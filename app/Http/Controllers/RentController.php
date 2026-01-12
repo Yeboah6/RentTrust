@@ -99,4 +99,12 @@ class RentController extends Controller
     public function superAdmin() {
         return inertia('Dashboards/SuperAdmin');
     }
+
+    public function propertyDetail() {
+        return inertia('PropertyDetailsPage');
+    }
+
+    public function reportListings() {
+        return inertia('ReportListingDialog');
+    }
 }

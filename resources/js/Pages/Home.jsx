@@ -14,7 +14,6 @@ const Home = () => {
       <Header />
 
       <main className="flex-1">
-        {/* <h1>Hello</h1> */}
          <HeroSearch />
         <FeaturedListings />
         <PopularAreas />

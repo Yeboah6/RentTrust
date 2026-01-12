@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from "@inertiajs/react";
 import { ArrowRight, MapPin, Home, TrendingUp, TrendingDown } from 'lucide-react';
 
 const areas = [
@@ -129,10 +130,6 @@ const AreaCard = ({ area }) => {
 };
 
 const PopularAreas = () => {
-  const handleViewAll = () => {
-    console.log('View all areas clicked');
-    alert('Navigating to all areas...');
-  };
 
   return (
     <>
@@ -155,8 +152,8 @@ const PopularAreas = () => {
                 Explore rent prices and reviews in these popular neighborhoods
               </p>
             </div>
-            <button
-              onClick={handleViewAll}
+            <Link
+              href="/areas"
               className="self-start md:self-auto inline-flex items-center px-4 py-2 rounded-lg font-medium transition-colors"
               style={{ 
                 color: 'hsl(174 62% 32%)',
@@ -167,7 +164,7 @@ const PopularAreas = () => {
             >
               View All Areas
               <ArrowRight className="h-4 w-4 ml-2" />
-            </button>
+            </Link>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

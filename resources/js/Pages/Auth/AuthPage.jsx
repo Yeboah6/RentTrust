@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Header from "../../Components/Layouts/Header";
 import Footer from "../../Components/Layouts/Footer";
+import { useForm } from "@inertiajs/react";
 
 // Icon components
 const Mail = ({ className, style }) => (
@@ -35,6 +36,20 @@ const EyeOff = ({ className, style }) => (
 );
 
 const AuthPage = () => {
+
+  const { data, setData, post, processing, errors, reset } = useForm({
+    fullName: '',
+    email: '',
+    password: '',
+  });
+
+  const handleSignUp = (e) => {
+    e.preventDefault();
+    post('/sign-up', {
+      onSuccess: () => reset(),
+    });
+  }
+
   const [isLogin, setIsLogin] = useState(true);
   const [activeTab, setActiveTab] = useState("email");
   const [showPassword, setShowPassword] = useState(false);
@@ -252,6 +267,7 @@ const AuthPage = () => {
               {/* Email Tab */}
               {activeTab === "email" && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  <form onSubmit={handleSignUp}>
                   {!isLogin && (
                     <div>
                       <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', fontSize: '0.875rem', color: 'hsl(200 25% 15%)' }}>
@@ -260,8 +276,8 @@ const AuthPage = () => {
                       <input
                         type="text"
                         placeholder="Kofi Mensah"
-                        value={fullName}
-                        onChange={(e) => setFullName(e.target.value)}
+                        value={data.fullName}
+                        onChange={(e) => setData("fullName", e.target.value)}
                         style={{
                           width: '100%',
                           padding: '0.75rem',
@@ -289,8 +305,8 @@ const AuthPage = () => {
                     <input
                       type="email"
                       placeholder="you@example.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      value={data.email}
+                      onChange={(e) => setData("email", e.target.value)}
                       onKeyPress={(e) => e.key === 'Enter' && handleEmailSubmit()}
                       style={{
                         width: '100%',
@@ -319,8 +335,8 @@ const AuthPage = () => {
                       <input
                         type={showPassword ? "text" : "password"}
                         placeholder="••••••••"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
+                        value={data.password}
+                        onChange={(e) => setData("password", e.target.value)}
                         onKeyPress={(e) => e.key === 'Enter' && handleEmailSubmit()}
                         style={{
                           width: '100%',
@@ -361,25 +377,26 @@ const AuthPage = () => {
                   </div>
 
                   <button
-                    onClick={handleEmailSubmit}
-                    disabled={isLoading}
+                    // onClick={handleEmailSubmit}
+                    disabled={processing}
                     style={{
                       width: '100%',
                       padding: '0.75rem',
                       border: 'none',
                       borderRadius: '0.75rem',
-                      background: isLoading ? 'hsl(174 62% 32% / 0.5)' : 'linear-gradient(135deg, hsl(174 62% 32%) 0%, hsl(174 50% 25%) 100%)',
+                      background: processing ? 'hsl(174 62% 32% / 0.5)' : 'linear-gradient(135deg, hsl(174 62% 32%) 0%, hsl(174 50% 25%) 100%)',
                       color: 'white',
                       fontWeight: '500',
-                      cursor: isLoading ? 'not-allowed' : 'pointer',
+                      cursor: processing ? 'not-allowed' : 'pointer',
                       transition: 'opacity 0.2s',
                       marginTop: '0.5rem'
                     }}
-                    onMouseEnter={(e) => !isLoading && (e.currentTarget.style.opacity = '0.9')}
-                    onMouseLeave={(e) => !isLoading && (e.currentTarget.style.opacity = '1')}
+                    onMouseEnter={(e) => !processing && (e.currentTarget.style.opacity = '0.9')}
+                    onMouseLeave={(e) => !processing && (e.currentTarget.style.opacity = '1')}
                   >
                     {isLoading ? "Please wait..." : isLogin ? "Sign In" : "Create Account"}
                   </button>
+                  </form>
                 </div>
               )}
 

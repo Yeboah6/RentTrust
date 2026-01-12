@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from "@inertiajs/react";
 import { ArrowRight, MapPin, Star, CheckCircle2, Shield } from 'lucide-react';
 
 // Sample data
@@ -176,10 +177,6 @@ const PropertyCard = ({
 };
 
 const FeaturedListings = () => {
-  const handleViewAll = () => {
-    console.log('View all listings clicked');
-    alert('Navigating to all listings...');
-  };
 
   return (
     <>
@@ -202,8 +199,8 @@ const FeaturedListings = () => {
                 Browse the latest properties with transparent rent information
               </p>
             </div>
-            <button
-              onClick={handleViewAll}
+            <Link
+              href="/listings"
               className="self-start md:self-auto inline-flex items-center px-4 py-2 rounded-lg font-medium transition-colors"
               style={{ 
                 color: 'hsl(174 62% 32%)',
@@ -214,7 +211,7 @@ const FeaturedListings = () => {
             >
               View All Listings
               <ArrowRight className="h-4 w-4 ml-2" />
-            </button>
+            </Link>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">

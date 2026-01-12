@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from '@inertiajs/react';
 import { ArrowRight, Building2, Users } from 'lucide-react';
 
 const CTASection = () => {
@@ -93,14 +94,14 @@ const CTASection = () => {
                   Claim your listings, build your reputation with verified reviews, 
                   and connect with serious tenants.
                 </p>
-                <a
+                <Link
                   href='/claim-listings'
                   className="gradient-accent inline-flex items-center px-6 py-3 font-semibold rounded-lg transition-all duration-200 active:scale-95 shadow-md hover:shadow-lg"
                   style={{ color: 'hsl(200 25% 10%)' }}
                 >
                   Claim Your Listing
                   <ArrowRight className="h-4 w-4 ml-2" />
-                </a>
+                </Link>
               </div>
             </div>
           </div>

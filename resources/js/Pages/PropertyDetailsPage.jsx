@@ -1,4 +1,6 @@
 import { useState } from "react";
+import Header from '../Components/Layouts/Header';
+import Footer from '../Components/Layouts/Footer';
 
 // Icon components
 const MapPin = ({ style }) => (
@@ -113,12 +115,7 @@ const PropertyDetailsPage = () => {
       `}</style>
 
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'hsl(40 33% 98%)' }}>
-        {/* Header */}
-        <header style={{ backgroundColor: 'white', borderBottom: '1px solid hsl(40 20% 88%)', padding: '1rem 0' }}>
-          <div className="container mx-auto px-4">
-            <h2 className="text-2xl font-bold" style={{ color: 'hsl(174 62% 32%)' }}>RentTrust Ghana</h2>
-          </div>
-        </header>
+        <Header />
 
         <main style={{ flex: 1 }}>
           {/* Hero Image */}
@@ -344,12 +341,7 @@ const PropertyDetailsPage = () => {
           </div>
         </main>
 
-        {/* Footer */}
-        <footer style={{ backgroundColor: 'white', borderTop: '1px solid hsl(40 20% 88%)', padding: '2rem 0' }}>
-          <div className="container mx-auto px-4" style={{ textAlign: 'center', color: 'hsl(200 15% 45%)' }}>
-            <p>&copy; 2024 RentTrust Ghana. All rights reserved.</p>
-          </div>
-        </footer>
+        <Footer />
       </div>
     </>
   );
