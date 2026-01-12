@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from "@inertiajs/react";
 import { Menu, X, Search, User } from 'lucide-react';
 
 const Header = () => {
@@ -43,7 +44,7 @@ const Header = () => {
       >
         <div className="container mx-auto px-4 flex h-16 items-center justify-between">
           {/* Logo */}
-          <a 
+          <Link
             href="/" 
             className="flex items-center gap-2 hover:opacity-80 transition-opacity"
           >
@@ -56,11 +57,11 @@ const Header = () => {
             <span className="text-xl font-bold tracking-tight" style={{ color: 'hsl(200 25% 15%)' }}>
               RentTrust
             </span>
-          </a>
+          </Link>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-1">
-            <a
+            <Link
               href="/listings"
               onMouseEnter={() => setActiveLink('listings')}
               onMouseLeave={() => setActiveLink(null)}
@@ -71,8 +72,8 @@ const Header = () => {
               }}
             >
               Find Rentals
-            </a>
-            <a
+            </Link>
+            <Link
               href="/areas"
               onMouseEnter={() => setActiveLink('areas')}
               onMouseLeave={() => setActiveLink(null)}
@@ -83,8 +84,8 @@ const Header = () => {
               }}
             >
               Areas
-            </a>
-            <a
+            </Link>
+            <Link
               href="/agents"
               onMouseEnter={() => setActiveLink('agents')}
               onMouseLeave={() => setActiveLink(null)}
@@ -95,8 +96,8 @@ const Header = () => {
               }}
             >
               Agents
-            </a>
-            <a
+            </Link>
+            <Link
               href="/calculator"
               onMouseEnter={() => setActiveLink('calculator')}
               onMouseLeave={() => setActiveLink(null)}
@@ -107,7 +108,7 @@ const Header = () => {
               }}
             >
               Calculator
-            </a>
+            </Link>
           </nav>
 
           {/* Desktop Actions */}
@@ -125,7 +126,7 @@ const Header = () => {
             >
               <Search className="h-5 w-5" />
             </button>
-            <a
+            <Link
               href="/sign-up"
               onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(40 30% 94%)'}
               onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
@@ -138,16 +139,17 @@ const Header = () => {
             >
               <User className="h-4 w-4 mr-2" />
               Sign In
-            </a>
-            <button
-              onClick={handleListProperty}
+            </Link>
+            <Link
+              href=""
+              // onClick={handleListProperty}
               className="px-4 py-2 text-sm font-semibold rounded-lg text-white transition-all duration-200 active:scale-95"
               style={{ backgroundColor: 'hsl(174 62% 32%)' }}
               onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(174 55% 28%)'}
               onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'hsl(174 62% 32%)'}
             >
               List Property
-            </button>
+            </Link>
           </div>
 
           {/* Mobile Menu Button */}
@@ -170,7 +172,7 @@ const Header = () => {
           }}
         >
           <nav className="container mx-auto px-4 py-4 space-y-1">
-            <a
+            <Link
               href="/listings"
               onClick={(e) => {
                 e.preventDefault();
@@ -182,8 +184,8 @@ const Header = () => {
               onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
             >
               Find Rentals
-            </a>
-            <a
+            </Link>
+            <Link
               href="/areas"
               onClick={(e) => {
                 e.preventDefault();
@@ -195,8 +197,8 @@ const Header = () => {
               onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
             >
               Areas
-            </a>
-            <a
+            </Link>
+            <Link
               href="/agents"
               onClick={(e) => {
                 e.preventDefault();
@@ -208,8 +210,8 @@ const Header = () => {
               onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
             >
               Agents
-            </a>
-            <a
+            </Link>
+            <Link
               href="/calculator"
               onClick={(e) => {
                 e.preventDefault();
@@ -221,10 +223,11 @@ const Header = () => {
               onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
             >
               Calculator
-            </a>
+            </Link>
             <div className="pt-4 space-y-2 border-t mt-4" style={{ borderColor: 'hsl(40 20% 88%)' }}>
-              <button
-                onClick={handleSignIn}
+              <Link
+                href="/sign-in"
+                // onClick={handleSignIn}
                 className="w-full inline-flex items-center justify-start px-4 py-3 text-sm font-medium rounded-lg border transition-colors"
                 style={{ 
                   borderColor: 'hsl(40 20% 88%)',
@@ -234,14 +237,14 @@ const Header = () => {
               >
                 <User className="h-4 w-4 mr-2" />
                 Sign In
-              </button>
-              <button
-                onClick={handleListProperty}
+              </Link>
+              <Link
+                href="/"
                 className="w-full px-4 py-3 text-sm font-semibold rounded-lg text-white transition-colors"
                 style={{ backgroundColor: 'hsl(174 62% 32%)' }}
               >
                 List Property
-              </button>
+              </Link>
             </div>
           </nav>
         </div>
