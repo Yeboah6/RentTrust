@@ -107,4 +107,12 @@ class RentController extends Controller
     public function reportListings() {
         return inertia('ReportListingDialog');
     }
+
+    public function addRentals() {
+        return inertia('AddRentals');
+    }
+
+    public function reviewForms() {
+        return inertia('ReviewForm');
+    }
 }

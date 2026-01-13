@@ -281,18 +281,18 @@ const AuthPage = () => {
                         style={{
                           width: '100%',
                           padding: '0.75rem',
-                          border: `1px solid ${emailErrors.fullName ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)'}`,
+                          border: `1px solid ${errors.fullName ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)'}`,
                           borderRadius: '0.75rem',
                           fontSize: '1rem',
                           outline: 'none',
                           color: 'hsl(200 25% 15%)'
                         }}
-                        onFocus={(e) => e.currentTarget.style.borderColor = emailErrors.fullName ? 'hsl(0 72% 51%)' : 'hsl(174 62% 32%)'}
-                        onBlur={(e) => e.currentTarget.style.borderColor = emailErrors.fullName ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)'}
+                        onFocus={(e) => e.currentTarget.style.borderColor = errors.fullName ? 'hsl(0 72% 51%)' : 'hsl(174 62% 32%)'}
+                        onBlur={(e) => e.currentTarget.style.borderColor = errors.fullName ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)'}
                       />
-                      {emailErrors.fullName && (
+                      {errors.fullName && (
                         <p style={{ fontSize: '0.875rem', color: 'hsl(0 72% 51%)', marginTop: '0.375rem' }}>
-                          {emailErrors.fullName}
+                          {errors.fullName}
                         </p>
                       )}
                     </div>
@@ -311,18 +311,18 @@ const AuthPage = () => {
                       style={{
                         width: '100%',
                         padding: '0.75rem',
-                        border: `1px solid ${emailErrors.email ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)'}`,
+                        border: `1px solid ${errors.email ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)'}`,
                         borderRadius: '0.75rem',
                         fontSize: '1rem',
                         outline: 'none',
                         color: 'hsl(200 25% 15%)'
                       }}
-                      onFocus={(e) => e.currentTarget.style.borderColor = emailErrors.email ? 'hsl(0 72% 51%)' : 'hsl(174 62% 32%)'}
-                      onBlur={(e) => e.currentTarget.style.borderColor = emailErrors.email ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)'}
+                      onFocus={(e) => e.currentTarget.style.borderColor = errors.email ? 'hsl(0 72% 51%)' : 'hsl(174 62% 32%)'}
+                      onBlur={(e) => e.currentTarget.style.borderColor = errors.email ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)'}
                     />
-                    {emailErrors.email && (
+                    {errors.email && (
                       <p style={{ fontSize: '0.875rem', color: 'hsl(0 72% 51%)', marginTop: '0.375rem' }}>
-                        {emailErrors.email}
+                        {errors.email}
                       </p>
                     )}
                   </div>
@@ -342,14 +342,14 @@ const AuthPage = () => {
                           width: '100%',
                           padding: '0.75rem',
                           paddingRight: '3rem',
-                          border: `1px solid ${emailErrors.password ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)'}`,
+                          border: `1px solid ${errors.password ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)'}`,
                           borderRadius: '0.75rem',
                           fontSize: '1rem',
                           outline: 'none',
                           color: 'hsl(200 25% 15%)'
                         }}
-                        onFocus={(e) => e.currentTarget.style.borderColor = emailErrors.password ? 'hsl(0 72% 51%)' : 'hsl(174 62% 32%)'}
-                        onBlur={(e) => e.currentTarget.style.borderColor = emailErrors.password ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)'}
+                        onFocus={(e) => e.currentTarget.style.borderColor = errors.password ? 'hsl(0 72% 51%)' : 'hsl(174 62% 32%)'}
+                        onBlur={(e) => e.currentTarget.style.borderColor = errors.password ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)'}
                       />
                       <button
                         type="button"
@@ -369,9 +369,9 @@ const AuthPage = () => {
                         {showPassword ? <EyeOff style={{ height: '1.25rem', width: '1.25rem' }} /> : <Eye style={{ height: '1.25rem', width: '1.25rem' }} />}
                       </button>
                     </div>
-                    {emailErrors.password && (
+                    {errors.password && (
                       <p style={{ fontSize: '0.875rem', color: 'hsl(0 72% 51%)', marginTop: '0.375rem' }}>
-                        {emailErrors.password}
+                        {errors.password}
                       </p>
                     )}
                   </div>

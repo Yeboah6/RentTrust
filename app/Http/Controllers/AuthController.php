@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Tenant;
 
 class AuthController extends Controller
 {
@@ -16,11 +17,10 @@ class AuthController extends Controller
         $signUpData = $request->validate([
             'fullName' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
-            'password' => 'required|string|min:8|confirmed',
+            'password' => 'required|string|min:8',
         ]);
 
         Tenant::create($signUpData);
-        return redirect('/')->with('success', 'Account created successfully!');
-        // dd($request);
+        return redirect('/');
     }
 }

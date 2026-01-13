@@ -18,6 +18,8 @@ Route::get('/calculator', [RentController::class, 'calculate']);
 Route::get('/reviews', [RentController::class, 'reviews']);
 Route::get('/property-detail', [RentController::class, 'propertyDetail']);
 Route::get('/report-listings', [RentController::class, 'reportListings']);
+Route::get('/add-rentals', [RentController::class, 'addRentals']);
+Route::get('/review-forms', [RentController::class, 'reviewForms']);
 
 Route::get('/agent-dashboard', [RentController::class, 'agentDashboard']);
 Route::get('/super-admin', [RentController::class, 'superAdmin']);
