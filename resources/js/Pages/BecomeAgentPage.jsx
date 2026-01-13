@@ -1,4 +1,7 @@
 import { useState } from "react";
+import { useForm } from '@inertiajs/react';
+import Header from '../Components/Layouts/Header';
+import Footer from '../Components/Layouts/Footer';
 
 // Icon components
 const Shield = ({ className, style }) => (
@@ -13,111 +16,52 @@ const CheckCircle = ({ className, style }) => (
   </svg>
 );
 
-const BecomeAgentPage = () => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  // Form state
-  const [formData, setFormData] = useState({
-    name: "",
-    phone: "",
-    email: "",
-    company_name: "",
-    license_number: "",
-    fee_percentage: "",
-    bio: ""
-  });
+const Eye = ({ className, style }) => (
+  <svg className={className} style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+  </svg>
+);
 
-  // Error state
-  const [errors, setErrors] = useState({
-    name: "",
-    phone: "",
-    email: "",
-    company_name: "",
-    license_number: "",
-    fee_percentage: "",
-    bio: ""
-  });
+const EyeOff = ({ className, style }) => (
+  <svg className={className} style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+  </svg>
+);
+
+const BecomeAgentPage = () => {
+  const [showPassword, setShowPassword] = useState(false);
 
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
 
-  const handleChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    // Clear error when user starts typing
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: "" }));
-    }
+  const agentTypes = ['Landlord', 'Agent'];
+
+  const { data, setData, post, processing, errors, reset } = useForm({
+    fullName: "",
+    phone: "",
+    email: "",
+    company: "",
+    type: "",
+    fee: "",
+    bio: "",
+    password: "",
+  });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    post('/become-agent', {
+      onSuccess: () => reset(),
+    })
   };
 
-  const handleSubmit = async () => {
-    const newErrors = {
-      name: "",
-      phone: "",
-      email: "",
-      company_name: "",
-      license_number: "",
-      fee_percentage: "",
-      bio: ""
-    };
-
-    // Validation
-    if (!formData.name) {
-      newErrors.name = "Name is required";
-    } else if (formData.name.length < 2) {
-      newErrors.name = "Name must be at least 2 characters";
-    }
-
-    if (!formData.phone) {
-      newErrors.phone = "Phone number is required";
-    } else if (formData.phone.length < 10) {
-      newErrors.phone = "Please enter a valid phone number";
-    }
-
-    if (!formData.email) {
-      newErrors.email = "Email is required";
-    } else if (!validateEmail(formData.email)) {
-      newErrors.email = "Please enter a valid email";
-    }
-
-    if (formData.bio && formData.bio.length > 500) {
-      newErrors.bio = "Bio must be less than 500 characters";
-    }
-
-    setErrors(newErrors);
-
-    if (Object.values(newErrors).some(error => error !== "")) {
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      alert("Registration successful! You can now manage listings and respond to reviews.");
-      
-      // Reset form
-      setFormData({
-        name: "",
-        phone: "",
-        email: "",
-        company_name: "",
-        license_number: "",
-        fee_percentage: "",
-        bio: ""
-      });
-    } catch (error) {
-      alert("Error during registration. Please try again.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
+  
   return (
     <>
-      <style>{`
+      <style>
+        {`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         
         * {
@@ -133,17 +77,11 @@ const BecomeAgentPage = () => {
         textarea {
           resize: vertical;
         }
-      `}</style>
+      `}
+      </style>
 
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'hsl(40 33% 98%)' }}>
-        {/* Header */}
-        <header style={{ backgroundColor: 'hsl(0 0% 100%)', borderBottom: '1px solid hsl(40 20% 88%)', padding: '1rem 0' }}>
-          <div className="container mx-auto px-4">
-            <h2 className="text-2xl font-bold tracking-tight" style={{ color: 'hsl(174 62% 32%)' }}>
-              RentTrust Ghana
-            </h2>
-          </div>
-        </header>
+        <Header />
 
         <main style={{ flex: 1, padding: '3rem 1rem' }}>
           <div className="container mx-auto" style={{ maxWidth: '32rem' }}>
@@ -181,6 +119,7 @@ const BecomeAgentPage = () => {
 
               {/* Content */}
               <div style={{ padding: '2rem' }}>
+                <form onSubmit={handleSubmit}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                   {/* Full Name */}
                   <div>
@@ -190,23 +129,23 @@ const BecomeAgentPage = () => {
                     <input
                       type="text"
                       placeholder="Kofi Mensah"
-                      value={formData.name}
-                      onChange={(e) => handleChange('name', e.target.value)}
+                      value={data.fullName}
+                      onChange={(e) => setData('fullName', e.target.value)}
                       style={{
                         width: '100%',
                         padding: '0.75rem',
-                        border: `1px solid ${errors.name ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)'}`,
+                        border: `1px solid ${errors.fullName ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)'}`,
                         borderRadius: '0.75rem',
                         fontSize: '1rem',
                         outline: 'none',
                         color: 'hsl(200 25% 15%)'
                       }}
-                      onFocus={(e) => e.currentTarget.style.borderColor = errors.name ? 'hsl(0 72% 51%)' : 'hsl(174 62% 32%)'}
-                      onBlur={(e) => e.currentTarget.style.borderColor = errors.name ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)'}
+                      onFocus={(e) => e.currentTarget.style.borderColor = errors.fullName ? 'hsl(0 72% 51%)' : 'hsl(174 62% 32%)'}
+                      onBlur={(e) => e.currentTarget.style.borderColor = errors.fullName ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)'}
                     />
-                    {errors.name && (
+                    {errors.fullName && (
                       <p style={{ fontSize: '0.875rem', color: 'hsl(0 72% 51%)', marginTop: '0.375rem' }}>
-                        {errors.name}
+                        {errors.fullName}
                       </p>
                     )}
                   </div>
@@ -220,8 +159,8 @@ const BecomeAgentPage = () => {
                       <input
                         type="tel"
                         placeholder="+233 XX XXX XXXX"
-                        value={formData.phone}
-                        onChange={(e) => handleChange('phone', e.target.value)}
+                        value={data.phone}
+                        onChange={(e) => setData('phone', e.target.value)}
                         style={{
                           width: '100%',
                           padding: '0.75rem',
@@ -248,8 +187,8 @@ const BecomeAgentPage = () => {
                       <input
                         type="email"
                         placeholder="you@example.com"
-                        value={formData.email}
-                        onChange={(e) => handleChange('email', e.target.value)}
+                        value={data.email}
+                        onChange={(e) => setData('email', e.target.value)}
                         style={{
                           width: '100%',
                           padding: '0.75rem',
@@ -278,8 +217,8 @@ const BecomeAgentPage = () => {
                     <input
                       type="text"
                       placeholder="Optional"
-                      value={formData.company_name}
-                      onChange={(e) => handleChange('company_name', e.target.value)}
+                      value={data.company}
+                      onChange={(e) => setData('company', e.target.value)}
                       style={{
                         width: '100%',
                         padding: '0.75rem',
@@ -292,34 +231,35 @@ const BecomeAgentPage = () => {
                       onFocus={(e) => e.currentTarget.style.borderColor = 'hsl(174 62% 32%)'}
                       onBlur={(e) => e.currentTarget.style.borderColor = 'hsl(40 20% 88%)'}
                     />
+                    {errors.company && (
+                        <p style={{ fontSize: '0.875rem', color: 'hsl(0 72% 51%)', marginTop: '0.375rem' }}>
+                          {errors.company}
+                        </p>
+                      )}
                   </div>
 
                   {/* License Number and Agent Fee */}
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
                     <div>
                       <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', fontSize: '0.875rem', color: 'hsl(200 25% 15%)' }}>
-                        License Number
+                        Type of Agent
                       </label>
-                      <input
-                        type="text"
-                        placeholder="Optional"
-                        value={formData.license_number}
-                        onChange={(e) => handleChange('license_number', e.target.value)}
-                        style={{
-                          width: '100%',
-                          padding: '0.75rem',
-                          border: '1px solid hsl(40 20% 88%)',
-                          borderRadius: '0.75rem',
-                          fontSize: '1rem',
-                          outline: 'none',
-                          color: 'hsl(200 25% 15%)'
-                        }}
-                        onFocus={(e) => e.currentTarget.style.borderColor = 'hsl(174 62% 32%)'}
-                        onBlur={(e) => e.currentTarget.style.borderColor = 'hsl(40 20% 88%)'}
-                      />
-                      <p style={{ fontSize: '0.75rem', color: 'hsl(200 15% 45%)', marginTop: '0.375rem' }}>
-                        If registered with a real estate body
-                      </p>
+                      <select
+                        value={data.type}
+                        onChange={(e) => setData('type', e.target.value)}
+                        className="w-full px-4 py-3 border rounded-lg focus:ring-2 transition-all appearance-none"
+                        style={{ borderColor: errors.type ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)' }}
+                      >
+                        <option value="">Select agent type</option>
+                        {agentTypes.map(type => (
+                          <option key={type} value={type}>{type}</option>
+                        ))}
+                      </select>
+                      {errors.type && (
+                        <p style={{ fontSize: '0.875rem', color: 'hsl(0 72% 51%)', marginTop: '0.375rem' }}>
+                          {errors.type}
+                        </p>
+                      )}
                     </div>
 
                     <div>
@@ -331,8 +271,8 @@ const BecomeAgentPage = () => {
                         placeholder="e.g. 10"
                         min="0"
                         max="100"
-                        value={formData.fee_percentage}
-                        onChange={(e) => handleChange('fee_percentage', e.target.value)}
+                        value={data.fee}
+                        onChange={(e) => setData('fee', e.target.value)}
                         style={{
                           width: '100%',
                           padding: '0.75rem',
@@ -345,6 +285,11 @@ const BecomeAgentPage = () => {
                         onFocus={(e) => e.currentTarget.style.borderColor = 'hsl(174 62% 32%)'}
                         onBlur={(e) => e.currentTarget.style.borderColor = 'hsl(40 20% 88%)'}
                       />
+                      {errors.fee && (
+                        <p style={{ fontSize: '0.875rem', color: 'hsl(0 72% 51%)', marginTop: '0.375rem' }}>
+                          {errors.fee}
+                        </p>
+                      )}
                       <p style={{ fontSize: '0.75rem', color: 'hsl(200 15% 45%)', marginTop: '0.375rem' }}>
                         Your typical commission rate
                       </p>
@@ -359,8 +304,8 @@ const BecomeAgentPage = () => {
                     <textarea
                       placeholder="Tell tenants about yourself and your experience..."
                       rows={4}
-                      value={formData.bio}
-                      onChange={(e) => handleChange('bio', e.target.value)}
+                      value={data.bio}
+                      onChange={(e) => setData('bio', e.target.value)}
                       style={{
                         width: '100%',
                         padding: '0.75rem',
@@ -380,8 +325,56 @@ const BecomeAgentPage = () => {
                       </p>
                     )}
                     <p style={{ fontSize: '0.75rem', color: 'hsl(200 15% 45%)', marginTop: '0.375rem' }}>
-                      {formData.bio.length}/500 characters
+                      {data.bio.length}/500 characters
                     </p>
+                  </div>
+                  {/* Password Field with Toggle */}
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', fontSize: '0.875rem', color: 'hsl(200 25% 15%)' }}>
+                      Password
+                    </label>
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        placeholder="••••••••"
+                        value={data.password}
+                        onChange={(e) => setData("password", e.target.value)}
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem',
+                          paddingRight: '3rem',
+                          border: `1px solid ${errors.password ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)'}`,
+                          borderRadius: '0.75rem',
+                          fontSize: '1rem',
+                          outline: 'none',
+                          color: 'hsl(200 25% 15%)'
+                        }}
+                        onFocus={(e) => e.currentTarget.style.borderColor = errors.password ? 'hsl(0 72% 51%)' : 'hsl(174 62% 32%)'}
+                        onBlur={(e) => e.currentTarget.style.borderColor = errors.password ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)'}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        style={{
+                          position: 'absolute',
+                          right: '0.75rem',
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          border: 'none',
+                          background: 'transparent',
+                          color: 'hsl(200 15% 45%)',
+                          cursor: 'pointer',
+                          padding: '0.25rem'
+                        }}
+                      >
+                        {showPassword ? <EyeOff style={{ height: '1.25rem', width: '1.25rem' }} /> : <Eye style={{ height: '1.25rem', width: '1.25rem' }} />}
+                      </button>
+                    </div>
+                    {errors.password && (
+                      <p style={{ fontSize: '0.875rem', color: 'hsl(0 72% 51%)', marginTop: '0.375rem' }}>
+                        {errors.password}
+                      </p>
+                    )}
                   </div>
 
                   {/* Benefits Section */}
@@ -418,36 +411,31 @@ const BecomeAgentPage = () => {
 
                   {/* Submit Button */}
                   <button
-                    onClick={handleSubmit}
-                    disabled={isSubmitting}
+                    disabled={processing}
                     style={{
                       width: '100%',
                       padding: '0.75rem',
                       border: 'none',
                       borderRadius: '0.75rem',
-                      background: isSubmitting ? 'hsl(174 62% 32% / 0.5)' : 'linear-gradient(135deg, hsl(174 62% 32%) 0%, hsl(174 50% 25%) 100%)',
+                      background: processing ? 'hsl(174 62% 32% / 0.5)' : 'linear-gradient(135deg, hsl(174 62% 32%) 0%, hsl(174 50% 25%) 100%)',
                       color: 'white',
                       fontWeight: '500',
-                      cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                      cursor: processing ? 'not-allowed' : 'pointer',
                       transition: 'opacity 0.2s'
                     }}
-                    onMouseEnter={(e) => !isSubmitting && (e.currentTarget.style.opacity = '0.9')}
-                    onMouseLeave={(e) => !isSubmitting && (e.currentTarget.style.opacity = '1')}
+                    onMouseEnter={(e) => !processing && (e.currentTarget.style.opacity = '0.9')}
+                    onMouseLeave={(e) => !processing && (e.currentTarget.style.opacity = '1')}
                   >
-                    {isSubmitting ? "Registering..." : "Complete Registration"}
+                    {processing ? "Registering..." : "Complete Registration"}
                   </button>
                 </div>
+                </form>
               </div>
             </div>
           </div>
         </main>
 
-        {/* Footer */}
-        <footer style={{ backgroundColor: 'hsl(0 0% 100%)', borderTop: '1px solid hsl(40 20% 88%)', padding: '2rem 0' }}>
-          <div className="container mx-auto px-4" style={{ textAlign: 'center', color: 'hsl(200 15% 45%)' }}>
-            <p>&copy; 2024 RentTrust Ghana. All rights reserved.</p>
-          </div>
-        </footer>
+        <Footer />
       </div>
     </>
   );

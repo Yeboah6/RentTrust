@@ -142,7 +142,6 @@ const Header = () => {
             </Link>
             <Link
               href=""
-              // onClick={handleListProperty}
               className="px-4 py-2 text-sm font-semibold rounded-lg text-white transition-all duration-200 active:scale-95"
               style={{ backgroundColor: 'hsl(174 62% 32%)' }}
               onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(174 55% 28%)'}

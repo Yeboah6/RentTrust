@@ -1,4 +1,6 @@
 import { useState } from "react";
+import Header from "@/Components/Layouts/Header";
+import Footer from "@/Components/Layouts/Footer";
 
 // Icon components
 const Shield = ({ style }) => (
@@ -188,124 +190,80 @@ const mockReviews = [
 ];
 
 // Header Component
-const Header = () => {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+// const Header = () => {
+//   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  return (
-    <header style={{
-      backgroundColor: 'white',
-      borderBottom: '1px solid hsl(40 20% 88%)',
-      position: 'sticky',
-      top: 0,
-      zIndex: 50
-    }}>
-      <nav style={{
-        maxWidth: '1200px',
-        margin: '0 auto',
-        padding: '1rem',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <Shield style={{ height: '2rem', width: '2rem', color: 'hsl(174 62% 32%)' }} />
-          <span style={{ fontSize: '1.5rem', fontWeight: '700', color: 'hsl(200 25% 15%)' }}>
-            RateMyLandlord
-          </span>
-        </div>
+//   return (
+    // <Header />
+    // <header style={{
+    //   backgroundColor: 'white',
+    //   borderBottom: '1px solid hsl(40 20% 88%)',
+    //   position: 'sticky',
+    //   top: 0,
+    //   zIndex: 50
+    // }}>
+    //   <nav style={{
+    //     maxWidth: '1200px',
+    //     margin: '0 auto',
+    //     padding: '1rem',
+    //     display: 'flex',
+    //     justifyContent: 'space-between',
+    //     alignItems: 'center'
+    //   }}>
+    //     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+    //       <Shield style={{ height: '2rem', width: '2rem', color: 'hsl(174 62% 32%)' }} />
+    //       <span style={{ fontSize: '1.5rem', fontWeight: '700', color: 'hsl(200 25% 15%)' }}>
+    //         RateMyLandlord
+    //       </span>
+    //     </div>
 
-        {/* Desktop Navigation */}
-        <div style={{ display: 'none', gap: '2rem', alignItems: 'center' }} className="md:flex">
-          <a href="#" style={{ color: 'hsl(200 15% 45%)', fontWeight: '500', textDecoration: 'none' }}>Dashboard</a>
-          <a href="#" style={{ color: 'hsl(200 15% 45%)', fontWeight: '500', textDecoration: 'none' }}>Settings</a>
-          <a href="#" style={{ color: 'hsl(200 15% 45%)', fontWeight: '500', textDecoration: 'none' }}>Logout</a>
-        </div>
+    //     {/* Desktop Navigation */}
+    //     <div style={{ display: 'none', gap: '2rem', alignItems: 'center' }} className="md:flex">
+    //       <a href="#" style={{ color: 'hsl(200 15% 45%)', fontWeight: '500', textDecoration: 'none' }}>Dashboard</a>
+    //       <a href="#" style={{ color: 'hsl(200 15% 45%)', fontWeight: '500', textDecoration: 'none' }}>Settings</a>
+    //       <a href="#" style={{ color: 'hsl(200 15% 45%)', fontWeight: '500', textDecoration: 'none' }}>Logout</a>
+    //     </div>
 
-        {/* Mobile Menu Button */}
-        <button
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          style={{
-            display: 'block',
-            padding: '0.5rem',
-            color: 'hsl(200 25% 15%)',
-            border: 'none',
-            background: 'none',
-            cursor: 'pointer'
-          }}
-          className="md:hidden"
-        >
-          {mobileMenuOpen ? (
-            <X style={{ height: '1.5rem', width: '1.5rem' }} />
-          ) : (
-            <Menu style={{ height: '1.5rem', width: '1.5rem' }} />
-          )}
-        </button>
-      </nav>
+    //     {/* Mobile Menu Button */}
+    //     <button
+    //       onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+    //       style={{
+    //         display: 'block',
+    //         padding: '0.5rem',
+    //         color: 'hsl(200 25% 15%)',
+    //         border: 'none',
+    //         background: 'none',
+    //         cursor: 'pointer'
+    //       }}
+    //       className="md:hidden"
+    //     >
+    //       {mobileMenuOpen ? (
+    //         <X style={{ height: '1.5rem', width: '1.5rem' }} />
+    //       ) : (
+    //         <Menu style={{ height: '1.5rem', width: '1.5rem' }} />
+    //       )}
+    //     </button>
+    //   </nav>
 
-      {/* Mobile Menu */}
-      {mobileMenuOpen && (
-        <div style={{
-          display: 'block',
-          padding: '1rem',
-          borderTop: '1px solid hsl(40 20% 88%)',
-          backgroundColor: 'white'
-        }} className="md:hidden">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <a href="#" style={{ color: 'hsl(200 15% 45%)', fontWeight: '500', textDecoration: 'none' }}>Dashboard</a>
-            <a href="#" style={{ color: 'hsl(200 15% 45%)', fontWeight: '500', textDecoration: 'none' }}>Settings</a>
-            <a href="#" style={{ color: 'hsl(200 15% 45%)', fontWeight: '500', textDecoration: 'none' }}>Logout</a>
-          </div>
-        </div>
-      )}
-    </header>
-  );
-};
+    //   {/* Mobile Menu */}
+    //   {mobileMenuOpen && (
+    //     <div style={{
+    //       display: 'block',
+    //       padding: '1rem',
+    //       borderTop: '1px solid hsl(40 20% 88%)',
+    //       backgroundColor: 'white'
+    //     }} className="md:hidden">
+    //       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+    //         <a href="#" style={{ color: 'hsl(200 15% 45%)', fontWeight: '500', textDecoration: 'none' }}>Dashboard</a>
+    //         <a href="#" style={{ color: 'hsl(200 15% 45%)', fontWeight: '500', textDecoration: 'none' }}>Settings</a>
+    //         <a href="#" style={{ color: 'hsl(200 15% 45%)', fontWeight: '500', textDecoration: 'none' }}>Logout</a>
+    //       </div>
+    //     </div>
+    //   )}
+    // </header>
+//   );
+// };
 
-// Footer Component
-const Footer = () => {
-  return (
-    <footer style={{
-      backgroundColor: 'hsl(200 25% 15%)',
-      color: 'white',
-      padding: '2rem 1rem',
-      marginTop: 'auto'
-    }}>
-      <div style={{
-        maxWidth: '1200px',
-        margin: '0 auto',
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-        gap: '2rem'
-      }}>
-        <div>
-          <h3 style={{ fontWeight: '600', marginBottom: '1rem' }}>RateMyLandlord</h3>
-          <p style={{ fontSize: '0.875rem', color: 'hsl(200 15% 70%)' }}>
-            Empowering tenants with transparency in the rental market.
-          </p>
-        </div>
-        <div>
-          <h4 style={{ fontWeight: '600', marginBottom: '1rem' }}>Quick Links</h4>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.875rem' }}>
-            <a href="#" style={{ color: 'hsl(200 15% 70%)', textDecoration: 'none' }}>About Us</a>
-            <a href="#" style={{ color: 'hsl(200 15% 70%)', textDecoration: 'none' }}>Contact</a>
-            <a href="#" style={{ color: 'hsl(200 15% 70%)', textDecoration: 'none' }}>Privacy Policy</a>
-          </div>
-        </div>
-      </div>
-      <div style={{
-        maxWidth: '1200px',
-        margin: '2rem auto 0',
-        paddingTop: '2rem',
-        borderTop: '1px solid hsl(200 15% 30%)',
-        textAlign: 'center',
-        fontSize: '0.875rem',
-        color: 'hsl(200 15% 70%)'
-      }}>
-        © 2024 RateMyLandlord. All rights reserved.
-      </div>
-    </footer>
-  );
-};
 
 const SuperAdminDashboard = () => {
   const [activeTab, setActiveTab] = useState("agents");
@@ -527,7 +485,20 @@ const SuperAdminDashboard = () => {
                     cursor: 'pointer',
                     alignSelf: 'flex-start'
                   }}>
-                    Edit Profile
+                    Settings
+                  </button>
+                  <button style={{
+                    padding: '0.5rem 1rem',
+                    border: '1px solid hsl(0 70% 50%)',
+                    borderRadius: '0.5rem',
+                    backgroundColor: 'white',
+                    color: 'hsl(0 70% 50%)',
+                    textDecoration: 'none',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    alignSelf: 'flex-start'
+                  }}>
+                    Logout
                   </button>
                 </div>
               </div>
@@ -596,7 +567,7 @@ const SuperAdminDashboard = () => {
                     </button>
                   </div>
 
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '1rem' }}>
                     {agents.map((agentItem) => (
                       <div key={agentItem.id} style={{
                         backgroundColor: 'white',
@@ -815,7 +786,7 @@ const SuperAdminDashboard = () => {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                   <h2 className="text-lg font-semibold" style={{ color: 'hsl(200 25% 15%)' }}>Platform Reports</h2>
 
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '1rem' }}>
                     {reports.map((report) => {
                       const getReportTypeBadge = (type) => {
                         const types = {
@@ -988,7 +959,7 @@ const SuperAdminDashboard = () => {
 
               {/* Reviews Tab */}
               {activeTab === 'reviews' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '1rem' }}>
                   <h2 className="text-lg font-semibold" style={{ color: 'hsl(200 25% 15%)' }}>All Platform Reviews</h2>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>

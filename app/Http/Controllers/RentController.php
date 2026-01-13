@@ -72,20 +72,12 @@ class RentController extends Controller
         return inertia('AreasPage');
     }
 
-    public function agent() {
-        return inertia('AgentsPage');
-    }
-
     public function calculate() {
         return inertia('CalculatorPage');
     }
 
     public function claimListings() {
         return inertia('ClaimListingPage');
-    }
-
-    public function becomeAgent() {
-        return inertia('BecomeAgentPage');
     }
 
     public function reviews() {

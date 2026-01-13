@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "@inertiajs/react";
 import Header from "../Components/Layouts/Header";
 import Footer from "../Components/Layouts/Footer";
 
@@ -271,37 +272,48 @@ const AgentsPage = () => {
                 Connect with verified agents who have proven track records
               </p>
 
-              <div style={{ position: 'relative', maxWidth: '28rem' }}>
-                <Search 
-                  style={{ 
-                    position: 'absolute', 
-                    left: '0.75rem', 
-                    top: '50%', 
-                    transform: 'translateY(-50%)', 
-                    height: '1.25rem', 
-                    width: '1.25rem', 
-                    color: 'hsl(200 15% 45%)' 
-                  }} 
-                />
-                <input
-                  type="text"
-                  placeholder="Search by name or area..."
-                  style={{
-                    width: '100%',
-                    paddingLeft: '2.5rem',
-                    height: '3rem',
-                    border: '1px solid hsl(40 20% 88%)',
-                    borderRadius: '0.75rem',
-                    fontSize: '1rem',
-                    outline: 'none',
-                    backgroundColor: 'white',
-                    color: 'hsl(200 25% 15%)'
-                  }}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onFocus={(e) => e.currentTarget.style.borderColor = 'hsl(174 62% 32%)'}
-                  onBlur={(e) => e.currentTarget.style.borderColor = 'hsl(40 20% 88%)'}
-                />
+              <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'space-between' }}>
+                <div style={{ position: 'relative', maxWidth: '28rem' }}>
+                  <Search 
+                    style={{ 
+                      position: 'absolute', 
+                      left: '0.75rem', 
+                      top: '50%', 
+                      transform: 'translateY(-50%)', 
+                      height: '1.25rem', 
+                      width: '1.25rem', 
+                      color: 'hsl(200 15% 45%)' 
+                    }} 
+                  />
+                  <input
+                    type="text"
+                    placeholder="Search by name or area..."
+                    style={{
+                      width: '100%',
+                      paddingLeft: '2.5rem',
+                      height: '3rem',
+                      border: '1px solid hsl(40 20% 88%)',
+                      borderRadius: '0.75rem',
+                      fontSize: '1rem',
+                      outline: 'none',
+                      backgroundColor: 'white',
+                      color: 'hsl(200 25% 15%)'
+                    }}
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onFocus={(e) => e.currentTarget.style.borderColor = 'hsl(174 62% 32%)'}
+                    onBlur={(e) => e.currentTarget.style.borderColor = 'hsl(40 20% 88%)'}
+                  />
+                </div>
+               <Link
+                  href="/become-agent"
+                  className="px-4 py-2 text-sm font-semibold rounded-lg text-white transition-all duration-200 active:scale-95"
+                  style={{ backgroundColor: 'hsl(174 62% 32%)' }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(174 55% 28%)'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'hsl(174 62% 32%)'}
+                >
+                  Become an Landlord
+                </Link>
               </div>
             </div>
           </div>
