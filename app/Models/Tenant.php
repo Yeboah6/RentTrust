@@ -3,13 +3,18 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 
-class Tenant extends Model
+class Tenant extends Authenticatable
 {
     protected $fillable = [
         'fullName',
         'email',
         'password',
         'phone',
+    ];
+
+    protected $hidden = [
+        'password',
     ];
 }

@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
+import { useForm } from '@inertiajs/react';
 import { Home, MapPin, DollarSign, Calendar, Image, FileText, CheckCircle2, AlertCircle, Upload, X } from 'lucide-react';
-import Header from '../Components/Layouts/Header';
-import Footer from '../Components/Layouts/Footer';
 
 const AddRentalPage = () => {
-  const [formData, setFormData] = useState({
+
+  const { data, setData, post, processing, errors, reset } = useForm({
     title: '',
     propertyType: '',
     area: '',
@@ -23,26 +23,16 @@ const AddRentalPage = () => {
 
   const [images, setImages] = useState([]);
   const [currentStep, setCurrentStep] = useState(1);
-  const [errors, setErrors] = useState({});
 
   const propertyTypes = ['Apartment', 'House', 'Studio', 'Chamber and Hall', 'Self-Contained', 'Condo', 'Townhouse'];
   const cities = ['Accra', 'Kumasi', 'Tema', 'Takoradi', 'Cape Coast', 'Tamale'];
   const amenitiesList = ['Wi-Fi', 'Parking', 'Security', 'Water Supply', 'Backup Generator', 'Air Conditioning', 'Furnished', 'Gym', 'Swimming Pool', 'Garden'];
 
-  const handleInputChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }));
-    }
-  };
-
   const handleAmenityToggle = (amenity) => {
-    setFormData(prev => ({
-      ...prev,
-      amenities: prev.amenities.includes(amenity)
-        ? prev.amenities.filter(a => a !== amenity)
-        : [...prev.amenities, amenity]
-    }));
+    const updatedAmenities = data.amenities.includes(amenity)
+      ? data.amenities.filter(a => a !== amenity)
+      : [...data.amenities, amenity];
+    setData('amenities', updatedAmenities);
   };
 
   const handleImageUpload = (e) => {
@@ -50,6 +40,7 @@ const AddRentalPage = () => {
     const newImages = files.map(file => ({
       id: Math.random().toString(36).substr(2, 9),
       name: file.name,
+      file: file,
       preview: URL.createObjectURL(file)
     }));
     setImages(prev => [...prev, ...newImages].slice(0, 6));
@@ -60,40 +51,69 @@ const AddRentalPage = () => {
   };
 
   const validateStep = (step) => {
-    const newErrors = {};
-    
     if (step === 1) {
-      if (!formData.title) newErrors.title = 'Property title is required';
-      if (!formData.propertyType) newErrors.propertyType = 'Property type is required';
-      if (!formData.city) newErrors.city = 'City is required';
-      if (!formData.area) newErrors.area = 'Area is required';
+      return data.title && data.propertyType && data.city && data.area;
     } else if (step === 2) {
-      if (!formData.monthlyRent) newErrors.monthlyRent = 'Monthly rent is required';
-      if (!formData.bedrooms) newErrors.bedrooms = 'Number of bedrooms is required';
+      return data.monthlyRent && data.bedrooms && data.advanceDuration;
     } else if (step === 3) {
-      if (!formData.agentName) newErrors.agentName = 'Your name is required';
-      if (!formData.agentPhone) newErrors.agentPhone = 'Phone number is required';
-      if (!formData.agentEmail) newErrors.agentEmail = 'Email is required';
+      return data.agentName && data.agentPhone && data.agentEmail;
     }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return true;
   };
 
-  const handleNext = () => {
+  const handleNext = (e) => {
+    e.preventDefault();
     if (validateStep(currentStep)) {
       setCurrentStep(prev => Math.min(prev + 1, 4));
     }
   };
 
-  const handlePrevious = () => {
+  const handlePrevious = (e) => {
+    e.preventDefault();
     setCurrentStep(prev => Math.max(prev - 1, 1));
   };
 
-  const handleSubmit = () => {
-    if (validateStep(3)) {
-      console.log('Form submitted:', formData, images);
-      alert('Property listing submitted successfully! Our team will review it within 24 hours.');
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (validateStep(currentStep)) {
+      const formData = new FormData();
+      
+      // Add all form fields
+      formData.append('title', data.title);
+      formData.append('propertyType', data.propertyType);
+      formData.append('area', data.area);
+      formData.append('city', data.city);
+      formData.append('address', data.address || '');
+      formData.append('monthlyRent', data.monthlyRent);
+      formData.append('advanceDuration', data.advanceDuration);
+      formData.append('bedrooms', data.bedrooms);
+      formData.append('bathrooms', data.bathrooms || '0');
+      formData.append('amenities', JSON.stringify(data.amenities));
+      formData.append('description', data.description || '');
+      formData.append('agentName', data.agentName);
+      formData.append('agentPhone', data.agentPhone);
+      formData.append('agentEmail', data.agentEmail);
+      
+      // Add images - each image as a separate field
+      images.forEach((image, index) => {
+        if (image.file) {
+          formData.append(`images[]`, image.file);
+        }
+      });
+      
+      post('/rent', {
+        data: formData,
+        forceFormData: true,
+        onSuccess: () => {
+          alert('Listing submitted successfully!');
+          reset();
+          setImages([]);
+          setCurrentStep(1);
+        },
+        onError: (errors) => {
+          console.error('Submission errors:', errors);
+        }
+      });
     }
   };
 
@@ -121,27 +141,6 @@ const AddRentalPage = () => {
       `}</style>
 
       <div className="min-h-screen" style={{ backgroundColor: 'hsl(40 33% 98%)' }}>
-        <Header />
-        {/* <div className="bg-white shadow-sm" style={{ borderBottom: '1px solid hsl(40 20% 88%)' }}>
-          <div className="container mx-auto px-4 py-6">
-            <div className="flex items-center gap-3">
-              <div 
-                className="flex h-10 w-10 items-center justify-center rounded-lg"
-                style={{ backgroundColor: 'hsl(174 62% 32%)' }}
-              >
-                <Home className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold tracking-tight" style={{ color: 'hsl(200 25% 15%)' }}>
-                  List Your Property
-                </h1>
-                <p className="text-sm" style={{ color: 'hsl(200 15% 45%)' }}>
-                  Build your reputation with transparent listings
-                </p>
-              </div>
-            </div>
-          </div>
-        </div> */}
 
         {/* Progress Steps */}
         <div className="bg-white shadow-sm">
@@ -188,7 +187,7 @@ const AddRentalPage = () => {
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-3xl mx-auto">
             <div className="bg-white rounded-xl shadow-lg p-6 md:p-8" style={{ borderColor: 'hsl(40 20% 88%)' }}>
-              
+              <form onSubmit={handleSubmit}>
               {/* Step 1: Property Details */}
               {currentStep === 1 && (
                 <div className="space-y-6">
@@ -207,8 +206,8 @@ const AddRentalPage = () => {
                     </label>
                     <input
                       type="text"
-                      value={formData.title}
-                      onChange={(e) => handleInputChange('title', e.target.value)}
+                      value={data.title}
+                      onChange={(e) => setData('title', e.target.value)}
                       placeholder="e.g., 2 Bedroom Self-Contained Apartment"
                       className="w-full px-4 py-3 border rounded-lg focus:ring-2 transition-all"
                       style={{ borderColor: errors.title ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)' }}
@@ -226,8 +225,8 @@ const AddRentalPage = () => {
                         Property Type *
                       </label>
                       <select
-                        value={formData.propertyType}
-                        onChange={(e) => handleInputChange('propertyType', e.target.value)}
+                        value={data.propertyType}
+                        onChange={(e) => setData('propertyType', e.target.value)}
                         className="w-full px-4 py-3 border rounded-lg focus:ring-2 transition-all appearance-none"
                         style={{ borderColor: errors.propertyType ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)' }}
                       >
@@ -248,8 +247,8 @@ const AddRentalPage = () => {
                         City *
                       </label>
                       <select
-                        value={formData.city}
-                        onChange={(e) => handleInputChange('city', e.target.value)}
+                        value={data.city}
+                        onChange={(e) => setData('city', e.target.value)}
                         className="w-full px-4 py-3 border rounded-lg focus:ring-2 transition-all appearance-none"
                         style={{ borderColor: errors.city ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)' }}
                       >
@@ -274,8 +273,8 @@ const AddRentalPage = () => {
                       <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5" style={{ color: 'hsl(200 15% 45%)' }} />
                       <input
                         type="text"
-                        value={formData.area}
-                        onChange={(e) => handleInputChange('area', e.target.value)}
+                        value={data.area}
+                        onChange={(e) => setData('area', e.target.value)}
                         placeholder="e.g., East Legon, Spintex"
                         className="w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 transition-all"
                         style={{ borderColor: errors.area ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)' }}
@@ -293,8 +292,8 @@ const AddRentalPage = () => {
                       Full Address
                     </label>
                     <textarea
-                      value={formData.address}
-                      onChange={(e) => handleInputChange('address', e.target.value)}
+                      value={data.address}
+                      onChange={(e) => setData('address', e.target.value)}
                       placeholder="Enter the complete address (optional)"
                       rows={3}
                       className="w-full px-4 py-3 border rounded-lg focus:ring-2 transition-all resize-none"
@@ -325,8 +324,8 @@ const AddRentalPage = () => {
                         <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5" style={{ color: 'hsl(200 15% 45%)' }} />
                         <input
                           type="number"
-                          value={formData.monthlyRent}
-                          onChange={(e) => handleInputChange('monthlyRent', e.target.value)}
+                          value={data.monthlyRent}
+                          onChange={(e) => setData('monthlyRent', e.target.value)}
                           placeholder="1500"
                           className="w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 transition-all"
                           style={{ borderColor: errors.monthlyRent ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)' }}
@@ -346,8 +345,8 @@ const AddRentalPage = () => {
                       <div className="relative">
                         <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5" style={{ color: 'hsl(200 15% 45%)' }} />
                         <select
-                          value={formData.advanceDuration}
-                          onChange={(e) => handleInputChange('advanceDuration', e.target.value)}
+                          value={data.advanceDuration}
+                          onChange={(e) => setData('advanceDuration', e.target.value)}
                           className="w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 transition-all appearance-none"
                           style={{ borderColor: 'hsl(40 20% 88%)' }}
                         >
@@ -368,8 +367,8 @@ const AddRentalPage = () => {
                       </label>
                       <input
                         type="number"
-                        value={formData.bedrooms}
-                        onChange={(e) => handleInputChange('bedrooms', e.target.value)}
+                        value={data.bedrooms}
+                        onChange={(e) => setData('bedrooms', e.target.value)}
                         placeholder="2"
                         min="0"
                         className="w-full px-4 py-3 border rounded-lg focus:ring-2 transition-all"
@@ -388,8 +387,8 @@ const AddRentalPage = () => {
                       </label>
                       <input
                         type="number"
-                        value={formData.bathrooms}
-                        onChange={(e) => handleInputChange('bathrooms', e.target.value)}
+                        value={data.bathrooms}
+                        onChange={(e) => setData('bathrooms', e.target.value)}
                         placeholder="1"
                         min="0"
                         className="w-full px-4 py-3 border rounded-lg focus:ring-2 transition-all"
@@ -410,12 +409,12 @@ const AddRentalPage = () => {
                           onClick={() => handleAmenityToggle(amenity)}
                           className="px-4 py-2 rounded-lg border text-sm font-medium transition-all"
                           style={{
-                            borderColor: formData.amenities.includes(amenity) ? 'hsl(174 62% 32%)' : 'hsl(40 20% 88%)',
-                            backgroundColor: formData.amenities.includes(amenity) ? 'hsl(174 62% 32% / 0.1)' : 'white',
-                            color: formData.amenities.includes(amenity) ? 'hsl(174 62% 32%)' : 'hsl(200 25% 15%)'
+                            borderColor: data.amenities.includes(amenity) ? 'hsl(174 62% 32%)' : 'hsl(40 20% 88%)',
+                            backgroundColor: data.amenities.includes(amenity) ? 'hsl(174 62% 32% / 0.1)' : 'white',
+                            color: data.amenities.includes(amenity) ? 'hsl(174 62% 32%)' : 'hsl(200 25% 15%)'
                           }}
                         >
-                          {formData.amenities.includes(amenity) && <CheckCircle2 className="inline h-4 w-4 mr-1" />}
+                          {data.amenities.includes(amenity) && <CheckCircle2 className="inline h-4 w-4 mr-1" />}
                           {amenity}
                         </button>
                       ))}
@@ -427,8 +426,8 @@ const AddRentalPage = () => {
                       Property Description
                     </label>
                     <textarea
-                      value={formData.description}
-                      onChange={(e) => handleInputChange('description', e.target.value)}
+                      value={data.description}
+                      onChange={(e) => setData('description', e.target.value)}
                       placeholder="Describe the property, its condition, nearby facilities, and any other relevant details..."
                       rows={5}
                       className="w-full px-4 py-3 border rounded-lg focus:ring-2 transition-all resize-none"
@@ -472,6 +471,7 @@ const AddRentalPage = () => {
                                 <img src={image.preview} alt={image.name} className="w-full h-full object-cover" />
                               </div>
                               <button
+                                type="button"
                                 onClick={() => removeImage(image.id)}
                                 className="absolute top-2 right-2 p-1 rounded-full transition-opacity opacity-0 group-hover:opacity-100"
                                 style={{ backgroundColor: 'hsl(0 72% 51%)' }}
@@ -515,8 +515,8 @@ const AddRentalPage = () => {
                     </label>
                     <input
                       type="text"
-                      value={formData.agentName}
-                      onChange={(e) => handleInputChange('agentName', e.target.value)}
+                      value={data.agentName}
+                      onChange={(e) => setData('agentName', e.target.value)}
                       placeholder="Full name or business name"
                       className="w-full px-4 py-3 border rounded-lg focus:ring-2 transition-all"
                       style={{ borderColor: errors.agentName ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)' }}
@@ -534,8 +534,8 @@ const AddRentalPage = () => {
                     </label>
                     <input
                       type="tel"
-                      value={formData.agentPhone}
-                      onChange={(e) => handleInputChange('agentPhone', e.target.value)}
+                      value={data.agentPhone}
+                      onChange={(e) => setData('agentPhone', e.target.value)}
                       placeholder="+233 XX XXX XXXX"
                       className="w-full px-4 py-3 border rounded-lg focus:ring-2 transition-all"
                       style={{ borderColor: errors.agentPhone ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)' }}
@@ -553,8 +553,8 @@ const AddRentalPage = () => {
                     </label>
                     <input
                       type="email"
-                      value={formData.agentEmail}
-                      onChange={(e) => handleInputChange('agentEmail', e.target.value)}
+                      value={data.agentEmail}
+                      onChange={(e) => setData('agentEmail', e.target.value)}
                       placeholder="your@email.com"
                       className="w-full px-4 py-3 border rounded-lg focus:ring-2 transition-all"
                       style={{ borderColor: errors.agentEmail ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)' }}
@@ -582,31 +582,49 @@ const AddRentalPage = () => {
 
                   <div className="space-y-4">
                     <div className="p-4 rounded-lg" style={{ backgroundColor: 'hsl(40 30% 94%)' }}>
+                      <h3 className="font-semibold mb-3" style={{ color: 'hsl(200 25% 15%)' }}>Property Details</h3>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span style={{ color: 'hsl(200 15% 45%)' }}>Title:</span>
+                          <span style={{ color: 'hsl(200 25% 15%)' }}>{data.title}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span style={{ color: 'hsl(200 15% 45%)' }}>Type:</span>
+                          <span style={{ color: 'hsl(200 25% 15%)' }}>{data.propertyType}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span style={{ color: 'hsl(200 15% 45%)' }}>Location:</span>
+                          <span style={{ color: 'hsl(200 25% 15%)' }}>{data.area}, {data.city}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="p-4 rounded-lg" style={{ backgroundColor: 'hsl(40 30% 94%)' }}>
                       <h3 className="font-semibold mb-3" style={{ color: 'hsl(200 25% 15%)' }}>Pricing & Features</h3>
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
                           <span style={{ color: 'hsl(200 15% 45%)' }}>Monthly Rent:</span>
                           <span className="font-semibold" style={{ color: 'hsl(174 62% 32%)' }}>
-                            GH₵{formData.monthlyRent ? Number(formData.monthlyRent).toLocaleString() : '0'}
+                            GH₵{data.monthlyRent ? Number(data.monthlyRent).toLocaleString() : '0'}
                           </span>
                         </div>
                         <div className="flex justify-between">
                           <span style={{ color: 'hsl(200 15% 45%)' }}>Advance Duration:</span>
-                          <span style={{ color: 'hsl(200 25% 15%)' }}>{formData.advanceDuration} {formData.advanceDuration === '1' ? 'Year' : 'Years'}</span>
+                          <span style={{ color: 'hsl(200 25% 15%)' }}>{data.advanceDuration} {data.advanceDuration === '1' ? 'Year' : 'Years'}</span>
                         </div>
                         <div className="flex justify-between">
                           <span style={{ color: 'hsl(200 15% 45%)' }}>Bedrooms:</span>
-                          <span style={{ color: 'hsl(200 25% 15%)' }}>{formData.bedrooms || '0'}</span>
+                          <span style={{ color: 'hsl(200 25% 15%)' }}>{data.bedrooms || '0'}</span>
                         </div>
                         <div className="flex justify-between">
                           <span style={{ color: 'hsl(200 15% 45%)' }}>Bathrooms:</span>
-                          <span style={{ color: 'hsl(200 25% 15%)' }}>{formData.bathrooms || '0'}</span>
+                          <span style={{ color: 'hsl(200 25% 15%)' }}>{data.bathrooms || '0'}</span>
                         </div>
-                        {formData.amenities.length > 0 && (
+                        {data.amenities.length > 0 && (
                           <div className="pt-2 mt-2 border-t" style={{ borderColor: 'hsl(40 20% 88%)' }}>
                             <span className="block mb-2" style={{ color: 'hsl(200 15% 45%)' }}>Amenities:</span>
                             <div className="flex flex-wrap gap-2">
-                              {formData.amenities.map(amenity => (
+                              {data.amenities.map(amenity => (
                                 <span 
                                   key={amenity}
                                   className="px-2 py-1 rounded text-xs font-medium"
@@ -629,15 +647,15 @@ const AddRentalPage = () => {
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
                           <span style={{ color: 'hsl(200 15% 45%)' }}>Name:</span>
-                          <span style={{ color: 'hsl(200 25% 15%)' }}>{formData.agentName}</span>
+                          <span style={{ color: 'hsl(200 25% 15%)' }}>{data.agentName}</span>
                         </div>
                         <div className="flex justify-between">
                           <span style={{ color: 'hsl(200 15% 45%)' }}>Phone:</span>
-                          <span style={{ color: 'hsl(200 25% 15%)' }}>{formData.agentPhone}</span>
+                          <span style={{ color: 'hsl(200 25% 15%)' }}>{data.agentPhone}</span>
                         </div>
                         <div className="flex justify-between">
                           <span style={{ color: 'hsl(200 15% 45%)' }}>Email:</span>
-                          <span style={{ color: 'hsl(200 25% 15%)' }}>{formData.agentEmail}</span>
+                          <span style={{ color: 'hsl(200 25% 15%)' }}>{data.agentEmail}</span>
                         </div>
                       </div>
                     </div>
@@ -684,7 +702,9 @@ const AddRentalPage = () => {
               <div className="flex justify-between pt-6 border-t mt-8" style={{ borderColor: 'hsl(40 20% 88%)' }}>
                 {currentStep > 1 ? (
                   <button
+                    type="button"
                     onClick={handlePrevious}
+                    disabled={processing}
                     className="px-6 py-3 rounded-lg font-semibold transition-colors border"
                     style={{ 
                       borderColor: 'hsl(40 20% 88%)',
@@ -699,7 +719,9 @@ const AddRentalPage = () => {
 
                 {currentStep < 4 ? (
                   <button
+                    type="button"
                     onClick={handleNext}
+                    disabled={processing}
                     className="px-6 py-3 rounded-lg font-semibold text-white transition-all duration-200 active:scale-95"
                     style={{ backgroundColor: 'hsl(174 62% 32%)' }}
                   >
@@ -707,21 +729,22 @@ const AddRentalPage = () => {
                   </button>
                 ) : (
                   <button
-                    onClick={handleSubmit}
-                    className="px-6 py-3 rounded-lg font-semibold transition-all duration-200 active:scale-95"
+                    type="submit"
+                    disabled={processing}
+                    className="px-6 py-3 rounded-lg font-semibold transition-all duration-200 active:scale-95 disabled:opacity-50"
                     style={{ 
                       background: 'linear-gradient(135deg, hsl(38 92% 50%) 0%, hsl(30 90% 45%) 100%)',
                       color: 'hsl(200 25% 10%)'
                     }}
                   >
-                    Submit Listing
+                    {processing ? 'Submitting...' : 'Submit Listing'}
                   </button>
                 )}
               </div>
+              </form>
             </div>
           </div>
         </div>
-        <Footer />
       </div>
     </>
   );

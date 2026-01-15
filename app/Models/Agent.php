@@ -3,8 +3,9 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 
-class Agent extends Model
+class Agent extends Authenticatable
 {
     protected $fillable = [
         'fullName',
@@ -14,6 +15,10 @@ class Agent extends Model
         'type',
         'fee',
         'bio',
+        'password',
+    ];
+
+    protected $hidden = [
         'password',
     ];
 }

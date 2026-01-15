@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
 use App\Models\Agent;
 
 class AgentController extends Controller
@@ -31,8 +32,15 @@ class AgentController extends Controller
         // Hash the password before storing
         $validated['password'] = Hash::make($validated['password']);
 
-        Agent::create($validated);
+        $agent = Agent::create($validated);
+
+        Auth::guard('agent')->login($agent);
 
         return redirect('/agent-dashboard')->with('success', 'Agent account created successfully!');
+    }
+
+    public function agentDashboard() {
+        $agentData = Auth::guard('agent')->user();
+        return inertia('Dashboards/AgentDashboard', ['agentData' => $agentData]);
     }
 }

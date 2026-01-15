@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Header from "@/Components/Layouts/Header";
 import Footer from "@/Components/Layouts/Footer";
+import AddRentalPage from "@/Pages/AddRentals";
 
 // Icon components
 const Shield = ({ style }) => (
@@ -46,15 +47,6 @@ const AlertCircle = ({ style }) => (
 );
 
 // Mock data
-const mockAgent = {
-  name: "Kofi Mensah",
-  company_name: "Prime Properties Ghana",
-  verification_status: "verified",
-  avatar_url: null,
-  average_rating: 4.7,
-  total_reviews: 24
-};
-
 const mockProperties = [
   {
     id: "1",
@@ -112,12 +104,20 @@ const mockClaims = [
   }
 ];
 
-const AgentDashboardPage = () => {
+const AgentDashboardPage = ({ agentData }) => {
   const [activeTab, setActiveTab] = useState("listings");
   const [respondingTo, setRespondingTo] = useState(null);
   const [responseText, setResponseText] = useState("");
+  const [showAddListingModal, setShowAddListingModal] = useState(false);
 
-  const agent = mockAgent;
+  const agent = {
+    name: agentData?.fullName || "Unknown Agent",
+    company: agentData?.company || null,
+    verification_status: "verified",
+    avatar_url: null,
+    average_rating: 4.7,
+    total_reviews: 24
+  };
   const properties = mockProperties;
   const reviews = mockReviews;
   const claims = mockClaims;
@@ -243,8 +243,8 @@ const AgentDashboardPage = () => {
                     <h1 className="text-2xl font-bold" style={{ color: 'hsl(200 25% 15%)' }}>{agent.name}</h1>
                     {getStatusBadge(agent.verification_status)}
                   </div>
-                  {agent.company_name && (
-                    <p style={{ color: 'hsl(200 15% 45%)', marginBottom: '0.5rem' }}>{agent.company_name}</p>
+                  {agent.company && (
+                    <p style={{ color: 'hsl(200 15% 45%)', marginBottom: '0.5rem' }}>{agent.company}</p>
                   )}
                   <div style={{ display: 'flex', gap: '1rem', fontSize: '0.875rem', flexWrap: 'wrap' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: 'hsl(200 15% 45%)' }}>
@@ -317,20 +317,22 @@ const AgentDashboardPage = () => {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <h2 className="text-lg font-semibold" style={{ color: 'hsl(200 25% 15%)' }}>Your Listings</h2>
-                    <button style={{
-                      padding: '0.5rem 1rem',
-                      background: 'linear-gradient(135deg, hsl(174 62% 32%) 0%, hsl(174 50% 25%) 100%)',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '0.5rem',
-                      fontWeight: '500',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.5rem'
-                    }}>
+                    <button 
+                      onClick={() => setShowAddListingModal(true)}
+                      style={{
+                        padding: '0.5rem 1rem',
+                        background: 'linear-gradient(135deg, hsl(174 62% 32%) 0%, hsl(174 50% 25%) 100%)',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '0.5rem',
+                        fontWeight: '500',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem'
+                      }}>
                       <Shield style={{ height: '1rem', width: '1rem' }} />
-                      Claim a Listing
+                      Add Listing
                     </button>
                   </div>
 
@@ -564,6 +566,53 @@ const AgentDashboardPage = () => {
         </main>
 
         <Footer />
+
+        {/* Add Listing Modal */}
+        {showAddListingModal && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 50,
+            padding: '1rem'
+          }}>
+            <div style={{
+              backgroundColor: 'white',
+              borderRadius: '1rem',
+              maxHeight: '90vh',
+              overflow: 'auto',
+              maxWidth: '60%',
+              width: '100%',
+              position: 'relative'
+            }}>
+              <button
+                onClick={() => setShowAddListingModal(false)}
+                style={{
+                  position: 'sticky',
+                  top: 0,
+                  right: 0,
+                  padding: '1rem',
+                  border: 'none',
+                  background: 'transparent',
+                  fontSize: '1.5rem',
+                  cursor: 'pointer',
+                  color: 'hsl(200 15% 45%)',
+                  float: 'right',
+                  zIndex: 10
+                }}
+              >
+                ✕
+              </button>
+              <AddRentalPage />
+            </div>
+          </div>
+        )}
       </div>
     </>
   );
