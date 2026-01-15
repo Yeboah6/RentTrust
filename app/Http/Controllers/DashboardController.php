@@ -13,6 +13,7 @@ class DashboardController extends Controller
         $agentData = Auth::guard('agent')->user();
 
         $rentals = Rental::where('agent_id', $agentData->id)->get();
+        // dd($rentals);
 
         return inertia('Dashboards/AgentDashboard', ['agentData' => $agentData, 'rentals' => $rentals]);
     }

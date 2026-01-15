@@ -46,29 +46,6 @@ const AlertCircle = ({ style }) => (
   </svg>
 );
 
-// Mock data
-const mockProperties = [
-  {
-    id: "1",
-    title: "2 Bedroom Self-Contained",
-    address: "123 Oxford Street",
-    city: "Accra",
-    rent_min: 1500,
-    rent_max: 2000,
-    listing_status: "verified",
-    total_reviews: 5
-  },
-  {
-    id: "2",
-    title: "3 Bedroom House",
-    address: "45 Ring Road",
-    city: "Tema",
-    rent_min: 2500,
-    rent_max: 3000,
-    listing_status: "pending",
-    total_reviews: 2
-  }
-];
 
 const mockReviews = [
   {
@@ -125,9 +102,9 @@ const AgentDashboardPage = ({ agentData, rentals }) => {
         title: rental.title || "Unknown",
         address: rental.address || "Unknown Address",
         city: rental.city || "Unknown City",
-        rent_min: rental.monthlyRent || 0,
-        rent_max: rental.monthlyRent || 0,
-        listing_status: "verified",
+        rent_min: rental.rentMin || 0,
+        rent_max: rental.rentMax || 0,
+        listing_status: rental.status || "unverified",
         total_reviews: 0
       }))
     : [];
@@ -368,7 +345,7 @@ const AgentDashboardPage = ({ agentData, rentals }) => {
                                 {property.address}, {property.city}
                               </p>
                               <p className="font-medium" style={{ fontSize: '0.875rem', color: 'hsl(174 62% 32%)' }}>
-                                GH₵{Math.round(property.rent_min).toLocaleString()}
+                                GH₵{Math.round(property.rent_min).toLocaleString()} - GH₵{Math.round(property.rent_max).toLocaleString()}
                               </p>
                             </div>
                             {getStatusBadge(property.listing_status)}
