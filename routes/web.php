@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\RentController;
 use App\Http\Controllers\AgentController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\DashboardController;
 
 Route::resource('rent', RentController::class) -> except('index');
 
@@ -21,15 +22,20 @@ Route::get('/property-detail', [RentController::class, 'propertyDetail']);
 Route::get('/report-listings', [RentController::class, 'reportListings']);
 Route::get('/review-forms', [RentController::class, 'reviewForms']);
 
-Route::get('agents', [AgentController::class, 'agent']);
+Route::get('/agents', [AgentController::class, 'agent']) -> name('agents.page');
 Route::get('/become-agent', [AgentController::class, 'becomeAgent']);
 Route::post('/become-agent', [AgentController::class, 'storeBecomeAgent']);
 
 // Route::get('/add-rentals', [RentController::class, 'addRentals']);
 // Route::post('/add/rentals', [RentController::class, 'store']);
 
-Route::get('/agent-dashboard', [AgentController::class, 'agentDashboard']);
-Route::get('/super-admin', [RentController::class, 'superAdmin']);
+// Protected Agent Routes
+Route::middleware('agent')->group(function () {
+    Route::get('/agent-dashboard', [DashboardController::class, 'agentDashboard']);
+    Route::post('/rent', [RentController::class, 'store']);
+});
+
+Route::get('/super-admin', [DashboardController::class, 'superAdmin']);
 
 
 Route::get('/sign-up', [AuthController::class, 'signUp']);

@@ -39,8 +39,4 @@ class AgentController extends Controller
         return redirect('/agent-dashboard')->with('success', 'Agent account created successfully!');
     }
 
-    public function agentDashboard() {
-        $agentData = Auth::guard('agent')->user();
-        return inertia('Dashboards/AgentDashboard', ['agentData' => $agentData]);
-    }
 }

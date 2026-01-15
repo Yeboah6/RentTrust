@@ -104,7 +104,7 @@ const mockClaims = [
   }
 ];
 
-const AgentDashboardPage = ({ agentData }) => {
+const AgentDashboardPage = ({ agentData, rentals }) => {
   const [activeTab, setActiveTab] = useState("listings");
   const [respondingTo, setRespondingTo] = useState(null);
   const [responseText, setResponseText] = useState("");
@@ -118,7 +118,21 @@ const AgentDashboardPage = ({ agentData }) => {
     average_rating: 4.7,
     total_reviews: 24
   };
-  const properties = mockProperties;
+
+  const properties = rentals && rentals.length > 0 
+    ? rentals.map(rental => ({
+        id: rental.id,
+        title: rental.title || "Unknown",
+        address: rental.address || "Unknown Address",
+        city: rental.city || "Unknown City",
+        rent_min: rental.monthlyRent || 0,
+        rent_max: rental.monthlyRent || 0,
+        listing_status: "verified",
+        total_reviews: 0
+      }))
+    : [];
+
+  // const properties = mockProperties;
   const reviews = mockReviews;
   const claims = mockClaims;
 
@@ -249,7 +263,7 @@ const AgentDashboardPage = ({ agentData }) => {
                   <div style={{ display: 'flex', gap: '1rem', fontSize: '0.875rem', flexWrap: 'wrap' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: 'hsl(200 15% 45%)' }}>
                       <Home style={{ height: '1rem', width: '1rem' }} />
-                      {properties.length} Listings
+                      {properties.length} {properties.length === 1 ? 'Listing' : 'Listings'}
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: 'hsl(200 15% 45%)' }}>
                       <Star style={{ height: '1rem', width: '1rem' }} />
@@ -337,55 +351,70 @@ const AgentDashboardPage = ({ agentData }) => {
                   </div>
 
                   <div className="grid md:grid-cols-2 gap-4">
-                    {properties.map((property) => (
-                      <div key={property.id} style={{
+                    {properties.length > 0 ? (
+                      properties.map((property) => (
+                        <div key={property.id} style={{
+                          backgroundColor: 'white',
+                          border: '1px solid hsl(40 20% 88%)',
+                          borderRadius: '0.75rem',
+                          padding: '1rem'
+                        }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '1rem' }}>
+                            <div>
+                              <h3 className="font-medium" style={{ color: 'hsl(200 25% 15%)', marginBottom: '0.25rem' }}>
+                                {property.title}
+                              </h3>
+                              <p style={{ fontSize: '0.875rem', color: 'hsl(200 15% 45%)', marginBottom: '0.5rem' }}>
+                                {property.address}, {property.city}
+                              </p>
+                              <p className="font-medium" style={{ fontSize: '0.875rem', color: 'hsl(174 62% 32%)' }}>
+                                GH₵{Math.round(property.rent_min).toLocaleString()}
+                              </p>
+                            </div>
+                            {getStatusBadge(property.listing_status)}
+                          </div>
+                          <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <button style={{
+                              padding: '0.375rem 0.75rem',
+                              border: '1px solid hsl(40 20% 88%)',
+                              borderRadius: '0.375rem',
+                              backgroundColor: 'white',
+                              color: 'hsl(174 62% 32%)',
+                              fontSize: '0.875rem',
+                              fontWeight: '500',
+                              cursor: 'pointer'
+                            }}>
+                              View
+                            </button>
+                            <button style={{
+                              padding: '0.375rem 0.75rem',
+                              border: '1px solid hsl(40 20% 88%)',
+                              borderRadius: '0.375rem',
+                              backgroundColor: 'white',
+                              color: 'hsl(174 62% 32%)',
+                              fontSize: '0.875rem',
+                              fontWeight: '500',
+                              cursor: 'pointer'
+                            }}>
+                              Edit
+                            </button>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div style={{
+                        gridColumn: '1 / -1',
+                        padding: '2rem',
+                        textAlign: 'center',
                         backgroundColor: 'white',
                         border: '1px solid hsl(40 20% 88%)',
-                        borderRadius: '0.75rem',
-                        padding: '1rem'
+                        borderRadius: '0.75rem'
                       }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '1rem' }}>
-                          <div>
-                            <h3 className="font-medium" style={{ color: 'hsl(200 25% 15%)', marginBottom: '0.25rem' }}>
-                              {property.title}
-                            </h3>
-                            <p style={{ fontSize: '0.875rem', color: 'hsl(200 15% 45%)', marginBottom: '0.5rem' }}>
-                              {property.address}, {property.city}
-                            </p>
-                            <p className="font-medium" style={{ fontSize: '0.875rem', color: 'hsl(174 62% 32%)' }}>
-                              GH₵{property.rent_min.toLocaleString()} - GH₵{property.rent_max.toLocaleString()}
-                            </p>
-                          </div>
-                          {getStatusBadge(property.listing_status)}
-                        </div>
-                        <div style={{ display: 'flex', gap: '0.5rem' }}>
-                          <button style={{
-                            padding: '0.375rem 0.75rem',
-                            border: '1px solid hsl(40 20% 88%)',
-                            borderRadius: '0.375rem',
-                            backgroundColor: 'white',
-                            color: 'hsl(174 62% 32%)',
-                            fontSize: '0.875rem',
-                            fontWeight: '500',
-                            cursor: 'pointer'
-                          }}>
-                            View
-                          </button>
-                          <button style={{
-                            padding: '0.375rem 0.75rem',
-                            border: '1px solid hsl(40 20% 88%)',
-                            borderRadius: '0.375rem',
-                            backgroundColor: 'white',
-                            color: 'hsl(174 62% 32%)',
-                            fontSize: '0.875rem',
-                            fontWeight: '500',
-                            cursor: 'pointer'
-                          }}>
-                            Edit
-                          </button>
-                        </div>
+                        <p style={{ color: 'hsl(200 15% 45%)', marginBottom: '1rem' }}>
+                          No listings yet. Add your first property to get started!
+                        </p>
                       </div>
-                    ))}
+                    )}
                   </div>
                 </div>
               )}

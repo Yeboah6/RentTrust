@@ -6,6 +6,7 @@ use App\Models\Rental;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 
 class RentController extends Controller
 {
@@ -30,67 +31,131 @@ class RentController extends Controller
      */
     public function store(Request $request)
     {
-        // Validate the request
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'propertyType' => 'required|string|max:100',
-            'city' => 'required|string|max:100',
-            'area' => 'required|string|max:100',
-            'address' => 'nullable|string|max:500',
-            'monthlyRent' => 'required|numeric|min:0',
-            'advanceDuration' => 'required|integer|min:1|max:5',
-            'bedrooms' => 'required|integer|min:0',
-            'bathrooms' => 'nullable|integer|min:0',
-            'amenities' => 'nullable|string',
-            'description' => 'nullable|string|max:2000',
-            'agentName' => 'required|string|max:255',
-            'agentPhone' => 'required|string|max:20',
-            'agentEmail' => 'required|email|max:255',
-            'images.*' => 'nullable|file|mimes:jpeg,png,jpg,svg|max:5120', // 5MB max per image
-        ]);
-
-        // Get the authenticated agent
+        // Get authenticated agent
         $agent = Auth::guard('agent')->user();
         
         if (!$agent) {
-            return redirect()->back()->with('error', 'You must be logged in as an agent to add rentals.');
+            return response()->json([
+                'message' => 'Unauthorized. Please login as an agent.'
+            ], 401);
         }
 
-        // Handle multiple image uploads
-        $imagePaths = [];
-        if ($request->hasFile('images')) {
-            foreach ($request->file('images') as $image) {
-                $path = $image->storeAs('rentals', 'public');
-                $imagePaths[] = $path;
+        $amenities = $request->amenities;
+        
+        // If amenities is an array, encode it to JSON
+        if (is_array($amenities)) {
+            $amenities = json_encode($amenities);
+        }
+
+        // Replace amenities in request with JSON string
+        $request->merge(['amenities' => $amenities]);
+
+        // Validate required fields
+        $validator = Validator::make($request->all(), [
+            'title' => 'required|string|max:255',
+            'propertyType' => 'required|string|max:50',
+            'city' => 'required|string|max:100',
+            'area' => 'required|string|max:255',
+            'address' => 'nullable|string|max:500',
+            'monthlyRent' => 'required|numeric|min:0',
+            'advanceDuration' => 'required|in:1,2,3,4,5',
+            'bedrooms' => 'required|integer|min:0',
+            'bathrooms' => 'nullable|integer|min:0',
+            'description' => 'nullable|string',
+            'agentName' => 'required|string|max:255',
+            'agentPhone' => 'required|string|max:20',
+            'agentEmail' => 'required|email|max:255',
+            'amenities' => 'nullable|string', // JSON string from frontend
+            'images' => 'nullable|array',
+            'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:5120', // 5MB max
+        ], [
+            'title.required' => 'Property title is required',
+            'propertyType.required' => 'Property type is required',
+            'city.required' => 'City is required',
+            'area.required' => 'Area/Neighborhood is required',
+            'monthlyRent.required' => 'Monthly rent is required',
+            'monthlyRent.numeric' => 'Monthly rent must be a valid number',
+            'bedrooms.required' => 'Number of bedrooms is required',
+            'bedrooms.integer' => 'Bedrooms must be a whole number',
+            'agentName.required' => 'Your name is required',
+            'agentPhone.required' => 'Phone number is required',
+            'agentPhone.max' => 'Phone number is too long',
+            'agentEmail.required' => 'Email address is required',
+            'agentEmail.email' => 'Please provide a valid email address',
+            'images.*.image' => 'Each image must be a valid image file',
+            'images.*.mimes' => 'Images must be in JPEG, PNG, JPG, or GIF format',
+            'images.*.max' => 'Each image must not exceed 5MB',
+        ]);
+
+         if ($validator->fails()) {
+            // For Inertia, we need to return a redirect back with errors
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput();
+        }
+
+        try {
+           // Decode amenities JSON string to array for storage
+            $amenitiesArray = [];
+            if (!empty($amenities)) {
+                $decoded = json_decode($amenities, true);
+                if (is_array($decoded)) {
+                    $amenitiesArray = $decoded;
+                }
             }
+
+            // Create rental listing
+           $rentalListing = Rental::create([
+                'agent_id' => $agent->id,
+                'title' => $request->title,
+                'property_type' => $request->propertyType,
+                'city' => $request->city,
+                'area' => $request->area,
+                'address' => $request->address,
+                'monthly_rent' => $request->monthlyRent,
+                'advance_duration' => $request->advanceDuration,
+                'bedrooms' => $request->bedrooms,
+                'bathrooms' => $request->bathrooms ?? 0,
+                'amenities' => $amenitiesArray,
+                'description' => $request->description,
+                'agent_name' => $request->agentName,
+                'agent_phone' => $request->agentPhone,
+                'agent_email' => $request->agentEmail,
+                'status' => 'pending',
+                // 'is_active' => true,
+            ]);
+
+            // Handle image uploads if present
+            if ($request->hasFile('images')) {
+                $displayOrder = 0;
+                foreach ($request->file('images') as $image) {
+                    if ($image->isValid()) {
+                        // Generate unique filename
+                        $filename = 'rental_' . $rentalListing->id . '_' . time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
+                        
+                        // Store image
+                        $path = $image->storeAs('rental_images', $filename, 'public');
+                        
+                        // Create image record
+                        RentalImage::create([
+                            'rental_listing_id' => $rentalListing->id,
+                            'image_path' => $path,
+                            'image_url' => Storage::disk('public')->url($path),
+                            'is_primary' => ($displayOrder === 0), // First image is primary
+                            'display_order' => $displayOrder++,
+                        ]);
+                    }
+                }
+            }
+
+        } catch (\Exception $e) {
+            \Log::error('Failed to create rental listing: ' . $e->getMessage());
+            
+            return response()->json([
+                'message' => 'Failed to create rental listing. Please try again.',
+                'error' => config('app.debug') ? $e->getMessage() : null
+            ], 500);
         }
-
-        // Map camelCase form fields to snake_case database columns
-        $rentalData = new Rental();
-
-        $rentalData = [
-            'agentId' => $agent->id,
-            'title' => $validated['title'],
-            'propertyType' => $validated['propertyType'],
-            'city' => $validated['city'],
-            'area' => $validated['area'],
-            'address' => $validated['address'] ?? null,
-            'monthlyRent' => $validated['monthlyRent'],
-            'advanceDuration' => $validated['advanceDuration'],
-            'bedrooms' => $validated['bedrooms'],
-            'bathrooms' => $validated['bathrooms'] ?? 0,
-            'amenities' => $validated['amenities'] ?? '[]',
-            'description' => $validated['description'] ?? null,
-            'agentName' => $validated['agentName'],
-            'agentPhone' => $validated['agentPhone'],
-            'agentEmail' => $validated['agentEmail'],
-            'images' => json_encode($imagePaths),
-        ];
-
-        // Create the rental listing
-        $rental = Rental::create($rentalData);
-
-        return redirect()->back()->with('success', 'Rental listing added successfully!');
     }
 
     /**
@@ -143,10 +208,6 @@ class RentController extends Controller
 
     public function reviews() {
         return inertia('ReviewsPage');
-    }
-
-    public function superAdmin() {
-        return inertia('Dashboards/SuperAdmin');
     }
 
     public function propertyDetail() {

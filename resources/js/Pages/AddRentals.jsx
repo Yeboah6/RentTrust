@@ -10,11 +10,13 @@ const AddRentalPage = () => {
     area: '',
     city: '',
     address: '',
-    monthlyRent: '',
+    rentMin: '',
+    rentMax: '',
     advanceDuration: '1',
     bedrooms: '',
     bathrooms: '',
     amenities: [],
+    images: [],
     description: '',
     agentName: '',
     agentPhone: '',
@@ -54,7 +56,7 @@ const AddRentalPage = () => {
     if (step === 1) {
       return data.title && data.propertyType && data.city && data.area;
     } else if (step === 2) {
-      return data.monthlyRent && data.bedrooms && data.advanceDuration;
+      return data.rentMin && data.rentMax && data.bedrooms && data.advanceDuration;
     } else if (step === 3) {
       return data.agentName && data.agentPhone && data.agentEmail;
     }
@@ -84,11 +86,18 @@ const AddRentalPage = () => {
       formData.append('area', data.area);
       formData.append('city', data.city);
       formData.append('address', data.address || '');
-      formData.append('monthlyRent', data.monthlyRent);
+      formData.append('rentMin', data.rentMin);
+      formData.append('rentMax', data.rentMax);
       formData.append('advanceDuration', data.advanceDuration);
       formData.append('bedrooms', data.bedrooms);
       formData.append('bathrooms', data.bathrooms || '0');
-      formData.append('amenities', JSON.stringify(data.amenities));
+
+      // Ensure amenities is always a string
+    const amenitiesString = Array.isArray(data.amenities) 
+      ? JSON.stringify(data.amenities) 
+      : data.amenities || '[]';
+    formData.append('amenities', amenitiesString);
+
       formData.append('description', data.description || '');
       formData.append('agentName', data.agentName);
       formData.append('agentPhone', data.agentPhone);
@@ -97,12 +106,11 @@ const AddRentalPage = () => {
       // Add images - each image as a separate field
       images.forEach((image, index) => {
         if (image.file) {
-          formData.append(`images[]`, image.file);
+          formData.append(`images[${index}]`, image.file);
         }
       });
       
-      post('/rent', {
-        data: formData,
+      post('/rent', formData, {
         forceFormData: true,
         onSuccess: () => {
           alert('Listing submitted successfully!');
@@ -318,45 +326,67 @@ const AddRentalPage = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium mb-2" style={{ color: 'hsl(200 25% 15%)' }}>
-                        Monthly Rent (GH₵) *
+                        Rent Minimum (GH₵) *
                       </label>
                       <div className="relative">
                         <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5" style={{ color: 'hsl(200 15% 45%)' }} />
                         <input
                           type="number"
-                          value={data.monthlyRent}
-                          onChange={(e) => setData('monthlyRent', e.target.value)}
+                          value={data.rentMin}
+                          onChange={(e) => setData('rentMin', e.target.value)}
                           placeholder="1500"
                           className="w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 transition-all"
-                          style={{ borderColor: errors.monthlyRent ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)' }}
+                          style={{ borderColor: errors.rentMin ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)' }}
                         />
                       </div>
-                      {errors.monthlyRent && (
+                      {errors.rentMin && (
                         <p className="text-sm mt-1 flex items-center gap-1" style={{ color: 'hsl(0 72% 51%)' }}>
-                          <AlertCircle className="h-4 w-4" /> {errors.monthlyRent}
+                          <AlertCircle className="h-4 w-4" /> {errors.rentMin}
                         </p>
                       )}
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium mb-2" style={{ color: 'hsl(200 25% 15%)' }}>
-                        Advance Duration *
+                        Rent Maximum (GH₵) *
                       </label>
                       <div className="relative">
-                        <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5" style={{ color: 'hsl(200 15% 45%)' }} />
-                        <select
-                          value={data.advanceDuration}
-                          onChange={(e) => setData('advanceDuration', e.target.value)}
-                          className="w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 transition-all appearance-none"
-                          style={{ borderColor: 'hsl(40 20% 88%)' }}
-                        >
-                          <option value="1">1 Year</option>
-                          <option value="2">2 Years</option>
-                          <option value="3">3 Years</option>
-                          <option value="4">4 Years</option>
-                          <option value="5">5 Years</option>
-                        </select>
+                        <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5" style={{ color: 'hsl(200 15% 45%)' }} />
+                        <input
+                          type="number"
+                          value={data.rentMax}
+                          onChange={(e) => setData('rentMax', e.target.value)}
+                          placeholder="2500"
+                          className="w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 transition-all"
+                          style={{ borderColor: errors.rentMax ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)' }}
+                        />
                       </div>
+                      {errors.rentMax && (
+                        <p className="text-sm mt-1 flex items-center gap-1" style={{ color: 'hsl(0 72% 51%)' }}>
+                          <AlertCircle className="h-4 w-4" /> {errors.rentMax}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2" style={{ color: 'hsl(200 25% 15%)' }}>
+                      Advance Duration *
+                    </label>
+                    <div className="relative">
+                      <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5" style={{ color: 'hsl(200 15% 45%)' }} />
+                      <select
+                        value={data.advanceDuration}
+                        onChange={(e) => setData('advanceDuration', e.target.value)}
+                        className="w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 transition-all appearance-none"
+                        style={{ borderColor: 'hsl(40 20% 88%)' }}
+                      >
+                        <option value="1">1 Year</option>
+                        <option value="2">2 Years</option>
+                        <option value="3">3 Years</option>
+                        <option value="4">4 Years</option>
+                        <option value="5">5 Years</option>
+                      </select>
                     </div>
                   </div>
 
@@ -605,7 +635,8 @@ const AddRentalPage = () => {
                         <div className="flex justify-between">
                           <span style={{ color: 'hsl(200 15% 45%)' }}>Monthly Rent:</span>
                           <span className="font-semibold" style={{ color: 'hsl(174 62% 32%)' }}>
-                            GH₵{data.monthlyRent ? Number(data.monthlyRent).toLocaleString() : '0'}
+                            GH₵{data.rentMin ? Number(data.rentMin).toLocaleString() : '0'} - 
+                             GH₵{data.rentMax ? Number(data.rentMax).toLocaleString() : '0'}
                           </span>
                         </div>
                         <div className="flex justify-between">

@@ -13,23 +13,28 @@ return new class extends Migration
     {
         Schema::create('rentals', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('agent_id')->constrained('agents')->onDelete('cascade');
+            $table->foreignId('agent_id')->constrained('agents')->onDelete('cascade');  
             $table->string('title');
-            $table->string('propertyType');
+            $table->string('property_type');
             $table->string('city');
             $table->string('area');
-            $table->string('address')->nullable();
-            $table->decimal('monthlyRent', 10, 2);
+            $table->text('address')->nullable();
+            $table->decimal('rent_min', 10, 2);
+            $table->decimal('rent_max', 10, 2);
+            $table->integer('advance_duration')->default(1); // in years
             $table->integer('bedrooms');
-            $table->integer('bathrooms');
-            $table->integer('advanceDuration');
-            $table->text('description')->nullable();
-            $table->string('agentName');
-            $table->string('agentPhone');
-            $table->string('agentEmail');
+            $table->integer('bathrooms')->default(0);
             $table->json('amenities')->nullable();
-            $table->json('images')->nullable();
+            $table->text('description')->nullable();
+            $table->string('agent_name');
+            $table->string('agent_phone');
+            $table->string('agent_email');
+            $table->enum('status', ['pending', 'approved', 'rejected', 'rented'])->default('pending');
             $table->timestamps();
+
+            $table->index(['city', 'area']);
+            $table->index(['rent_min', 'bedrooms']);
+            $table->index('status');
         });
     }
 
