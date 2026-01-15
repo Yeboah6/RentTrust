@@ -57,7 +57,8 @@ class RentController extends Controller
             'city' => 'required|string|max:100',
             'area' => 'required|string|max:255',
             'address' => 'nullable|string|max:500',
-            'monthlyRent' => 'required|numeric|min:0',
+            'rentMin' => 'required|numeric|min:0',
+            'rentMax' => 'required|numeric|min:0|gte:rentMin',
             'advanceDuration' => 'required|in:1,2,3,4,5',
             'bedrooms' => 'required|integer|min:0',
             'bathrooms' => 'nullable|integer|min:0',
@@ -73,8 +74,11 @@ class RentController extends Controller
             'propertyType.required' => 'Property type is required',
             'city.required' => 'City is required',
             'area.required' => 'Area/Neighborhood is required',
-            'monthlyRent.required' => 'Monthly rent is required',
-            'monthlyRent.numeric' => 'Monthly rent must be a valid number',
+            'rentMin.required' => 'Minimum rent is required',
+            'rentMin.numeric' => 'Minimum rent must be a valid number',
+            'rentMax.required' => 'Maximum rent is required',
+            'rentMax.numeric' => 'Maximum rent must be a valid number',
+            'rentMax.gte' => 'Maximum rent must be greater than or equal to minimum rent',
             'bedrooms.required' => 'Number of bedrooms is required',
             'bedrooms.integer' => 'Bedrooms must be a whole number',
             'agentName.required' => 'Your name is required',
@@ -112,7 +116,8 @@ class RentController extends Controller
                 'city' => $request->city,
                 'area' => $request->area,
                 'address' => $request->address,
-                'monthly_rent' => $request->monthlyRent,
+                'rent_min' => $request->rentMin,
+                'rent_max' => $request->rentMax,
                 'advance_duration' => $request->advanceDuration,
                 'bedrooms' => $request->bedrooms,
                 'bathrooms' => $request->bathrooms ?? 0,
@@ -126,6 +131,7 @@ class RentController extends Controller
             ]);
 
             // Handle image uploads if present
+            $imagePaths = [];
             if ($request->hasFile('images')) {
                 $displayOrder = 0;
                 foreach ($request->file('images') as $image) {
