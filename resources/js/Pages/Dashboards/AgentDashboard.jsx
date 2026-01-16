@@ -104,8 +104,8 @@ const AgentDashboardPage = ({ agentData, rentals }) => {
         title: rental.title || "Unknown",
         address: rental.address || "Unknown Address",
         city: rental.city || "Unknown City",
-        rent_min: rental.rentMin || 0,
-        rent_max: rental.rentMax || 0,
+        rent_min: rental.rent_min || 0,
+        rent_max: rental.rent_max || 0,
         listing_status: rental.status || "unverified",
         total_reviews: 0
       }))
@@ -349,7 +349,7 @@ const AgentDashboardPage = ({ agentData, rentals }) => {
                     </button>
                   </div>
 
-                  <div className="grid md:grid-cols-2 gap-4">
+                  <div className="grid md:grid-cols-3 gap-4">
                     {properties.length > 0 ? (
                       properties.map((property) => (
                         <div key={property.id} style={{

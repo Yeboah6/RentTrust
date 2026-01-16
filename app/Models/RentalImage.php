@@ -18,11 +18,12 @@ class RentalImage extends Model
     ];
 
     protected $casts = [
-        'is_primary' => 'boolean'
+        'is_primary' => 'boolean',
+        'display_order' => 'integer',
     ];
 
-    public function rentalListing()
+    public function rental()
     {
-        return $this->belongsTo(RentalListing::class);
+        return $this->belongsTo(Rental::class);
     }
 }

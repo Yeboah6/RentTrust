@@ -30,10 +30,12 @@ return new class extends Migration
             $table->string('agent_phone');
             $table->string('agent_email');
             $table->enum('status', ['pending', 'approved', 'rejected', 'rented'])->default('pending');
+            $table->boolean('is_verified')->default(false);
+            $table->boolean('is_claimed')->default(false);
             $table->timestamps();
 
             $table->index(['city', 'area']);
-            $table->index(['rent_min', 'bedrooms']);
+            $table->index(['rent_min', 'rent_max']);
             $table->index('status');
         });
     }

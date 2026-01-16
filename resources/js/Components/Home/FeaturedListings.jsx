@@ -2,79 +2,19 @@ import React, { useState } from 'react';
 import { Link } from "@inertiajs/react";
 import { ArrowRight, MapPin, Star, CheckCircle2, Shield } from 'lucide-react';
 
-// Sample data
-const sampleListings = [
-  {
-    id: "1",
-    title: "2 Bedroom Self-Contained",
-    area: "East Legon",
-    city: "Accra",
-    rentMin: 1500,
-    rentMax: 2000,
-    advanceDuration: 2,
-    agentName: "Kofi Mensah",
-    isVerified: true,
-    isClaimed: true,
-    reviewCount: 12,
-    rating: 4.5,
-  },
-  {
-    id: "2",
-    title: "1 Bedroom Apartment",
-    area: "Spintex",
-    city: "Accra",
-    rentMin: 800,
-    rentMax: 1200,
-    advanceDuration: 1,
-    agentName: "Ama Serwaa",
-    isVerified: true,
-    isClaimed: true,
-    reviewCount: 8,
-    rating: 4.2,
-  },
-  {
-    id: "3",
-    title: "3 Bedroom House",
-    area: "Tema Community 25",
-    city: "Tema",
-    rentMin: 2500,
-    rentMax: 3500,
-    advanceDuration: 2,
-    agentName: null,
-    isVerified: false,
-    isClaimed: false,
-    reviewCount: 3,
-    rating: 3.8,
-  },
-  {
-    id: "4",
-    title: "Chamber and Hall",
-    area: "Achimota",
-    city: "Accra",
-    rentMin: 500,
-    rentMax: 700,
-    advanceDuration: 1,
-    agentName: "Emmanuel Boateng",
-    isVerified: false,
-    isClaimed: true,
-    reviewCount: 5,
-    rating: 4.0,
-  },
-];
-
 const PropertyCard = ({ 
   id, 
   title, 
   area, 
   city, 
-  rentMin, 
-  rentMax, 
-  advanceDuration, 
-  agentName, 
-  isVerified, 
-  isClaimed, 
-  reviewCount, 
-  rating 
+  rent_min, 
+  rent_max, 
+  advance_duration, 
+  agent_name, 
+  is_verified, 
+  is_claimed, 
+  // reviewCount, 
+  // rating 
 }) => {
   const [isHovered, setIsHovered] = useState(false);
 
@@ -120,21 +60,21 @@ const PropertyCard = ({
             Monthly Rent
           </div>
           <div className="text-xl font-bold" style={{ color: 'hsl(174 62% 32%)' }}>
-            {formatPrice(rentMin)} - {formatPrice(rentMax)}
+            {formatPrice(rent_min)} - {formatPrice(rent_max)}
           </div>
           <div className="text-xs" style={{ color: 'hsl(200 15% 45%)' }}>
-            {advanceDuration} {advanceDuration === 1 ? 'year' : 'years'} advance
+            {advance_duration} {advance_duration === 1 ? 'year' : 'years'} advance
           </div>
         </div>
 
         {/* Agent Info */}
-        {agentName && (
+        {agent_name && (
           <div className="mb-3 pb-3 border-b" style={{ borderColor: 'hsl(40 20% 88%)' }}>
             <div className="flex items-center gap-2">
               <span className="text-sm" style={{ color: 'hsl(200 15% 45%)' }}>
-                Agent: {agentName}
+                Agent: {agent_name}
               </span>
-              {isVerified && (
+              {is_verified && (
                 <div className="inline-flex items-center gap-1">
                   <Shield className="h-3 w-3" style={{ color: 'hsl(152 60% 40%)' }} />
                 </div>
@@ -148,16 +88,16 @@ const PropertyCard = ({
           <div className="flex items-center gap-1">
             <Star className="h-4 w-4 fill-current" style={{ color: 'hsl(38 92% 50%)' }} />
             <span className="font-semibold" style={{ color: 'hsl(200 25% 15%)' }}>
-              {rating.toFixed(1)}
+              {/* {rating.toFixed(1)} */}
             </span>
             <span className="text-sm" style={{ color: 'hsl(200 15% 45%)' }}>
-              ({reviewCount})
+              {/* ({reviewCount}) */}
             </span>
           </div>
           
           {/* Badges */}
           <div className="flex gap-2">
-            {isVerified && (
+            {is_verified && (
               <span 
                 className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium"
                 style={{ 
@@ -176,7 +116,34 @@ const PropertyCard = ({
   );
 };
 
-const FeaturedListings = () => {
+const FeaturedListings = ({ recentListings = [] }) => {
+  // Show message if no listings available
+  if (!recentListings || recentListings.length === 0) {
+    return (
+      <>
+        <style>{`
+          @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+          
+          * {
+            font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+          }
+        `}</style>
+
+        <section className="py-16" style={{ backgroundColor: 'hsl(40 33% 98%)' }}>
+          <div className="container mx-auto px-4">
+            <div className="text-center py-12">
+              <h2 className="text-2xl font-bold mb-2" style={{ color: 'hsl(200 25% 15%)' }}>
+                No Listings Available
+              </h2>
+              <p style={{ color: 'hsl(200 15% 45%)' }}>
+                Check back soon for new property listings
+              </p>
+            </div>
+          </div>
+        </section>
+      </>
+    );
+  }
 
   return (
     <>
@@ -215,7 +182,7 @@ const FeaturedListings = () => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {sampleListings.map((listing) => (
+            {recentListings.map((listing) => (
               <PropertyCard key={listing.id} {...listing} />
             ))}
           </div>

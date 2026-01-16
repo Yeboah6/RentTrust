@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, usePage } from "@inertiajs/react";
-import { Menu, X, Search, User, LogOut } from 'lucide-react';
+import { Menu, X, Search, User, LogOut, LayoutDashboard } from 'lucide-react';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -9,6 +9,7 @@ const Header = () => {
 
   const isAgentLoggedIn = auth?.agent;
   const isTenantLoggedIn = auth?.user;
+  const isAnyUserLoggedIn = isAgentLoggedIn || isTenantLoggedIn;
 
   return (
     <>
@@ -102,25 +103,11 @@ const Header = () => {
                 </Link>
               </>
             )}
-            {isAgentLoggedIn && (
-              <Link
-                href="/agent-dashboard"
-                onMouseEnter={() => setActiveLink('dashboard')}
-                onMouseLeave={() => setActiveLink(null)}
-                className="px-4 py-2 text-sm font-medium transition-all rounded-lg"
-                style={{ 
-                  color: activeLink === 'dashboard' ? 'hsl(200 25% 15%)' : 'hsl(200 15% 45%)',
-                  backgroundColor: activeLink === 'dashboard' ? 'hsl(40 30% 94%)' : 'transparent'
-                }}
-              >
-                Dashboard
-              </Link>
-            )}
           </nav>
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center gap-3">
-            {!isAgentLoggedIn && !isTenantLoggedIn && (
+            {!isAnyUserLoggedIn && (
               <>
                 <button
                   className="p-2 rounded-lg transition-colors"
@@ -159,23 +146,77 @@ const Header = () => {
                 </Link>
               </>
             )}
+            
+            {/* Agent Logged In */}
             {isAgentLoggedIn && (
-              <form action="/logout" method="POST" style={{ display: 'inline' }}>
-                <button
-                  type="submit"
+              <>
+                <Link
+                  href="/agent-dashboard"
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(40 30% 94%)'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
                   className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg border transition-colors"
                   style={{ 
-                    borderColor: 'hsl(0 70% 50%)',
-                    color: 'hsl(0 70% 50%)',
+                    borderColor: 'hsl(40 20% 88%)',
+                    color: 'hsl(200 25% 15%)',
                     backgroundColor: 'white'
                   }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(0 70% 50% / 0.1)'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
                 >
-                  <LogOut className="h-4 w-4 mr-2" />
-                  Logout
-                </button>
-              </form>
+                  <LayoutDashboard className="h-4 w-4 mr-2" />
+                  Dashboard
+                </Link>
+                <form action="/logout" method="POST" style={{ display: 'inline' }}>
+                  <button
+                    type="submit"
+                    className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg border transition-colors"
+                    style={{ 
+                      borderColor: 'hsl(0 70% 50%)',
+                      color: 'hsl(0 70% 50%)',
+                      backgroundColor: 'white'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(0 70% 50% / 0.1)'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
+                  >
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Logout
+                  </button>
+                </form>
+              </>
+            )}
+
+            {/* Tenant Logged In */}
+            {isTenantLoggedIn && !isAgentLoggedIn && (
+              <>
+                <Link
+                  href="/tenant-dashboard"
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(40 30% 94%)'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
+                  className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg border transition-colors"
+                  style={{ 
+                    borderColor: 'hsl(40 20% 88%)',
+                    color: 'hsl(200 25% 15%)',
+                    backgroundColor: 'white'
+                  }}
+                >
+                  <LayoutDashboard className="h-4 w-4 mr-2" />
+                  Dashboard
+                </Link>
+                <form action="/logout" method="POST" style={{ display: 'inline' }}>
+                  <button
+                    type="submit"
+                    className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg border transition-colors"
+                    style={{ 
+                      borderColor: 'hsl(0 70% 50%)',
+                      color: 'hsl(0 70% 50%)',
+                      backgroundColor: 'white'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(0 70% 50% / 0.1)'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
+                  >
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Logout
+                  </button>
+                </form>
+              </>
             )}
           </div>
 
@@ -194,7 +235,7 @@ const Header = () => {
         <div
           className="mobile-menu md:hidden overflow-hidden bg-white"
           style={{ 
-            maxHeight: isMenuOpen ? '384px' : '0',
+            maxHeight: isMenuOpen ? '500px' : '0',
             borderTop: isMenuOpen ? '1px solid hsl(40 20% 88%)' : 'none'
           }}
         >
@@ -239,19 +280,10 @@ const Header = () => {
                 </Link>
               </>
             )}
-            {isAgentLoggedIn && (
-              <Link
-                href="/agent-dashboard"
-                className="block px-4 py-3 text-sm font-medium rounded-lg transition-colors"
-                style={{ color: 'hsl(200 25% 15%)' }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(40 30% 94%)'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-              >
-                Dashboard
-              </Link>
-            )}
+            
             <div className="pt-4 space-y-2 border-t mt-4" style={{ borderColor: 'hsl(40 20% 88%)' }}>
-              {!isAgentLoggedIn && !isTenantLoggedIn && (
+              {/* Not Logged In */}
+              {!isAnyUserLoggedIn && (
                 <>
                   <Link
                     href="/sign-up"
@@ -274,16 +306,61 @@ const Header = () => {
                   </Link>
                 </>
               )}
+              
+              {/* Agent Logged In */}
               {isAgentLoggedIn && (
-                <form action="/logout" method="POST">
-                  <button
-                    type="submit"
-                    className="w-full px-4 py-3 text-sm font-semibold rounded-lg text-white transition-colors"
-                    style={{ backgroundColor: 'hsl(0 70% 50%)' }}
+                <>
+                  <Link
+                    href="/agent-dashboard"
+                    className="w-full inline-flex items-center justify-start px-4 py-3 text-sm font-medium rounded-lg border transition-colors"
+                    style={{ 
+                      borderColor: 'hsl(40 20% 88%)',
+                      color: 'hsl(200 25% 15%)',
+                      backgroundColor: 'white'
+                    }}
                   >
-                    Logout
-                  </button>
-                </form>
+                    <LayoutDashboard className="h-4 w-4 mr-2" />
+                    Dashboard
+                  </Link>
+                  <form action="/logout" method="POST">
+                    <button
+                      type="submit"
+                      className="w-full inline-flex items-center justify-start px-4 py-3 text-sm font-semibold rounded-lg text-white transition-colors"
+                      style={{ backgroundColor: 'hsl(0 70% 50%)' }}
+                    >
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Logout
+                    </button>
+                  </form>
+                </>
+              )}
+
+              {/* Tenant Logged In */}
+              {isTenantLoggedIn && !isAgentLoggedIn && (
+                <>
+                  <Link
+                    href="/tenant-dashboard"
+                    className="w-full inline-flex items-center justify-start px-4 py-3 text-sm font-medium rounded-lg border transition-colors"
+                    style={{ 
+                      borderColor: 'hsl(40 20% 88%)',
+                      color: 'hsl(200 25% 15%)',
+                      backgroundColor: 'white'
+                    }}
+                  >
+                    <LayoutDashboard className="h-4 w-4 mr-2" />
+                    Dashboard
+                  </Link>
+                  <form action="/logout" method="POST">
+                    <button
+                      type="submit"
+                      className="w-full inline-flex items-center justify-start px-4 py-3 text-sm font-semibold rounded-lg text-white transition-colors"
+                      style={{ backgroundColor: 'hsl(0 70% 50%)' }}
+                    >
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Logout
+                    </button>
+                  </form>
+                </>
               )}
             </div>
           </nav>

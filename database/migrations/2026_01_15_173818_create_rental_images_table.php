@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('rental_images', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('rental_id')->constrained()->onDelete('cascade');
+            $table->foreignId('rental_id')->constrained('rentals')->onDelete('cascade');
             $table->string('image_path');
             $table->string('image_url');
             $table->boolean('is_primary')->default(false);
@@ -21,6 +21,7 @@ return new class extends Migration
             $table->timestamps();
             
             $table->index(['rental_id', 'is_primary']);
+            $table->index('display_order');
         });
     }
 

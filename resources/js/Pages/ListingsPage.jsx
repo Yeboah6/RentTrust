@@ -40,93 +40,6 @@ const ChevronDown = ({ className, style }) => (
   </svg>
 );
 
-const listings = [
-  {
-    id: "1",
-    title: "2 Bedroom Self-Contained",
-    area: "East Legon",
-    city: "Accra",
-    rentMin: 1500,
-    rentMax: 2000,
-    advanceDuration: 2,
-    agentName: "Kofi Mensah",
-    isVerified: true,
-    isClaimed: true,
-    reviewCount: 12,
-    rating: 4.5,
-  },
-  {
-    id: "2",
-    title: "1 Bedroom Apartment",
-    area: "Spintex",
-    city: "Accra",
-    rentMin: 800,
-    rentMax: 1200,
-    advanceDuration: 1,
-    agentName: "Ama Serwaa",
-    isVerified: true,
-    isClaimed: true,
-    reviewCount: 8,
-    rating: 4.2,
-  },
-  {
-    id: "3",
-    title: "3 Bedroom House",
-    area: "Tema Community 25",
-    city: "Tema",
-    rentMin: 2500,
-    rentMax: 3500,
-    advanceDuration: 2,
-    agentName: null,
-    isVerified: false,
-    isClaimed: false,
-    reviewCount: 3,
-    rating: 3.8,
-  },
-  {
-    id: "4",
-    title: "Chamber and Hall",
-    area: "Achimota",
-    city: "Accra",
-    rentMin: 500,
-    rentMax: 700,
-    advanceDuration: 1,
-    agentName: "Emmanuel Boateng",
-    isVerified: false,
-    isClaimed: true,
-    reviewCount: 5,
-    rating: 4.0,
-  },
-  {
-    id: "5",
-    title: "Studio Apartment",
-    area: "Osu",
-    city: "Accra",
-    rentMin: 1200,
-    rentMax: 1500,
-    advanceDuration: 2,
-    agentName: "Grace Owusu",
-    isVerified: true,
-    isClaimed: true,
-    reviewCount: 15,
-    rating: 4.7,
-  },
-  {
-    id: "6",
-    title: "4 Bedroom Townhouse",
-    area: "Cantonments",
-    city: "Accra",
-    rentMin: 4000,
-    rentMax: 5000,
-    advanceDuration: 2,
-    agentName: "Daniel Asare",
-    isVerified: true,
-    isClaimed: true,
-    reviewCount: 6,
-    rating: 4.3,
-  },
-];
-
 const Dropdown = ({ value, options, onChange, placeholder }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -366,10 +279,34 @@ const PropertyCard = ({ listing }) => {
   );
 };
 
-const ListingsPage = () => {
+const ListingsPage = ({ listings: initialListings = [] }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
   const [sortBy, setSortBy] = useState("recent");
+  const [listings, setListings] = useState(initialListings);
+
+  useEffect(() => {
+    if (initialListings && initialListings.length > 0) {
+      setListings(initialListings);
+    }
+  }, [initialListings]);
+
+const formatListings = (dbListings) => {
+    return dbListings.map(listing => ({
+      id: listing.id,
+      title:`${listing.bedrooms} Bedroom ${listing.property_type}`,
+      area: listing.area || listing.location,
+      city: listing.city || "Accra",
+      rentMin: parseFloat(listing.rent_min) || 0,
+      rentMax: parseFloat(listing.rent_max) || 0,
+      advanceDuration: parseInt(listing.advance_duration) || 1,
+      agentName: listing.agent_name || null,
+      isVerified: Boolean(listing.is_verified),
+      isClaimed: Boolean(listing.is_claimed), 
+      reviewCount: parseInt(listing.review_count) || 0,
+      rating: parseFloat(listing.rating) || 0
+    }));
+  };
 
   const cityOptions = [
     { value: "", label: "All Cities" },
@@ -386,12 +323,28 @@ const ListingsPage = () => {
     { value: "rating", label: "Highest Rated" }
   ];
 
-  const filteredListings = listings.filter(listing => {
+  const formattedListings = formatListings(listings);
+
+  const filteredListings = formattedListings.filter(listing => {
     const matchesSearch = listing.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          listing.area.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          listing.city.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCity = !selectedCity || listing.city.toLowerCase() === selectedCity.toLowerCase();
     return matchesSearch && matchesCity;
+  });
+
+  const sortedListings = [...filteredListings].sort((a, b) => {
+    switch (sortBy) {
+      case "price-low":
+        return a.rentMin - b.rentMin;
+      case "price-high":
+        return b.rentMax - a.rentMax;
+      case "rating":
+        return b.rating - a.rating;
+      case "recent":
+      default:
+        return 0; // Add timestamp field if you want to sort by recent
+    }
   });
 
   return (

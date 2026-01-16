@@ -15,7 +15,12 @@ class RentController extends Controller
      */
     public function index()
     {
-        return inertia('Home');
+        $recentListings = Rental::latest()->get();
+        // dd($recentListings);
+        return inertia('Home', [
+            'recentListings' => $recentListings
+        ]);
+
     }
 
     /**
@@ -41,7 +46,6 @@ class RentController extends Controller
         }
 
         $amenities = $request->amenities;
-        
         // If amenities is an array, encode it to JSON
         if (is_array($amenities)) {
             $amenities = json_encode($amenities);
@@ -127,32 +131,41 @@ class RentController extends Controller
                 'agent_phone' => $request->agentPhone,
                 'agent_email' => $request->agentEmail,
                 'status' => 'pending',
-                // 'is_active' => true,
             ]);
 
             // Handle image uploads if present
-            $imagePaths = [];
-            if ($request->hasFile('images')) {
-                $displayOrder = 0;
-                foreach ($request->file('images') as $image) {
-                    if ($image->isValid()) {
-                        // Generate unique filename
-                        $filename = 'rental_' . $rentalListing->id . '_' . time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
-                        
-                        // Store image
-                        $path = $image->storeAs('rental_images', $filename, 'public');
-                        
-                        // Create image record
-                        RentalImage::create([
-                            'rental_listing_id' => $rentalListing->id,
-                            'image_path' => $path,
-                            'image_url' => Storage::disk('public')->url($path),
-                            'is_primary' => ($displayOrder === 0), // First image is primary
-                            'display_order' => $displayOrder++,
-                        ]);
-                    }
+        if ($request->hasFile('images')) {
+            $displayOrder = 0;
+            
+            foreach ($request->file('images') as $image) {
+                if ($image->isValid()) {
+                    // Generate unique filename
+                    $filename = 'rental_' . $rentalListing->id . '_' . time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
+                    
+                    // Store image in storage/app/public/rental_images
+                    $path = $image->storeAs('rental_images', $filename, 'public');
+                    
+                    // Get full URL for the image
+                    $url = Storage::disk('public')->url($path);
+                    
+                    // Create image record in database
+                    RentalImage::create([
+                        'rental_id' => $rentalListing->id,
+                        'image_path' => $path,
+                        'image_url' => $url,
+                        'is_primary' => ($displayOrder === 0),
+                        'display_order' => $displayOrder,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                    
+                    $displayOrder++;
                 }
             }
+        }
+        // Success response
+        return redirect()->back()
+            ->with('success', 'Rental listing created successfully! It will be reviewed and activated soon.');
 
         } catch (\Exception $e) {
             \Log::error('Failed to create rental listing: ' . $e->getMessage());
@@ -197,7 +210,8 @@ class RentController extends Controller
     }
 
     public function listings() {
-        return inertia('ListingsPage');
+        $listings = Rental::all();
+        return inertia('ListingsPage', ['listings' => $listings]);
     }
 
     public function area() {

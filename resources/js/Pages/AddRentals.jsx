@@ -106,22 +106,32 @@ const AddRentalPage = () => {
       // Add images - each image as a separate field
       images.forEach((image, index) => {
         if (image.file) {
-          formData.append(`images[${index}]`, image.file);
+          formData.append(`images[]`, image.file); // Note: [] is important for array
         }
       });
       
       post('/rent', formData, {
-        forceFormData: true,
-        onSuccess: () => {
-          alert('Listing submitted successfully!');
-          reset();
-          setImages([]);
-          setCurrentStep(1);
-        },
-        onError: (errors) => {
-          console.error('Submission errors:', errors);
-        }
-      });
+      forceFormData: true,
+      headers: {
+        'Accept': 'application/json',
+      },
+      onSuccess: () => {
+        // Clear form and reset state
+        reset();
+        setImages([]);
+        setCurrentStep(1);
+        
+        // Show success message
+        alert('Listing submitted successfully! Our team will review it shortly.');
+        
+        // Optionally redirect to listings page
+        // window.location.href = '/listings';
+      },
+      onError: (errors) => {
+        console.error('Submission errors:', errors);
+        alert('There was an error submitting your listing. Please check all fields and try again.');
+      },
+    });
     }
   };
 
