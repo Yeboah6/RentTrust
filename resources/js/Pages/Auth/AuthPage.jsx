@@ -46,7 +46,7 @@ const validateEmail = (email) => {
 
 const AuthPage = () => {
 
-  const { data, setData, post, processing, errors, reset } = useForm({
+  const { data, setData, post, processing, errors } = useForm({
     fullName: '',
     email: '',
     password: '',
@@ -60,13 +60,7 @@ const AuthPage = () => {
       return;
     }
     
-    post('/sign-up', {
-      data: {
-        ...data,
-        userType: 'tenant'
-      },
-      onSuccess: () => reset(),
-    });
+    post('/sign-up');
   }
 
   const handleLogin = (e) => {
@@ -78,17 +72,16 @@ const AuthPage = () => {
     }
     
     post('/login', {
-      data: {
-        email: data.email,
-        password: data.password,
-        userType: activeTab
-      },
-      onSuccess: () => reset(),
+      email: data.email,
+      password: data.password,
     });
   }
 
+  const handleBack = () => {
+    window.location.href = "/";
+  }
+
   const [isLogin, setIsLogin] = useState(true);
-  const [activeTab, setActiveTab] = useState(isLogin ? "tenant" : "signup");
   const [showPassword, setShowPassword] = useState(false);
 
   return (
@@ -122,7 +115,7 @@ const AuthPage = () => {
           >
             {/* Back Button */}
             <button
-              onClick={() => alert("Navigate to home")}
+              onClick={handleBack}
               style={{
                 position: 'absolute',
                 left: '1rem',
@@ -153,73 +146,13 @@ const AuthPage = () => {
               </h1>
               <p style={{ color: 'hsl(200 15% 45%)', fontSize: '0.875rem' }}>
                 {isLogin
-                  ? `Sign in as ${activeTab === "agent" ? "agent/landlord" : "tenant/user"}`
-                  : "Join RentTrust to help fellow tenants"}
+                  ? "Sign in to your RentWise account"
+                  : "Join RentWise to find your perfect home"}
               </p>
             </div>
 
             {/* Content */}
             <div style={{ padding: '0 2rem 2rem' }}>
-              {/* Tabs - Only show for login */}
-              {isLogin && (
-                <div
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: '1fr 1fr',
-                    gap: '0.5rem',
-                    backgroundColor: 'hsl(40 30% 94%)',
-                    padding: '0.25rem',
-                    borderRadius: '0.5rem',
-                    marginBottom: '1.5rem'
-                  }}
-                >
-                  <button
-                    onClick={() => setActiveTab("tenant")}
-                    style={{
-                      padding: '0.5rem 1rem',
-                      border: 'none',
-                      borderRadius: '0.375rem',
-                      backgroundColor: activeTab === "tenant" ? 'white' : 'transparent',
-                      color: activeTab === "tenant" ? 'hsl(200 25% 15%)' : 'hsl(200 15% 45%)',
-                      fontWeight: '500',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '0.5rem',
-                      transition: 'all 0.2s',
-                      boxShadow: activeTab === "tenant" ? '0 1px 2px 0 hsl(200 25% 15% / 0.05)' : 'none',
-                      fontSize: '0.875rem'
-                    }}
-                  >
-                    <Users style={{ height: '1rem', width: '1rem' }} />
-                    Tenant
-                  </button>
-                  <button
-                    onClick={() => setActiveTab("agent")}
-                    style={{
-                      padding: '0.5rem 1rem',
-                      border: 'none',
-                      borderRadius: '0.375rem',
-                      backgroundColor: activeTab === "agent" ? 'white' : 'transparent',
-                      color: activeTab === "agent" ? 'hsl(200 25% 15%)' : 'hsl(200 15% 45%)',
-                      fontWeight: '500',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '0.5rem',
-                      transition: 'all 0.2s',
-                      boxShadow: activeTab === "agent" ? '0 1px 2px 0 hsl(200 25% 15% / 0.05)' : 'none',
-                      fontSize: '0.875rem'
-                    }}
-                  >
-                    <Building style={{ height: '1rem', width: '1rem' }} />
-                    Agent
-                  </button>
-                </div>
-              )}
-
               {/* Form */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <form onSubmit={isLogin ? handleLogin : handleSignUp}>
@@ -331,6 +264,7 @@ const AuthPage = () => {
                 </div>
 
                 <button
+                  type="submit"
                   disabled={processing}
                   style={{
                     width: '100%',
@@ -357,8 +291,6 @@ const AuthPage = () => {
                 <button
                   onClick={() => {
                     setIsLogin(!isLogin);
-                    setActiveTab(!isLogin ? "tenant" : "signup");
-                    // errors({ email: "", password: "", fullName: "" });
                   }}
                   style={{
                     border: 'none',

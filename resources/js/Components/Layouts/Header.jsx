@@ -1,25 +1,14 @@
 import React, { useState } from 'react';
-import { Link } from "@inertiajs/react";
-import { Menu, X, Search, User } from 'lucide-react';
+import { Link, usePage } from "@inertiajs/react";
+import { Menu, X, Search, User, LogOut } from 'lucide-react';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeLink, setActiveLink] = useState(null);
+  const { auth } = usePage().props;
 
-  const handleSignIn = () => {
-    console.log('Sign in clicked');
-    alert('Opening sign in dialog...');
-  };
-
-  const handleListProperty = () => {
-    console.log('List property clicked');
-    alert('Opening list property form...');
-  };
-
-  const handleSearch = () => {
-    console.log('Search clicked');
-    alert('Opening search...');
-  };
+  const isAgentLoggedIn = auth?.agent;
+  const isTenantLoggedIn = auth?.user;
 
   return (
     <>
@@ -61,94 +50,133 @@ const Header = () => {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-1">
-            <Link
-              href="/listings"
-              onMouseEnter={() => setActiveLink('listings')}
-              onMouseLeave={() => setActiveLink(null)}
-              className="px-4 py-2 text-sm font-medium transition-all rounded-lg"
-              style={{ 
-                color: activeLink === 'listings' ? 'hsl(200 25% 15%)' : 'hsl(200 15% 45%)',
-                backgroundColor: activeLink === 'listings' ? 'hsl(40 30% 94%)' : 'transparent'
-              }}
-            >
-              Find Rentals
-            </Link>
-            <Link
-              href="/areas"
-              onMouseEnter={() => setActiveLink('areas')}
-              onMouseLeave={() => setActiveLink(null)}
-              className="px-4 py-2 text-sm font-medium transition-all rounded-lg"
-              style={{ 
-                color: activeLink === 'areas' ? 'hsl(200 25% 15%)' : 'hsl(200 15% 45%)',
-                backgroundColor: activeLink === 'areas' ? 'hsl(40 30% 94%)' : 'transparent'
-              }}
-            >
-              Areas
-            </Link>
-            <Link
-              href="/agents"
-              onMouseEnter={() => setActiveLink('agents')}
-              onMouseLeave={() => setActiveLink(null)}
-              className="px-4 py-2 text-sm font-medium transition-all rounded-lg"
-              style={{ 
-                color: activeLink === 'agents' ? 'hsl(200 25% 15%)' : 'hsl(200 15% 45%)',
-                backgroundColor: activeLink === 'agents' ? 'hsl(40 30% 94%)' : 'transparent'
-              }}
-            >
-              Agents
-            </Link>
-            <Link
-              href="/calculator"
-              onMouseEnter={() => setActiveLink('calculator')}
-              onMouseLeave={() => setActiveLink(null)}
-              className="px-4 py-2 text-sm font-medium transition-all rounded-lg"
-              style={{ 
-                color: activeLink === 'calculator' ? 'hsl(200 25% 15%)' : 'hsl(200 15% 45%)',
-                backgroundColor: activeLink === 'calculator' ? 'hsl(40 30% 94%)' : 'transparent'
-              }}
-            >
-              Calculator
-            </Link>
+            {!isAgentLoggedIn && (
+              <>
+                <Link
+                  href="/listings"
+                  onMouseEnter={() => setActiveLink('listings')}
+                  onMouseLeave={() => setActiveLink(null)}
+                  className="px-4 py-2 text-sm font-medium transition-all rounded-lg"
+                  style={{ 
+                    color: activeLink === 'listings' ? 'hsl(200 25% 15%)' : 'hsl(200 15% 45%)',
+                    backgroundColor: activeLink === 'listings' ? 'hsl(40 30% 94%)' : 'transparent'
+                  }}
+                >
+                  Find Rentals
+                </Link>
+                <Link
+                  href="/areas"
+                  onMouseEnter={() => setActiveLink('areas')}
+                  onMouseLeave={() => setActiveLink(null)}
+                  className="px-4 py-2 text-sm font-medium transition-all rounded-lg"
+                  style={{ 
+                    color: activeLink === 'areas' ? 'hsl(200 25% 15%)' : 'hsl(200 15% 45%)',
+                    backgroundColor: activeLink === 'areas' ? 'hsl(40 30% 94%)' : 'transparent'
+                  }}
+                >
+                  Areas
+                </Link>
+                <Link
+                  href="/agents"
+                  onMouseEnter={() => setActiveLink('agents')}
+                  onMouseLeave={() => setActiveLink(null)}
+                  className="px-4 py-2 text-sm font-medium transition-all rounded-lg"
+                  style={{ 
+                    color: activeLink === 'agents' ? 'hsl(200 25% 15%)' : 'hsl(200 15% 45%)',
+                    backgroundColor: activeLink === 'agents' ? 'hsl(40 30% 94%)' : 'transparent'
+                  }}
+                >
+                  Agents
+                </Link>
+                <Link
+                  href="/calculator"
+                  onMouseEnter={() => setActiveLink('calculator')}
+                  onMouseLeave={() => setActiveLink(null)}
+                  className="px-4 py-2 text-sm font-medium transition-all rounded-lg"
+                  style={{ 
+                    color: activeLink === 'calculator' ? 'hsl(200 25% 15%)' : 'hsl(200 15% 45%)',
+                    backgroundColor: activeLink === 'calculator' ? 'hsl(40 30% 94%)' : 'transparent'
+                  }}
+                >
+                  Calculator
+                </Link>
+              </>
+            )}
+            {isAgentLoggedIn && (
+              <Link
+                href="/agent-dashboard"
+                onMouseEnter={() => setActiveLink('dashboard')}
+                onMouseLeave={() => setActiveLink(null)}
+                className="px-4 py-2 text-sm font-medium transition-all rounded-lg"
+                style={{ 
+                  color: activeLink === 'dashboard' ? 'hsl(200 25% 15%)' : 'hsl(200 15% 45%)',
+                  backgroundColor: activeLink === 'dashboard' ? 'hsl(40 30% 94%)' : 'transparent'
+                }}
+              >
+                Dashboard
+              </Link>
+            )}
           </nav>
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center gap-3">
-            <button
-              onClick={handleSearch}
-              className="p-2 rounded-lg transition-colors"
-              style={{ 
-                color: 'hsl(200 15% 45%)',
-                backgroundColor: 'transparent'
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(40 30% 94%)'}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-              aria-label="Search"
-            >
-              <Search className="h-5 w-5" />
-            </button>
-            <Link
-              href="/sign-up"
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(40 30% 94%)'}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
-              className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg border transition-colors"
-              style={{ 
-                borderColor: 'hsl(40 20% 88%)',
-                color: 'hsl(200 25% 15%)',
-                backgroundColor: 'white'
-              }}
-            >
-              <User className="h-4 w-4 mr-2" />
-              Sign In
-            </Link>
-            <Link
-              href=""
-              className="px-4 py-2 text-sm font-semibold rounded-lg text-white transition-all duration-200 active:scale-95"
-              style={{ backgroundColor: 'hsl(174 62% 32%)' }}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(174 55% 28%)'}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'hsl(174 62% 32%)'}
-            >
-              List Property
-            </Link>
+            {!isAgentLoggedIn && !isTenantLoggedIn && (
+              <>
+                <button
+                  className="p-2 rounded-lg transition-colors"
+                  style={{ 
+                    color: 'hsl(200 15% 45%)',
+                    backgroundColor: 'transparent'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(40 30% 94%)'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                  aria-label="Search"
+                >
+                  <Search className="h-5 w-5" />
+                </button>
+                <Link
+                  href="/sign-up"
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(40 30% 94%)'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
+                  className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg border transition-colors"
+                  style={{ 
+                    borderColor: 'hsl(40 20% 88%)',
+                    color: 'hsl(200 25% 15%)',
+                    backgroundColor: 'white'
+                  }}
+                >
+                  <User className="h-4 w-4 mr-2" />
+                  Sign In
+                </Link>
+                <Link
+                  href="/become-agent"
+                  className="px-4 py-2 text-sm font-semibold rounded-lg text-white transition-all duration-200 active:scale-95"
+                  style={{ backgroundColor: 'hsl(174 62% 32%)' }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(174 55% 28%)'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'hsl(174 62% 32%)'}
+                >
+                  List Property
+                </Link>
+              </>
+            )}
+            {isAgentLoggedIn && (
+              <form action="/logout" method="POST" style={{ display: 'inline' }}>
+                <button
+                  type="submit"
+                  className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg border transition-colors"
+                  style={{ 
+                    borderColor: 'hsl(0 70% 50%)',
+                    color: 'hsl(0 70% 50%)',
+                    backgroundColor: 'white'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(0 70% 50% / 0.1)'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Logout
+                </button>
+              </form>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -171,79 +199,92 @@ const Header = () => {
           }}
         >
           <nav className="container mx-auto px-4 py-4 space-y-1">
-            <Link
-              href="/listings"
-              onClick={(e) => {
-                e.preventDefault();
-                handleNavClick('Find Rentals', '/listings');
-              }}
-              className="block px-4 py-3 text-sm font-medium rounded-lg transition-colors"
-              style={{ color: 'hsl(200 25% 15%)' }}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(40 30% 94%)'}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-            >
-              Find Rentals
-            </Link>
-            <Link
-              href="/areas"
-              onClick={(e) => {
-                e.preventDefault();
-                handleNavClick('Areas', '/areas');
-              }}
-              className="block px-4 py-3 text-sm font-medium rounded-lg transition-colors"
-              style={{ color: 'hsl(200 25% 15%)' }}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(40 30% 94%)'}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-            >
-              Areas
-            </Link>
-            <Link
-              href="/agents"
-              onClick={(e) => {
-                e.preventDefault();
-                handleNavClick('Agents', '/agents');
-              }}
-              className="block px-4 py-3 text-sm font-medium rounded-lg transition-colors"
-              style={{ color: 'hsl(200 25% 15%)' }}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(40 30% 94%)'}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-            >
-              Agents
-            </Link>
-            <Link
-              href="/calculator"
-              onClick={(e) => {
-                e.preventDefault();
-                handleNavClick('Calculator', '/calculator');
-              }}
-              className="block px-4 py-3 text-sm font-medium rounded-lg transition-colors"
-              style={{ color: 'hsl(200 25% 15%)' }}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(40 30% 94%)'}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-            >
-              Calculator
-            </Link>
+            {!isAgentLoggedIn && (
+              <>
+                <Link
+                  href="/listings"
+                  className="block px-4 py-3 text-sm font-medium rounded-lg transition-colors"
+                  style={{ color: 'hsl(200 25% 15%)' }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(40 30% 94%)'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                >
+                  Find Rentals
+                </Link>
+                <Link
+                  href="/areas"
+                  className="block px-4 py-3 text-sm font-medium rounded-lg transition-colors"
+                  style={{ color: 'hsl(200 25% 15%)' }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(40 30% 94%)'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                >
+                  Areas
+                </Link>
+                <Link
+                  href="/agents"
+                  className="block px-4 py-3 text-sm font-medium rounded-lg transition-colors"
+                  style={{ color: 'hsl(200 25% 15%)' }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(40 30% 94%)'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                >
+                  Agents
+                </Link>
+                <Link
+                  href="/calculator"
+                  className="block px-4 py-3 text-sm font-medium rounded-lg transition-colors"
+                  style={{ color: 'hsl(200 25% 15%)' }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(40 30% 94%)'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                >
+                  Calculator
+                </Link>
+              </>
+            )}
+            {isAgentLoggedIn && (
+              <Link
+                href="/agent-dashboard"
+                className="block px-4 py-3 text-sm font-medium rounded-lg transition-colors"
+                style={{ color: 'hsl(200 25% 15%)' }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(40 30% 94%)'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+              >
+                Dashboard
+              </Link>
+            )}
             <div className="pt-4 space-y-2 border-t mt-4" style={{ borderColor: 'hsl(40 20% 88%)' }}>
-              <Link
-                href="/sign-in"
-                // onClick={handleSignIn}
-                className="w-full inline-flex items-center justify-start px-4 py-3 text-sm font-medium rounded-lg border transition-colors"
-                style={{ 
-                  borderColor: 'hsl(40 20% 88%)',
-                  color: 'hsl(200 25% 15%)',
-                  backgroundColor: 'white'
-                }}
-              >
-                <User className="h-4 w-4 mr-2" />
-                Sign In
-              </Link>
-              <Link
-                href="/"
-                className="w-full px-4 py-3 text-sm font-semibold rounded-lg text-white transition-colors"
-                style={{ backgroundColor: 'hsl(174 62% 32%)' }}
-              >
-                List Property
-              </Link>
+              {!isAgentLoggedIn && !isTenantLoggedIn && (
+                <>
+                  <Link
+                    href="/sign-up"
+                    className="w-full inline-flex items-center justify-start px-4 py-3 text-sm font-medium rounded-lg border transition-colors"
+                    style={{ 
+                      borderColor: 'hsl(40 20% 88%)',
+                      color: 'hsl(200 25% 15%)',
+                      backgroundColor: 'white'
+                    }}
+                  >
+                    <User className="h-4 w-4 mr-2" />
+                    Sign In
+                  </Link>
+                  <Link
+                    href="/become-agent"
+                    className="w-full px-4 py-3 text-sm font-semibold rounded-lg text-white transition-colors"
+                    style={{ backgroundColor: 'hsl(174 62% 32%)' }}
+                  >
+                    List Property
+                  </Link>
+                </>
+              )}
+              {isAgentLoggedIn && (
+                <form action="/logout" method="POST">
+                  <button
+                    type="submit"
+                    className="w-full px-4 py-3 text-sm font-semibold rounded-lg text-white transition-colors"
+                    style={{ backgroundColor: 'hsl(0 70% 50%)' }}
+                  >
+                    Logout
+                  </button>
+                </form>
+              )}
             </div>
           </nav>
         </div>

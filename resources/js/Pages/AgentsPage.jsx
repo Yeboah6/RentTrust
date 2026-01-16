@@ -104,6 +104,15 @@ const agents = [
   },
 ];
 
+  // const agents = {
+  //   name: agentData?.fullName || "Unknown Agent",
+  //   company: agentData?.company || null,
+  //   verification_status: "verified",
+  //   avatar_url: null,
+  //   average_rating: 4.7,
+  //   total_reviews: 24
+  // };
+
 const AgentCard = ({ agent }) => {
   const [isHovered, setIsHovered] = useState(false);
 
@@ -232,10 +241,23 @@ const AgentCard = ({ agent }) => {
   );
 };
 
-const AgentsPage = () => {
+const AgentsPage = ({ agent }) => {
   const [searchQuery, setSearchQuery] = useState("");
 
-  const filteredAgents = agents.filter(
+  const agentsData = agent.map((agentItem) => ({
+    id: agentItem.id,
+    name: agentItem.fullName,
+    isVerified: agentItem.verification_status === 'verified',
+    rating: agentItem.average_rating || 0,
+    reviewCount: agentItem.total_reviews || 0,
+    listingsCount: agentItem.listings_count || 0,
+    areas: agentItem.service_areas ? agentItem.service_areas.split(',').map(a => a.trim()) : [],
+    feePercent: agentItem.fee || 0,
+    responseRate: agentItem.response_rate || 0,
+    company: agentItem.company
+  }));
+
+  const filteredAgents = agentsData.filter(
     (agent) =>
       agent.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       agent.areas.some((area) => area.toLowerCase().includes(searchQuery.toLowerCase()))

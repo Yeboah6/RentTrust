@@ -26,14 +26,15 @@ Route::get('/agents', [AgentController::class, 'agent']) -> name('agents.page');
 Route::get('/become-agent', [AgentController::class, 'becomeAgent']);
 Route::post('/become-agent', [AgentController::class, 'storeBecomeAgent']);
 
-// Route::get('/add-rentals', [RentController::class, 'addRentals']);
-// Route::post('/add/rentals', [RentController::class, 'store']);
-
 // Protected Agent Routes
 Route::middleware('agent')->group(function () {
     Route::get('/agent-dashboard', [DashboardController::class, 'agentDashboard']);
     Route::post('/rent', [RentController::class, 'store']);
 });
+
+Route::get('settings', [AuthController::class, 'settings'])->name('settings.page');
+
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 Route::get('/super-admin', [DashboardController::class, 'superAdmin']);
 

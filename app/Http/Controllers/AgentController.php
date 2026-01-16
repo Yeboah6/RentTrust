@@ -14,7 +14,8 @@ class AgentController extends Controller
     }
 
     public function agent() {
-        return inertia('AgentsPage');
+        $agents = Agent::all();
+        return inertia('AgentsPage', ['agent' => $agents]);
     }
 
     public function storeBecomeAgent(Request $request) {

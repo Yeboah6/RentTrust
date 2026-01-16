@@ -32,36 +32,44 @@ class AuthController extends Controller
     }
 
     public function login(Request $request) {
-        $loginData = $request->validate([
+        $validated = $request->validate([
             'email' => 'required|email',
-            'password' => 'required|string',
-            'userType' => 'required|in:tenant,agent'
+            'password' => 'required|string|min:8'
         ]);
 
-        $userType = $loginData['userType'];
-        $credentials = [
-            'email' => $loginData['email'],
-            'password' => $loginData['password']
-        ];
+        $email = $validated['email'];
+        $password = $validated['password'];
 
-        if ($userType === 'tenant') {
-            $user = Tenant::where('email', $credentials['email'])->first();
-            if ($user && Hash::check($credentials['password'], $user->password)) {
-                Auth::login($user);
-                $request->session()->regenerate();
-                return redirect()->intended('/');
-            }
-        } elseif ($userType === 'agent') {
-            $user = Agent::where('email', $credentials['email'])->first();
-            if ($user && Hash::check($credentials['password'], $user->password)) {
-                Auth::login($user);
-                $request->session()->regenerate();
-                return redirect()->intended('/agent-dashboard');
-            }
+        // Check Tenant table first
+        $tenant = Tenant::where('email', $email)->first();
+        if ($tenant && Hash::check($password, $tenant->password)) {
+            Auth::guard('web')->login($tenant);
+            $request->session()->regenerate();
+            return redirect()->intended('/');
         }
 
+        // Check Agent table
+        $agent = Agent::where('email', $email)->first();
+        if ($agent && Hash::check($password, $agent->password)) {
+            Auth::guard('agent')->login($agent);
+            $request->session()->regenerate();
+            return redirect()->intended('/agent-dashboard');
+        }
+
+        // No user found with matching credentials
         return back()->withErrors([
             'email' => 'The provided credentials do not match our records.',
         ])->onlyInput('email');
+    }
+
+    public function logout(Request $request) {
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+        return redirect('/sign-up');
+    }
+
+    public function settings() {
+        return inertia('Auth/SettingsPage');
     }
 }
