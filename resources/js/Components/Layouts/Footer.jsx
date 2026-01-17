@@ -1,12 +1,8 @@
 import React, { useState } from 'react';
+import { Link } from "@inertiajs/react";
 
 const Footer = () => {
   const [hoveredLink, setHoveredLink] = useState(null);
-
-  const handleLinkClick = (path) => {
-    console.log(`Navigating to: ${path}`);
-    alert(`Navigation to ${path} (React Router would handle this in a full app)`);
-  };
 
   const footerLinks = {
     explore: [
@@ -42,8 +38,8 @@ const Footer = () => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {/* Brand */}
             <div className="col-span-2 md:col-span-1">
-              <button
-                onClick={() => handleLinkClick('/')}
+              <Link
+                href="/"
                 className="flex items-center gap-2 mb-4 hover:opacity-80 transition-opacity"
               >
                 <div 
@@ -55,7 +51,7 @@ const Footer = () => {
                 <span className="text-lg font-bold tracking-tight" style={{ color: 'hsl(200 25% 15%)' }}>
                   RentTrust
                 </span>
-              </button>
+              </Link>
               <p className="text-sm" style={{ color: 'hsl(200 15% 45%)' }}>
                 Empowering tenants with transparent rent information across Ghana.
               </p>
@@ -69,7 +65,8 @@ const Footer = () => {
               <ul className="space-y-2">
                 {footerLinks.explore.map((link) => (
                   <li key={link.path}>
-                    <button
+                    <Link
+                      href={link.path}
                       onClick={() => handleLinkClick(link.path)}
                       onMouseEnter={() => setHoveredLink(link.path)}
                       onMouseLeave={() => setHoveredLink(null)}
@@ -79,7 +76,7 @@ const Footer = () => {
                       }}
                     >
                       {link.label}
-                    </button>
+                    </Link>
                   </li>
                 ))}
               </ul>
