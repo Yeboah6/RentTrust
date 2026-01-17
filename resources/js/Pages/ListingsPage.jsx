@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { Link } from "@inertiajs/react";
 import Header from "../Components/Layouts/Header";
 import Footer from "../Components/Layouts/Footer";
 
@@ -166,7 +167,7 @@ const PropertyCard = ({ listing }) => {
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      onClick={() => alert(`View details for ${listing.title}`)}
+      // onClick={() => alert(`View details for ${listing.title}`)}
     >
       {/* Image placeholder */}
       <div 
@@ -465,7 +466,13 @@ const formatListings = (dbListings) => {
             {/* Listings Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
               {filteredListings.map((listing) => (
-                <PropertyCard key={listing.id} listing={listing} />
+                <Link 
+                  key={listing.id} 
+                  href={`/rent/${listing.id}`}
+                  className="block transition-transform hover:scale-[1.02]"
+                >
+                  <PropertyCard listing={listing} />
+                </Link>
               ))}
             </div>
 

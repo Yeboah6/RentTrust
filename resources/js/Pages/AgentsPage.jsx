@@ -241,7 +241,7 @@ const AgentCard = ({ agent }) => {
   );
 };
 
-const AgentsPage = ({ agent }) => {
+const AgentsPage = ({ agent, listingsCount }) => {
   const [searchQuery, setSearchQuery] = useState("");
 
   const agentsData = agent.map((agentItem) => ({
@@ -250,7 +250,7 @@ const AgentsPage = ({ agent }) => {
     isVerified: agentItem.verification_status === 'verified',
     rating: agentItem.average_rating || 0,
     reviewCount: agentItem.total_reviews || 0,
-    listingsCount: agentItem.listings_count || 0,
+    // listingsCount: listingsCount[agentItem.id] || 0,
     areas: agentItem.service_areas ? agentItem.service_areas.split(',').map(a => a.trim()) : [],
     feePercent: agentItem.fee || 0,
     responseRate: agentItem.response_rate || 0,

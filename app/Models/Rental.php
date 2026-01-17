@@ -39,6 +39,8 @@ class Rental extends Model
         'is_claimed' => 'boolean',
     ];
 
+    protected $with = ['agent'];
+
     public function agent()
     {
         return $this->belongsTo(Agent::class);

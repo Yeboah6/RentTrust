@@ -18,7 +18,7 @@ Route::get('/claim-listings', [RentController::class, 'claimListings']);
 
 Route::get('/calculator', [RentController::class, 'calculate']);
 Route::get('/reviews', [RentController::class, 'reviews']);
-Route::get('/property-detail', [RentController::class, 'propertyDetail']);
+
 Route::get('/report-listings', [RentController::class, 'reportListings']);
 Route::get('/review-forms', [RentController::class, 'reviewForms']);
 

@@ -57,46 +57,29 @@ const Flag = ({ style }) => (
   </svg>
 );
 
-// Mock data
-const property = {
-  title: "2 Bedroom Self-Contained Apartment",
-  description: "Spacious and modern 2-bedroom apartment in a quiet neighborhood. Features include a fully equipped kitchen, modern bathroom facilities, and ample parking space.",
-  address: "123 Oxford Street",
-  city: "Accra",
-  rent_min: 1500,
-  rent_max: 2000,
-  advance_months: 2,
-  bedrooms: 2,
-  bathrooms: 2,
-  amenities: ["Parking", "Security", "Water", "Electricity", "Backup Generator"],
-  listing_status: "verified"
-};
-
-const agent = {
-  name: "Kofi Mensah",
-  company_name: "Prime Properties Ghana",
-  fee_percentage: 10,
-  verification_status: "verified",
-  average_rating: 4.7,
-  total_reviews: 24
-};
-
-const PropertyDetailsPage = () => {
-  const formatCurrency = (amount) => `GH₵${amount.toLocaleString()}`;
+const PropertyDetailsPage = ({ rental }) => {
+  const formatCurrency = (amount) => `GH₵${amount?.toLocaleString() || '0'}`;
   
-  const totalUpfront = property.rent_max * property.advance_months;
-  const agentFee = property.rent_max * (agent.fee_percentage / 100);
+  // Parse amenities if it's a string
+  const amenities = typeof rental.amenities === 'string' 
+    ? JSON.parse(rental.amenities) 
+    : (rental.amenities || []);
+  
+  // Calculate costs
+  const totalUpfront = (rental.rent_max || 0) * (rental.advance_months || 0);
+  const agentFee = (rental.rent_max || 0) * ((rental.agent?.fee_percentage || 0) / 100);
   const estimatedTotal = totalUpfront + agentFee;
 
   const renderStars = (rating) => {
+    const ratingValue = Math.floor(rating || 0);
     return Array.from({ length: 5 }).map((_, i) => (
       <Star
         key={i}
         style={{
           height: '1rem',
           width: '1rem',
-          color: i < rating ? 'hsl(38 92% 50%)' : 'hsl(200 15% 45%)',
-          fill: i < rating ? 'hsl(38 92% 50%)' : 'none'
+          color: i < ratingValue ? 'hsl(38 92% 50%)' : 'hsl(200 15% 45%)',
+          fill: i < ratingValue ? 'hsl(38 92% 50%)' : 'none'
         }}
       />
     ));
@@ -123,7 +106,7 @@ const PropertyDetailsPage = () => {
             <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <MapPin style={{ height: '4rem', width: '4rem', color: 'hsl(200 25% 15% / 0.2)' }} />
             </div>
-            {property.listing_status === "verified" && (
+            {rental.listing_status === "verified" && (
               <div style={{ position: 'absolute', top: '1rem', right: '1rem' }}>
                 <span style={{
                   display: 'inline-flex',
@@ -150,10 +133,12 @@ const PropertyDetailsPage = () => {
                 <div className="lg:col-span-2" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                   {/* Title & Location */}
                   <div>
-                    <h1 className="text-3xl font-bold mb-2" style={{ color: 'hsl(200 25% 15%)' }}>{property.title}</h1>
+                    <h1 className="text-3xl font-bold mb-2" style={{ color: 'hsl(200 25% 15%)' }}>
+                      {rental.title || 'Property Title'}
+                    </h1>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'hsl(200 15% 45%)' }}>
                       <MapPin style={{ height: '1rem', width: '1rem' }} />
-                      {property.address}, {property.city}
+                      {rental.address}, {rental.city}
                     </div>
                   </div>
 
@@ -161,22 +146,22 @@ const PropertyDetailsPage = () => {
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'center' }}>
                     <div>
                       <span className="text-2xl font-bold" style={{ color: 'hsl(174 62% 32%)' }}>
-                        {formatCurrency(property.rent_min)} - {formatCurrency(property.rent_max)}
+                        {formatCurrency(rental.rent_min)} - {formatCurrency(rental.rent_max)}
                       </span>
                       <span style={{ fontSize: '0.875rem', color: 'hsl(200 15% 45%)', marginLeft: '0.5rem' }}>/month</span>
                     </div>
                     <div style={{ display: 'flex', gap: '1rem', fontSize: '0.875rem', color: 'hsl(200 15% 45%)' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                         <Bed style={{ height: '1rem', width: '1rem' }} />
-                        {property.bedrooms} Beds
+                        {rental.bedrooms} Beds
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                         <Bath style={{ height: '1rem', width: '1rem' }} />
-                        {property.bathrooms} Baths
+                        {rental.bathrooms} Baths
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                         <Calendar style={{ height: '1rem', width: '1rem' }} />
-                        {property.advance_months} months advance
+                        {rental.advance_months} months advance
                       </div>
                     </div>
                   </div>
@@ -199,26 +184,30 @@ const PropertyDetailsPage = () => {
                   {/* Description */}
                   <div style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.75rem', padding: '1.5rem' }}>
                     <h3 className="text-lg font-semibold mb-3" style={{ color: 'hsl(200 25% 15%)' }}>Description</h3>
-                    <p style={{ color: 'hsl(200 15% 45%)', lineHeight: '1.6' }}>{property.description}</p>
+                    <p style={{ color: 'hsl(200 15% 45%)', lineHeight: '1.6' }}>
+                      {rental.description || 'No description available.'}
+                    </p>
                   </div>
 
                   {/* Amenities */}
-                  <div style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.75rem', padding: '1.5rem' }}>
-                    <h3 className="text-lg font-semibold mb-3" style={{ color: 'hsl(200 25% 15%)' }}>Amenities</h3>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                      {property.amenities.map((amenity, i) => (
-                        <span key={i} style={{
-                          padding: '0.375rem 0.75rem',
-                          fontSize: '0.875rem',
-                          backgroundColor: 'hsl(40 30% 94%)',
-                          color: 'hsl(200 25% 15%)',
-                          borderRadius: '9999px'
-                        }}>
-                          {amenity}
-                        </span>
-                      ))}
+                  {amenities.length > 0 && (
+                    <div style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.75rem', padding: '1.5rem' }}>
+                      <h3 className="text-lg font-semibold mb-3" style={{ color: 'hsl(200 25% 15%)' }}>Amenities</h3>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                        {amenities.map((amenity, i) => (
+                          <span key={i} style={{
+                            padding: '0.375rem 0.75rem',
+                            fontSize: '0.875rem',
+                            backgroundColor: 'hsl(40 30% 94%)',
+                            color: 'hsl(200 25% 15%)',
+                            borderRadius: '9999px'
+                          }}>
+                            {amenity}
+                          </span>
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
 
                 {/* Sidebar */}
@@ -232,14 +221,14 @@ const PropertyDetailsPage = () => {
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.875rem' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                           <span style={{ color: 'hsl(200 15% 45%)' }}>Monthly Rent (max)</span>
-                          <span>{formatCurrency(property.rent_max)}</span>
+                          <span>{formatCurrency(rental.rent_max)}</span>
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                          <span style={{ color: 'hsl(200 15% 45%)' }}>Advance ({property.advance_months} months)</span>
+                          <span style={{ color: 'hsl(200 15% 45%)' }}>Advance ({rental.advance_months} months)</span>
                           <span>{formatCurrency(totalUpfront)}</span>
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                          <span style={{ color: 'hsl(200 15% 45%)' }}>Agent Fee ({agent.fee_percentage}%)</span>
+                          <span style={{ color: 'hsl(200 15% 45%)' }}>Agent Fee ({rental.agent?.fee_percentage || 0}%)</span>
                           <span>{formatCurrency(agentFee)}</span>
                         </div>
                         <div style={{ height: '1px', backgroundColor: 'hsl(40 20% 88%)', margin: '0.5rem 0' }} />
@@ -264,58 +253,68 @@ const PropertyDetailsPage = () => {
                   </div>
 
                   {/* Agent Card */}
-                  <div style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.75rem' }}>
-                    <div style={{ padding: '1.5rem', borderBottom: '1px solid hsl(40 20% 88%)' }}>
-                      <h3 className="text-lg font-semibold" style={{ color: 'hsl(200 25% 15%)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <User style={{ height: '1.25rem', width: '1.25rem' }} />
-                        Agent/Landlord
-                      </h3>
-                    </div>
-                    <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                        <div style={{
-                          width: '3rem',
-                          height: '3rem',
-                          borderRadius: '50%',
-                          backgroundColor: 'hsl(174 62% 32% / 0.1)',
+                  {rental.agent && (
+                    <div style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.75rem' }}>
+                      <div style={{ padding: '1.5rem', borderBottom: '1px solid hsl(40 20% 88%)' }}>
+                        <h3 className="text-lg font-semibold" style={{ color: 'hsl(200 25% 15%)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <User style={{ height: '1.25rem', width: '1.25rem' }} />
+                          Agent/Landlord
+                        </h3>
+                      </div>
+                      <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                          <div style={{
+                            width: '3rem',
+                            height: '3rem',
+                            borderRadius: '50%',
+                            backgroundColor: 'hsl(174 62% 32% / 0.1)',
+                            color: 'hsl(174 62% 32%)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '1.25rem',
+                            fontWeight: '600'
+                          }}>
+                            {rental.agent.fullName?.[0] || 'A'}
+                          </div>
+                          <div>
+                            <p className="font-medium" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                              {rental.agent.fullName}
+                              {rental.agent.verification_status === 'verified' && (
+                                <Shield style={{ height: '1rem', width: '1rem', color: 'hsl(152 60% 40%)' }} />
+                              )}
+                            </p>
+                            <p style={{ fontSize: '0.875rem', color: 'hsl(200 15% 45%)' }}>
+                              {rental.agent.company || 'Independent Agent'}
+                            </p>
+                          </div>
+                        </div>
+                        {rental.agent.average_rating && (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <div style={{ display: 'flex' }}>{renderStars(rental.agent.average_rating)}</div>
+                            <span style={{ fontSize: '0.875rem', color: 'hsl(200 15% 45%)' }}>
+                              ({rental.agent.total_reviews || 0} reviews)
+                            </span>
+                          </div>
+                        )}
+                        <p style={{ fontSize: '0.875rem' }}>
+                          Agent Fee: <span className="font-medium">{rental.agent.fee || 0}%</span>
+                        </p>
+                        <button style={{
+                          width: '100%',
+                          padding: '0.5rem',
+                          border: '1px solid hsl(40 20% 88%)',
+                          borderRadius: '0.5rem',
+                          backgroundColor: 'white',
                           color: 'hsl(174 62% 32%)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: '1.25rem',
-                          fontWeight: '600'
+                          fontWeight: '500',
+                          cursor: 'pointer'
                         }}>
-                          {agent.name[0]}
-                        </div>
-                        <div>
-                          <p className="font-medium" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            {agent.name}
-                            <Shield style={{ height: '1rem', width: '1rem', color: 'hsl(152 60% 40%)' }} />
-                          </p>
-                          <p style={{ fontSize: '0.875rem', color: 'hsl(200 15% 45%)' }}>{agent.company_name}</p>
-                        </div>
+                          View Profile
+                        </button>
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <div style={{ display: 'flex' }}>{renderStars(agent.average_rating)}</div>
-                        <span style={{ fontSize: '0.875rem', color: 'hsl(200 15% 45%)' }}>({agent.total_reviews} reviews)</span>
-                      </div>
-                      <p style={{ fontSize: '0.875rem' }}>
-                        Agent Fee: <span className="font-medium">{agent.fee_percentage}%</span>
-                      </p>
-                      <button style={{
-                        width: '100%',
-                        padding: '0.5rem',
-                        border: '1px solid hsl(40 20% 88%)',
-                        borderRadius: '0.5rem',
-                        backgroundColor: 'white',
-                        color: 'hsl(174 62% 32%)',
-                        fontWeight: '500',
-                        cursor: 'pointer'
-                      }}>
-                        View Profile
-                      </button>
                     </div>
-                  </div>
+                  )}
 
                   {/* Report Button */}
                   <button style={{

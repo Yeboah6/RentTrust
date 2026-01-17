@@ -1,15 +1,21 @@
 import React, { useState } from 'react';
-import { Link, usePage } from "@inertiajs/react";
+import { Link, usePage, useForm } from "@inertiajs/react";
 import { Menu, X, Search, User, LogOut, LayoutDashboard } from 'lucide-react';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeLink, setActiveLink] = useState(null);
   const { auth } = usePage().props;
+  const { post } = useForm();
 
   const isAgentLoggedIn = auth?.agent;
   const isTenantLoggedIn = auth?.user;
   const isAnyUserLoggedIn = isAgentLoggedIn || isTenantLoggedIn;
+
+    const handleLogout = (e) => {
+      e.preventDefault();
+      post('/logout');
+    };
 
   return (
     <>
@@ -51,7 +57,6 @@ const Header = () => {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-1">
-            {!isAgentLoggedIn && (
               <>
                 <Link
                   href="/listings"
@@ -102,7 +107,6 @@ const Header = () => {
                   Calculator
                 </Link>
               </>
-            )}
           </nav>
 
           {/* Desktop Actions */}
@@ -145,9 +149,10 @@ const Header = () => {
                   List Property
                 </Link>
               </>
-            )}
+             )}
             
             {/* Agent Logged In */}
+            
             {isAgentLoggedIn && (
               <>
                 <Link
@@ -164,7 +169,6 @@ const Header = () => {
                   <LayoutDashboard className="h-4 w-4 mr-2" />
                   Dashboard
                 </Link>
-                <form action="/logout" method="POST" style={{ display: 'inline' }}>
                   <button
                     type="submit"
                     className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg border transition-colors"
@@ -175,33 +179,68 @@ const Header = () => {
                     }}
                     onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(0 70% 50% / 0.1)'}
                     onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
+                    onClick={handleLogout}
                   >
                     <LogOut className="h-4 w-4 mr-2" />
                     Logout
                   </button>
-                </form>
               </>
+              
             )}
+           
 
             {/* Tenant Logged In */}
             {isTenantLoggedIn && !isAgentLoggedIn && (
               <>
-                <Link
-                  href="/tenant-dashboard"
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(40 30% 94%)'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
-                  className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg border transition-colors"
+              <Link
+                  href="/listings"
+                  onMouseEnter={() => setActiveLink('listings')}
+                  onMouseLeave={() => setActiveLink(null)}
+                  className="px-4 py-2 text-sm font-medium transition-all rounded-lg"
                   style={{ 
-                    borderColor: 'hsl(40 20% 88%)',
-                    color: 'hsl(200 25% 15%)',
-                    backgroundColor: 'white'
+                    color: activeLink === 'listings' ? 'hsl(200 25% 15%)' : 'hsl(200 15% 45%)',
+                    backgroundColor: activeLink === 'listings' ? 'hsl(40 30% 94%)' : 'transparent'
                   }}
                 >
-                  <LayoutDashboard className="h-4 w-4 mr-2" />
-                  Dashboard
+                  Find Rentals
                 </Link>
-                <form action="/logout" method="POST" style={{ display: 'inline' }}>
-                  <button
+                <Link
+                  href="/areas"
+                  onMouseEnter={() => setActiveLink('areas')}
+                  onMouseLeave={() => setActiveLink(null)}
+                  className="px-4 py-2 text-sm font-medium transition-all rounded-lg"
+                  style={{ 
+                    color: activeLink === 'areas' ? 'hsl(200 25% 15%)' : 'hsl(200 15% 45%)',
+                    backgroundColor: activeLink === 'areas' ? 'hsl(40 30% 94%)' : 'transparent'
+                  }}
+                >
+                  Areas
+                </Link>
+                <Link
+                  href="/agents"
+                  onMouseEnter={() => setActiveLink('agents')}
+                  onMouseLeave={() => setActiveLink(null)}
+                  className="px-4 py-2 text-sm font-medium transition-all rounded-lg"
+                  style={{ 
+                    color: activeLink === 'agents' ? 'hsl(200 25% 15%)' : 'hsl(200 15% 45%)',
+                    backgroundColor: activeLink === 'agents' ? 'hsl(40 30% 94%)' : 'transparent'
+                  }}
+                >
+                  Agents
+                </Link>
+                <Link
+                  href="/calculator"
+                  onMouseEnter={() => setActiveLink('calculator')}
+                  onMouseLeave={() => setActiveLink(null)}
+                  className="px-4 py-2 text-sm font-medium transition-all rounded-lg"
+                  style={{ 
+                    color: activeLink === 'calculator' ? 'hsl(200 25% 15%)' : 'hsl(200 15% 45%)',
+                    backgroundColor: activeLink === 'calculator' ? 'hsl(40 30% 94%)' : 'transparent'
+                  }}
+                >
+                  Calculator
+                </Link>
+                <button
                     type="submit"
                     className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg border transition-colors"
                     style={{ 
@@ -211,11 +250,11 @@ const Header = () => {
                     }}
                     onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(0 70% 50% / 0.1)'}
                     onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
+                    onClick={handleLogout}
                   >
                     <LogOut className="h-4 w-4 mr-2" />
                     Logout
                   </button>
-                </form>
               </>
             )}
           </div>
@@ -240,7 +279,7 @@ const Header = () => {
           }}
         >
           <nav className="container mx-auto px-4 py-4 space-y-1">
-            {!isAgentLoggedIn && (
+            {/* {!isAgentLoggedIn && ( */}
               <>
                 <Link
                   href="/listings"
@@ -279,7 +318,7 @@ const Header = () => {
                   Calculator
                 </Link>
               </>
-            )}
+            {/* )} */}
             
             <div className="pt-4 space-y-2 border-t mt-4" style={{ borderColor: 'hsl(40 20% 88%)' }}>
               {/* Not Logged In */}
@@ -322,44 +361,42 @@ const Header = () => {
                     <LayoutDashboard className="h-4 w-4 mr-2" />
                     Dashboard
                   </Link>
-                  <form action="/logout" method="POST">
-                    <button
-                      type="submit"
-                      className="w-full inline-flex items-center justify-start px-4 py-3 text-sm font-semibold rounded-lg text-white transition-colors"
-                      style={{ backgroundColor: 'hsl(0 70% 50%)' }}
-                    >
-                      <LogOut className="h-4 w-4 mr-2" />
-                      Logout
-                    </button>
-                  </form>
+                  <button
+                    type="submit"
+                    className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg border transition-colors"
+                    style={{ 
+                      borderColor: 'hsl(0 70% 50%)',
+                      color: 'hsl(0 70% 50%)',
+                      backgroundColor: 'white'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(0 70% 50% / 0.1)'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
+                    onClick={handleLogout}
+                  >
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Logout
+                  </button>
                 </>
               )}
 
               {/* Tenant Logged In */}
               {isTenantLoggedIn && !isAgentLoggedIn && (
                 <>
-                  <Link
-                    href="/tenant-dashboard"
-                    className="w-full inline-flex items-center justify-start px-4 py-3 text-sm font-medium rounded-lg border transition-colors"
+                  <button
+                    type="submit"
+                    className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg border transition-colors"
                     style={{ 
-                      borderColor: 'hsl(40 20% 88%)',
-                      color: 'hsl(200 25% 15%)',
+                      borderColor: 'hsl(0 70% 50%)',
+                      color: 'hsl(0 70% 50%)',
                       backgroundColor: 'white'
                     }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(0 70% 50% / 0.1)'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
+                    onClick={handleLogout}
                   >
-                    <LayoutDashboard className="h-4 w-4 mr-2" />
-                    Dashboard
-                  </Link>
-                  <form action="/logout" method="POST">
-                    <button
-                      type="submit"
-                      className="w-full inline-flex items-center justify-start px-4 py-3 text-sm font-semibold rounded-lg text-white transition-colors"
-                      style={{ backgroundColor: 'hsl(0 70% 50%)' }}
-                    >
-                      <LogOut className="h-4 w-4 mr-2" />
-                      Logout
-                    </button>
-                  </form>
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Logout
+                  </button>
                 </>
               )}
             </div>

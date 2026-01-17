@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useForm } from "@inertiajs/react";
+import { Link } from "@inertiajs/react";
 import Header from "@/Components/Layouts/Header";
 import Footer from "@/Components/Layouts/Footer";
 import AddRentalPage from "@/Pages/AddRentals";
@@ -87,7 +87,6 @@ const AgentDashboardPage = ({ agentData, rentals }) => {
   const [respondingTo, setRespondingTo] = useState(null);
   const [responseText, setResponseText] = useState("");
   const [showAddListingModal, setShowAddListingModal] = useState(false);
-  const { post } = useForm();
 
   const agent = {
     name: agentData?.fullName || "Unknown Agent",
@@ -110,11 +109,6 @@ const AgentDashboardPage = ({ agentData, rentals }) => {
         total_reviews: 0
       }))
     : [];
-
-  const handleLogout = (e) => {
-    e.preventDefault();
-    post('/logout');
-  };
 
   const reviews = mockReviews;
   const claims = mockClaims;
@@ -267,21 +261,6 @@ const AgentDashboardPage = ({ agentData, rentals }) => {
                   href={'settings'}>
                     Settings
                   </Link>
-                  <button style={{
-                    padding: '0.5rem 1rem',
-                    border: '1px solid hsl(0 70% 50%)',
-                    borderRadius: '0.5rem',
-                    backgroundColor: 'white',
-                    color: 'hsl(0 70% 50%)',
-                    textDecoration: 'none',
-                    fontWeight: '500',
-                    cursor: 'pointer',
-                    alignSelf: 'flex-start'
-                  }}
-                  onClick={handleLogout}
-                  >
-                    Logout
-                  </button>
               </div>
             </div>
 

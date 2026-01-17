@@ -6,6 +6,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Agent;
+use App\Models\Rental;
+use App\Models\RentalImage;
+use Illuminate\Support\Facades\DB;
 
 class AgentController extends Controller
 {
@@ -15,7 +18,11 @@ class AgentController extends Controller
 
     public function agent() {
         $agents = Agent::all();
-        return inertia('AgentsPage', ['agent' => $agents]);
+        $listingCounts = Rental::select('agent_id', \DB::raw('count(*) as total'))
+            ->groupBy('agent_id')
+            ->pluck('total', 'agent_id')
+            ->toArray();
+        return inertia('AgentsPage', ['agent' => $agents, 'listingCounts' => $listingCounts]);
     }
 
     public function storeBecomeAgent(Request $request) {

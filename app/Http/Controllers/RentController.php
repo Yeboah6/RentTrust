@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Rental;
+use App\Models\RentalImage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+
 
 class RentController extends Controller
 {
@@ -180,15 +182,15 @@ class RentController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Rent $rent)
+    public function show(Rental $rent)
     {
-        //
+        return inertia('PropertyDetailsPage', ['rental' => $rent]);
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Rent $rent)
+    public function edit(Rental $rent)
     {
         //
     }
@@ -196,7 +198,7 @@ class RentController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Rent $rent)
+    public function update(Request $request, Rental $rent)
     {
         //
     }
@@ -204,7 +206,7 @@ class RentController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Rent $rent)
+    public function destroy(Rental $rent)
     {
         //
     }
@@ -230,9 +232,9 @@ class RentController extends Controller
         return inertia('ReviewsPage');
     }
 
-    public function propertyDetail() {
-        return inertia('PropertyDetailsPage');
-    }
+    // public function propertyDetail() {
+    //     return inertia('PropertyDetailsPage');
+    // }
 
     public function reportListings() {
         return inertia('ReportListingDialog');
