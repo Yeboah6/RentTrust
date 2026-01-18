@@ -46,6 +46,11 @@ return [
             'provider' => 'agents',
         ],
 
+        'super' => [
+            'driver' => 'session',
+            'provider' => 'super_admins',
+        ],
+
         'tenant' => [
             'driver' => 'session',
             'provider' => 'tenants',
@@ -78,6 +83,11 @@ return [
         'agents' => [
             'driver' => 'eloquent',
             'model' => App\Models\Agent::class,
+        ],
+
+         'super_admins' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\SuperAdmin::class,
         ],
 
         'tenants' => [

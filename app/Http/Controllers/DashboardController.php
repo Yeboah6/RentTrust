@@ -18,6 +18,9 @@ class DashboardController extends Controller
     }
 
     public function superAdmin() {
-        return inertia('Dashboards/SuperAdmin');
+        $adminData = Auth::guard('super')->user();
+        $rentals = Rental::all();
+        $agentData = Agent::all();
+        return inertia('Dashboards/SuperAdmin', ['adminData' => $adminData, 'rentals' => $rentals, 'agentData' => $agentData]);
     }
 }

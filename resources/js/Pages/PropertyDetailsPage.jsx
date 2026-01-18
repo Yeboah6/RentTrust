@@ -1,6 +1,8 @@
 import { useState } from "react";
 import Header from '../Components/Layouts/Header';
 import Footer from '../Components/Layouts/Footer';
+import { Link } from "@inertiajs/react";
+import ReportListingDialog from "./ReportListingDialog";
 
 // Icon components
 const MapPin = ({ style }) => (
@@ -59,6 +61,7 @@ const Flag = ({ style }) => (
 
 const PropertyDetailsPage = ({ rental }) => {
   const formatCurrency = (amount) => `GH₵${amount?.toLocaleString() || '0'}`;
+  const [showAddListingModal, setShowAddListingModal] = useState(false);
   
   // Parse amenities if it's a string
   const amenities = typeof rental.amenities === 'string' 
@@ -317,7 +320,9 @@ const PropertyDetailsPage = ({ rental }) => {
                   )}
 
                   {/* Report Button */}
-                  <button style={{
+                  <button 
+                  onClick={() => setShowAddListingModal(true)}
+                  style={{
                     width: '100%',
                     padding: '0.75rem',
                     border: '1px solid hsl(0 72% 51%)',
@@ -341,6 +346,35 @@ const PropertyDetailsPage = ({ rental }) => {
         </main>
 
         <Footer />
+
+        {/* Add Listing Modal */}
+        {showAddListingModal && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 50,
+            padding: '1rem'
+          }}>
+            <div style={{
+              backgroundColor: 'white',
+              borderRadius: '1rem',
+              maxHeight: '90vh',
+              overflow: 'auto',
+              maxWidth: '60%',
+              width: '100%',
+              position: 'relative'
+            }}>
+              <ReportListingDialog setShowAddListingModal={setShowAddListingModal} rental={rental} />
+            </div>
+          </div>
+        )}
       </div>
     </>
   );

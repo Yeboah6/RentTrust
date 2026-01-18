@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Tenant;
 use App\Models\Agent;
+use App\Models\SuperAdmin;
 
 class AuthController extends Controller
 {
@@ -43,7 +44,7 @@ class AuthController extends Controller
         // Check Tenant table first
         $tenant = Tenant::where('email', $email)->first();
         if ($tenant && Hash::check($password, $tenant->password)) {
-            Auth::guard('web')->login($tenant);
+            Auth::guard('tenant')->login($tenant);
             $request->session()->regenerate();
             return redirect()->intended('/');
         }
@@ -54,6 +55,14 @@ class AuthController extends Controller
             Auth::guard('agent')->login($agent);
             $request->session()->regenerate();
             return redirect()->intended('/agent-dashboard');
+        }
+
+        // Check Admin table
+        $admin = SuperAdmin::where('email', $email)->first();
+        if ($admin && Hash::check($password, $admin->password)) {
+            Auth::guard('super')->login($admin);
+            $request->session()->regenerate();
+            return redirect()->intended('/super-admin');
         }
 
         // No user found with matching credentials

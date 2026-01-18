@@ -32,13 +32,15 @@ Route::middleware('agent')->group(function () {
     Route::post('/rent', [RentController::class, 'store']);
 });
 
+Route::middleware('super')->group(function () {
+    Route::get('/super-admin', [DashboardController::class, 'superAdmin']);
+});
+
 Route::get('settings', [AuthController::class, 'settings'])->name('settings.page');
 
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-Route::get('/super-admin', [DashboardController::class, 'superAdmin']);
 
-
-Route::get('/sign-up', [AuthController::class, 'signUp']);
+Route::get('/sign-up', [AuthController::class, 'signUp']) -> name('sign-up.page');
 Route::post('/sign-up', [AuthController::class, 'store']);
 Route::post('/login', [AuthController::class, 'login']);

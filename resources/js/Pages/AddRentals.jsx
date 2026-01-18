@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useForm } from '@inertiajs/react';
 import { Home, MapPin, DollarSign, Calendar, Image, FileText, CheckCircle2, AlertCircle, Upload, X } from 'lucide-react';
 
-const AddRentalPage = () => {
+const AddRentalPage = ({ agentData }) => {
 
   const { data, setData, post, processing, errors, reset } = useForm({
     title: '',
@@ -120,12 +120,6 @@ const AddRentalPage = () => {
         reset();
         setImages([]);
         setCurrentStep(1);
-        
-        // Show success message
-        alert('Listing submitted successfully! Our team will review it shortly.');
-        
-        // Optionally redirect to listings page
-        // window.location.href = '/listings';
       },
       onError: (errors) => {
         console.error('Submission errors:', errors);
@@ -555,9 +549,9 @@ const AddRentalPage = () => {
                     </label>
                     <input
                       type="text"
-                      value={data.agentName}
+                      value={agentData.fullName || data.agentName}
                       onChange={(e) => setData('agentName', e.target.value)}
-                      placeholder="Full name or business name"
+                      // placeholder="Full name or business name"
                       className="w-full px-4 py-3 border rounded-lg focus:ring-2 transition-all"
                       style={{ borderColor: errors.agentName ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)' }}
                     />
@@ -574,9 +568,9 @@ const AddRentalPage = () => {
                     </label>
                     <input
                       type="tel"
-                      value={data.agentPhone}
+                      value={agentData.phone || data.agentPhone}
                       onChange={(e) => setData('agentPhone', e.target.value)}
-                      placeholder="+233 XX XXX XXXX"
+                      // placeholder="+233 XX XXX XXXX"
                       className="w-full px-4 py-3 border rounded-lg focus:ring-2 transition-all"
                       style={{ borderColor: errors.agentPhone ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)' }}
                     />
@@ -593,9 +587,9 @@ const AddRentalPage = () => {
                     </label>
                     <input
                       type="email"
-                      value={data.agentEmail}
+                      value={agentData.email || data.agentEmail}
                       onChange={(e) => setData('agentEmail', e.target.value)}
-                      placeholder="your@email.com"
+                      // placeholder="your@email.com"
                       className="w-full px-4 py-3 border rounded-lg focus:ring-2 transition-all"
                       style={{ borderColor: errors.agentEmail ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)' }}
                     />

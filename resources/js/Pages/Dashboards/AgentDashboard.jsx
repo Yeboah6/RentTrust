@@ -616,7 +616,7 @@ const AgentDashboardPage = ({ agentData, rentals }) => {
               >
                 ✕
               </button>
-              <AddRentalPage />
+              <AddRentalPage agentData={agentData} />
             </div>
           </div>
         )}

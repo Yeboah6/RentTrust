@@ -10,12 +10,13 @@ const Header = () => {
 
   const isAgentLoggedIn = auth?.agent;
   const isTenantLoggedIn = auth?.user;
-  const isAnyUserLoggedIn = isAgentLoggedIn || isTenantLoggedIn;
+  const isSuperAdminLoggedIn = auth?.super;
+  const isAnyUserLoggedIn = isAgentLoggedIn || isTenantLoggedIn || isSuperAdminLoggedIn;
 
-    const handleLogout = (e) => {
-      e.preventDefault();
-      post('/logout');
-    };
+  const handleLogout = (e) => {
+    e.preventDefault();
+    post('/logout');
+  };
 
   return (
     <>
@@ -153,7 +154,7 @@ const Header = () => {
             
             {/* Agent Logged In */}
             
-            {isAgentLoggedIn && (
+            {isAgentLoggedIn &&  (
               <>
                 <Link
                   href="/agent-dashboard"
@@ -187,10 +188,44 @@ const Header = () => {
               </>
               
             )}
+
+            {isSuperAdminLoggedIn &&  (
+              <>
+                <Link
+                  href="/super-admin"
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(40 30% 94%)'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
+                  className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg border transition-colors"
+                  style={{ 
+                    borderColor: 'hsl(40 20% 88%)',
+                    color: 'hsl(200 25% 15%)',
+                    backgroundColor: 'white'
+                  }}
+                >
+                  <LayoutDashboard className="h-4 w-4 mr-2" />
+                  Dashboard
+                </Link>
+                  <button
+                    type="submit"
+                    className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg border transition-colors"
+                    style={{ 
+                      borderColor: 'hsl(0 70% 50%)',
+                      color: 'hsl(0 70% 50%)',
+                      backgroundColor: 'white'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(0 70% 50% / 0.1)'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
+                    onClick={handleLogout}
+                  >
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Logout
+                  </button>
+              </>
+            )}
            
 
             {/* Tenant Logged In */}
-            {isTenantLoggedIn && !isAgentLoggedIn && (
+            {isTenantLoggedIn && !isAgentLoggedIn && !isSuperAdminLoggedIn && (
               <>
               <Link
                   href="/listings"
@@ -279,7 +314,6 @@ const Header = () => {
           }}
         >
           <nav className="container mx-auto px-4 py-4 space-y-1">
-            {/* {!isAgentLoggedIn && ( */}
               <>
                 <Link
                   href="/listings"
@@ -318,7 +352,6 @@ const Header = () => {
                   Calculator
                 </Link>
               </>
-            {/* )} */}
             
             <div className="pt-4 space-y-2 border-t mt-4" style={{ borderColor: 'hsl(40 20% 88%)' }}>
               {/* Not Logged In */}

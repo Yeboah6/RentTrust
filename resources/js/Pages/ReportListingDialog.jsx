@@ -2,9 +2,11 @@ import { useState } from "react";
 import { Upload, X, AlertCircle } from "lucide-react";
 
 // Standalone Report Listing Dialog Component
-const ReportListingDialog = ({ open, onOpenChange, propertyId, agentId }) => {
+const ReportListingDialog = ({ open, onOpenChange, propertyId, agentId, setShowAddListingModal, rental }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState([]);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  
   const [formData, setFormData] = useState({
     subject: "",
     description: "",
@@ -106,7 +108,7 @@ const ReportListingDialog = ({ open, onOpenChange, propertyId, agentId }) => {
     }, 1500);
   };
 
-  if (!open) return null;
+  // if (!open) return null;
 
   return (
     <>
@@ -156,7 +158,7 @@ const ReportListingDialog = ({ open, onOpenChange, propertyId, agentId }) => {
             boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)',
             position: 'relative'
           }}
-          onClick={(e) => e.stopPropagation()}
+          // onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
           <div style={{
@@ -176,8 +178,25 @@ const ReportListingDialog = ({ open, onOpenChange, propertyId, agentId }) => {
                 padding: '0.25rem'
               }}
             >
-              <X size={20} />
+            <X size={20} onClick={() => setShowAddListingModal(false)}/>
             </button>
+<br />
+            <div style={{
+              backgroundColor: '#f3f4f6',
+              padding: '1.5rem',
+              borderRadius: '0.5rem',
+              marginBottom: '1.5rem'
+            }}>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '0.5rem', color: '#111827' }}>
+                {rental.title} {rental.property_type}
+              </h2>
+              <p style={{ color: '#6b7280', marginBottom: '1rem' }}>
+                {rental.address}, {rental.city} • GH₵ {rental.rent_min} - GH₵ {rental.rent_max}/month
+              </p>
+              <p style={{ color: '#374151', lineHeight: '1.5' }}>
+                {rental.description}
+              </p>
+            </div>
             <h2 style={{
               fontSize: '1.25rem',
               fontWeight: '600',
@@ -448,78 +467,4 @@ const ReportListingDialog = ({ open, onOpenChange, propertyId, agentId }) => {
   );
 };
 
-// Demo App
-export default function App() {
-  const [dialogOpen, setDialogOpen] = useState(false);
-
-  return (
-    <div style={{
-      minHeight: '100vh',
-      backgroundColor: '#f9fafb',
-      padding: '2rem',
-      fontFamily: 'system-ui, -apple-system, sans-serif'
-    }}>
-      <div style={{
-        maxWidth: '800px',
-        margin: '0 auto',
-        backgroundColor: 'white',
-        borderRadius: '0.75rem',
-        padding: '2rem',
-        boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)'
-      }}>
-        <h1 style={{
-          fontSize: '1.875rem',
-          fontWeight: '700',
-          marginBottom: '1rem',
-          color: '#111827'
-        }}>
-          Property Listing
-        </h1>
-        
-        <div style={{
-          backgroundColor: '#f3f4f6',
-          padding: '1.5rem',
-          borderRadius: '0.5rem',
-          marginBottom: '1.5rem'
-        }}>
-          <h2 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '0.5rem', color: '#111827' }}>
-            Luxury 3-Bedroom Apartment
-          </h2>
-          <p style={{ color: '#6b7280', marginBottom: '1rem' }}>
-            East Legon, Accra • GH₵ 2,500/month
-          </p>
-          <p style={{ color: '#374151', lineHeight: '1.5' }}>
-            Beautiful spacious apartment with modern amenities, 24/7 security, 
-            and close proximity to shopping centers and restaurants.
-          </p>
-        </div>
-
-        <button
-          onClick={() => setDialogOpen(true)}
-          style={{
-            padding: '0.625rem 1.25rem',
-            backgroundColor: '#ef4444',
-            color: 'white',
-            border: 'none',
-            borderRadius: '0.375rem',
-            fontWeight: '500',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem'
-          }}
-        >
-          <AlertCircle size={18} />
-          Report This Listing
-        </button>
-      </div>
-
-      <ReportListingDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        propertyId="prop123"
-        agentId="agent456"
-      />
-    </div>
-  );
-}
+export default ReportListingDialog;

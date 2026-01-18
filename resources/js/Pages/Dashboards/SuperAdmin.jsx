@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Header from "@/Components/Layouts/Header";
 import Footer from "@/Components/Layouts/Footer";
+import { Link, useForm } from "@inertiajs/react";
 
 // Icon components
 const Shield = ({ style }) => (
@@ -57,50 +58,6 @@ const X = ({ style }) => (
   </svg>
 );
 
-// Mock data
-const mockAdmin = {
-  name: "Super Admin",
-  role: "Platform Administrator",
-  verification_status: "verified",
-  avatar_url: null,
-  total_agents: 128,
-  total_listings: 412,
-  total_reports: 36
-};
-
-const mockAgents = [
-  {
-    id: "1",
-    name: "John Mensah",
-    email: "john.mensah@realty.com",
-    company_name: "Mensah Realty Group",
-    verification_status: "verified",
-    total_listings: 24,
-    created_at: "2023-06-15",
-    last_active: "2024-01-12"
-  },
-  {
-    id: "2",
-    name: "Sarah Osei",
-    email: "sarah@goldcoastproperties.com",
-    company_name: "Gold Coast Properties",
-    verification_status: "pending",
-    total_listings: 12,
-    created_at: "2024-01-05",
-    last_active: "2024-01-11"
-  },
-  {
-    id: "3",
-    name: "Kwame Boateng",
-    email: "kwame.b@gmail.com",
-    company_name: null,
-    verification_status: "unverified",
-    total_listings: 3,
-    created_at: "2024-01-10",
-    last_active: "2024-01-10"
-  }
-];
-
 const mockReports = [
   {
     id: "1",
@@ -143,31 +100,6 @@ const mockReports = [
   }
 ];
 
-const mockProperties = [
-  {
-    id: "1",
-    title: "2 Bedroom Self-Contained",
-    address: "123 Oxford Street",
-    city: "Accra",
-    rent_min: 1500,
-    rent_max: 2000,
-    listing_status: "verified",
-    total_reviews: 5,
-    agent_name: "John Mensah"
-  },
-  {
-    id: "2",
-    title: "3 Bedroom House",
-    address: "45 Ring Road",
-    city: "Tema",
-    rent_min: 2500,
-    rent_max: 3000,
-    listing_status: "pending",
-    total_reviews: 2,
-    agent_name: "Sarah Osei"
-  }
-];
-
 const mockReviews = [
   {
     id: "1",
@@ -189,14 +121,30 @@ const mockReviews = [
   }
 ];
 
-const SuperAdminDashboard = () => {
+const SuperAdminDashboard = ({ adminData, rentals, agentData }) => {
   const [activeTab, setActiveTab] = useState("agents");
   const [respondingTo, setRespondingTo] = useState(null);
   const [responseText, setResponseText] = useState("");
+    const { post } = useForm();
+
+    const handleLogout = (e) => {
+    e.preventDefault();
+    post('/logout');
+  };
+
+  const mockAdmin = {
+    name: adminData?.fullName || "Super Admin",
+    role: "Platform Administrator",
+    verification_status: "verified",
+    avatar_url: null,
+    total_agents: agentData?.length,
+    total_listings: rentals?.length,
+    total_reports: 36
+  };
 
   const agent = mockAdmin;
-  const agents = mockAgents;
-  const properties = mockProperties;
+  const agents = agentData || [];
+  const properties = rentals || [];
   const reviews = mockReviews;
   const reports = mockReports;
 
@@ -399,7 +347,9 @@ const SuperAdminDashboard = () => {
                       </div>
                     </div>
                   </div>
-                  <button style={{
+                  <Link 
+                  href="/settings"
+                  style={{
                     padding: '0.5rem 1rem',
                     border: '1px solid hsl(40 20% 88%)',
                     borderRadius: '0.5rem',
@@ -410,8 +360,10 @@ const SuperAdminDashboard = () => {
                     alignSelf: 'flex-start'
                   }}>
                     Settings
-                  </button>
-                  <button style={{
+                  </Link>
+                  <button 
+                  onClick={handleLogout}
+                  style={{
                     padding: '0.5rem 1rem',
                     border: '1px solid hsl(0 70% 50%)',
                     borderRadius: '0.5rem',
@@ -503,22 +455,22 @@ const SuperAdminDashboard = () => {
                           <div style={{ flex: 1, minWidth: '250px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem', flexWrap: 'wrap' }}>
                               <h3 className="font-semibold" style={{ color: 'hsl(200 25% 15%)' }}>
-                                {agentItem.name}
+                                {agentItem.fullName}
                               </h3>
                               {getStatusBadge(agentItem.verification_status)}
                             </div>
                             <p style={{ fontSize: '0.875rem', color: 'hsl(200 15% 45%)', marginBottom: '0.25rem' }}>
                               {agentItem.email}
                             </p>
-                            {agentItem.company_name && (
+                            {agentItem.company && (
                               <p style={{ fontSize: '0.875rem', color: 'hsl(200 15% 45%)', marginBottom: '0.5rem' }}>
-                                {agentItem.company_name}
+                                {agentItem.company}
                               </p>
                             )}
                             <div style={{ display: 'flex', gap: '1rem', fontSize: '0.75rem', color: 'hsl(200 15% 45%)', marginTop: '0.5rem', flexWrap: 'wrap' }}>
                               <span>{agentItem.total_listings} listings</span>
                               <span>Joined {new Date(agentItem.created_at).toLocaleDateString()}</span>
-                              <span>Last active {new Date(agentItem.last_active).toLocaleDateString()}</span>
+                              <span>Last active {new Date(agentItem.updated_at).toLocaleDateString()}</span>
                             </div>
                           </div>
                         </div>
