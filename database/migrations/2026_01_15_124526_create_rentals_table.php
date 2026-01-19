@@ -26,10 +26,11 @@ return new class extends Migration
             $table->integer('bathrooms')->default(0);
             $table->json('amenities')->nullable();
             $table->text('description')->nullable();
+            $table->string('images');
             $table->string('agent_name');
             $table->string('agent_phone');
             $table->string('agent_email');
-            $table->enum('status', ['pending', 'approved', 'rejected', 'rented'])->default('pending');
+            $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
             $table->boolean('is_verified')->default(false);
             $table->boolean('is_claimed')->default(false);
             $table->timestamps();

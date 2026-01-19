@@ -20,6 +20,7 @@ class Rental extends Model
         'bathrooms',
         'amenities',
         'description',
+        'images',
         'agent_name',
         'agent_phone',
         'agent_email',

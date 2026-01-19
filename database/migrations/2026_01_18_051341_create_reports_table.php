@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('report_type');
             $table->string('report_description', 1000);
             $table->string('evidence');
-            $table->boolen('anonymous')->default(false);
+            $table->string('full_name')->nullable();
             $table->timestamps();
         });
     }

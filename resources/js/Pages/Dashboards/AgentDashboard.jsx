@@ -616,7 +616,7 @@ const AgentDashboardPage = ({ agentData, rentals }) => {
               >
                 ✕
               </button>
-              <AddRentalPage agentData={agentData} />
+              <AddRentalPage agentData={agentData} setShowAddListingModal={setShowAddListingModal}  />
             </div>
           </div>
         )}

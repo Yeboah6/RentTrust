@@ -11,6 +11,6 @@ class Report extends Model
         'report_type',
         'report_description',
         'evidence',
-        'anonymous'
+        'full_name'
     ];
 }

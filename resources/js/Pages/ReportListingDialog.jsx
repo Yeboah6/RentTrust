@@ -1,22 +1,20 @@
 import { useState } from "react";
-import { Upload, X, AlertCircle } from "lucide-react";
+import { Upload, X } from "lucide-react";
+import { useForm } from "@inertiajs/react";
 
-// Standalone Report Listing Dialog Component
 const ReportListingDialog = ({ open, onOpenChange, propertyId, agentId, setShowAddListingModal, rental }) => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState([]);
-  const [dialogOpen, setDialogOpen] = useState(false);
   
-  const [formData, setFormData] = useState({
-    subject: "",
+  // FIXED: Ensure property_id is properly set
+  const {data, setData, post, processing, errors, reset} = useForm({
+    report_type: "",
     description: "",
-    is_anonymous: false,
+    evidence: [],
+    property_id: rental?.id || "",
+    name: ""
   });
-  const [errors, setErrors] = useState({});
+
   const [toast, setToast] = useState(null);
-  
-  // Mock user - set to null to see "not signed in" state
-  const user = { id: "user123", email: "user@example.com" };
 
   const subjectOptions = [
     "Misleading listing information",
@@ -27,27 +25,6 @@ const ReportListingDialog = ({ open, onOpenChange, propertyId, agentId, setShowA
     "Other",
   ];
 
-  const validateForm = () => {
-    const newErrors = {};
-    
-    if (!formData.subject) {
-      newErrors.subject = "Please select an issue type";
-    } else if (formData.subject.length < 5) {
-      newErrors.subject = "Subject must be at least 5 characters";
-    }
-    
-    if (!formData.description) {
-      newErrors.description = "Description is required";
-    } else if (formData.description.length < 20) {
-      newErrors.description = "Please provide more details (at least 20 characters)";
-    } else if (formData.description.length > 2000) {
-      newErrors.description = "Description must be less than 2000 characters";
-    }
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
   const handleFileUpload = (e) => {
     const files = Array.from(e.target.files || []);
     const validFiles = files.filter((file) => {
@@ -57,11 +34,19 @@ const ReportListingDialog = ({ open, onOpenChange, propertyId, agentId, setShowA
       }
       return true;
     });
-    setUploadedFiles((prev) => [...prev, ...validFiles].slice(0, 5));
+    
+    // FIXED: Create new array correctly
+    const newFiles = [...uploadedFiles, ...validFiles].slice(0, 5);
+    setUploadedFiles(newFiles);
+    
+    // FIXED: Set evidence in form data
+    setData('evidence', newFiles);
   };
 
   const removeFile = (index) => {
-    setUploadedFiles((prev) => prev.filter((_, i) => i !== index));
+    const newFiles = uploadedFiles.filter((_, i) => i !== index);
+    setUploadedFiles(newFiles);
+    setData('evidence', newFiles);
   };
 
   const showToast = (title, description, variant = "success") => {
@@ -72,47 +57,44 @@ const ReportListingDialog = ({ open, onOpenChange, propertyId, agentId, setShowA
   const handleSubmit = (e) => {
     e.preventDefault();
     
-    if (!user) {
-      showToast("Please sign in", "You need to be signed in to report a listing", "error");
-      return;
-    }
-
-    if (!validateForm()) {
-      return;
-    }
-
-    setIsSubmitting(true);
+    // FIXED: Prepare FormData for file uploads
+    const formData = new FormData();
     
-    // Simulate API call
-    setTimeout(() => {
-      console.log("Report submitted:", {
-        complainant_id: user.id,
-        property_id: propertyId,
-        agent_id: agentId,
-        subject: formData.subject,
-        description: formData.description,
-        evidence_files: uploadedFiles.map(f => f.name),
-        is_anonymous: formData.is_anonymous,
+    // Add text fields
+    formData.append('property_id', data.property_id);
+    formData.append('description', data.description);
+    formData.append('report_type', data.report_type);
+    formData.append('name', data.name);
+    
+    // Add files
+    if (data.evidence && data.evidence.length > 0) {
+      data.evidence.forEach((file, index) => {
+        formData.append(`evidence[${index}]`, file);
       });
-      
-      showToast("Report submitted", "We'll review your complaint and take appropriate action");
-      
-      // Reset
-      setFormData({ subject: "", description: "", is_anonymous: false });
-      setUploadedFiles([]);
-      setErrors({});
-      setIsSubmitting(false);
-      
-      // Close dialog after short delay
-      setTimeout(() => onOpenChange(false), 1500);
-    }, 1500);
+    }
+    
+    // FIXED: Use the correct endpoint and pass FormData
+    post('/report-listing', {
+      data: formData,
+      forceFormData: true,
+      onSuccess: () => {
+        showToast("Report Submitted", "Thank you for helping us maintain trust.", "success");
+        reset();
+        setUploadedFiles([]);
+        setTimeout(() => {
+          if (setShowAddListingModal) setShowAddListingModal(false);
+        }, 1500);
+      },
+      onError: (errors) => {
+        console.log("Errors:", errors);
+        showToast("Submission Failed", "Please correct the errors and try again.", "error");
+      }
+    });
   };
-
-  // if (!open) return null;
 
   return (
     <>
-      {/* Toast Notification */}
+      {/* Toast Notification - unchanged */}
       {toast && (
         <div style={{
           position: 'fixed',
@@ -144,10 +126,11 @@ const ReportListingDialog = ({ open, onOpenChange, propertyId, agentId, setShowA
           zIndex: 50,
           padding: '1rem'
         }}
-        onClick={() => onOpenChange(false)}
+        onClick={() => setShowAddListingModal && setShowAddListingModal(false)}
       >
-        {/* Dialog Content */}
-        <div
+        {/* Dialog Content - Wrap in form for better accessibility */}
+        <form
+          onSubmit={handleSubmit}
           style={{
             backgroundColor: 'white',
             borderRadius: '0.75rem',
@@ -158,14 +141,16 @@ const ReportListingDialog = ({ open, onOpenChange, propertyId, agentId, setShowA
             boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)',
             position: 'relative'
           }}
+          onClick={(e) => e.stopPropagation()}
         >
-          {/* Header */}
+          {/* Header - unchanged */}
           <div style={{
             padding: '1.5rem',
             borderBottom: '1px solid #e5e7eb'
           }}>
             <button
-              // onClick={() => onOpenChange(false)}
+              type="button"
+              onClick={() => setShowAddListingModal && setShowAddListingModal(false)}
               style={{
                 position: 'absolute',
                 right: '1rem',
@@ -177,9 +162,9 @@ const ReportListingDialog = ({ open, onOpenChange, propertyId, agentId, setShowA
                 padding: '0.25rem'
               }}
             >
-            <X size={20} onClick={() => setShowAddListingModal(false)}/>
+              <X size={20} />
             </button>
-<br />
+
             <div style={{
               backgroundColor: '#f3f4f6',
               padding: '1.5rem',
@@ -187,13 +172,13 @@ const ReportListingDialog = ({ open, onOpenChange, propertyId, agentId, setShowA
               marginBottom: '1.5rem'
             }}>
               <h2 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '0.5rem', color: '#111827' }}>
-                {rental.title} {rental.property_type}
+                {rental?.title} {rental?.property_type}
               </h2>
               <p style={{ color: '#6b7280', marginBottom: '1rem' }}>
-                {rental.address}, {rental.city} • GH₵ {rental.rent_min} - GH₵ {rental.rent_max}/month
+                {rental?.address}, {rental?.city} • GH₵ {rental?.rent_min} - GH₵ {rental?.rent_max}/month
               </p>
               <p style={{ color: '#374151', lineHeight: '1.5' }}>
-                {rental.description}
+                {rental?.description}
               </p>
             </div>
             <h2 style={{
@@ -211,243 +196,221 @@ const ReportListingDialog = ({ open, onOpenChange, propertyId, agentId, setShowA
 
           {/* Body */}
           <div style={{ padding: '1.5rem' }}>
-            {!user ? (
-              <div style={{ textAlign: 'center', padding: '1.5rem 0' }}>
-                <p style={{ color: '#6b7280', marginBottom: '1rem' }}>
-                  You need to be signed in to submit a report
-                </p>
-                <button style={{
-                  padding: '0.5rem 1rem',
-                  backgroundColor: '#3b82f6',
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {/* Hidden property_id field */}
+              <input type="hidden" name="property_id" value={data.property_id} />
+              
+              {/* Issue Type */}
+              <div>
+                <label style={{
+                  display: 'block',
+                  fontSize: '0.875rem',
+                  fontWeight: '500',
+                  color: '#374151',
+                  marginBottom: '0.5rem'
+                }}>
+                  Issue Type *
+                </label>
+                <select
+                  value={data.report_type}
+                  onChange={(e) => setData('report_type', e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '0.5rem 0.75rem',
+                    border: `1px solid ${errors.report_type ? '#ef4444' : '#d1d5db'}`,
+                    borderRadius: '0.375rem',
+                    fontSize: '0.875rem',
+                    outline: 'none'
+                  }}
+                >
+                  <option value="">Select the issue type</option>
+                  {subjectOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+                {errors.report_type && (
+                  <p style={{ fontSize: '0.75rem', color: '#ef4444', marginTop: '0.25rem' }}>
+                    {errors.report_type}
+                  </p>
+                )}
+              </div>
+
+              {/* Description */}
+              <div>
+                <label style={{
+                  display: 'block',
+                  fontSize: '0.875rem',
+                  fontWeight: '500',
+                  color: '#374151',
+                  marginBottom: '0.5rem'
+                }}>
+                  Description *
+                </label>
+                <textarea
+                  value={data.description}
+                  onChange={(e) => setData('description', e.target.value)}
+                  placeholder="Please describe the issue in detail. Include dates, amounts, and any relevant information..."
+                  rows={5}
+                  style={{
+                    width: '100%',
+                    padding: '0.5rem 0.75rem',
+                    border: `1px solid ${errors.description ? '#ef4444' : '#d1d5db'}`,
+                    borderRadius: '0.375rem',
+                    fontSize: '0.875rem',
+                    outline: 'none',
+                    resize: 'vertical',
+                    fontFamily: 'inherit'
+                  }}
+                />
+                {errors.description && (
+                  <p style={{ fontSize: '0.75rem', color: '#ef4444', marginTop: '0.25rem' }}>
+                    {errors.description}
+                  </p>
+                )}
+              </div>
+
+              {/* Evidence Upload */}
+              <div>
+                <label style={{
+                  display: 'block',
+                  fontSize: '0.875rem',
+                  fontWeight: '500',
+                  color: '#374151',
+                  marginBottom: '0.5rem'
+                }}>
+                  Evidence (optional)
+                </label>
+                <div style={{
+                  border: '2px dashed #d1d5db',
+                  borderRadius: '0.5rem',
+                  padding: '1rem',
+                  textAlign: 'center'
+                }}>
+                  <input
+                    type="file"
+                    id="evidence-upload"
+                    style={{ display: 'none' }}
+                    accept="image/*,.pdf"
+                    multiple
+                    onChange={handleFileUpload}
+                    disabled={uploadedFiles.length >= 5}
+                  />
+                  <label 
+                    htmlFor="evidence-upload" 
+                    style={{ 
+                      cursor: uploadedFiles.length >= 5 ? 'not-allowed' : 'pointer', 
+                      display: 'block',
+                      opacity: uploadedFiles.length >= 5 ? 0.5 : 1
+                    }}
+                  >
+                    <Upload size={32} style={{ margin: '0 auto 0.5rem', color: '#9ca3af' }} />
+                    <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+                      Click to upload screenshots or documents
+                    </p>
+                    <p style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: '0.25rem' }}>
+                      Max 5 files, 5MB each ({uploadedFiles.length}/5 uploaded)
+                    </p>
+                  </label>
+                </div>
+
+                {uploadedFiles.length > 0 && (
+                  <div style={{ marginTop: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    {uploadedFiles.map((file, index) => (
+                      <div
+                        key={index}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          backgroundColor: '#f3f4f6',
+                          borderRadius: '0.375rem',
+                          padding: '0.5rem'
+                        }}
+                      >
+                        <span style={{
+                          fontSize: '0.875rem',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                          flex: 1
+                        }}>
+                          {file.name}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => removeFile(index)}
+                          style={{
+                            border: 'none',
+                            background: 'none',
+                            cursor: 'pointer',
+                            padding: '0.25rem',
+                            color: '#6b7280'
+                          }}
+                        >
+                          <X size={16} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Full Name */}
+              <div>
+                <label style={{
+                  display: 'block',
+                  fontSize: '0.875rem',
+                  fontWeight: '500',
+                  color: '#374151',
+                  marginBottom: '0.5rem'
+                }}>
+                  Full Name *
+                </label>
+                <input
+                  type="text"
+                  value={data.name}
+                  onChange={(e) => setData('name', e.target.value)}
+                  placeholder="Solomon Yeboah"
+                  style={{
+                    width: '100%',
+                    padding: '0.5rem 0.75rem',
+                    border: `1px solid ${errors.name ? '#ef4444' : '#d1d5db'}`,
+                    borderRadius: '0.375rem',
+                    fontSize: '0.875rem',
+                    outline: 'none',
+                    fontFamily: 'inherit'
+                  }}
+                />
+                {errors.name && (
+                  <p style={{ fontSize: '0.75rem', color: '#ef4444', marginTop: '0.25rem' }}>
+                    {errors.name}
+                  </p>
+                )}
+              </div>
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                disabled={processing}
+                style={{
+                  width: '100%',
+                  padding: '0.625rem',
+                  backgroundColor: processing ? '#9ca3af' : '#3b82f6',
                   color: 'white',
                   border: 'none',
                   borderRadius: '0.375rem',
                   fontWeight: '500',
-                  cursor: 'pointer'
-                }}>
-                  Sign In
-                </button>
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                {/* Issue Type */}
-                <div>
-                  <label style={{
-                    display: 'block',
-                    fontSize: '0.875rem',
-                    fontWeight: '500',
-                    color: '#374151',
-                    marginBottom: '0.5rem'
-                  }}>
-                    Issue Type *
-                  </label>
-                  <select
-                    value={formData.subject}
-                    onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                    style={{
-                      width: '100%',
-                      padding: '0.5rem 0.75rem',
-                      border: `1px solid ${errors.subject ? '#ef4444' : '#d1d5db'}`,
-                      borderRadius: '0.375rem',
-                      fontSize: '0.875rem',
-                      outline: 'none'
-                    }}
-                  >
-                    <option value="">Select the issue type</option>
-                    {subjectOptions.map((option) => (
-                      <option key={option} value={option}>
-                        {option}
-                      </option>
-                    ))}
-                  </select>
-                  {errors.subject && (
-                    <p style={{ fontSize: '0.75rem', color: '#ef4444', marginTop: '0.25rem' }}>
-                      {errors.subject}
-                    </p>
-                  )}
-                </div>
-
-                {/* Description */}
-                <div>
-                  <label style={{
-                    display: 'block',
-                    fontSize: '0.875rem',
-                    fontWeight: '500',
-                    color: '#374151',
-                    marginBottom: '0.5rem'
-                  }}>
-                    Description *
-                  </label>
-                  <textarea
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    placeholder="Please describe the issue in detail. Include dates, amounts, and any relevant information..."
-                    rows={5}
-                    style={{
-                      width: '100%',
-                      padding: '0.5rem 0.75rem',
-                      border: `1px solid ${errors.description ? '#ef4444' : '#d1d5db'}`,
-                      borderRadius: '0.375rem',
-                      fontSize: '0.875rem',
-                      outline: 'none',
-                      resize: 'vertical',
-                      fontFamily: 'inherit'
-                    }}
-                  />
-                  {errors.description && (
-                    <p style={{ fontSize: '0.75rem', color: '#ef4444', marginTop: '0.25rem' }}>
-                      {errors.description}
-                    </p>
-                  )}
-                </div>
-
-                {/* Evidence Upload */}
-                <div>
-                  <label style={{
-                    display: 'block',
-                    fontSize: '0.875rem',
-                    fontWeight: '500',
-                    color: '#374151',
-                    marginBottom: '0.5rem'
-                  }}>
-                    Evidence (optional)
-                  </label>
-                  <div style={{
-                    border: '2px dashed #d1d5db',
-                    borderRadius: '0.5rem',
-                    padding: '1rem',
-                    textAlign: 'center'
-                  }}>
-                    <input
-                      type="file"
-                      id="evidence-upload"
-                      style={{ display: 'none' }}
-                      accept="image/*,.pdf"
-                      multiple
-                      onChange={handleFileUpload}
-                    />
-                    <label htmlFor="evidence-upload" style={{ cursor: 'pointer', display: 'block' }}>
-                      <Upload size={32} style={{ margin: '0 auto 0.5rem', color: '#9ca3af' }} />
-                      <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>
-                        Click to upload screenshots or documents
-                      </p>
-                      <p style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: '0.25rem' }}>
-                        Max 5 files, 5MB each
-                      </p>
-                    </label>
-                  </div>
-
-                  {uploadedFiles.length > 0 && (
-                    <div style={{ marginTop: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                      {uploadedFiles.map((file, index) => (
-                        <div
-                          key={index}
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            backgroundColor: '#f3f4f6',
-                            borderRadius: '0.375rem',
-                            padding: '0.5rem'
-                          }}
-                        >
-                          <span style={{
-                            fontSize: '0.875rem',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap',
-                            flex: 1
-                          }}>
-                            {file.name}
-                          </span>
-                          <button
-                            onClick={() => removeFile(index)}
-                            style={{
-                              border: 'none',
-                              background: 'none',
-                              cursor: 'pointer',
-                              padding: '0.25rem',
-                              color: '#6b7280'
-                            }}
-                          >
-                            <X size={16} />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Anonymous Toggle */}
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '0.5rem',
-                  padding: '1rem'
-                }}>
-                  <div>
-                    <div style={{
-                      fontSize: '0.875rem',
-                      fontWeight: '500',
-                      color: '#374151',
-                      marginBottom: '0.25rem'
-                    }}>
-                      Report Anonymously
-                    </div>
-                    <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
-                      Your identity won't be shared with the reported party
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => setFormData({ ...formData, is_anonymous: !formData.is_anonymous })}
-                    style={{
-                      width: '44px',
-                      height: '24px',
-                      backgroundColor: formData.is_anonymous ? '#3b82f6' : '#d1d5db',
-                      borderRadius: '12px',
-                      border: 'none',
-                      cursor: 'pointer',
-                      position: 'relative',
-                      transition: 'background-color 0.2s'
-                    }}
-                  >
-                    <div style={{
-                      width: '20px',
-                      height: '20px',
-                      backgroundColor: 'white',
-                      borderRadius: '50%',
-                      position: 'absolute',
-                      top: '2px',
-                      left: formData.is_anonymous ? '22px' : '2px',
-                      transition: 'left 0.2s'
-                    }} />
-                  </button>
-                </div>
-
-                {/* Submit Button */}
-                <button
-                  onClick={handleSubmit}
-                  disabled={isSubmitting}
-                  style={{
-                    width: '100%',
-                    padding: '0.625rem',
-                    backgroundColor: isSubmitting ? '#9ca3af' : '#3b82f6',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '0.375rem',
-                    fontWeight: '500',
-                    cursor: isSubmitting ? 'not-allowed' : 'pointer',
-                    fontSize: '0.875rem'
-                  }}
-                >
-                  {isSubmitting ? "Submitting..." : "Submit Report"}
-                </button>
-              </div>
-            )}
+                  cursor: processing ? 'not-allowed' : 'pointer',
+                  fontSize: '0.875rem'
+                }}
+              >
+                {processing ? "Submitting..." : "Submit Report"}
+              </button>
+            </div>
           </div>
-        </div>
+        </form>
       </div>
 
       <style>{`

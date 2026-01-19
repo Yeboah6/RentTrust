@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useForm } from '@inertiajs/react';
 import { Home, MapPin, DollarSign, Calendar, Image, FileText, CheckCircle2, AlertCircle, Upload, X } from 'lucide-react';
 
-const AddRentalPage = ({ agentData }) => {
+const AddRentalPage = ({ agentData, setShowAddListingModal }) => {
 
   const { data, setData, post, processing, errors, reset } = useForm({
     title: '',
@@ -18,13 +18,14 @@ const AddRentalPage = ({ agentData }) => {
     amenities: [],
     images: [],
     description: '',
-    agentName: '',
-    agentPhone: '',
-    agentEmail: ''
+    agentName: agentData?.fullName || '',
+    agentPhone: agentData?.phone || '',
+    agentEmail: agentData?.email || ''
   });
 
   const [images, setImages] = useState([]);
   const [currentStep, setCurrentStep] = useState(1);
+  const [toast, setToast] = useState(null);
 
   const propertyTypes = ['Apartment', 'House', 'Studio', 'Chamber and Hall', 'Self-Contained', 'Condo', 'Townhouse'];
   const cities = ['Accra', 'Kumasi', 'Tema', 'Takoradi', 'Cape Coast', 'Tamale'];
@@ -39,17 +40,37 @@ const AddRentalPage = ({ agentData }) => {
 
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
-    const newImages = files.map(file => ({
+    
+    // Filter valid files
+    const validFiles = files.filter(file => {
+      if (file.size > 5 * 1024 * 1024) {
+        showToast("File too large", `${file.name} is larger than 5MB`, "error");
+        return false;
+      }
+      return true;
+    });
+
+    const newImages = validFiles.map(file => ({
       id: Math.random().toString(36).substr(2, 9),
       name: file.name,
       file: file,
       preview: URL.createObjectURL(file)
     }));
-    setImages(prev => [...prev, ...newImages].slice(0, 6));
+    
+    const updatedImages = [...images, ...newImages].slice(0, 6);
+    setImages(updatedImages);
+    setData('images', updatedImages.map(img => img.file));
   };
 
   const removeImage = (id) => {
-    setImages(prev => prev.filter(img => img.id !== id));
+    const updatedImages = images.filter(img => img.id !== id);
+    setImages(updatedImages);
+    setData('images', updatedImages.map(img => img.file));
+  };
+
+  const showToast = (title, description, variant = "success") => {
+    setToast({ title, description, variant });
+    setTimeout(() => setToast(null), 3000);
   };
 
   const validateStep = (step) => {
@@ -67,66 +88,75 @@ const AddRentalPage = ({ agentData }) => {
     e.preventDefault();
     if (validateStep(currentStep)) {
       setCurrentStep(prev => Math.min(prev + 1, 4));
+    } else {
+      showToast("Missing Information", "Please fill all required fields before proceeding.", "error");
     }
   };
 
   const handlePrevious = (e) => {
     e.preventDefault();
     setCurrentStep(prev => Math.max(prev - 1, 1));
-  };
+  };  
 
-  const handleSubmit = (e) => {
+    const handleSubmit = (e) => {
     e.preventDefault();
-    if (validateStep(currentStep)) {
-      const formData = new FormData();
-      
-      // Add all form fields
-      formData.append('title', data.title);
-      formData.append('propertyType', data.propertyType);
-      formData.append('area', data.area);
-      formData.append('city', data.city);
-      formData.append('address', data.address || '');
-      formData.append('rentMin', data.rentMin);
-      formData.append('rentMax', data.rentMax);
-      formData.append('advanceDuration', data.advanceDuration);
-      formData.append('bedrooms', data.bedrooms);
-      formData.append('bathrooms', data.bathrooms || '0');
+    
+    if (!validateStep(currentStep)) {
+      showToast("Missing Information", "Please fill all required fields.", "error");
+      return;
+    }
 
-      // Ensure amenities is always a string
+    const formData = new FormData();
+    
+    // Add all form fields
+    formData.append('title', data.title);
+    formData.append('propertyType', data.propertyType);
+    formData.append('area', data.area);
+    formData.append('city', data.city);
+    formData.append('address', data.address || '');
+    formData.append('rentMin', data.rentMin);
+    formData.append('rentMax', data.rentMax);
+    formData.append('advanceDuration', data.advanceDuration);
+    formData.append('bedrooms', data.bedrooms);
+    formData.append('bathrooms', data.bathrooms || '0');
+
+     // Ensure amenities is always a string
     const amenitiesString = Array.isArray(data.amenities) 
       ? JSON.stringify(data.amenities) 
       : data.amenities || '[]';
     formData.append('amenities', amenitiesString);
 
-      formData.append('description', data.description || '');
-      formData.append('agentName', data.agentName);
-      formData.append('agentPhone', data.agentPhone);
-      formData.append('agentEmail', data.agentEmail);
-      
-      // Add images - each image as a separate field
-      images.forEach((image, index) => {
-        if (image.file) {
-          formData.append(`images[]`, image.file); // Note: [] is important for array
+    formData.append('description', data.description || '');
+    formData.append('agentName', data.agentName);
+    formData.append('agentPhone', data.agentPhone);
+    formData.append('agentEmail', data.agentEmail);
+    
+    // Add images - using the same format as reports
+    if (data.images && data.images.length > 0) {
+      data.images.forEach((file, index) => {
+        if (file) {
+          formData.append(`images[${index}]`, file);
         }
       });
-      
-      post('/rent', formData, {
+    }
+    
+    post('/rent', {
+      data: formData,
       forceFormData: true,
-      headers: {
-        'Accept': 'application/json',
-      },
       onSuccess: () => {
-        // Clear form and reset state
+        showToast("Listing Submitted", "Your rental listing has been submitted for review.", "success");
         reset();
         setImages([]);
         setCurrentStep(1);
+        setTimeout(() => {
+          if (setShowAddListingModal) setShowAddListingModal(false);
+        }, 1500);
       },
       onError: (errors) => {
         console.error('Submission errors:', errors);
-        alert('There was an error submitting your listing. Please check all fields and try again.');
+        showToast("Submission Failed", "Please correct the errors and try again.", "error");
       },
     });
-    }
   };
 
   const steps = [
@@ -151,6 +181,26 @@ const AddRentalPage = ({ agentData }) => {
           ring-color: hsl(174 62% 32%);
         }
       `}</style>
+
+      {/* Toast Notification - Same as reports */}
+      {toast && (
+        <div style={{
+          position: 'fixed',
+          top: '1rem',
+          right: '1rem',
+          backgroundColor: toast.variant === 'error' ? '#ef4444' : '#10b981',
+          color: 'white',
+          padding: '1rem',
+          borderRadius: '0.5rem',
+          boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
+          zIndex: 9999,
+          maxWidth: '400px',
+          animation: 'slideIn 0.3s ease-out'
+        }}>
+          <div style={{ fontWeight: '600', marginBottom: '0.25rem' }}>{toast.title}</div>
+          <div style={{ fontSize: '0.875rem' }}>{toast.description}</div>
+        </div>
+      )}
 
       <div className="min-h-screen" style={{ backgroundColor: 'hsl(40 33% 98%)' }}>
 
@@ -549,9 +599,8 @@ const AddRentalPage = ({ agentData }) => {
                     </label>
                     <input
                       type="text"
-                      value={agentData.fullName || data.agentName}
+                      value={data.agentName || agentData.fullName}
                       onChange={(e) => setData('agentName', e.target.value)}
-                      // placeholder="Full name or business name"
                       className="w-full px-4 py-3 border rounded-lg focus:ring-2 transition-all"
                       style={{ borderColor: errors.agentName ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)' }}
                     />
@@ -568,9 +617,8 @@ const AddRentalPage = ({ agentData }) => {
                     </label>
                     <input
                       type="tel"
-                      value={agentData.phone || data.agentPhone}
+                      value={data.agentPhone || agentData.phone}
                       onChange={(e) => setData('agentPhone', e.target.value)}
-                      // placeholder="+233 XX XXX XXXX"
                       className="w-full px-4 py-3 border rounded-lg focus:ring-2 transition-all"
                       style={{ borderColor: errors.agentPhone ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)' }}
                     />
@@ -587,9 +635,8 @@ const AddRentalPage = ({ agentData }) => {
                     </label>
                     <input
                       type="email"
-                      value={agentData.email || data.agentEmail}
+                      value={data.agentEmail || agentData.email}
                       onChange={(e) => setData('agentEmail', e.target.value)}
-                      // placeholder="your@email.com"
                       className="w-full px-4 py-3 border rounded-lg focus:ring-2 transition-all"
                       style={{ borderColor: errors.agentEmail ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)' }}
                     />
