@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Header from '../Components/Layouts/Header';
 import Footer from '../Components/Layouts/Footer';
+import AppReview from './AppReview';
 
 // Icons
 const MessageSquare = ({ style }) => (
@@ -141,7 +142,7 @@ const ReviewsSection = () => {
                 </p>
               </div>
               <button
-                onClick={() => setShowReviewForm(!showReviewForm)}
+                onClick={() => setShowReviewForm(true)}
                 style={{
                   padding: '0.5rem 1rem',
                   background: 'linear-gradient(135deg, hsl(174 62% 32%) 0%, hsl(174 50% 25%) 100%)',
@@ -159,14 +160,33 @@ const ReviewsSection = () => {
               </button>
             </div>
 
-            {/* Review Form */}
             {showReviewForm && (
-              <div style={{ padding: '1.5rem', backgroundColor: 'hsl(40 30% 94%)', borderBottom: '1px solid hsl(40 20% 88%)' }}>
-                <p style={{ textAlign: 'center', color: 'hsl(200 15% 45%)' }}>
-                  Review form would go here
-                </p>
-              </div>
-            )}
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 50,
+          padding: '1rem'
+        }}>
+          <div style={{
+            backgroundColor: 'white',
+            borderRadius: '1rem',
+            maxHeight: '90vh',
+            overflow: 'auto',
+            maxWidth: '60%',
+            width: '100%',
+            position: 'relative'
+          }}>
+            <AppReview setShowReviewForm={setShowReviewForm} />
+          </div>
+        </div>
+      )}
 
             {/* Reviews List */}
             <div style={{ padding: '1.5rem' }}>
