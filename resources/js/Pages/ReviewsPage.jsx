@@ -1,4 +1,6 @@
 import { useState } from "react";
+import Header from '../Components/Layouts/Header';
+import Footer from '../Components/Layouts/Footer';
 
 // Icons
 const MessageSquare = ({ style }) => (
@@ -109,6 +111,8 @@ const ReviewsSection = () => {
         }
       `}</style>
 
+      <Header />
+
       <div style={{ padding: '2rem', backgroundColor: 'hsl(40 33% 98%)', minHeight: '100vh' }}>
         <div style={{ maxWidth: '56rem', margin: '0 auto' }}>
           <div style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.75rem' }}>
@@ -130,10 +134,10 @@ const ReviewsSection = () => {
                   gap: '0.5rem'
                 }}>
                   <MessageSquare style={{ height: '1.25rem', width: '1.25rem' }} />
-                  Tenant Reviews
+                  Tenant & Agent/Landloard Reviews
                 </h3>
                 <p style={{ fontSize: '0.875rem', color: 'hsl(200 15% 45%)' }}>
-                  {reviews.length} reviews from verified tenants
+                  {reviews.length} reviews from users
                 </p>
               </div>
               <button
@@ -295,6 +299,7 @@ const ReviewsSection = () => {
           </div>
         </div>
       </div>
+      <Footer />
     </>
   );
 };

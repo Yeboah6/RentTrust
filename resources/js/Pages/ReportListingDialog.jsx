@@ -158,7 +158,6 @@ const ReportListingDialog = ({ open, onOpenChange, propertyId, agentId, setShowA
             boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)',
             position: 'relative'
           }}
-          // onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
           <div style={{
@@ -166,7 +165,7 @@ const ReportListingDialog = ({ open, onOpenChange, propertyId, agentId, setShowA
             borderBottom: '1px solid #e5e7eb'
           }}>
             <button
-              onClick={() => onOpenChange(false)}
+              // onClick={() => onOpenChange(false)}
               style={{
                 position: 'absolute',
                 right: '1rem',

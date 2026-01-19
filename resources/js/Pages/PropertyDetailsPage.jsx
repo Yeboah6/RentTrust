@@ -3,6 +3,7 @@ import Header from '../Components/Layouts/Header';
 import Footer from '../Components/Layouts/Footer';
 import { Link } from "@inertiajs/react";
 import ReportListingDialog from "./ReportListingDialog";
+import ReviewForm from "./ReviewForm";
 
 // Icon components
 const MapPin = ({ style }) => (
@@ -59,9 +60,16 @@ const Flag = ({ style }) => (
   </svg>
 );
 
+const MessageSquare = ({ style }) => (
+  <svg style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+  </svg>
+);
+
 const PropertyDetailsPage = ({ rental }) => {
   const formatCurrency = (amount) => `GH₵${amount?.toLocaleString() || '0'}`;
   const [showAddListingModal, setShowAddListingModal] = useState(false);
+  const [showAddReviewForm, setShowAddReviewForm] = useState(false);
   
   // Parse amenities if it's a string
   const amenities = typeof rental.amenities === 'string' 
@@ -339,6 +347,25 @@ const PropertyDetailsPage = ({ rental }) => {
                     <Flag style={{ height: '1rem', width: '1rem' }} />
                     Report Listing
                   </button>
+                  <button 
+                  onClick={() => setShowAddReviewForm(true)}
+                  style={{
+                    width: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.5rem',
+                    padding: '0.75rem',
+                    border: '1px solid hsl(40 20% 88%)',
+                    borderRadius: '0.5rem',
+                    backgroundColor: 'white',
+                    color: 'hsl(174 62% 32%)',
+                    fontWeight: '500',
+                    cursor: 'pointer'
+                  }}>
+                    <MessageSquare style={{ height: '1.25rem', width: '1.25rem' }} />
+                    Write Review
+                  </button>
                 </div>
               </div>
             </div>
@@ -372,6 +399,34 @@ const PropertyDetailsPage = ({ rental }) => {
               position: 'relative'
             }}>
               <ReportListingDialog setShowAddListingModal={setShowAddListingModal} rental={rental} />
+            </div>
+          </div>
+        )}
+        {/* Add ReviewForm Modal */}
+        {showAddReviewForm && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 50,
+            padding: '1rem'
+          }}>
+            <div style={{
+              backgroundColor: 'white',
+              borderRadius: '1rem',
+              maxHeight: '90vh',
+              overflow: 'auto',
+              maxWidth: '60%',
+              width: '100%',
+              position: 'relative'
+            }}>
+              <ReviewForm setShowAddReviewForm={setShowAddReviewForm} rental={rental} />
             </div>
           </div>
         )}

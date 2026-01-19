@@ -12,16 +12,15 @@ const PropertyCard = ({
   advance_duration, 
   agent_name, 
   is_verified, 
-  is_claimed, 
-  // reviewCount, 
-  // rating 
+  is_claimed,
 }) => {
   const [isHovered, setIsHovered] = useState(false);
 
   const formatPrice = (price) => `GH₵${price.toLocaleString()}`;
 
   return (
-    <div
+    <Link
+      href={`/rent/${id}`}
       className="border rounded-xl bg-white overflow-hidden transition-all duration-300 cursor-pointer"
       style={{ 
         borderColor: 'hsl(40 20% 88%)',
@@ -32,7 +31,6 @@ const PropertyCard = ({
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      onClick={() => alert(`View details for ${title}`)}
     >
       {/* Image placeholder */}
       <div 
@@ -112,7 +110,7 @@ const PropertyCard = ({
           </div>
         </div>
       </div>
-    </div>
+    </Link>
   );
 };
 

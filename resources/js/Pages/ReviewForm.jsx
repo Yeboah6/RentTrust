@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Star } from "lucide-react";
+import { Star, X } from "lucide-react";
 
 const ReviewForm = ({ propertyId, agentId, onSuccess }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -383,7 +383,7 @@ const ReviewForm = ({ propertyId, agentId, onSuccess }) => {
 };
 
 // Demo App
-export default function App() {
+export default function App({ setShowAddReviewForm, rental }) {
   const handleSuccess = () => {
     console.log("Review submitted successfully!");
   };
@@ -395,6 +395,23 @@ export default function App() {
       padding: '2rem',
       fontFamily: 'system-ui, -apple-system, sans-serif'
     }}>
+      <br />
+
+      <button
+        onClick={() => onOpenChange(false)}
+        style={{
+          position: 'absolute',
+          right: '1rem',
+          top: '1rem',
+          border: 'none',
+          background: 'none',
+          cursor: 'pointer',
+          color: '#6b7280',
+          padding: '0.25rem'
+        }}
+      >
+      <X size={20} onClick={() => setShowAddReviewForm(false)}/>
+      </button>
       <div style={{
         maxWidth: '800px',
         margin: '0 auto',
@@ -425,10 +442,10 @@ export default function App() {
           borderLeft: '4px solid #3b82f6'
         }}>
           <h3 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '0.25rem', color: '#111827' }}>
-            Luxury 3-Bedroom Apartment
+           { rental.title } { rental.property_type }
           </h3>
           <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>
-            East Legon, Accra • Agent: John Mensah
+            {rental.area}, {rental.city} • Agent: {rental.agent.fullName}
           </p>
         </div>
 

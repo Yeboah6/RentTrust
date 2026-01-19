@@ -5,10 +5,10 @@ import { ArrowRight, Building2, Users } from 'lucide-react';
 const CTASection = () => {
   const [hoveredCard, setHoveredCard] = useState(null);
 
-  const handleTenantClick = () => {
-    console.log('Submit a Review clicked');
-    alert('Redirecting to review submission form...');
-  };
+  // const handleTenantClick = () => {
+  //   console.log('Submit a Review clicked');
+  //   alert('Redirecting to review submission form...');
+  // };
 
   return (
     <>
@@ -59,14 +59,14 @@ const CTASection = () => {
                   Share your rent experience and help other Ghanaians avoid bad deals. 
                   Your review could save someone from a scam.
                 </p>
-                <button
-                  onClick={handleTenantClick}
+                <Link
+                  href="/reviews"
                   className="inline-flex items-center px-6 py-3 text-white font-semibold rounded-lg transition-all duration-200 active:scale-95 shadow-md hover:shadow-lg"
                   style={{ backgroundColor: 'hsl(174 62% 32%)' }}
                 >
-                  Submit a Review
+                  Reviews
                   <ArrowRight className="h-4 w-4 ml-2" />
-                </button>
+                </Link>
               </div>
             </div>
 
