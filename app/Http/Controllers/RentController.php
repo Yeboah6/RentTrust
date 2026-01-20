@@ -229,7 +229,42 @@ public function store(Request $request)
     }
 
     public function listings() {
-        $listings = Rental::all();
+        $listings = Rental::all()->map(function ($listing) {
+            return [
+                'id' => $listing->id,
+                'title' => $listing->title,
+                'property_type' => $listing->property_type,
+                'city' => $listing->city,
+                'area' => $listing->area,
+                'address' => $listing->address,
+                'rent_min' => $listing->rent_min,
+                'rent_max' => $listing->rent_max,
+                'advance_duration' => $listing->advance_duration,
+                'bedrooms' => $listing->bedrooms,
+                'bathrooms' => $listing->bathrooms,
+                'amenities' => $listing->amenities,
+                'description' => $listing->description,
+                'agent_name' => $listing->agent_name,
+                'agent_phone' => $listing->agent_phone,
+                'agent_email' => $listing->agent_email,
+                'is_claimed' => $listing->is_claimed ?? false,
+                'is_verified' => $listing->is_verified ?? false,
+                'status' => $listing->status,
+                // Parse images to array
+                'images' => $listing->images ? 
+                    (is_string($listing->images) ? json_decode($listing->images, true) : $listing->images) 
+                    : [],
+                // Parse amenities to array
+                'amenities' => $listing->amenities ? 
+                    (is_string($listing->amenities) ? json_decode($listing->amenities, true) : $listing->amenities) 
+                    : [],
+                'review_count' => $listing->review_count ?? 0,
+                'rating' => $listing->rating ?? 0,
+                'created_at' => $listing->created_at,
+                'updated_at' => $listing->updated_at,
+            ];
+        });
+        
         return inertia('ListingsPage', ['listings' => $listings]);
     }
 

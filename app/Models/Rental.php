@@ -30,6 +30,7 @@ class Rental extends Model
     ];
 
     protected $casts = [
+        'images' => 'array',
         'amenities' => 'array',
         'rent_min' => 'decimal:2',
         'rent_max' => 'decimal:2',

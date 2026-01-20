@@ -155,6 +155,39 @@ const Dropdown = ({ value, options, onChange, placeholder }) => {
 const PropertyCard = ({ listing }) => {
   const [isHovered, setIsHovered] = useState(false);
 
+  // Debug what you're receiving
+  console.log('Listing:', listing);
+  console.log('Images type:', typeof listing.images);
+  console.log('Images value:', listing.title);
+  console.log('Is array?', Array.isArray(listing.images));
+  
+  // Get first image
+  const getFirstImage = () => {
+    if (!listing.images) return null;
+    
+    // If it's already an array
+    if (Array.isArray(listing.images) && listing.images.length > 0) {
+      return listing.images[0];
+    }
+    
+    // If it's a string, try to parse it
+    if (typeof listing.images === 'string') {
+      try {
+        const parsed = JSON.parse(listing.images);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed[0];
+        }
+      } catch (e) {
+        console.error('Failed to parse images JSON:', e);
+      }
+    }
+    
+    return null;
+  };
+  
+  const firstImage = getFirstImage();
+  console.log(firstImage)
+
   return (
     <div
       className="overflow-hidden cursor-pointer border rounded-xl bg-white transition-all duration-300"
@@ -167,23 +200,76 @@ const PropertyCard = ({ listing }) => {
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      // onClick={() => alert(`View details for ${listing.title}`)}
     >
-      {/* Image placeholder */}
+      {/* Debug info - keep this temporarily */}
+      <div style={{
+        backgroundColor: '#f8f9fa',
+        padding: '4px 8px',
+        fontSize: '10px',
+        color: '#666',
+        borderBottom: '1px solid #dee2e6'
+      }}>
+        Images: {JSON.stringify(listing.images)} | Type: {typeof listing.images}
+      </div>
+      
+      {/* Image as background */}
       <div 
         style={{ 
-          height: '12rem', 
-          background: 'linear-gradient(135deg, hsl(174 62% 32% / 0.2) 0%, hsl(174 62% 32% / 0.05) 100%)',
+          height: '12rem',
+          backgroundImage: firstImage
+            ? `url(/storage/rental_images/${firstImage})`
+            : 'linear-gradient(135deg, hsl(174 62% 32% / 0.2) 0%, hsl(174 62% 32% / 0.05) 100%)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center'
+          justifyContent: 'center',
+          position: 'relative'
         }}
       >
-        <MapPin style={{ height: '3rem', width: '3rem', color: 'hsl(200 25% 15% / 0.2)' }} />
+        {/* Show icon only if no images */}
+        {!firstImage && (
+          <div>
+            <MapPin style={{ height: '3rem', width: '3rem', color: 'hsl(200 25% 15% / 0.2)' }} />
+            <div style={{ fontSize: '12px', color: '#666', marginTop: '8px' }}>
+              No image available
+            </div>
+          </div>
+        )}
+        
+        {/* Optional: Image count badge */}
+        {firstImage && listing.images && (
+          <div style={{
+            position: 'absolute',
+            top: '0.75rem',
+            right: '0.75rem',
+            backgroundColor: 'hsl(200 25% 15% / 0.8)',
+            color: 'white',
+            padding: '0.25rem 0.5rem',
+            borderRadius: '0.375rem',
+            fontSize: '0.75rem',
+            fontWeight: '500',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.25rem'
+          }}>
+            <span>📷</span>
+            <span>1</span>
+          </div>
+        )}
+        
+        {/* Optional: Overlay gradient for better contrast */}
+        {firstImage && (
+          <div style={{
+            position: 'absolute',
+            inset: 0,
+            background: 'linear-gradient(to bottom, transparent 0%, hsl(200 25% 15% / 0.3) 100%)'
+          }} />
+        )}
       </div>
 
       <div className="p-4">
-        {/* Claimed Badge */}
         <div style={{ marginBottom: '0.75rem' }}>
           <span
             style={{
@@ -202,7 +288,6 @@ const PropertyCard = ({ listing }) => {
           </span>
         </div>
 
-        {/* Title and Location */}
         <h3 className="font-semibold tracking-tight mb-1" style={{ color: 'hsl(200 25% 15%)', fontSize: '1.125rem' }}>
           {listing.title}
         </h3>
@@ -213,7 +298,6 @@ const PropertyCard = ({ listing }) => {
           </span>
         </div>
 
-        {/* Price */}
         <div style={{ marginBottom: '0.75rem' }}>
           <div className="font-bold" style={{ color: 'hsl(174 62% 32%)', fontSize: '1.25rem' }}>
             GH₵{listing.rentMin.toLocaleString()} - {listing.rentMax.toLocaleString()}
@@ -221,7 +305,6 @@ const PropertyCard = ({ listing }) => {
           <div style={{ fontSize: '0.75rem', color: 'hsl(200 15% 45%)' }}>per month</div>
         </div>
 
-        {/* Advance Duration */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
           <Calendar style={{ height: '1rem', width: '1rem', color: 'hsl(200 15% 45%)' }} />
           <span style={{ fontSize: '0.875rem', color: 'hsl(200 15% 45%)' }}>
@@ -229,7 +312,6 @@ const PropertyCard = ({ listing }) => {
           </span>
         </div>
 
-        {/* Agent Info */}
         {listing.agentName && (
           <div style={{ 
             paddingTop: '0.75rem', 
@@ -261,7 +343,6 @@ const PropertyCard = ({ listing }) => {
           </div>
         )}
 
-        {/* Rating */}
         {listing.reviewCount > 0 && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
