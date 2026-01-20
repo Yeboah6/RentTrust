@@ -3,6 +3,7 @@ import { Link } from "@inertiajs/react";
 import Header from "@/Components/Layouts/Header";
 import Footer from "@/Components/Layouts/Footer";
 import AddRentalPage from "@/Pages/AddRentals";
+import EditRentals from "@/Pages/EditRentals";
 
 // Icon components
 const Shield = ({ style }) => (
@@ -87,6 +88,7 @@ const AgentDashboardPage = ({ agentData, rentals }) => {
   const [respondingTo, setRespondingTo] = useState(null);
   const [responseText, setResponseText] = useState("");
   const [showAddListingModal, setShowAddListingModal] = useState(false);
+  const [showEditListingModal, setShowEditListingModal] = useState(false);
 
   const agent = {
     name: agentData?.fullName || "Unknown Agent",
@@ -364,7 +366,9 @@ const AgentDashboardPage = ({ agentData, rentals }) => {
                             }}>
                               View
                             </button>
-                            <button style={{
+                            <button 
+                            onClick={() => setShowEditListingModal(true)}
+                            style={{
                               padding: '0.375rem 0.75rem',
                               border: '1px solid hsl(40 20% 88%)',
                               borderRadius: '0.375rem',
@@ -617,6 +621,53 @@ const AgentDashboardPage = ({ agentData, rentals }) => {
                 ✕
               </button>
               <AddRentalPage agentData={agentData} setShowAddListingModal={setShowAddListingModal}  />
+            </div>
+          </div>
+        )}
+
+        {/* Edit Listing Modal */}
+        {showEditListingModal && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 50,
+            padding: '1rem'
+          }}>
+            <div style={{
+              backgroundColor: 'white',
+              borderRadius: '1rem',
+              maxHeight: '90vh',
+              overflow: 'auto',
+              maxWidth: '60%',
+              width: '100%',
+              position: 'relative'
+            }}>
+              <button
+                onClick={() => setShowEditListingModal(false)}
+                style={{
+                  position: 'sticky',
+                  top: 0,
+                  right: 0,
+                  padding: '1rem',
+                  border: 'none',
+                  background: 'transparent',
+                  fontSize: '1.5rem',
+                  cursor: 'pointer',
+                  color: 'hsl(200 15% 45%)',
+                  float: 'right',
+                  zIndex: 10
+                }}
+              >
+                ✕
+              </button>
+              <EditRentals agentData={agentData} setShowEditListingModal={setShowEditListingModal} rentals={rentals}  />
             </div>
           </div>
         )}

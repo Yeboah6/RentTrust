@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Link } from "@inertiajs/react";
 import Header from "../Components/Layouts/Header";
 import Footer from "../Components/Layouts/Footer";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 // Icon components
 const Search = ({ className, style }) => (
@@ -152,41 +153,47 @@ const Dropdown = ({ value, options, onChange, placeholder }) => {
   );
 };
 
+// Parse images from database (handles both string and array formats)
+const parseImages = (imagesData) => {
+  if (!imagesData) return [];
+  
+  try {
+    // If it's already an array, return it
+    if (Array.isArray(imagesData)) return imagesData;
+    
+    // If it's a string, parse it as JSON
+    if (typeof imagesData === 'string') {
+      const parsed = JSON.parse(imagesData);
+      return Array.isArray(parsed) ? parsed : [];
+    }
+    
+    return [];
+  } catch (e) {
+    console.error('Error parsing images:', e);
+    return [];
+  }
+};
+
 const PropertyCard = ({ listing }) => {
   const [isHovered, setIsHovered] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  
+  // Parse images from listing
+  const imagesArray = parseImages(listing.images);
 
-  // Debug what you're receiving
-  console.log('Listing:', listing);
-  console.log('Images type:', typeof listing.images);
-  console.log('Images value:', listing.title);
-  console.log('Is array?', Array.isArray(listing.images));
-  
-  // Get first image
-  const getFirstImage = () => {
-    if (!listing.images) return null;
-    
-    // If it's already an array
-    if (Array.isArray(listing.images) && listing.images.length > 0) {
-      return listing.images[0];
-    }
-    
-    // If it's a string, try to parse it
-    if (typeof listing.images === 'string') {
-      try {
-        const parsed = JSON.parse(listing.images);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed[0];
-        }
-      } catch (e) {
-        console.error('Failed to parse images JSON:', e);
-      }
-    }
-    
-    return null;
+  const handlePrevImage = (e) => {
+    e.stopPropagation(); // Prevent card click when clicking arrow
+    setCurrentImageIndex((prev) => 
+      prev === 0 ? imagesArray.length - 1 : prev - 1
+    );
   };
-  
-  const firstImage = getFirstImage();
-  console.log(firstImage)
+
+  const handleNextImage = (e) => {
+    e.stopPropagation(); // Prevent card click when clicking arrow
+    setCurrentImageIndex((prev) => 
+      prev === imagesArray.length - 1 ? 0 : prev + 1
+    );
+  };
 
   return (
     <div
@@ -201,74 +208,158 @@ const PropertyCard = ({ listing }) => {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Debug info - keep this temporarily */}
-      <div style={{
-        backgroundColor: '#f8f9fa',
-        padding: '4px 8px',
-        fontSize: '10px',
-        color: '#666',
-        borderBottom: '1px solid #dee2e6'
+      {/* Image Carousel Section */}
+      <div style={{ 
+        height: '12rem',
+        position: 'relative',
+        overflow: 'hidden',
+        backgroundColor: 'hsl(174 62% 32% / 0.05)'
       }}>
-        Images: {JSON.stringify(listing.images)} | Type: {typeof listing.images}
-      </div>
-      
-      {/* Image as background */}
-      <div 
-        style={{ 
-          height: '12rem',
-          backgroundImage: firstImage
-            ? `url(/storage/rental_images/${firstImage})`
-            : 'linear-gradient(135deg, hsl(174 62% 32% / 0.2) 0%, hsl(174 62% 32% / 0.05) 100%)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          position: 'relative'
-        }}
-      >
-        {/* Show icon only if no images */}
-        {!firstImage && (
-          <div>
+        {/* Image */}
+        {imagesArray.length > 0 ? (
+          <img 
+            src={`/storage/rental_images/${imagesArray[currentImageIndex]}`}
+            alt={`${listing.title || 'Property'} image ${currentImageIndex + 1}`}
+            style={{
+              // width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              objectPosition: 'center',
+              transition: 'opacity 0.3s ease-in-out'
+            }}
+          />
+        ) : (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '100%',
+            height: '100%',
+            flexDirection: 'column'
+          }}>
             <MapPin style={{ height: '3rem', width: '3rem', color: 'hsl(200 25% 15% / 0.2)' }} />
             <div style={{ fontSize: '12px', color: '#666', marginTop: '8px' }}>
               No image available
             </div>
           </div>
         )}
-        
-        {/* Optional: Image count badge */}
-        {firstImage && listing.images && (
-          <div style={{
-            position: 'absolute',
-            top: '0.75rem',
-            right: '0.75rem',
-            backgroundColor: 'hsl(200 25% 15% / 0.8)',
-            color: 'white',
-            padding: '0.25rem 0.5rem',
-            borderRadius: '0.375rem',
-            fontSize: '0.75rem',
-            fontWeight: '500',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.25rem'
-          }}>
-            <span>📷</span>
-            <span>1</span>
-          </div>
-        )}
-        
-        {/* Optional: Overlay gradient for better contrast */}
-        {firstImage && (
-          <div style={{
-            position: 'absolute',
-            inset: 0,
-            background: 'linear-gradient(to bottom, transparent 0%, hsl(200 25% 15% / 0.3) 100%)'
-          }} />
+
+        {/* Carousel Controls - Only show if there are multiple images */}
+        {imagesArray.length > 1 && (
+          <>
+            {/* Previous Button */}
+            <button
+              onClick={handlePrevImage}
+              style={{
+                position: 'absolute',
+                left: '0.5rem',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                border: 'none',
+                borderRadius: '50%',
+                width: '2rem',
+                height: '2rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+                zIndex: 10,
+                transition: 'all 0.2s'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 1)';
+                e.currentTarget.style.transform = 'translateY(-50%) scale(1.1)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+                e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
+              }}
+            >
+              <ChevronLeft size={20} style={{ color: '#374151' }} />
+            </button>
+
+            {/* Next Button */}
+            <button
+              onClick={handleNextImage}
+              style={{
+                position: 'absolute',
+                right: '0.5rem',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                border: 'none',
+                borderRadius: '50%',
+                width: '2rem',
+                height: '2rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+                zIndex: 10,
+                transition: 'all 0.2s'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 1)';
+                e.currentTarget.style.transform = 'translateY(-50%) scale(1.1)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+                e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
+              }}
+            >
+              <ChevronRight size={20} style={{ color: '#374151' }} />
+            </button>
+
+            {/* Dot Indicators */}
+            <div style={{
+              position: 'absolute',
+              bottom: '0.75rem',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              display: 'flex',
+              gap: '0.375rem',
+              padding: '0.375rem 0.625rem',
+              backgroundColor: 'rgba(0, 0, 0, 0.6)',
+              borderRadius: '9999px',
+              zIndex: 10
+            }}>
+              {imagesArray.map((_, index) => (
+                <div
+                  key={index}
+                  style={{
+                    width: '0.375rem',
+                    height: '0.375rem',
+                    borderRadius: '50%',
+                    backgroundColor: index === currentImageIndex ? 'white' : 'rgba(255, 255, 255, 0.5)',
+                    transition: 'all 0.2s'
+                  }}
+                />
+              ))}
+            </div>
+
+            {/* Image Counter Badge */}
+            <div style={{
+              position: 'absolute',
+              top: '0.75rem',
+              right: '0.75rem',
+              backgroundColor: 'rgba(0, 0, 0, 0.7)',
+              color: 'white',
+              padding: '0.25rem 0.5rem',
+              borderRadius: '0.375rem',
+              fontSize: '0.75rem',
+              fontWeight: '500',
+              zIndex: 10
+            }}>
+              {currentImageIndex + 1} / {imagesArray.length}
+            </div>
+          </>
         )}
       </div>
 
+      {/* Card Content Section */}
       <div className="p-4">
         <div style={{ marginBottom: '0.75rem' }}>
           <span
@@ -365,7 +456,7 @@ const ListingsPage = ({ listings: initialListings = [] }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
   const [sortBy, setSortBy] = useState("recent");
-  const [listings, setListings] = useState(initialListings);
+  const [listings, setListings] = useState([]);
 
   useEffect(() => {
     if (initialListings && initialListings.length > 0) {
@@ -373,20 +464,27 @@ const ListingsPage = ({ listings: initialListings = [] }) => {
     }
   }, [initialListings]);
 
-const formatListings = (dbListings) => {
+  const formatListings = (dbListings) => {
     return dbListings.map(listing => ({
       id: listing.id,
-      title:`${listing.bedrooms} Bedroom ${listing.property_type}`,
+      title: listing.title || `${listing.bedrooms} Bedroom ${listing.property_type}`,
       area: listing.area || listing.location,
       city: listing.city || "Accra",
       rentMin: parseFloat(listing.rent_min) || 0,
       rentMax: parseFloat(listing.rent_max) || 0,
       advanceDuration: parseInt(listing.advance_duration) || 1,
+      bedrooms: listing.bedrooms,
+      bathrooms: listing.bathrooms,
+      property_type: listing.property_type,
       agentName: listing.agent_name || null,
       isVerified: Boolean(listing.is_verified),
       isClaimed: Boolean(listing.is_claimed), 
       reviewCount: parseInt(listing.review_count) || 0,
-      rating: parseFloat(listing.rating) || 0
+      rating: parseFloat(listing.rating) || 0,
+      // Ensure images are properly included
+      images: listing.images || [],
+      amenities: listing.amenities || [],
+      description: listing.description || ''
     }));
   };
 
@@ -425,7 +523,7 @@ const formatListings = (dbListings) => {
         return b.rating - a.rating;
       case "recent":
       default:
-        return 0; // Add timestamp field if you want to sort by recent
+        return new Date(b.created_at || 0) - new Date(a.created_at || 0);
     }
   });
 
@@ -540,13 +638,13 @@ const formatListings = (dbListings) => {
           <div className="container mx-auto px-4 py-8">
             <div style={{ marginBottom: '1.5rem' }}>
               <p style={{ color: 'hsl(200 15% 45%)' }}>
-                Showing <span className="font-medium" style={{ color: 'hsl(200 25% 15%)' }}>{filteredListings.length}</span> listings
+                Showing <span className="font-medium" style={{ color: 'hsl(200 25% 15%)' }}>{sortedListings.length}</span> listings
               </p>
             </div>
 
             {/* Listings Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
-              {filteredListings.map((listing) => (
+              {sortedListings.map((listing) => (
                 <Link 
                   key={listing.id} 
                   href={`/rent/${listing.id}`}
@@ -557,7 +655,7 @@ const formatListings = (dbListings) => {
               ))}
             </div>
 
-            {filteredListings.length === 0 && (
+            {sortedListings.length === 0 && (
               <div style={{ textAlign: 'center', padding: '3rem 0' }}>
                 <MapPin style={{ height: '3rem', width: '3rem', color: 'hsl(200 15% 45% / 0.5)', margin: '0 auto 1rem' }} />
                 <h3 className="text-lg font-semibold tracking-tight" style={{ color: 'hsl(200 25% 15%)', marginBottom: '0.5rem' }}>
@@ -568,7 +666,7 @@ const formatListings = (dbListings) => {
             )}
 
             {/* Load More */}
-            {filteredListings.length > 0 && (
+            {sortedListings.length > 0 && (
               <div style={{ textAlign: 'center', marginTop: '2rem' }}>
                 <button
                   style={{
