@@ -302,7 +302,7 @@ public function storeReviewForms(Request $request) {
         'good_communication' => 'nullable|boolean',
         'comments' => 'nullable|string|max:255',
         'full_name' => 'required|string|max:255',
-        'rental_id' => 'required|exists:rentals,id' // Added rental_id to link the review
+        'rental_id' => 'required|exists:rentals,id'
     ], [
         'overall_rating.required' => 'Please provide an overall rating.',
         'overall_rating.integer' => 'Rating must be a whole number.',
@@ -337,9 +337,6 @@ public function storeReviewForms(Request $request) {
             'comments' => $validated['comments'] ?? null,
             'full_name' => $validated['full_name'],
         ]);
-
-        // Recalculate average rating for the rental
-        $this->updateRentalRating($validated['rental_id']);
 
         // Success response
         return redirect()->back()

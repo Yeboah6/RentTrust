@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Review extends Model
 {
     protected $fillable = [
+    'rental_id',
     'overall_rating',
     'landlord_responsive',
     'property_matched_description',
