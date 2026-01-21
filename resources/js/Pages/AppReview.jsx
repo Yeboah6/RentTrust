@@ -308,7 +308,7 @@ export default function App({ setShowReviewForm }) {
             marginBottom: '0.5rem',
             color: '#111827'
           }}>
-            Write a Review
+            Rate your Experience
           </h1>
           <p style={{ color: '#6b7280' }}>
             Share your experience with RentTrust to help others make informed decisions

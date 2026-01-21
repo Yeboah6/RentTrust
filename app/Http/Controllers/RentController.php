@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Rental;
-use App\Models\RentalImage;
+use App\Models\Review;
 use App\Models\Report;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -284,10 +284,6 @@ public function store(Request $request)
         return inertia('ReviewsPage');
     }
 
-    // public function propertyDetail() {
-    //     return inertia('PropertyDetailsPage');
-    // }
-
     public function reportListings() {
         return inertia('ReportListingDialog');
     }
@@ -296,11 +292,66 @@ public function store(Request $request)
         return inertia('AddRentals');
     }
 
-    // public function storeAddRentals(Request $request) {
-    //     dd($request);
-    // }
+   
+public function storeReviewForms(Request $request) {
+    $validated = $request->validate([
+        'overall_rating' => 'required|integer|min:1|max:5',
+        'landlord_responsive' => 'nullable|boolean',
+        'property_matched_description' => 'nullable|boolean',
+        'fair_pricing' => 'nullable|boolean',
+        'good_communication' => 'nullable|boolean',
+        'comments' => 'nullable|string|max:255',
+        'full_name' => 'required|string|max:255',
+        'rental_id' => 'required|exists:rentals,id' // Added rental_id to link the review
+    ], [
+        'overall_rating.required' => 'Please provide an overall rating.',
+        'overall_rating.integer' => 'Rating must be a whole number.',
+        'overall_rating.min' => 'Rating must be at least 1 star.',
+        'overall_rating.max' => 'Rating cannot be more than 5 stars.',
+        'full_name.required' => 'Your name is required.',
+        'rental_id.required' => 'Rental property is required.',
+        'rental_id.exists' => 'The selected rental property does not exist.'
+    ]);
 
-    public function reviewForms() {
-        return inertia('ReviewForm');
+    try {
+        // Convert checkbox values to boolean (they come as 'on' or null)
+        $checkboxFields = [
+            'landlord_responsive',
+            'property_matched_description', 
+            'fair_pricing',
+            'good_communication'
+        ];
+
+        foreach ($checkboxFields as $field) {
+            $validated[$field] = $request->has($field) ? true : false;
+        }
+
+        // Create the review
+        $review = Review::create([
+            'rental_id' => $validated['rental_id'],
+            'overall_rating' => $validated['overall_rating'],
+            'landlord_responsive' => $validated['landlord_responsive'] ?? false,
+            'property_matched_description' => $validated['property_matched_description'] ?? false,
+            'fair_pricing' => $validated['fair_pricing'] ?? false,
+            'good_communication' => $validated['good_communication'] ?? false,
+            'comments' => $validated['comments'] ?? null,
+            'full_name' => $validated['full_name'],
+        ]);
+
+        // Recalculate average rating for the rental
+        $this->updateRentalRating($validated['rental_id']);
+
+        // Success response
+        return redirect()->back()
+            ->with('success', 'Thank you for your review! Your feedback has been submitted.');
+
+    } catch (\Exception $e) {
+        \Log::error('Failed to store review: ' . $e->getMessage());
+        
+        return redirect()->back()
+            ->with('error', 'Failed to submit review. Please try again.')
+            ->withInput();
     }
+}
+
 }

@@ -146,8 +146,8 @@ const AuthPage = () => {
               </h1>
               <p style={{ color: 'hsl(200 15% 45%)', fontSize: '0.875rem' }}>
                 {isLogin
-                  ? "Sign in to your RentWise account"
-                  : "Join RentWise to find your perfect home"}
+                  ? "Sign in to your RentTrust account"
+                  : "Join RentTrust to find your perfect home"}
               </p>
             </div>
 

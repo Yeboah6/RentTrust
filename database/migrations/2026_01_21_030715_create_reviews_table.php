@@ -13,6 +13,16 @@ return new class extends Migration
     {
         Schema::create('reviews', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('rental_id')->constrained('rentals')->onDelete('cascade');
+            $table->json('overall_rating');
+            $table->boolean('landlord_responsive')->nullable();
+            $table->boolean('property_matched_description')->nullable();
+            $table->boolean('fair_pricing')->nullable();
+            $table->boolean('good_communication')->nullable();
+            $table->string('comments')->nullable();
+            $table->string('full_name')->nullable();
+            $table->text('response')->nullable();
+            $table->string('response_person')->nullable();
             $table->timestamps();
         });
     }

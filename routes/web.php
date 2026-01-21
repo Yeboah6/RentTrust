@@ -22,7 +22,8 @@ Route::get('/reviews-reports', [RentController::class, 'reviews']);
 // Route::get('/report-listings', [RentController::class, 'reportListings']);
 Route::post('/report-listing', [RentController::class, 'reportListing'])->name('report.listing');
 
-Route::get('/review-forms', [RentController::class, 'reviewForms']);
+// Route::get('/review-forms', [RentController::class, 'reviewForms']);
+Route::post('/review-forms', [RentController::class, 'storeReviewForms']);
 
 Route::get('/agents', [AgentController::class, 'agent']) -> name('agents.page');
 Route::get('/become-agent', [AgentController::class, 'becomeAgent']);

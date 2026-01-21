@@ -17,6 +17,7 @@ const PropertyCard = ({
   const [isHovered, setIsHovered] = useState(false);
 
   const formatPrice = (price) => `GH₵${price.toLocaleString()}`;
+  
 
   return (
     <Link

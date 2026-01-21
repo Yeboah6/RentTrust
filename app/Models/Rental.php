@@ -48,14 +48,13 @@ class Rental extends Model
         return $this->belongsTo(Agent::class);
     }
 
+    public function review() {
+        return $this->belongsTo(Review::class);
+    }
+
     public function images()
     {
         return $this->hasMany(RentalImage::class);
-    }
-
-    public function primaryImage()
-    {
-        return $this->hasOne(RentalImage::class)->where('is_primary', true);
     }
 
     protected function amenities(): Attribute

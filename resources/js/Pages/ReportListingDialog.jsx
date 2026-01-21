@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Upload, X } from "lucide-react";
 import { useForm } from "@inertiajs/react";
 
-const ReportListingDialog = ({ open, onOpenChange, propertyId, agentId, setShowAddListingModal, rental }) => {
+const ReportListingDialog = ({ setShowAddListingModal, rental }) => {
   const [uploadedFiles, setUploadedFiles] = useState([]);
   
   // FIXED: Ensure property_id is properly set
