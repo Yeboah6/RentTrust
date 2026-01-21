@@ -107,6 +107,18 @@ const Header = () => {
                 >
                   Calculator
                 </Link>
+                <Link
+                  href="/reviews-reports"
+                  onMouseEnter={() => setActiveLink('calculator')}
+                  onMouseLeave={() => setActiveLink(null)}
+                  className="px-4 py-2 text-sm font-medium transition-all rounded-lg"
+                  style={{ 
+                    color: activeLink === 'calculator' ? 'hsl(200 25% 15%)' : 'hsl(200 15% 45%)',
+                    backgroundColor: activeLink === 'calculator' ? 'hsl(40 30% 94%)' : 'transparent'
+                  }}
+                >
+                  Reports & Reviews
+                </Link>
               </>
           </nav>
 

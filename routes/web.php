@@ -17,7 +17,7 @@ Route::get('/calculator', [RentController::class, 'calculate']);
 Route::get('/claim-listings', [RentController::class, 'claimListings']);
 
 Route::get('/calculator', [RentController::class, 'calculate']);
-Route::get('/reviews', [RentController::class, 'reviews']);
+Route::get('/reviews-reports', [RentController::class, 'reviews']);
 
 // Route::get('/report-listings', [RentController::class, 'reportListings']);
 Route::post('/report-listing', [RentController::class, 'reportListing'])->name('report.listing');

@@ -144,7 +144,7 @@ public function store(Request $request)
             'agent_phone' => $request->agentPhone,
             'agent_email' => $request->agentEmail,
             'status' => 'pending',
-            'images' => !empty($filePaths) ? json_encode($filePaths) : '[]'
+            'images' => $filePaths ?? []
         ]);
 
         return redirect()->back()

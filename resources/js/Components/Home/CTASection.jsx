@@ -60,7 +60,7 @@ const CTASection = () => {
                   Your review could save someone from a scam.
                 </p>
                 <Link
-                  href="/reviews"
+                  href="/reviews-reports"
                   className="inline-flex items-center px-6 py-3 text-white font-semibold rounded-lg transition-all duration-200 active:scale-95 shadow-md hover:shadow-lg"
                   style={{ backgroundColor: 'hsl(174 62% 32%)' }}
                 >

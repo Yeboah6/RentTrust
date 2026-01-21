@@ -221,9 +221,9 @@ const PropertyCard = ({ listing }) => {
             src={`/storage/rental_images/${imagesArray[currentImageIndex]}`}
             alt={`${listing.title || 'Property'} image ${currentImageIndex + 1}`}
             style={{
-              // width: '100%',
+              width: '100%',
               height: '100%',
-              objectFit: 'cover',
+              // objectFit: 'cover',
               objectPosition: 'center',
               transition: 'opacity 0.3s ease-in-out'
             }}
