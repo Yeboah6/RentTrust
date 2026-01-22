@@ -371,7 +371,28 @@ const handleNextImage = (e) => {
                       </div>
                     </div>
                   )}
+
+                  {amenities.length > 0 && (
+                    <div style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.75rem', padding: '1.5rem' }}>
+                      <h3 className="text-lg font-semibold mb-3" style={{ color: 'hsl(200 25% 15%)' }}>Reviews</h3>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                        {amenities.map((amenity, i) => (
+                          <span key={i} style={{
+                            padding: '0.375rem 0.75rem',
+                            fontSize: '0.875rem',
+                            backgroundColor: 'hsl(40 30% 94%)',
+                            color: 'hsl(200 25% 15%)',
+                            borderRadius: '9999px'
+                          }}>
+                            {amenity}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
+
+                
 
                 {/* Sidebar */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
