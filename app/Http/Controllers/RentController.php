@@ -217,7 +217,7 @@ public function store(Request $request)
      */
     public function update(Request $request, Rental $rent)
     {
-        //
+        dd($request);
     }
 
     /**

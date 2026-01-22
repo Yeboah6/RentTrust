@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from '@inertiajs/react';
 import { Home, MapPin, DollarSign, Calendar, Image, FileText, CheckCircle2, AlertCircle, Upload, X } from 'lucide-react';
 
-const EditRentals = ({ agentData, setShowAddListingModal, rentals }) => {
-
-  const { data, setData, post, processing, errors, reset } = useForm({
-    title: '',
+const EditRentals = ({ agentData, setShowEditListingModal, rental }) => {
+  // Use put instead of post for updates
+  const { data, setData, put, processing, errors, reset } = useForm({
+    id: rental?.id,
+    title: rental?.title,
     propertyType: '',
     area: '',
     city: '',
@@ -17,6 +18,7 @@ const EditRentals = ({ agentData, setShowAddListingModal, rentals }) => {
     bathrooms: '',
     amenities: [],
     images: [],
+    existingImages: [], // Add this to track existing images
     description: '',
     agentName: agentData?.fullName || '',
     agentPhone: agentData?.phone || '',
@@ -24,10 +26,66 @@ const EditRentals = ({ agentData, setShowAddListingModal, rentals }) => {
   });
 
   const [images, setImages] = useState([]);
+  const [existingImages, setExistingImages] = useState([]);
   const [currentStep, setCurrentStep] = useState(1);
   const [toast, setToast] = useState(null);
+  const allImages = [...existingImages, ...images];
 
-  const propertyTypes = ['Apartment', 'House', 'Studio', 'Chamber and Hall', 'Self-Contained', 'Condo', 'Townhouse'];
+  useEffect(() => {
+    if (rental) {
+      console.log('Rentals data received:', rental); // Debug log
+      
+      // Parse amenities if they're stored as JSON string
+      let parsedAmenities = [];
+      try {
+        if (rental.amenities) {
+          parsedAmenities = typeof rental.amenities === 'string' 
+            ? JSON.parse(rental.amenities) 
+            : rental.amenities;
+        }
+      } catch (e) {
+        console.error('Error parsing amenities:', e);
+        parsedAmenities = [];
+      }
+
+      // Handle existing images - assuming rental.images is an array of image URLs or objects
+      const imagesArray = rental.images || [];
+      const existingImagesList = imagesArray.map((img, index) => ({
+        id: `existing-${index}`,
+        name: `image-${index}`,
+        preview: img.url || img, // Adjust based on your data structure
+        isExisting: true
+      }));
+
+      setExistingImages(existingImagesList);
+      
+      setData({
+        id: rental.id || '',
+        title: rental.title || '',
+        propertyType: rental.property_type || rental.propertyType || '',
+        area: rental.area || '',
+        city: rental.city || '',
+        address: rental.address || '',
+        rentMin: rental.rent_min || rental.rentMin || '',
+        rentMax: rental.rent_max || rental.rentMax || '',
+        advanceDuration: rental.advance_duration || rental.advanceDuration || '1',
+        bedrooms: rental.bedrooms || '',
+        bathrooms: rental.bathrooms || '',
+        amenities: parsedAmenities,
+        images: [],
+        existingImages: imagesArray, // Store existing images
+        description: rental.description || '',
+        agentName: rental.agent_name || rental.agentName || agentData?.fullName || '',
+        agentPhone: rental.agent_phone || rental.agentPhone || agentData?.phone || '',
+        agentEmail: rental.agent_email || rental.agentEmail || agentData?.email || ''
+      });
+    }
+  }, [rental]);
+
+  console.log('EditRentals received rental prop:', rental);
+
+
+ const propertyTypes = ['Apartment', 'House', 'Studio', 'Chamber and Hall', 'Self-Contained', 'Condo', 'Townhouse'];
   const cities = ['Accra', 'Kumasi', 'Tema', 'Takoradi', 'Cape Coast', 'Tamale'];
   const amenitiesList = ['Wi-Fi', 'Parking', 'Security', 'Water Supply', 'Backup Generator', 'Air Conditioning', 'Furnished', 'Gym', 'Swimming Pool', 'Garden'];
 
@@ -54,18 +112,34 @@ const EditRentals = ({ agentData, setShowAddListingModal, rentals }) => {
       id: Math.random().toString(36).substr(2, 9),
       name: file.name,
       file: file,
-      preview: URL.createObjectURL(file)
+      preview: URL.createObjectURL(file),
+      isExisting: false
     }));
     
-    const updatedImages = [...images, ...newImages].slice(0, 6);
+    const totalImages = [...existingImages, ...images, ...newImages];
+    if (totalImages.length > 6) {
+      showToast("Too many images", "Maximum 6 images allowed", "error");
+      return;
+    }
+    
+    const updatedImages = [...images, ...newImages];
     setImages(updatedImages);
     setData('images', updatedImages.map(img => img.file));
   };
 
   const removeImage = (id) => {
-    const updatedImages = images.filter(img => img.id !== id);
-    setImages(updatedImages);
-    setData('images', updatedImages.map(img => img.file));
+    // Check if it's an existing image or new upload
+    if (id.startsWith('existing-')) {
+      // Remove from existing images
+      const updatedExistingImages = existingImages.filter(img => img.id !== id);
+      setExistingImages(updatedExistingImages);
+      setData('existingImages', updatedExistingImages.map(img => img.preview));
+    } else {
+      // Remove from new images
+      const updatedImages = images.filter(img => img.id !== id);
+      setImages(updatedImages);
+      setData('images', updatedImages.map(img => img.file));
+    }
   };
 
   const showToast = (title, description, variant = "success") => {
@@ -96,9 +170,9 @@ const EditRentals = ({ agentData, setShowAddListingModal, rentals }) => {
   const handlePrevious = (e) => {
     e.preventDefault();
     setCurrentStep(prev => Math.max(prev - 1, 1));
-  };  
+  };
 
-    const handleSubmit = (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     
     if (!validateStep(currentStep)) {
@@ -107,6 +181,9 @@ const EditRentals = ({ agentData, setShowAddListingModal, rentals }) => {
     }
 
     const formData = new FormData();
+    
+    // Add ID for update
+    formData.append('id', data.id);
     
     // Add all form fields
     formData.append('title', data.title);
@@ -120,7 +197,7 @@ const EditRentals = ({ agentData, setShowAddListingModal, rentals }) => {
     formData.append('bedrooms', data.bedrooms);
     formData.append('bathrooms', data.bathrooms || '0');
 
-     // Ensure amenities is always a string
+    // Ensure amenities is always a string
     const amenitiesString = Array.isArray(data.amenities) 
       ? JSON.stringify(data.amenities) 
       : data.amenities || '[]';
@@ -131,7 +208,14 @@ const EditRentals = ({ agentData, setShowAddListingModal, rentals }) => {
     formData.append('agentPhone', data.agentPhone);
     formData.append('agentEmail', data.agentEmail);
     
-    // Add images - using the same format as reports
+    // Add existing images to be kept
+    if (data.existingImages && data.existingImages.length > 0) {
+      data.existingImages.forEach((img, index) => {
+        formData.append(`existingImages[${index}]`, img);
+      });
+    }
+    
+    // Add new images
     if (data.images && data.images.length > 0) {
       data.images.forEach((file, index) => {
         if (file) {
@@ -140,24 +224,28 @@ const EditRentals = ({ agentData, setShowAddListingModal, rentals }) => {
       });
     }
     
-    post('/rent', {
+    // Use PUT for update and include the ID in the URL
+    put(`/rent/${data.id}`, {
       data: formData,
       forceFormData: true,
+      preserveScroll: true,
       onSuccess: () => {
-        showToast("Listing Submitted", "Your rental listing has been submitted for review.", "success");
+        showToast("Listing Updated", "Your rental listing has been updated.", "success");
         reset();
         setImages([]);
+        setExistingImages([]);
         setCurrentStep(1);
         setTimeout(() => {
-          if (setShowAddListingModal) setShowAddListingModal(false);
+          if (setShowEditListingModal) setShowEditListingModal(false);
         }, 1500);
       },
       onError: (errors) => {
-        console.error('Submission errors:', errors);
-        showToast("Submission Failed", "Please correct the errors and try again.", "error");
+        console.error('Update errors:', errors);
+        showToast("Update Failed", "Please correct the errors and try again.", "error");
       },
     });
   };
+
 
   const steps = [
     { number: 1, title: 'Property Details', icon: Home },
@@ -268,7 +356,7 @@ const EditRentals = ({ agentData, setShowAddListingModal, rentals }) => {
                     </label>
                     <input
                       type="text"
-                      value={data.title || rentals.title}
+                      value={data.title}
                       onChange={(e) => setData('title', e.target.value)}
                       placeholder="e.g., 2 Bedroom Self-Contained Apartment"
                       className="w-full px-4 py-3 border rounded-lg focus:ring-2 transition-all"
@@ -547,12 +635,17 @@ const EditRentals = ({ agentData, setShowAddListingModal, rentals }) => {
                         </label>
                       )}
 
-                      {images.length > 0 && (
+                      {allImages.length > 0 && (
                         <div className="grid grid-cols-3 gap-3">
-                          {images.map(image => (
+                          {allImages.map(image => (
                             <div key={image.id} className="relative group">
                               <div className="aspect-square bg-gray-200 rounded-lg overflow-hidden">
                                 <img src={image.preview} alt={image.name} className="w-full h-full object-cover" />
+                                {image.isExisting && (
+                                  <div className="absolute top-2 left-2 px-2 py-1 rounded text-xs font-medium bg-blue-500 text-white">
+                                    Existing
+                                  </div>
+                                )}
                               </div>
                               <button
                                 type="button"

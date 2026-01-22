@@ -33,6 +33,7 @@ Route::post('/become-agent', [AgentController::class, 'storeBecomeAgent']);
 Route::middleware('agent')->group(function () {
     Route::get('/agent-dashboard', [DashboardController::class, 'agentDashboard']);
     Route::post('/rent', [RentController::class, 'store']);
+    // Route::post('/rent/{id}', [RentController::class, 'store']);
 });
 
 Route::middleware('super')->group(function () {
