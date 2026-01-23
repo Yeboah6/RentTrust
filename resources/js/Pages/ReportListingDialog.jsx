@@ -366,7 +366,7 @@ const ReportListingDialog = ({ setShowAddListingModal, rental }) => {
                   color: '#374151',
                   marginBottom: '0.5rem'
                 }}>
-                  Full Name *
+                  Full Name
                 </label>
                 <input
                   type="text"
