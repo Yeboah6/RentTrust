@@ -201,8 +201,8 @@ class RentController extends Controller
      */
     public function show(Rental $rent)
     {
-        $review = Review::where('rental_id', $rent->id);
-            dd($review);
+        // $review = Review::where('rental_id', $rent->id)->get();
+        // dd($review);
         
         // return inertia('PropertyDetailsPage', ['rental' => $rent, 'review' => $review]);
     }
