@@ -67,7 +67,7 @@ const MessageSquare = ({ style }) => (
   </svg>
 );
 
-const PropertyDetailsPage = ({ rental }) => {
+const PropertyDetailsPage = ({ rental, reviews }) => {
   const formatCurrency = (amount) => `GH₵${amount?.toLocaleString() || '0'}`;
   const [showAddListingModal, setShowAddListingModal] = useState(false);
   const [showAddReviewForm, setShowAddReviewForm] = useState(false);
@@ -92,7 +92,12 @@ const handleNextImage = (e) => {
     ? JSON.parse(rental.amenities) 
     : (rental.amenities || []);
 
-    console.log(rental.images)
+  // Parse amenities if it's a string
+  // const reviews = typeof rental.amenities === 'string' 
+  //   ? JSON.parse(rental.amenities) 
+  //   : (rental.amenities || []);
+
+    // console.log(rental.images)
   
   // Calculate costs
   const totalUpfront = (rental.rent_max || 0) * (rental.advance_months || 0);
@@ -372,20 +377,124 @@ const handleNextImage = (e) => {
                     </div>
                   )}
 
-                  {amenities.length > 0 && (
+                  {/* Reviews */}
+                  {reviews && reviews.length > 0 && (
                     <div style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.75rem', padding: '1.5rem' }}>
-                      <h3 className="text-lg font-semibold mb-3" style={{ color: 'hsl(200 25% 15%)' }}>Reviews</h3>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                        {amenities.map((amenity, i) => (
-                          <span key={i} style={{
-                            padding: '0.375rem 0.75rem',
-                            fontSize: '0.875rem',
-                            backgroundColor: 'hsl(40 30% 94%)',
-                            color: 'hsl(200 25% 15%)',
-                            borderRadius: '9999px'
+                      <h3 className="text-lg font-semibold mb-4" style={{ color: 'hsl(200 25% 15%)' }}>
+                        Reviews ({reviews.length})
+                      </h3>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                        {reviews.map((review, i) => (
+                          <div key={i} style={{
+                            padding: '1rem',
+                            backgroundColor: 'hsl(40 30% 97%)',
+                            borderRadius: '0.5rem',
+                            border: '1px solid hsl(40 20% 90%)'
                           }}>
-                            {amenity}
-                          </span>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                <div style={{
+                                  width: '2.5rem',
+                                  height: '2.5rem',
+                                  borderRadius: '50%',
+                                  backgroundColor: 'hsl(174 62% 32% / 0.1)',
+                                  color: 'hsl(174 62% 32%)',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  fontSize: '1rem',
+                                  fontWeight: '600'
+                                }}>
+                                  {review.full_name?.[0] || 'U'}
+                                </div>
+                                <div>
+                                  <p style={{ fontWeight: '500', fontSize: '0.875rem', color: 'hsl(200 25% 15%)' }}>
+                                    {review.full_name || 'Anonymous'}
+                                  </p>
+                                </div>
+                              </div>
+                              <div style={{ display: 'flex' }}>
+                                {renderStars(review.overall_rating)}
+                              </div>
+                            </div>
+                            
+                            {/* Review Attributes */}
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                              {review.landlord_responsive === 1 && (
+                                <span style={{
+                                  padding: '0.25rem 0.625rem',
+                                  fontSize: '0.75rem',
+                                  backgroundColor: 'hsl(152 60% 95%)',
+                                  color: 'hsl(152 60% 35%)',
+                                  borderRadius: '9999px',
+                                  border: '1px solid hsl(152 60% 85%)'
+                                }}>
+                                  ✓ Responsive Landlord
+                                </span>
+                              )}
+                              {review.property_matched_description === 1 && (
+                                <span style={{
+                                  padding: '0.25rem 0.625rem',
+                                  fontSize: '0.75rem',
+                                  backgroundColor: 'hsl(152 60% 95%)',
+                                  color: 'hsl(152 60% 35%)',
+                                  borderRadius: '9999px',
+                                  border: '1px solid hsl(152 60% 85%)'
+                                }}>
+                                  ✓ Accurate Description
+                                </span>
+                              )}
+                              {review.fair_pricing === 1 && (
+                                <span style={{
+                                  padding: '0.25rem 0.625rem',
+                                  fontSize: '0.75rem',
+                                  backgroundColor: 'hsl(152 60% 95%)',
+                                  color: 'hsl(152 60% 35%)',
+                                  borderRadius: '9999px',
+                                  border: '1px solid hsl(152 60% 85%)'
+                                }}>
+                                  ✓ Fair Pricing
+                                </span>
+                              )}
+                              {review.good_communication === 1 && (
+                                <span style={{
+                                  padding: '0.25rem 0.625rem',
+                                  fontSize: '0.75rem',
+                                  backgroundColor: 'hsl(152 60% 95%)',
+                                  color: 'hsl(152 60% 35%)',
+                                  borderRadius: '9999px',
+                                  border: '1px solid hsl(152 60% 85%)'
+                                }}>
+                                  ✓ Good Communication
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Comment */}
+                            {review.comments && (
+                              <p style={{ fontSize: '0.875rem', color: 'hsl(200 15% 45%)', lineHeight: '1.5' }}>
+                                {review.comments}
+                              </p>
+                            )}
+
+                            {/* Response */}
+                            {review.response && (
+                              <div style={{
+                                marginTop: '0.75rem',
+                                padding: '0.75rem',
+                                backgroundColor: 'hsl(210 20% 98%)',
+                                borderLeft: '3px solid hsl(174 62% 32%)',
+                                borderRadius: '0.25rem'
+                              }}>
+                                <p style={{ fontSize: '0.75rem', fontWeight: '600', color: 'hsl(200 25% 15%)', marginBottom: '0.25rem' }}>
+                                  Response from {review.response_person || 'Property Owner'}
+                                </p>
+                                <p style={{ fontSize: '0.875rem', color: 'hsl(200 15% 45%)', lineHeight: '1.5' }}>
+                                  {review.response}
+                                </p>
+                              </div>
+                            )}
+                          </div>
                         ))}
                       </div>
                     </div>

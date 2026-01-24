@@ -165,7 +165,7 @@ class RentController extends Controller
             'property_id' => 'required',
             'description' => 'required|max:255',
             'report_type' => 'required|string|max:255',
-            'name' => 'required|string|max:255',
+            'name' => 'string|max:255',
             'evidence.*' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120'
         ]);
 
@@ -201,10 +201,10 @@ class RentController extends Controller
      */
     public function show(Rental $rent)
     {
-        // $review = Review::where('rental_id', $rent->id)->get();
-        // dd($review);
+        $review = Review::where('rental_id', $rent->id);
+            dd($review);
         
-        // return inertia('PropertyDetailsPage', ['rental' => $rent, 'review' => $review]);
+        return inertia('PropertyDetailsPage', ['rental' => $rent, 'reviews' => $reviews]);
     }
 
     /**
