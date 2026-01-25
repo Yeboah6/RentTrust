@@ -280,7 +280,7 @@ const renderStars = (rating) => {
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem', flexWrap: 'wrap' }}>
                     <h1 className="text-2xl font-bold" style={{ color: 'hsl(200 25% 15%)' }}>{agent.name}</h1>
-                    {getStatusBadge(agent.verification_status)}
+                    {getStatusBadge(agent.status)}
                   </div>
                   {agent.company && (
                     <p style={{ color: 'hsl(200 15% 45%)', marginBottom: '0.5rem' }}>{agent.company}</p>
@@ -371,7 +371,7 @@ const renderStars = (rating) => {
                         alignItems: 'center',
                         gap: '0.5rem'
                       }}>
-                      <Shield style={{ height: '1rem', width: '1rem' }} />
+                      <Home style={{ height: '1rem', width: '1rem' }} />
                       Add Listing
                     </button>
                   </div>

@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('report_description', 1000);
             $table->string('evidence');
             $table->string('full_name')->nullable();
+            $table->string('status')->nullable();
             $table->timestamps();
         });
     }

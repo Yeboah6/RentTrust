@@ -47,9 +47,7 @@ class RentController extends Controller
                 ->with('error', 'Unauthorized. Please login as an agent.');
         }
 
-        // Prepare amenities - handle both array and JSON
        $amenities = $request->amenities;
-        // If amenities is an array, encode it to JSON
         if (is_array($amenities)) {
             $amenities = json_encode($amenities);
         }
@@ -361,13 +359,28 @@ class RentController extends Controller
             "response" => "required|string|max:1000",
             "response_person" => "required|string|max:255"
         ]);
-    
+
         Review::where('id', $validated['review_id'])->update([
             'response' => $validated['response'],
             'response_person' => $validated['response_person']
         ]);
-    
+
         return redirect()->back()->with('success', 'Response submitted successfully');
+    }
+
+    public function updateReportStatus(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'status' => 'required|in:pending,investigating,resolved,dismissed'
+        ]);
+
+        $report = Report::findOrFail($id);
+        $report->update([
+            'status' => $validated['status'],
+            'updated_at' => now()
+        ]);
+
+        return redirect()->back()->with('success', 'Report status updated successfully');
     }
 
 }

@@ -39,6 +39,8 @@ Route::middleware('agent')->group(function () {
 
 Route::middleware('super')->group(function () {
     Route::get('/super-admin', [DashboardController::class, 'superAdmin']);
+    Route::put('/admin/reports/{id}/status', [RentController::class, 'updateReportStatus'])
+    ->name('admin.reports.status');
 });
 
 Route::get('settings', [AuthController::class, 'settings'])->name('settings.page');

@@ -22,9 +22,7 @@ class AgentController extends Controller
         //     ->groupBy('agent_id')
         //     ->pluck('total', 'agent_id')
         //     ->toArray();
-        return inertia('AgentsPage', ['agent' => $agents, 
-        // 'listingCounts' => $listingCounts
-        ]);
+        return inertia('AgentsPage', ['agent' => $agents]);
     }
 
     public function storeBecomeAgent(Request $request) {
@@ -36,11 +34,13 @@ class AgentController extends Controller
             'type' => 'required|string',
             'fee' => 'nullable|numeric|min:0',
             'bio' => 'nullable|string|max:1000',
-            'password' => 'required|string|min:8|max:255'
+            'password' => 'required|string|min:8|max:255',
+            'status' => "nullable"
         ]);
 
         // Hash the password before storing
         $validated['password'] = Hash::make($validated['password']);
+        $validated['status'] = "unverified";
 
         $agent = Agent::create($validated);
 
