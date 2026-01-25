@@ -16,6 +16,7 @@ class Agent extends Authenticatable
         'fee',
         'bio',
         'password',
+        'status'
     ];
 
     protected $hidden = [

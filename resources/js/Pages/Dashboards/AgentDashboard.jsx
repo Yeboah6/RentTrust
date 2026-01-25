@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "@inertiajs/react";
+import { Link, useForm, router } from "@inertiajs/react";
 import Header from "@/Components/Layouts/Header";
 import Footer from "@/Components/Layouts/Footer";
 import AddRentalPage from "@/Pages/AddRentals";
@@ -69,15 +69,44 @@ const AgentDashboardPage = ({ agentData, rentals, reviews }) => {
   const [showEditListingModal, setShowEditListingModal] = useState(false);
   const [selectedRental, setSelectedRental] = useState(null);
 
+  const { data, setData, put, processing, reset } = useForm({
+    'response': "",
+    'response_name': agentData?.fullName
+  });
+
+  const showToast = (response, response_name, variant = "success") => {
+    setToast({ response, response_name, variant });
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  const handleResponse = (e, reviewId) => {
+    e.preventDefault();
+    
+    // Use router.put with Inertia
+    router.put('/response', {
+      review_id: reviewId,
+      response: responseText,
+      response_person: agentData.fullName // or however you access the agent's name
+    }, {
+      onSuccess: () => {
+        showToast("Response Submitted", "Your response has been posted successfully.", "success");
+        setResponseText("");
+        setRespondingTo(null);
+      },
+      onError: (errors) => {
+        console.error('Submission errors:', errors);
+        showToast("Submission Failed", "Please correct the errors and try again.", "error");
+      },
+    });
+  };
+
   const handleEditClick = (rental) => {
-    // Find the full rental data from the rentals prop
     const selectedRentalData = rentals.find(r => r.id === rental.id);
     setSelectedRental(selectedRentalData);
     setShowEditListingModal(true);
     console.log('Selected Rental:', selectedRental);
 
   };
-
 
   const agent = {
     name: agentData?.fullName || "Unknown Agent",
@@ -91,14 +120,17 @@ const AgentDashboardPage = ({ agentData, rentals, reviews }) => {
 const formattedReviews = reviews && reviews.length > 0 
     ? reviews.map(review => ({
         id: review.id,
-        overall_rating: review.rating || 0,
-        comment: review.comment || "No comment provided",
-        agent_response: review.response_person || null,
-        created_at: review.created_at || new Date().toISOString(),
-        property_id: review.property_id || "Unknown",
-        is_anonymous: review.is_anonymous || false,
-        // Add tenant name if available
-        tenant_name: review.tenant_name || review.user_name || "Anonymous"
+        rental_id: review.rental_id || "Unknown",
+        overall_rating: review.overall_rating || 0,
+        landlord_responsive: review.landlord_responsive || 0,
+        property_matched_description: review.property_matched_description || 0,
+        fair_pricing: review.fair_pricing || 0,
+        good_communication: review.good_communication || 0,
+        comments: review.comments || null,
+        full_name: review.full_name || "Anonymous",
+        response: review.response || null,
+        response_person: review.response_person || null,
+        created_at: review.created_at || new Date().toISOString()
       }))
     : [];
 
@@ -205,13 +237,6 @@ const renderStars = (rating) => {
         </span>
       );
     }
-  };
-
-  const handleResponseSubmit = (reviewId) => {
-    if (!responseText.trim()) return;
-    alert(`Response submitted for review ${reviewId}`);
-    setRespondingTo(null);
-    setResponseText("");
   };
 
   return (
@@ -430,7 +455,7 @@ const renderStars = (rating) => {
               </h2>
 
               {formattedReviews.length > 0 ? (
-                <div className="grid md:grid-cols-2 gap-4" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div className="grid md:grid-cols-3 gap-4" style={{ display: 'grid', flexDirection: 'column', gap: '1rem' }}>
                   {formattedReviews.map((review) => (
                     <div key={review.id} style={{
                       backgroundColor: 'white',
@@ -442,13 +467,29 @@ const renderStars = (rating) => {
                         <div>
                           {/* Show property title if available */}
                           <p style={{ fontSize: '0.875rem', color: 'hsl(200 15% 45%)', marginBottom: '0.5rem' }}>
-                            Review for {review.property_title || 'Property'}
+                            Review for Property #{review.rental_id}
                           </p>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <span className="font-medium" style={{ color: 'hsl(200 25% 15%)' }}>
-                              {review.is_anonymous ? 'Anonymous' : review.tenant_name || 'Tenant'}
-                            </span>
-                            <div style={{ display: 'flex' }}>{renderStars(review.overall_rating)}</div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                            <div style={{
+                              width: '2rem',
+                              height: '2rem',
+                              borderRadius: '50%',
+                              backgroundColor: 'hsl(174 62% 32% / 0.1)',
+                              color: 'hsl(174 62% 32%)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '0.875rem',
+                              fontWeight: '600'
+                            }}>
+                              {review.full_name?.[0] || 'T'}
+                            </div>
+                            <div>
+                              <span className="font-medium" style={{ color: 'hsl(200 25% 15%)', display: 'block' }}>
+                                {review.full_name || 'Anonymous Tenant'}
+                              </span>
+                              <div style={{ display: 'flex' }}>{renderStars(review.overall_rating)}</div>
+                            </div>
                           </div>
                         </div>
                         <span style={{ fontSize: '0.75rem', color: 'hsl(200 15% 45%)' }}>
@@ -459,90 +500,154 @@ const renderStars = (rating) => {
                           })}
                         </span>
                       </div>
-
-                      {review.comment && (
+                        
+                      {/* Review Attributes */}
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                        {review.landlord_responsive === 1 && (
+                          <span style={{
+                            padding: '0.25rem 0.625rem',
+                            fontSize: '0.75rem',
+                            backgroundColor: 'hsl(152 60% 95%)',
+                            color: 'hsl(152 60% 35%)',
+                            borderRadius: '9999px',
+                            border: '1px solid hsl(152 60% 85%)'
+                          }}>
+                            ✓ Responsive Landlord
+                          </span>
+                        )}
+                        {review.property_matched_description === 1 && (
+                          <span style={{
+                            padding: '0.25rem 0.625rem',
+                            fontSize: '0.75rem',
+                            backgroundColor: 'hsl(152 60% 95%)',
+                            color: 'hsl(152 60% 35%)',
+                            borderRadius: '9999px',
+                            border: '1px solid hsl(152 60% 85%)'
+                          }}>
+                            ✓ Accurate Description
+                          </span>
+                        )}
+                        {review.fair_pricing === 1 && (
+                          <span style={{
+                            padding: '0.25rem 0.625rem',
+                            fontSize: '0.75rem',
+                            backgroundColor: 'hsl(152 60% 95%)',
+                            color: 'hsl(152 60% 35%)',
+                            borderRadius: '9999px',
+                            border: '1px solid hsl(152 60% 85%)'
+                          }}>
+                            ✓ Fair Pricing
+                          </span>
+                        )}
+                        {review.good_communication === 1 && (
+                          <span style={{
+                            padding: '0.25rem 0.625rem',
+                            fontSize: '0.75rem',
+                            backgroundColor: 'hsl(152 60% 95%)',
+                            color: 'hsl(152 60% 35%)',
+                            borderRadius: '9999px',
+                            border: '1px solid hsl(152 60% 85%)'
+                          }}>
+                            ✓ Good Communication
+                          </span>
+                        )}
+                      </div>
+                      
+                      {review.comments && (
                         <p style={{ 
                           color: 'hsl(200 15% 45%)', 
                           marginBottom: '1rem',
                           fontSize: '0.875rem',
                           lineHeight: '1.5'
                         }}>
-                          "{review.comment}"
+                          "{review.comments}"
                         </p>
                       )}
-
-                      {review.agent_response ? (
+              
+                      {review.response ? (
                         <div style={{
-                          backgroundColor: 'hsl(40 30% 94%)',
+                          backgroundColor: 'hsl(210 20% 98%)',
                           padding: '0.75rem',
                           borderRadius: '0.5rem',
+                          borderLeft: '3px solid hsl(174 62% 32%)',
                           marginTop: '0.5rem'
                         }}>
                           <p style={{ 
                             fontSize: '0.75rem', 
-                            fontWeight: '500', 
+                            fontWeight: '600', 
                             color: 'hsl(174 62% 32%)', 
                             marginBottom: '0.25rem' 
                           }}>
-                            Your Response
+                            Your Response {review.response_person && `by ${review.response_person}`}
                           </p>
                           <p style={{ 
                             fontSize: '0.875rem', 
                             color: 'hsl(200 25% 15%)',
-                            fontStyle: 'italic'
+                            lineHeight: '1.5'
                           }}>
-                            "{review.agent_response}"
+                            {review.response}
                           </p>
                         </div>
                       ) : respondingTo === review.id ? (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem' }}>
-                          <textarea
-                            placeholder="Write your response to this review..."
-                            value={responseText}
-                            onChange={(e) => setResponseText(e.target.value)}
-                            rows={3}
-                            style={{
-                              width: '100%',
-                              padding: '0.75rem',
-                              border: '1px solid hsl(40 20% 88%)',
-                              borderRadius: '0.5rem',
-                              fontSize: '0.875rem',
-                              outline: 'none',
-                              fontFamily: 'inherit'
-                            }}
-                          />
-                          <div style={{ display: 'flex', gap: '0.5rem' }}>
-                            <button
-                              onClick={() => handleResponseSubmit(review.id)}
+                          <form onSubmit={(e) => handleResponse(e, review.id)}>
+                            <textarea
+                              placeholder="Write your response to this review..."
+                              value={responseText}
+                              onChange={(e) => setResponseText(e.target.value)}
+                              rows={3}
                               style={{
-                                padding: '0.375rem 0.75rem',
-                                background: 'linear-gradient(135deg, hsl(174 62% 32%) 0%, hsl(174 50% 25%) 100%)',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '0.375rem',
-                                fontSize: '0.875rem',
-                                fontWeight: '500',
-                                cursor: 'pointer'
-                              }}
-                            >
-                              Submit Response
-                            </button>
-                            <button
-                              onClick={() => { setRespondingTo(null); setResponseText(''); }}
-                              style={{
-                                padding: '0.375rem 0.75rem',
+                                width: '100%',
+                                padding: '0.75rem',
                                 border: '1px solid hsl(40 20% 88%)',
-                                borderRadius: '0.375rem',
-                                backgroundColor: 'white',
-                                color: 'hsl(200 25% 15%)',
+                                borderRadius: '0.5rem',
                                 fontSize: '0.875rem',
-                                fontWeight: '500',
-                                cursor: 'pointer'
+                                outline: 'none',
+                                fontFamily: 'inherit',
+                                resize: 'vertical'
                               }}
-                            >
-                              Cancel
-                            </button>
-                          </div>
+                            />
+                            {/* <input type="text" name="response_name" value={agentData?.fullName} /> */}
+                            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                              <button
+                                type="submit"
+                                disabled={processing}
+                                style={{
+                                  padding: '0.375rem 0.75rem',
+                                  background: !processing
+                                    ? 'linear-gradient(135deg, hsl(174 62% 32%) 0%, hsl(174 50% 25%) 100%)'
+                                    : 'hsl(200 15% 70%)',
+                                  color: 'white',
+                                  border: 'none',
+                                  borderRadius: '0.375rem',
+                                  fontSize: '0.875rem',
+                                  fontWeight: '500',
+                                  cursor: !processing ? 'pointer' : 'not-allowed',
+                                  opacity: processing ? 0.7 : 1
+                                }}
+                              >
+                                {processing ? 'Submitting...' : 'Submit Response'}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => { setRespondingTo(null);}}
+                                disabled={processing}
+                                style={{
+                                  padding: '0.375rem 0.75rem',
+                                  border: '1px solid hsl(40 20% 88%)',
+                                  borderRadius: '0.375rem',
+                                  backgroundColor: 'white',
+                                  color: 'hsl(200 25% 15%)',
+                                  fontSize: '0.875rem',
+                                  fontWeight: '500',
+                                  cursor: processing ? 'not-allowed' : 'pointer',
+                                  opacity: processing ? 0.7 : 1
+                                }}
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </form>
                         </div>
                       ) : (
                         <button

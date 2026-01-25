@@ -91,13 +91,6 @@ const handleNextImage = (e) => {
   const amenities = typeof rental.amenities === 'string' 
     ? JSON.parse(rental.amenities) 
     : (rental.amenities || []);
-
-  // Parse amenities if it's a string
-  // const reviews = typeof rental.amenities === 'string' 
-  //   ? JSON.parse(rental.amenities) 
-  //   : (rental.amenities || []);
-
-    // console.log(rental.images)
   
   // Calculate costs
   const totalUpfront = (rental.rent_max || 0) * (rental.advance_months || 0);

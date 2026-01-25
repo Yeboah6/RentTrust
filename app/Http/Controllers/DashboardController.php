@@ -17,10 +17,10 @@ class DashboardController extends Controller
         $rentals = Rental::where('agent_id', $agentData->id)->get();
         $rentalIds = $rentals->pluck('id');
 
-        $review = Review::whereIn('rental_id', $rentalIds)->get();
-        // dd($review);
+        $reviews = Review::whereIn('rental_id', $rentalIds)->get();
+        // dd($reviews);
 
-        return inertia('Dashboards/AgentDashboard', ['agentData' => $agentData, 'rentals' => $rentals, 'review' => $review]);
+        return inertia('Dashboards/AgentDashboard', ['agentData' => $agentData, 'rentals' => $rentals, 'reviews' => $reviews]);
     }
 
     public function superAdmin() {
@@ -28,6 +28,19 @@ class DashboardController extends Controller
         $rentals = Rental::all();
         $agentData = Agent::all();
         $reports = Report::all();
-        return inertia('Dashboards/SuperAdmin', ['adminData' => $adminData, 'rentals' => $rentals, 'agentData' => $agentData, 'reports' => $reports]);
+        $reviews = Review::all();
+        return inertia('Dashboards/SuperAdmin', [
+            'adminData' => $adminData,
+            'rentals' => $rentals,
+            'agentData' => $agentData,
+            'reports' => $reports,
+            'reviews' => $reviews
+            ]
+        );
+
+        // foreach($reports as $rep) {
+        //     dd($rep);
+        // }
+        
     }
 }

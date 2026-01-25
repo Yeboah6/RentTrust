@@ -1,7 +1,7 @@
 import { useState } from "react";
 import Header from "@/Components/Layouts/Header";
 import Footer from "@/Components/Layouts/Footer";
-import { Link, useForm } from "@inertiajs/react";
+import { Link, useForm, router } from "@inertiajs/react";
 
 // Icon components
 const Shield = ({ style }) => (
@@ -58,70 +58,70 @@ const X = ({ style }) => (
   </svg>
 );
 
-const mockReports = [
-  {
-    id: "1",
-    type: "fraudulent_listing",
-    status: "pending",
-    created_at: "2024-01-11",
-    reporter_email: "tenant@example.com",
-    description: "This listing appears to be fake. The property doesn't exist at the given address.",
-    property: {
-      id: "5",
-      title: "Luxury Villa in East Legon",
-      agent_name: "Unknown Agent"
-    }
-  },
-  {
-    id: "2",
-    type: "harassment",
-    status: "investigating",
-    created_at: "2024-01-10",
-    reporter_email: "user2@example.com",
-    description: "Agent has been sending inappropriate messages after I viewed the property.",
-    agent: {
-      id: "7",
-      name: "David Asante",
-      company_name: "Asante Homes"
-    }
-  },
-  {
-    id: "3",
-    type: "false_information",
-    status: "resolved",
-    created_at: "2024-01-08",
-    reporter_email: "tenant3@example.com",
-    description: "Listing claimed property had 3 bedrooms but only has 2.",
-    property: {
-      id: "12",
-      title: "3 Bedroom House in Tema",
-      agent_name: "Sarah Osei"
-    }
-  }
-];
+// const mockReports = [
+//   {
+//     id: "1",
+//     type: "fraudulent_listing",
+//     status: "pending",
+//     created_at: "2024-01-11",
+//     reporter_email: "tenant@example.com",
+//     description: "This listing appears to be fake. The property doesn't exist at the given address.",
+//     property: {
+//       id: "5",
+//       title: "Luxury Villa in East Legon",
+//       agent_name: "Unknown Agent"
+//     }
+//   },
+//   {
+//     id: "2",
+//     type: "harassment",
+//     status: "investigating",
+//     created_at: "2024-01-10",
+//     reporter_email: "user2@example.com",
+//     description: "Agent has been sending inappropriate messages after I viewed the property.",
+//     agent: {
+//       id: "7",
+//       name: "David Asante",
+//       company_name: "Asante Homes"
+//     }
+//   },
+//   {
+//     id: "3",
+//     type: "false_information",
+//     status: "resolved",
+//     created_at: "2024-01-08",
+//     reporter_email: "tenant3@example.com",
+//     description: "Listing claimed property had 3 bedrooms but only has 2.",
+//     property: {
+//       id: "12",
+//       title: "3 Bedroom House in Tema",
+//       agent_name: "Sarah Osei"
+//     }
+//   }
+// ];
 
-const mockReviews = [
-  {
-    id: "1",
-    overall_rating: 5,
-    comment: "Great landlord! Very responsive and professional.",
-    agent_response: "Thank you for the positive feedback!",
-    created_at: "2024-01-15",
-    property_id: "1",
-    is_anonymous: false
-  },
-  {
-    id: "2",
-    overall_rating: 4,
-    comment: "Good experience overall, minor delays with repairs.",
-    agent_response: null,
-    created_at: "2024-01-10",
-    property_id: "1",
-    is_anonymous: true
-  }
-];
+// const mockReviews = [
+//   {
+//     id: "1",
+//     overall_rating: 5,
+//     comment: "Great landlord! Very responsive and professional.",
+//     agent_response: "Thank you for the positive feedback!",
+//     created_at: "2024-01-15",
+//     property_id: "1",
+//     is_anonymous: false
+//   },
+//   {
+//     id: "2",
+//     overall_rating: 4,
+//     comment: "Good experience overall, minor delays with repairs.",
+//     agent_response: null,
+//     created_at: "2024-01-10",
+//     property_id: "1",
+//     is_anonymous: true
+//   }
+// ];
 
-const SuperAdminDashboard = ({ adminData, rentals, agentData }) => {
+const SuperAdminDashboard = ({ adminData, rentals, agentData, reviews, reports }) => {
   const [activeTab, setActiveTab] = useState("agents");
   const [respondingTo, setRespondingTo] = useState(null);
   const [responseText, setResponseText] = useState("");
@@ -145,8 +145,8 @@ const SuperAdminDashboard = ({ adminData, rentals, agentData }) => {
   const agent = mockAdmin;
   const agents = agentData || [];
   const properties = rentals || [];
-  const reviews = mockReviews;
-  const reports = mockReports;
+  // const reviews = mockReviews;
+  // const reports = mockReports;
 
   const handleVerifyAgent = (agentId) => {
     alert(`Agent ${agentId} has been verified`);
@@ -345,6 +345,10 @@ const SuperAdminDashboard = ({ adminData, rentals, agentData }) => {
                         <AlertCircle style={{ height: '1rem', width: '1rem' }} />
                         {agent.total_reports} Reports
                       </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: 'hsl(200 15% 45%)' }}>
+                        <MessageSquare style={{ height: '1rem', width: '1rem' }} />
+                        {reviews.length} Reviews
+                      </div>
                     </div>
                   </div>
                   <Link 
@@ -426,7 +430,9 @@ const SuperAdminDashboard = ({ adminData, rentals, agentData }) => {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
                     <h2 className="text-lg font-semibold" style={{ color: 'hsl(200 25% 15%)' }}>Platform Agents</h2>
-                    <button style={{
+                    <Link
+                    href="/become-agent"
+                     style={{
                       padding: '0.5rem 1rem',
                       background: 'linear-gradient(135deg, hsl(174 62% 32%) 0%, hsl(174 50% 25%) 100%)',
                       color: 'white',
@@ -440,7 +446,7 @@ const SuperAdminDashboard = ({ adminData, rentals, agentData }) => {
                     }}>
                       <Shield style={{ height: '1rem', width: '1rem' }} />
                       Add New Agent
-                    </button>
+                    </Link>
                   </div>
 
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '1rem' }}>
@@ -721,11 +727,11 @@ const SuperAdminDashboard = ({ adminData, rentals, agentData }) => {
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
                             <div style={{ flex: 1 }}>
                               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', flexWrap: 'wrap' }}>
-                                {getReportTypeBadge(report.type)}
+                                {getReportTypeBadge(report.report_type)}
                                 {getReportStatusBadge(report.status)}
                               </div>
                               <p style={{ fontSize: '0.875rem', color: 'hsl(200 15% 45%)', marginBottom: '0.25rem' }}>
-                                Reported by: {report.reporter_email}
+                                Reported by: {report.full_name}
                               </p>
                               <p style={{ fontSize: '0.75rem', color: 'hsl(200 15% 45%)' }}>
                                 {new Date(report.created_at).toLocaleDateString()}
@@ -734,10 +740,10 @@ const SuperAdminDashboard = ({ adminData, rentals, agentData }) => {
                           </div>
 
                           <p style={{ color: 'hsl(200 25% 15%)', marginBottom: '1rem', fontSize: '0.875rem' }}>
-                            {report.description}
+                            {report.report_description}
                           </p>
 
-                          {report.property && (
+                          {rentals && (
                             <div style={{
                               backgroundColor: 'hsl(40 30% 94%)',
                               padding: '0.75rem',
@@ -748,10 +754,10 @@ const SuperAdminDashboard = ({ adminData, rentals, agentData }) => {
                                 Related Property
                               </p>
                               <p style={{ fontSize: '0.875rem', color: 'hsl(200 25% 15%)' }}>
-                                {report.property.title}
+                                {rentals.title}
                               </p>
                               <p style={{ fontSize: '0.75rem', color: 'hsl(200 15% 45%)' }}>
-                                Agent: {report.property.agent_name}
+                                Agent: {rentals.agent_name}
                               </p>
                             </div>
                           )}
@@ -835,91 +841,247 @@ const SuperAdminDashboard = ({ adminData, rentals, agentData }) => {
 
               {/* Reviews Tab */}
               {activeTab === 'reviews' && (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '1rem' }}>
-                  <h2 className="text-lg font-semibold" style={{ color: 'hsl(200 25% 15%)' }}>All Platform Reviews</h2>
-
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                    {reviews.map((review) => (
-                      <div key={review.id} style={{
-                        backgroundColor: 'white',
-                        border: '1px solid hsl(40 20% 88%)',
-                        borderRadius: '0.75rem',
-                        padding: '1rem'
-                      }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-                          <div>
-                            <p style={{ fontSize: '0.875rem', color: 'hsl(200 15% 45%)', marginBottom: '0.5rem' }}>
-                              Review for Property
-                            </p>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                              <span className="font-medium" style={{ color: 'hsl(200 25% 15%)' }}>
-                                {review.is_anonymous ? 'Anonymous' : 'Verified Tenant'}
-                              </span>
-                              <div style={{ display: 'flex' }}>{renderStars(review.overall_rating)}</div>
-                            </div>
-                          </div>
-                          <span style={{ fontSize: '0.75rem', color: 'hsl(200 15% 45%)' }}>
-                            {new Date(review.created_at).toLocaleDateString()}
-                          </span>
-                        </div>
-
-                        {review.comment && (
-                          <p style={{ color: 'hsl(200 15% 45%)', marginBottom: '1rem' }}>{review.comment}</p>
-                        )}
-
-                        {review.agent_response && (
-                          <div style={{
-                            backgroundColor: 'hsl(40 30% 94%)',
-                            padding: '0.75rem',
-                            borderRadius: '0.5rem',
-                            marginBottom: '0.5rem'
-                          }}>
-                            <p style={{ fontSize: '0.75rem', fontWeight: '500', color: 'hsl(174 62% 32%)', marginBottom: '0.25rem' }}>
-                              Agent Response
-                            </p>
-                            <p style={{ fontSize: '0.875rem', color: 'hsl(200 25% 15%)' }}>{review.agent_response}</p>
-                          </div>
-                        )}
-
-                        <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
-                          <button
-                            onClick={() => alert(`Viewing review ${review.id}`)}
-                            style={{
-                              padding: '0.375rem 0.75rem',
-                              border: '1px solid hsl(40 20% 88%)',
-                              borderRadius: '0.375rem',
-                              backgroundColor: 'white',
-                              color: 'hsl(174 62% 32%)',
-                              fontSize: '0.875rem',
-                              fontWeight: '500',
-                              cursor: 'pointer'
-                            }}
-                          >
-                            View Full Review
-                          </button>
-                          <button
-                            onClick={() => {
-                              if (confirm("Are you sure you want to delete this review?")) {
-                                alert(`Review ${review.id} deleted`);
-                              }
-                            }}
-                            style={{
-                              padding: '0.375rem 0.75rem',
-                              border: '1px solid hsl(0 70% 50%)',
-                              borderRadius: '0.375rem',
-                              backgroundColor: 'white',
-                              color: 'hsl(0 70% 50%)',
-                              fontSize: '0.875rem',
-                              fontWeight: '500',
-                              cursor: 'pointer'
-                            }}
-                          >
-                            Delete Review
-                          </button>
-                        </div>
-                      </div>
-                    ))}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                    <h2 className="text-lg font-semibold" style={{ color: 'hsl(200 25% 15%)' }}>
+                      All Platform Reviews ({reviews.length})
+                    </h2>
+                    {/* Optional: Add filter/sort controls */}
                   </div>
+
+                  {reviews.length > 0 ? (
+                    <div className="grid md:grid-cols-3 gap-4" style={{ display: 'grid', flexDirection: 'column', gap: '1rem' }}>
+                      {reviews.map((review) => (
+                        <div key={review.id} style={{
+                          backgroundColor: 'white',
+                          border: '1px solid hsl(40 20% 88%)',
+                          borderRadius: '0.75rem',
+                          padding: '1.5rem'
+                        }}>
+                          {/* Header Section */}
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                            <div style={{ flex: 1 }}>
+                              <p style={{ fontSize: '0.875rem', color: 'hsl(200 15% 45%)', marginBottom: '0.5rem' }}>
+                                Review for Property #{review.rental_id || 'Unknown'}
+                              </p>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+                                <div style={{
+                                  width: '2rem',
+                                  height: '2rem',
+                                  borderRadius: '50%',
+                                  backgroundColor: 'hsl(174 62% 32% / 0.1)',
+                                  color: 'hsl(174 62% 32%)',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  fontSize: '0.875rem',
+                                  fontWeight: '600'
+                                }}>
+                                  {review.full_name?.[0] || 'T'}
+                                </div>
+                                <div>
+                                  <span className="font-medium" style={{ color: 'hsl(200 25% 15%)', display: 'block' }}>
+                                    {review.full_name || 'Anonymous Tenant'}
+                                  </span>
+                                  <div style={{ display: 'flex', gap: '0.25rem' }}>
+                                    {renderStars(review.overall_rating)}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                            <span style={{ fontSize: '0.75rem', color: 'hsl(200 15% 45%)' }}>
+                              {new Date(review.created_at).toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric'
+                              })}
+                            </span>
+                          </div>
+                            
+                          {/* Review Attributes */}
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
+                            {review.landlord_responsive === 1 && (
+                              <span style={{
+                                padding: '0.25rem 0.625rem',
+                                fontSize: '0.75rem',
+                                backgroundColor: 'hsl(152 60% 95%)',
+                                color: 'hsl(152 60% 35%)',
+                                borderRadius: '9999px',
+                                border: '1px solid hsl(152 60% 85%)'
+                              }}>
+                                ✓ Responsive Landlord
+                              </span>
+                            )}
+                            {review.property_matched_description === 1 && (
+                              <span style={{
+                                padding: '0.25rem 0.625rem',
+                                fontSize: '0.75rem',
+                                backgroundColor: 'hsl(152 60% 95%)',
+                                color: 'hsl(152 60% 35%)',
+                                borderRadius: '9999px',
+                                border: '1px solid hsl(152 60% 85%)'
+                              }}>
+                                ✓ Accurate Description
+                              </span>
+                            )}
+                            {review.fair_pricing === 1 && (
+                              <span style={{
+                                padding: '0.25rem 0.625rem',
+                                fontSize: '0.75rem',
+                                backgroundColor: 'hsl(152 60% 95%)',
+                                color: 'hsl(152 60% 35%)',
+                                borderRadius: '9999px',
+                                border: '1px solid hsl(152 60% 85%)'
+                              }}>
+                                ✓ Fair Pricing
+                              </span>
+                            )}
+                            {review.good_communication === 1 && (
+                              <span style={{
+                                padding: '0.25rem 0.625rem',
+                                fontSize: '0.75rem',
+                                backgroundColor: 'hsl(152 60% 95%)',
+                                color: 'hsl(152 60% 35%)',
+                                borderRadius: '9999px',
+                                border: '1px solid hsl(152 60% 85%)'
+                              }}>
+                                ✓ Good Communication
+                              </span>
+                            )}
+                          </div>
+                          
+                          {/* Comment */}
+                          {review.comments && (
+                            <p style={{ 
+                              color: 'hsl(200 15% 45%)', 
+                              marginBottom: '1rem',
+                              fontSize: '0.875rem',
+                              lineHeight: '1.5',
+                              padding: '0.75rem',
+                              backgroundColor: 'hsl(40 30% 97%)',
+                              borderRadius: '0.5rem',
+                              borderLeft: '3px solid hsl(174 62% 32% / 0.3)'
+                            }}>
+                              "{review.comments}"
+                            </p>
+                          )}
+
+                          {/* Agent Response */}
+                          {review.response && (
+                            <div style={{
+                              backgroundColor: 'hsl(210 20% 98%)',
+                              padding: '0.75rem',
+                              borderRadius: '0.5rem',
+                              marginBottom: '1rem',
+                              borderLeft: '3px solid hsl(174 62% 32%)'
+                            }}>
+                              <p style={{ 
+                                fontSize: '0.75rem', 
+                                fontWeight: '600', 
+                                color: 'hsl(174 62% 32%)', 
+                                marginBottom: '0.25rem' 
+                              }}>
+                                Response {review.response_person && `by ${review.response_person}`}
+                              </p>
+                              <p style={{ 
+                                fontSize: '0.875rem', 
+                                color: 'hsl(200 25% 15%)',
+                                lineHeight: '1.5'
+                              }}>
+                                {review.response}
+                              </p>
+                            </div>
+                          )}
+
+                          {/* Action Buttons */}
+                          <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem', flexWrap: 'wrap' }}>
+                            <button
+                              onClick={() => window.location.href = `/rentals/${review.rental_id}`}
+                              style={{
+                                padding: '0.375rem 0.75rem',
+                                border: '1px solid hsl(40 20% 88%)',
+                                borderRadius: '0.375rem',
+                                backgroundColor: 'white',
+                                color: 'hsl(174 62% 32%)',
+                                fontSize: '0.875rem',
+                                fontWeight: '500',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s'
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.backgroundColor = 'hsl(174 62% 32% / 0.05)';
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.backgroundColor = 'white';
+                              }}
+                            >
+                              View Property
+                            </button>
+                            <button
+                              onClick={() => {
+                                if (confirm("Are you sure you want to delete this review? This action cannot be undone.")) {
+                                  router.delete(`/admin/reviews/${review.id}`, {
+                                    onSuccess: () => {
+                                      showToast("Review Deleted", "The review has been removed successfully.", "success");
+                                    },
+                                    onError: () => {
+                                      showToast("Delete Failed", "Unable to delete the review. Please try again.", "error");
+                                    }
+                                  });
+                                }
+                              }}
+                              style={{
+                                padding: '0.375rem 0.75rem',
+                                border: '1px solid hsl(0 70% 50%)',
+                                borderRadius: '0.375rem',
+                                backgroundColor: 'white',
+                                color: 'hsl(0 70% 50%)',
+                                fontSize: '0.875rem',
+                                fontWeight: '500',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s'
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.backgroundColor = 'hsl(0 70% 50% / 0.05)';
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.backgroundColor = 'white';
+                              }}
+                            >
+                              Delete Review
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div style={{
+                      backgroundColor: 'white',
+                      border: '1px solid hsl(40 20% 88%)',
+                      borderRadius: '0.75rem',
+                      padding: '3rem 2rem',
+                      textAlign: 'center'
+                    }}>
+                      <Star style={{ 
+                        height: '3rem', 
+                        width: '3rem', 
+                        color: 'hsl(200 15% 45%)',
+                        margin: '0 auto 1rem auto',
+                        fill: 'none'
+                      }} />
+                      <h3 style={{ 
+                        fontSize: '1.125rem', 
+                        fontWeight: '600', 
+                        color: 'hsl(200 25% 15%)',
+                        marginBottom: '0.5rem'
+                      }}>
+                        No Reviews Yet
+                      </h3>
+                      <p style={{ color: 'hsl(200 15% 45%)' }}>
+                        There are no reviews on the platform yet.
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

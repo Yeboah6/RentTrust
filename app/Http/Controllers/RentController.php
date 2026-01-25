@@ -201,8 +201,9 @@ class RentController extends Controller
      */
     public function show(Rental $rent)
     {
-        $review = Review::where('rental_id', $rent->id);
-            dd($review);
+        $reviews = Review::where('rental_id', $rent->id)
+        ->orderBy('created_at', 'desc')
+        ->get();
         
         return inertia('PropertyDetailsPage', ['rental' => $rent, 'reviews' => $reviews]);
     }
@@ -296,62 +297,77 @@ class RentController extends Controller
     }
 
    
-public function storeReviewForms(Request $request) {
-    $validated = $request->validate([
-        'overall_rating' => 'required|integer|min:1|max:5',
-        'landlord_responsive' => 'nullable|boolean',
-        'property_matched_description' => 'nullable|boolean',
-        'fair_pricing' => 'nullable|boolean',
-        'good_communication' => 'nullable|boolean',
-        'comments' => 'nullable|string|max:255',
-        'full_name' => 'required|string|max:255',
-        'rental_id' => 'required|exists:rentals,id'
-    ], [
-        'overall_rating.required' => 'Please provide an overall rating.',
-        'overall_rating.integer' => 'Rating must be a whole number.',
-        'overall_rating.min' => 'Rating must be at least 1 star.',
-        'overall_rating.max' => 'Rating cannot be more than 5 stars.',
-        'full_name.required' => 'Your name is required.',
-        'rental_id.required' => 'Rental property is required.',
-        'rental_id.exists' => 'The selected rental property does not exist.'
-    ]);
-
-    try {
-        // Convert checkbox values to boolean (they come as 'on' or null)
-        $checkboxFields = [
-            'landlord_responsive',
-            'property_matched_description', 
-            'fair_pricing',
-            'good_communication'
-        ];
-
-        foreach ($checkboxFields as $field) {
-            $validated[$field] = $request->has($field) ? true : false;
-        }
-
-        // Create the review
-        $review = Review::create([
-            'rental_id' => $validated['rental_id'],
-            'overall_rating' => $validated['overall_rating'],
-            'landlord_responsive' => $validated['landlord_responsive'] ?? false,
-            'property_matched_description' => $validated['property_matched_description'] ?? false,
-            'fair_pricing' => $validated['fair_pricing'] ?? false,
-            'good_communication' => $validated['good_communication'] ?? false,
-            'comments' => $validated['comments'] ?? null,
-            'full_name' => $validated['full_name'],
+    public function storeReviewForms(Request $request) {
+        $validated = $request->validate([
+            'overall_rating' => 'required|integer|min:1|max:5',
+            'landlord_responsive' => 'nullable|boolean',
+            'property_matched_description' => 'nullable|boolean',
+            'fair_pricing' => 'nullable|boolean',
+            'good_communication' => 'nullable|boolean',
+            'comments' => 'nullable|string|max:255',
+            'full_name' => 'required|string|max:255',
+            'rental_id' => 'required|exists:rentals,id'
+        ], [
+            'overall_rating.required' => 'Please provide an overall rating.',
+            'overall_rating.integer' => 'Rating must be a whole number.',
+            'overall_rating.min' => 'Rating must be at least 1 star.',
+            'overall_rating.max' => 'Rating cannot be more than 5 stars.',
+            'full_name.required' => 'Your name is required.',
+            'rental_id.required' => 'Rental property is required.',
+            'rental_id.exists' => 'The selected rental property does not exist.'
         ]);
 
-        // Success response
-        return redirect()->back()
-            ->with('success', 'Thank you for your review! Your feedback has been submitted.');
+        try {
+            // Convert checkbox values to boolean (they come as 'on' or null)
+            $checkboxFields = [
+                'landlord_responsive',
+                'property_matched_description', 
+                'fair_pricing',
+                'good_communication'
+            ];
 
-    } catch (\Exception $e) {
-        \Log::error('Failed to store review: ' . $e->getMessage());
-        
-        return redirect()->back()
-            ->with('error', 'Failed to submit review. Please try again.')
-            ->withInput();
+            foreach ($checkboxFields as $field) {
+                $validated[$field] = $request->has($field) ? true : false;
+            }
+
+            // Create the review
+            $review = Review::create([
+                'rental_id' => $validated['rental_id'],
+                'overall_rating' => $validated['overall_rating'],
+                'landlord_responsive' => $validated['landlord_responsive'] ?? false,
+                'property_matched_description' => $validated['property_matched_description'] ?? false,
+                'fair_pricing' => $validated['fair_pricing'] ?? false,
+                'good_communication' => $validated['good_communication'] ?? false,
+                'comments' => $validated['comments'] ?? null,
+                'full_name' => $validated['full_name'],
+            ]);
+
+            // Success response
+            return redirect()->back()
+                ->with('success', 'Thank you for your review! Your feedback has been submitted.');
+
+        } catch (\Exception $e) {
+            \Log::error('Failed to store review: ' . $e->getMessage());
+
+            return redirect()->back()
+                ->with('error', 'Failed to submit review. Please try again.')
+                ->withInput();
+        }
     }
-}
+
+    public function response(Request $request) {
+        $validated = $request->validate([
+            "review_id" => "required|exists:reviews,id",
+            "response" => "required|string|max:1000",
+            "response_person" => "required|string|max:255"
+        ]);
+    
+        Review::where('id', $validated['review_id'])->update([
+            'response' => $validated['response'],
+            'response_person' => $validated['response_person']
+        ]);
+    
+        return redirect()->back()->with('success', 'Response submitted successfully');
+    }
 
 }

@@ -52,11 +52,6 @@ class Rental extends Model
         return $this->belongsTo(Review::class);
     }
 
-    public function images()
-    {
-        return $this->hasMany(RentalImage::class);
-    }
-
     protected function amenities(): Attribute
     {
         return Attribute::make(
