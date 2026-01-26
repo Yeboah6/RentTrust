@@ -43,6 +43,7 @@ const VerifyAgentDialog = ({ agentItem, isOpen, onClose, onSubmit }) => {
   // const [adminNotes, setAdminNotes] = useState('');
   // const [verificationLevel, setVerificationLevel] = useState('basic');
   const [expiryDate, setExpiryDate] = useState('');
+  const [toast, setToast] = useState(null);
   
   // const verificationLevels = [
   //   { value: 'basic', label: 'Basic Verification', description: 'Basic identity verification' },
@@ -57,14 +58,25 @@ const VerifyAgentDialog = ({ agentItem, isOpen, onClose, onSubmit }) => {
     // expiry_date: '',
   });
 
+  const showToast = (status = "success") => {
+    setToast({ status });
+    setTimeout(() => setToast(null), 3000);
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     put(`/admin/agents/${agentItem.id}/verify`, {
       onSuccess: () => {
-        
+        showToast("Listing Submitted", "Your rental listing has been submitted for review.", "success");
         reset();
-        onClose();
-      }
+        setTimeout(() => {
+          if (setShowAddListingModal) setShowAddListingModal(false);
+        }, 1500);
+      },
+      onError: (errors) => {
+        console.error('Submission errors:', errors);
+        showToast("Submission Failed", "Please correct the errors and try again.", "error");
+      },
     });
   };
 
@@ -103,6 +115,26 @@ const VerifyAgentDialog = ({ agentItem, isOpen, onClose, onSubmit }) => {
         }
       `}
       </style>
+
+      {/* Toast Notification */}
+      {toast && (
+        <div style={{
+          position: 'fixed',
+          top: '1rem',
+          right: '1rem',
+          backgroundColor: toast.variant === 'error' ? '#ef4444' : '#10b981',
+          color: 'white',
+          padding: '1rem',
+          borderRadius: '0.5rem',
+          boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
+          zIndex: 9999,
+          maxWidth: '400px',
+          animation: 'slideIn 0.3s ease-out'
+        }}>
+          <div style={{ fontWeight: '600', marginBottom: '0.25rem' }}>{toast.title}</div>
+          <div style={{ fontSize: '0.875rem' }}>{toast.description}</div>
+        </div>
+      )}
 
       {/* Overlay */}
       <div
@@ -235,7 +267,7 @@ const VerifyAgentDialog = ({ agentItem, isOpen, onClose, onSubmit }) => {
                   </label>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '0.75rem' }}>
                     {[
-                      { value: 'approved', label: 'Approve', color: 'hsl(152 60% 40%)' },
+                      { value: 'verified', label: 'verified', color: 'hsl(152 60% 40%)' },
                       { value: 'rejected', label: 'Reject', color: 'hsl(0 72% 51%)' },
                       { value: 'pending', label: 'Request Info', color: 'hsl(30 80% 55%)' },
                     ].map((option) => (

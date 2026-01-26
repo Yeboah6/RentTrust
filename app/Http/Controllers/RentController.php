@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Rental;
 use App\Models\Review;
 use App\Models\Report;
+use App\Models\Agent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -391,7 +392,7 @@ class RentController extends Controller
 
     public function verifyAgent(Request $request, $id) {
         $validated = $request->validate([
-            'status' => 'required|in:approved,rejected,request_info'
+            'status' => 'required|in:verified,rejected,request_info'
         ]);
 
         $verify = Agent::findOrFail($id);
@@ -403,5 +404,19 @@ class RentController extends Controller
         return redirect()->back()->with('success', 'Agent status updated successfully');
         dd($request);
     }
+
+public function suspendAgent(Request $request, $id) {
+    $validated = $request->validate([
+        'status' => 'required|in:suspended,unverified' // Allow both suspended and verified (for unsuspend)
+    ]);
+
+    $agent = Agent::findOrFail($id);
+    $agent->update([
+        'status' => $validated['status'],
+        'updated_at' => now() // Fixed: was 'updated', should be 'updated_at'
+    ]);
+
+    return redirect()->back()->with('success', 'Agent status updated successfully');
+}
 
 }

@@ -4,6 +4,8 @@ import Header from "@/Components/Layouts/Header";
 import Footer from "@/Components/Layouts/Footer";
 import AddRentalPage from "@/Pages/AddRentals";
 import EditRentals from "@/Pages/EditRentals";
+import VerificationRequestModal from "../VerifyRentals";
+
 
 // Icon components
 const Shield = ({ style }) => (
@@ -68,6 +70,8 @@ const AgentDashboardPage = ({ agentData, rentals, reviews }) => {
   const [showAddListingModal, setShowAddListingModal] = useState(false);
   const [showEditListingModal, setShowEditListingModal] = useState(false);
   const [selectedRental, setSelectedRental] = useState(null);
+  const [showVerificationModal, setShowVerificationModal] = useState(false);
+  const [selectedRentalForVerification, setSelectedRentalForVerification] = useState(null);
 
   const { data, setData, put, processing, reset } = useForm({
     'response': "",
@@ -427,6 +431,24 @@ const renderStars = (rating) => {
                             Edit
                           </button>
                           </div>
+                          <button 
+  onClick={() => {
+    setSelectedRentalForVerification(property);
+    setShowVerificationModal(true);
+  }}
+  style={{
+    padding: '0.375rem 0.75rem',
+    border: '1px solid hsl(40 20% 88%)',
+    borderRadius: '0.375rem',
+    backgroundColor: 'white',
+    color: 'hsl(174 62% 32%)',
+    fontSize: '0.875rem',
+    fontWeight: '500',
+    cursor: 'pointer'
+  }}
+>
+  Request Verification
+</button>
                         </div>
                       ))
                     ) : (
@@ -808,58 +830,63 @@ const renderStars = (rating) => {
 
         {/* Edit Listing Modal */}
         {showEditListingModal && selectedRental && (
-  <div style={{
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 50,
-    padding: '1rem'
-  }}>
-    <div style={{
-      backgroundColor: 'white',
-      borderRadius: '1rem',
-      maxHeight: '90vh',
-      overflow: 'auto',
-      maxWidth: '60%',
-      width: '100%',
-      position: 'relative'
-    }}>
-      <button
-        onClick={() => {
-          setShowEditListingModal(false);
-          setSelectedRental(null);
-        }}
-        style={{
-          position: 'sticky',
-          top: 0,
-          right: 0,
-          padding: '1rem',
-          border: 'none',
-          background: 'transparent',
-          fontSize: '1.5rem',
-          cursor: 'pointer',
-          color: 'hsl(200 15% 45%)',
-          float: 'right',
-          zIndex: 10
-        }}
-      >
-        ✕
-      </button>
-      {/* Pass ONLY the selectedRental, not the entire rentals array */}
-      <EditRentals 
-        agentData={agentData} 
-        setShowEditListingModal={setShowEditListingModal} 
-        rental={selectedRental}  // Changed from rentals to rental (singular)
-      />
-    </div>
-  </div>
-)}
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 50,
+            padding: '1rem'
+          }}>
+            <div style={{
+              backgroundColor: 'white',
+              borderRadius: '1rem',
+              maxHeight: '90vh',
+              overflow: 'auto',
+              maxWidth: '60%',
+              width: '100%',
+              position: 'relative'
+            }}>
+              <button
+                onClick={() => {
+                  setShowEditListingModal(false);
+                  setSelectedRental(null);
+                }}
+                style={{
+                  position: 'sticky',
+                  top: 0,
+                  right: 0,
+                  padding: '1rem',
+                  border: 'none',
+                  background: 'transparent',
+                  fontSize: '1.5rem',
+                  cursor: 'pointer',
+                  color: 'hsl(200 15% 45%)',
+                  float: 'right',
+                  zIndex: 10
+                }}
+              >
+                ✕
+              </button>
+              <EditRentals 
+                agentData={agentData} 
+                setShowEditListingModal={setShowEditListingModal} 
+                rental={selectedRental}
+              />
+            </div>
+          </div>
+        )}
+                <VerificationRequestModal
+  isOpen={showVerificationModal}
+  onClose={() => setShowVerificationModal(false)}
+  agentData={agentData}
+  selectedRental={selectedRentalForVerification}
+/>
       </div>
     </>
   );

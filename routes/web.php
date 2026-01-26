@@ -41,6 +41,8 @@ Route::middleware('super')->group(function () {
     ->name('admin.reports.status');
     Route::put('/admin/agents/{id}/verify', [RentController::class, 'verifyAgent'])
     ->name('admin.verify.agent');
+    Route::put('/admin/agents/{id}/suspend', [RentController::class, 'suspendAgent'])
+    ->name('admin.verify.agent');
 });
 
 Route::get('settings', [AuthController::class, 'settings'])->name('settings.page');

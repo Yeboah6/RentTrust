@@ -73,6 +73,9 @@ const SuperAdminDashboard = ({ adminData, rentals, agentData, reviews, reports }
   const [showDialog, setShowDialog] = useState(false);
 
   const { post } = useForm();
+  const { put, data, setData, processing } = useForm({
+    status: ''
+  });
 
   const handleLogout = (e) => {
     e.preventDefault();
@@ -86,7 +89,7 @@ const SuperAdminDashboard = ({ adminData, rentals, agentData, reviews, reports }
     avatar_url: null,
     total_agents: agentData?.length,
     total_listings: rentals?.length,
-    total_reports: 36
+    total_reports: reports?.length
   };
 
   const agent = mockAdmin;
@@ -95,17 +98,41 @@ const SuperAdminDashboard = ({ adminData, rentals, agentData, reviews, reports }
 
 
   const handleVerifyClick = (agentId) => {
-    const agent = agents.find(a => a.id === agentId);
-    console.log(agent);
-    setSelectedAgent(agent);
+    const verifyAgent = agents.find(a => a.id === agentId);
+    setSelectedAgent(verifyAgent);
     setShowDialog(true);
   };
 
-  const handleSuspendAgent = (agentId) => {
-    if (confirm("Are you sure you want to suspend this agent?")) {
-      alert(`Agent ${agentId} has been suspended`);
-    }
-  };
+const handleSuspendAgent = (agentId) => {
+  const agent = agents.find(a => a.id === agentId);
+
+  if (!agent) {
+    showToast("Error", "Agent not found.", "error");
+    return;
+  }
+
+  const isSuspended = agent.status === 'suspended';
+  const newStatus = isSuspended ? 'unverified' : 'suspended';
+  const actionText = isSuspended ? 'unsuspend' : 'suspend';
+
+  if (confirm(`Are you sure you want to ${actionText} ${agent.fullName}?`)) {
+    router.put(`/admin/agents/${agentId}/suspend`, {
+      status: newStatus
+    }, {
+      onSuccess: () => {
+        showToast(
+          isSuspended ? "Agent Unsuspended" : "Agent Suspended",
+          `${agent.fullName} has been ${actionText}ed successfully.`,
+          "success"
+        );
+      },
+      onError: (errors) => {
+        console.error('Suspension error:', errors);
+        showToast("Suspension Failed", `Unable to ${actionText} agent. Please try again.`, "error");
+      }
+    });
+  }
+};
 
   const handleReportAction = (reportId, action) => {
     alert(`Report ${reportId} marked as ${action}`);
@@ -149,7 +176,7 @@ const SuperAdminDashboard = ({ adminData, rentals, agentData, reviews, reports }
           Verified
         </span>
       );
-    } else if (status === "pending") {
+    } else if (status === "unverified") {
       return (
         <span style={{
           display: 'inline-flex',
@@ -164,7 +191,7 @@ const SuperAdminDashboard = ({ adminData, rentals, agentData, reviews, reports }
           border: '1px solid hsl(40 20% 88%)'
         }}>
           <Clock style={{ height: '0.75rem', width: '0.75rem' }} />
-          Pending
+          Unverified
         </span>
       );
     } else {
@@ -175,14 +202,14 @@ const SuperAdminDashboard = ({ adminData, rentals, agentData, reviews, reports }
           padding: '0.25rem 0.625rem',
           fontSize: '0.75rem',
           fontWeight: '500',
-          backgroundColor: 'white',
-          color: 'hsl(200 15% 45%)',
+          backgroundColor: '#d92626',
+          color: 'white',
           borderRadius: '9999px',
           gap: '0.25rem',
           border: '1px solid hsl(40 20% 88%)'
         }}>
           <AlertCircle style={{ height: '0.75rem', width: '0.75rem' }} />
-          Unverified
+          Suspended
         </span>
       );
     }
@@ -466,16 +493,19 @@ const SuperAdminDashboard = ({ adminData, rentals, agentData, reviews, reports }
                             onClick={() => handleSuspendAgent(agentItem.id)}
                             style={{
                               padding: '0.375rem 0.75rem',
-                              border: '1px solid hsl(0 70% 50%)',
+                              border: '1px solid #d92626',
                               borderRadius: '0.375rem',
                               backgroundColor: 'white',
-                              color: 'hsl(0 70% 50%)',
+                              color: '#d92626',
                               fontSize: '0.875rem',
                               fontWeight: '500',
-                              cursor: 'pointer'
+                              cursor: 'pointer',
+                              transition: 'background-color 0.2s'
                             }}
+                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(0 70% 95%)'}
+                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
                           >
-                            Suspend
+                          {agentItem.status === 'suspended' ? 'Unsuspend' : 'Suspend'}
                           </button>
                         </div>
                       </div>
