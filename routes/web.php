@@ -33,13 +33,14 @@ Route::middleware('agent')->group(function () {
     Route::get('/agent-dashboard', [DashboardController::class, 'agentDashboard']);
     Route::post('/rent', [RentController::class, 'store']);
     Route::put('/response', [RentController::class, 'response']);
-    // Route::post('/rent/{id}', [RentController::class, 'store']);
 });
 
 Route::middleware('super')->group(function () {
     Route::get('/super-admin', [DashboardController::class, 'superAdmin']);
     Route::put('/admin/reports/{id}/status', [RentController::class, 'updateReportStatus'])
     ->name('admin.reports.status');
+    Route::put('/admin/agents/{id}/verify', [RentController::class, 'verifyAgent'])
+    ->name('admin.verify.agent');
 });
 
 Route::get('settings', [AuthController::class, 'settings'])->name('settings.page');

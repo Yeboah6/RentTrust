@@ -38,29 +38,30 @@ const Star = ({ className, style }) => (
   </svg>
 );
 
-const VerifyAgentDialog = ({ agent, isOpen, onClose, onSubmit }) => {
+const VerifyAgentDialog = ({ agentItem, isOpen, onClose, onSubmit }) => {
   const [verificationStatus, setVerificationStatus] = useState('');
-  const [adminNotes, setAdminNotes] = useState('');
-  const [verificationLevel, setVerificationLevel] = useState('basic');
+  // const [adminNotes, setAdminNotes] = useState('');
+  // const [verificationLevel, setVerificationLevel] = useState('basic');
   const [expiryDate, setExpiryDate] = useState('');
   
-  const verificationLevels = [
-    { value: 'basic', label: 'Basic Verification', description: 'Basic identity verification' },
-    { value: 'premium', label: 'Premium Verified', description: 'Document verification completed' },
-    { value: 'trusted', label: 'Trusted Partner', description: 'Verified + Excellent track record' },
-  ];
+  // const verificationLevels = [
+  //   { value: 'basic', label: 'Basic Verification', description: 'Basic identity verification' },
+  //   { value: 'premium', label: 'Premium Verified', description: 'Document verification completed' },
+  //   { value: 'trusted', label: 'Trusted Partner', description: 'Verified + Excellent track record' },
+  // ];
 
-  const { data, setData, post, processing, errors, reset } = useForm({
+  const { data, setData, put, processing, errors, reset } = useForm({
     status: '',
-    level: '',
-    notes: '',
-    expiry_date: '',
+    // level: '',
+    // notes: '',
+    // expiry_date: '',
   });
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    post(`/admin/agents/${agent.id}/verify`, {
+    put(`/admin/agents/${agentItem.id}/verify`, {
       onSuccess: () => {
+        
         reset();
         onClose();
       }
@@ -202,24 +203,24 @@ const VerifyAgentDialog = ({ agent, isOpen, onClose, onSubmit }) => {
                     color: 'hsl(200 25% 15%)'
                   }}
                 >
-                  {agent.fullName?.charAt(0) || 'A'}
+                  {agentItem.fullName?.charAt(0) || 'A'}
                 </div>
                 <div style={{ flex: 1 }}>
                   <h3 style={{ fontWeight: '600', color: 'hsl(200 25% 15%)' }}>
-                    {agent.fullName || 'Agent Name'}
+                    {agentItem.fullName || 'Agent Name'}
                   </h3>
                   <div style={{ display: 'flex', gap: '1rem', fontSize: '0.875rem', color: 'hsl(200 15% 45%)' }}>
-                    <span>{agent.email || 'email@example.com'}</span>
+                    <span>{agentItem.email || 'email@example.com'}</span>
                     <span>•</span>
-                    <span>{agent.phone || '+233 XX XXX XXXX'}</span>
+                    <span>{agentItem.phone || '+233 XX XXX XXXX'}</span>
                   </div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
                   <div style={{ fontSize: '0.875rem', color: 'hsl(200 15% 45%)' }}>
-                    Joined: {agent.created_at ? new Date(agent.created_at).toLocaleDateString() : 'N/A'}
+                    Joined: {agentItem.created_at ? new Date(agentItem.created_at).toLocaleDateString() : 'N/A'}
                   </div>
-                  <div style={{ fontSize: '0.875rem', fontWeight: '500', color: agent.type === 'Landlord' ? 'hsl(30 80% 55%)' : 'hsl(220 70% 50%)' }}>
-                    {agent.type || 'Agent'}
+                  <div style={{ fontSize: '0.875rem', fontWeight: '500', color: agentItem.type === 'Landlord' ? 'hsl(30 80% 55%)' : 'hsl(220 70% 50%)' }}>
+                    {agentItem.type || 'Agent'}
                   </div>
                 </div>
               </div>
@@ -272,7 +273,7 @@ const VerifyAgentDialog = ({ agent, isOpen, onClose, onSubmit }) => {
                 </div>
 
                 {/* Verification Level */}
-                <div>
+                {/* <div>
                   <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', fontSize: '0.875rem', color: 'hsl(200 25% 15%)' }}>
                     Verification Level
                   </label>
@@ -321,10 +322,10 @@ const VerifyAgentDialog = ({ agent, isOpen, onClose, onSubmit }) => {
                       {errors.level}
                     </p>
                   )}
-                </div>
+                </div> */}
 
                 {/* Expiry Date */}
-                <div>
+                {/* <div>
                   <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', fontSize: '0.875rem', color: 'hsl(200 25% 15%)' }}>
                     Verification Expiry Date
                   </label>
@@ -356,10 +357,10 @@ const VerifyAgentDialog = ({ agent, isOpen, onClose, onSubmit }) => {
                   <p style={{ fontSize: '0.75rem', color: 'hsl(200 15% 45%)', marginTop: '0.375rem' }}>
                     Leave empty for permanent verification
                   </p>
-                </div>
+                </div> */}
 
                 {/* Admin Notes */}
-                <div>
+                {/* <div>
                   <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', fontSize: '0.875rem', color: 'hsl(200 25% 15%)' }}>
                     Admin Notes
                   </label>
@@ -392,7 +393,7 @@ const VerifyAgentDialog = ({ agent, isOpen, onClose, onSubmit }) => {
                   <p style={{ fontSize: '0.75rem', color: 'hsl(200 15% 45%)', marginTop: '0.375rem' }}>
                     These notes are for internal use only and won't be visible to the agent
                   </p>
-                </div>
+                </div> */}
 
                 {/* Action Buttons */}
                 <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem' }}>

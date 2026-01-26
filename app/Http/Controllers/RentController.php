@@ -389,4 +389,19 @@ class RentController extends Controller
         return redirect()->back()->with('success', 'Report status updated successfully');
     }
 
+    public function verifyAgent(Request $request, $id) {
+        $validated = $request->validate([
+            'status' => 'required|in:approved,rejected,request_info'
+        ]);
+
+        $verify = Agent::findOrFail($id);
+        $verify->update([
+            'status' => $validated['status'],
+            'updated_at' => now()
+        ]);
+
+        return redirect()->back()->with('success', 'Agent status updated successfully');
+        dd($request);
+    }
+
 }

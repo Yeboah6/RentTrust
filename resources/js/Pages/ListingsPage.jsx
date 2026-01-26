@@ -661,7 +661,7 @@ const ListingsPage = ({ listings: initialListings = [] }) => {
                 <h3 className="text-lg font-semibold tracking-tight" style={{ color: 'hsl(200 25% 15%)', marginBottom: '0.5rem' }}>
                   No listings found
                 </h3>
-                <p style={{ color: 'hsl(200 15% 45%)' }}>Try adjusting your search criteria</p>
+                {/* <p style={{ color: 'hsl(200 15% 45%)' }}>Try adjusting your search criteria</p> */}
               </div>
             )}
 

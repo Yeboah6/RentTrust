@@ -11,6 +11,12 @@ const Shield = ({ style }) => (
   </svg>
 );
 
+const Flag = ({ style }) => (
+  <svg style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+  </svg>
+);
+
 const Home = ({ style }) => (
   <svg style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
@@ -88,7 +94,9 @@ const SuperAdminDashboard = ({ adminData, rentals, agentData, reviews, reports }
   const properties = rentals || [];
 
 
-  const handleVerifyClick = (agent) => {
+  const handleVerifyClick = (agentId) => {
+    const agent = agents.find(a => a.id === agentId);
+    console.log(agent);
     setSelectedAgent(agent);
     setShowDialog(true);
   };
@@ -437,9 +445,9 @@ const SuperAdminDashboard = ({ adminData, rentals, agentData, reviews, reports }
                           >
                             View Details
                           </button>
-                          {agentItem.status === 'pending' && (
+                          {agentItem.status === 'unverified' && (
                             <button
-                              onClick={() => handleVerifyClick(agent)}
+                              onClick={() => handleVerifyClick(agentItem.id)}
                               style={{
                                 padding: '0.375rem 0.75rem',
                                 background: 'linear-gradient(135deg, hsl(152 60% 40%) 0%, hsl(152 50% 35%) 100%)',
@@ -452,23 +460,6 @@ const SuperAdminDashboard = ({ adminData, rentals, agentData, reviews, reports }
                               }}
                             >
                               Verify Agent
-                            </button>
-                          )}
-                          {agentItem.status === 'unverified' && (
-                            <button
-                              onClick={() => handleVerifyAgent(agentItem.id)}
-                              style={{
-                                padding: '0.375rem 0.75rem',
-                                border: '1px solid hsl(152 60% 40%)',
-                                borderRadius: '0.375rem',
-                                backgroundColor: 'white',
-                                color: 'hsl(152 60% 40%)',
-                                fontSize: '0.875rem',
-                                fontWeight: '500',
-                                cursor: 'pointer'
-                              }}
-                            >
-                              Verify
                             </button>
                           )}
                           <button
@@ -1205,12 +1196,13 @@ const SuperAdminDashboard = ({ adminData, rentals, agentData, reviews, reports }
 
         <Footer />
 
-        <VerifyAgentDialog
-        agent={agentData}
-        isOpen={showDialog}
-        onClose={() => setShowDialog(false)}
-        // onSubmit={handleSubmitVerification}
-      />
+        {selectedAgent && (
+          <VerifyAgentDialog
+            agentItem={selectedAgent}
+            isOpen={showDialog}
+            onClose={() => setShowDialog(false)}
+          />
+        )}
       </div>
     </>
   );

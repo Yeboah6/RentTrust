@@ -44,11 +44,11 @@ const Footer = () => {
               >
                 <div 
                   className="flex h-8 w-8 items-center justify-center rounded-lg"
-                  style={{ backgroundColor: 'hsl(174 62% 32%)' }}
+                  style={{ backgroundColor: '#1f847a' }}
                 >
                   <span className="text-base font-bold text-white">R</span>
                 </div>
-                <span className="text-lg font-bold tracking-tight" style={{ color: 'hsl(200 25% 15%)' }}>
+                <span className="text-lg font-bold tracking-tight" style={{ color: '#1d2930' }}>
                   RentTrust
                 </span>
               </Link>
@@ -139,7 +139,7 @@ const Footer = () => {
               © {new Date().getFullYear()} RentTrust Ghana. All rights reserved.
             </p>
             <p className="text-sm" style={{ color: 'hsl(200 15% 45%)' }}>
-               Made with ❤️ by Alpha Dev
+               Made with <span style={{border:'5px solid #1f847a'}}>✌️</span>by Alpha Dev
             </p>
             <p 
               className="text-xs px-3 py-1.5 rounded-lg"
