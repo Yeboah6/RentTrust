@@ -13,7 +13,8 @@ return new class extends Migration
     {
         Schema::create('reviews', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('rental_id')->constrained('rentals')->onDelete('cascade');
+            $table->enum('review_type', ['rent', 'app'])->default('rent'); // NEW FIELD
+            $table->foreignId('rental_id')->nullable()->constrained('rentals')->onDelete('cascade'); // Make nullable for app reviews
             $table->json('overall_rating');
             $table->boolean('landlord_responsive')->nullable();
             $table->boolean('property_matched_description')->nullable();
