@@ -11,6 +11,7 @@ class Report extends Model
         'report_type',
         'report_description',
         'evidence',
-        'full_name'
+        'full_name',
+        'status'
     ];
 }

@@ -188,7 +188,8 @@ class RentController extends Controller
             'report_description' => $validated['description'],
             'report_type' => $validated['report_type'], 
             'full_name' => $name,
-            'evidence' => !empty($filePaths) ? json_encode($filePaths) : '[]' // Never NULL
+            'evidence' => !empty($filePaths) ? json_encode($filePaths) : '[]',
+            'status' => "pending"
         ]);
 
         return redirect()->back()->with('success', 'Report submitted successfully. Thank you for your feedback.');
@@ -283,11 +284,16 @@ class RentController extends Controller
     }
 
     public function reviews() {
-        return inertia('ReviewsPage');
-    }
+        $reviews = Review::latest()->get();
+        $reports = Report::latest()->get();
+        // dd($reviews, $reports);
 
-    public function reportListings() {
-        return inertia('ReportListingDialog');
+        return inertia('ReviewsPage',
+        [
+            'reviews' => $reviews,
+            'reports' => $reports
+
+        ]);
     }
 
     public function addRentals() {
