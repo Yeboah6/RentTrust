@@ -152,7 +152,7 @@ const Header = () => {
                   <User className="h-4 w-4 mr-2" />
                   Sign In
                 </Link>
-                <Link
+                {/* <Link
                   href="/become-agent"
                   className="px-4 py-2 text-sm font-semibold rounded-lg text-white transition-all duration-200 active:scale-95"
                   style={{ backgroundColor: 'hsl(174 62% 32%)' }}
@@ -160,7 +160,7 @@ const Header = () => {
                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'hsl(174 62% 32%)'}
                 >
                   List Property
-                </Link>
+                </Link> */}
               </>
              )}
             

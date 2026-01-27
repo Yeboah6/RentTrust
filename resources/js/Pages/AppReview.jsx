@@ -1,77 +1,38 @@
 import { useState } from "react";
 import { Star, X } from "lucide-react";
+import { useForm } from "@inertiajs/react";
 
 const AppReview = ({ propertyId, agentId, onSuccess }) => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [hoveredRating, setHoveredRating] = useState(0);
   const [toast, setToast] = useState(null);
-  const [formData, setFormData] = useState({
-    overall_rating: 0,
-    name: "",
-    comment: "",
-  });
-  const [errors, setErrors] = useState({});
 
-  // Mock user - set to null to test "not signed in" state
-  const user = { id: "user123", email: "user@example.com" };
-
-  const showToast = (title, description, variant = "success") => {
-    setToast({ title, description, variant });
-    setTimeout(() => setToast(null), 3000);
-  };
-
-  const validateForm = () => {
-    const newErrors = {};
-    
-    if (formData.overall_rating < 1 || formData.overall_rating > 5) {
-      newErrors.overall_rating = "Please select a rating";
-    }
-    
-    if (formData.comment && formData.comment.length > 1000) {
-      newErrors.comment = "Comment must be less than 1000 characters";
-    }
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+  const { data, setData, post, processing, reset, errors } = useForm({
+    'overall_rating': 0,
+    'name': "",
+    'comment': ""
+  })
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
-    if (!user) {
-      showToast("Please sign in", "You need to be signed in to submit a review", "error");
-      return;
-    }
 
-    if (!validateForm()) {
-      return;
-    }
+    post("/reviews/app", {
+      onSuccess: () => {
+        showToast("Review Submitted", "Thank you!!", "success");
+        reset();
+        setTimeout(() => {
+          if (setShowReviewForm) setShowReviewForm(false);
+        }, 1500);
+      },
+      onError: (errors) => {
+        console.error('Submission errors:', errors);
+        showToast("Submission Failed", "Please correct the errors and try again.", "error");
+      },
+    });
+  }
 
-    setIsSubmitting(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      console.log("Review submitted:", {
-        property_id: propertyId,
-        agent_id: agentId,
-        reviewer_id: user.id,
-        ...formData,
-        comment: formData.comment || null,
-      });
-      
-      showToast("Review submitted", "Thank you for sharing your experience!");
-      
-      // Reset form
-      setFormData({
-        overall_rating: 0,
-        name: "",
-        comment: "",
-      });
-      setErrors({});
-      setIsSubmitting(false);
-      
-      onSuccess?.();
-    }, 1500);
+  const showToast = (name, comment, overall_rating = "success") => {
+    setToast({ name, comment, overall_rating });
+    setTimeout(() => setToast(null), 3000);
   };
 
   return (
@@ -97,6 +58,7 @@ const AppReview = ({ propertyId, agentId, onSuccess }) => {
       )}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+        <form onSubmit={handleSubmit}>
         {/* Overall Rating */}
         <div>
           <label style={{
@@ -115,7 +77,7 @@ const AppReview = ({ propertyId, agentId, onSuccess }) => {
                 type="button"
                 onMouseEnter={() => setHoveredRating(value)}
                 onMouseLeave={() => setHoveredRating(0)}
-                onClick={() => setFormData({ ...formData, overall_rating: value })}
+                onClick={() => setData({ ...data, overall_rating: value })}
                 style={{
                   padding: '0.25rem',
                   border: 'none',
@@ -129,8 +91,8 @@ const AppReview = ({ propertyId, agentId, onSuccess }) => {
                 <Star
                   size={32}
                   style={{
-                    color: value <= (hoveredRating || formData.overall_rating) ? '#f59e0b' : '#d1d5db',
-                    fill: value <= (hoveredRating || formData.overall_rating) ? '#f59e0b' : 'none',
+                    color: value <= (hoveredRating || data.overall_rating) ? '#f59e0b' : '#d1d5db',
+                    fill: value <= (hoveredRating || data.overall_rating) ? '#f59e0b' : 'none',
                     transition: 'all 0.2s'
                   }}
                 />
@@ -138,9 +100,9 @@ const AppReview = ({ propertyId, agentId, onSuccess }) => {
             ))}
           </div>
           <p style={{ fontSize: '0.75rem', color: '#6b7280' }}>
-            {formData.overall_rating === 0 
+            {data.overall_rating === 0 
               ? "Click to rate" 
-              : `You rated ${formData.overall_rating} star${formData.overall_rating !== 1 ? "s" : ""}`}
+              : `You rated ${data.overall_rating} star${data.overall_rating !== 1 ? "s" : ""}`}
           </p>
           {errors.overall_rating && (
             <p style={{ fontSize: '0.75rem', color: '#ef4444', marginTop: '0.25rem' }}>
@@ -161,8 +123,8 @@ const AppReview = ({ propertyId, agentId, onSuccess }) => {
             Additional Comments (optional)
           </label>
           <textarea
-            value={formData.comment}
-            onChange={(e) => setFormData({ ...formData, comment: e.target.value })}
+            value={data.comment}
+            onChange={(e) => setData({ ...data, comment: e.target.value })}
             placeholder="Share more details about your experience..."
             rows={4}
             style={{
@@ -194,8 +156,8 @@ const AppReview = ({ propertyId, agentId, onSuccess }) => {
             Full name
           </label>
           <input
-            value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            value={data.name}
+            onChange={(e) => setData({ ...data, name: e.target.value })}
             placeholder="Solomon Yeboah"
             style={{
               width: '100%',
@@ -217,22 +179,24 @@ const AppReview = ({ propertyId, agentId, onSuccess }) => {
 
         {/* Submit Button */}
         <button
-          onClick={handleSubmit}
-          disabled={isSubmitting}
+          // onClick={handleSubmit}
+          type="submit"
+          disabled={processing}
           style={{
             width: '100%',
             padding: '0.625rem',
-            backgroundColor: isSubmitting ? '#9ca3af' : '#3b82f6',
+            backgroundColor: processing ? '#9ca3af' : '#3b82f6',
             color: 'white',
             border: 'none',
             borderRadius: '0.375rem',
             fontWeight: '500',
-            cursor: isSubmitting ? 'not-allowed' : 'pointer',
+            cursor: processing ? 'not-allowed' : 'pointer',
             fontSize: '0.875rem'
           }}
         >
-          {isSubmitting ? "Submitting..." : "Submit Review"}
+          {processing ? "Submitting..." : "Submit Review"}
         </button>
+        </form>
       </div>
 
       <style>{`

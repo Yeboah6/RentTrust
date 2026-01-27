@@ -337,6 +337,7 @@ class RentController extends Controller
 
             // Create the review
             $review = Review::create([
+                // 'review_type' => "rent",
                 'rental_id' => $validated['rental_id'],
                 'overall_rating' => $validated['overall_rating'],
                 'landlord_responsive' => $validated['landlord_responsive'] ?? false,
@@ -405,18 +406,36 @@ class RentController extends Controller
         dd($request);
     }
 
-public function suspendAgent(Request $request, $id) {
-    $validated = $request->validate([
-        'status' => 'required|in:suspended,unverified' // Allow both suspended and verified (for unsuspend)
-    ]);
+    public function suspendAgent(Request $request, $id) {
+        $validated = $request->validate([
+            'status' => 'required|in:suspended,unverified' // Allow both suspended and verified (for unsuspend)
+        ]);
 
-    $agent = Agent::findOrFail($id);
-    $agent->update([
-        'status' => $validated['status'],
-        'updated_at' => now() // Fixed: was 'updated', should be 'updated_at'
-    ]);
+        $agent = Agent::findOrFail($id);
+        $agent->update([
+            'status' => $validated['status'],
+            'updated_at' => now() // Fixed: was 'updated', should be 'updated_at'
+        ]);
 
-    return redirect()->back()->with('success', 'Agent status updated successfully');
-}
+        return redirect()->back()->with('success', 'Agent status updated successfully');
+    }
+
+    public function storeReviewApp(Request $request) {
+        $validated = $request->validate([
+            'overall_rating' => 'required|integer|min:1|max:5',
+            'name' => 'required|string|max:255',
+            'comment' => 'nullable|string|max:255'
+        ]);
+
+        Review::create([
+            'review_type' => "app",
+            'overall_rating' => $validated['overall_rating'],
+            'full_name' => $validated['name'],
+            'comments' => $validated['comment']
+        ]);
+
+        return redirect()->back()->with('success', 'Rview added successfully');
+        // dd($request);
+    }
 
 }
