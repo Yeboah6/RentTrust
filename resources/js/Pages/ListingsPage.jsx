@@ -18,6 +18,12 @@ const MapPin = ({ className, style }) => (
   </svg>
 );
 
+const Clock = ({ style }) => (
+  <svg style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+  </svg>
+);
+
 const Star = ({ className, style }) => (
   <svg className={className} style={style} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
     <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
@@ -369,13 +375,13 @@ const PropertyCard = ({ listing }) => {
               padding: '0.25rem 0.625rem',
               fontSize: '0.75rem',
               fontWeight: '500',
-              backgroundColor: listing.isClaimed ? 'hsl(174 62% 32% / 0.1)' : 'hsl(40 20% 92%)',
-              color: listing.isClaimed ? 'hsl(174 62% 32%)' : 'hsl(200 15% 45%)',
+              backgroundColor: listing.status ? 'hsl(174 62% 32% / 0.1)' : '#efece7',
+              color: listing.status === "pending" ? '#627884' : '#1f847a',
               borderRadius: '9999px'
             }}
           >
-            <CheckCircle2 style={{ height: '0.75rem', width: '0.75rem', marginRight: '0.25rem' }} />
-            {listing.isClaimed ? 'Claimed' : 'Unclaimed'}
+            <Clock style={{ height: '0.75rem', width: '0.75rem' }} /> 
+            { listing.status }
           </span>
         </div>
 
@@ -477,8 +483,9 @@ const ListingsPage = ({ listings: initialListings = [] }) => {
       bathrooms: listing.bathrooms,
       property_type: listing.property_type,
       agentName: listing.agent_name || null,
-      isVerified: Boolean(listing.is_verified),
-      isClaimed: Boolean(listing.is_claimed), 
+      status:listing.status,
+      isVerified: Boolean(listing.status),
+      isClaimed: Boolean(listing.is_verified), 
       reviewCount: parseInt(listing.review_count) || 0,
       rating: parseFloat(listing.rating) || 0,
       // Ensure images are properly included

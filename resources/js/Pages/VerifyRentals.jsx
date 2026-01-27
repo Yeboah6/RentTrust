@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 // Icons
 const ShieldCheck = ({ style }) => (
@@ -60,7 +60,7 @@ const VerificationRequestModal = ({ isOpen, onClose, agentData, selectedRental }
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Reset form when modal closes or rental changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (selectedRental) {
       setFormData(prev => ({
         ...prev,

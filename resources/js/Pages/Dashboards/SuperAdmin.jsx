@@ -176,7 +176,7 @@ const handleSuspendAgent = (agentId) => {
           Verified
         </span>
       );
-    } else if (status === "unverified") {
+    } else if (status === "pending") {
       return (
         <span style={{
           display: 'inline-flex',
@@ -191,7 +191,7 @@ const handleSuspendAgent = (agentId) => {
           border: '1px solid hsl(40 20% 88%)'
         }}>
           <Clock style={{ height: '0.75rem', width: '0.75rem' }} />
-          Unverified
+          Pending
         </span>
       );
     } else {
@@ -559,7 +559,7 @@ const handleSuspendAgent = (agentId) => {
                               GH₵{property.rent_min.toLocaleString()} - GH₵{property.rent_max.toLocaleString()}
                             </p>
                           </div>
-                          {getStatusBadge(property.listing_status)}
+                          {getStatusBadge(property.status)}
                         </div>
                         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                           <button style={{
@@ -586,7 +586,7 @@ const handleSuspendAgent = (agentId) => {
                           }}>
                             Edit
                           </button>
-                          {property.listing_status === 'pending' && (
+                          {property.status === 'pending' && (
                             <button
                               onClick={() => alert(`Listing ${property.id} approved`)}
                               style={{

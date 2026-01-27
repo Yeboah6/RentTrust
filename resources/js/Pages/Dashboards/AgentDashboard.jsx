@@ -60,7 +60,7 @@ const mockClaims = [
       title: "Studio Apartment",
       address: "12 Cantonments Road, Accra"
     }
-  }
+    }
 ];
 
 const AgentDashboardPage = ({ agentData, rentals, reviews }) => {
@@ -115,10 +115,9 @@ const AgentDashboardPage = ({ agentData, rentals, reviews }) => {
   const agent = {
     name: agentData?.fullName || "Unknown Agent",
     company: agentData?.company || null,
-    verification_status: "verified",
+    status: agentData?.status || "unverified",
     avatar_url: null,
     average_rating: 4.7,
-    total_reviews: 24
   };
 
 const formattedReviews = reviews && reviews.length > 0 
@@ -432,23 +431,23 @@ const renderStars = (rating) => {
                           </button>
                           </div>
                           <button 
-  onClick={() => {
-    setSelectedRentalForVerification(property);
-    setShowVerificationModal(true);
-  }}
-  style={{
-    padding: '0.375rem 0.75rem',
-    border: '1px solid hsl(40 20% 88%)',
-    borderRadius: '0.375rem',
-    backgroundColor: 'white',
-    color: 'hsl(174 62% 32%)',
-    fontSize: '0.875rem',
-    fontWeight: '500',
-    cursor: 'pointer'
-  }}
->
-  Request Verification
-</button>
+                            onClick={() => {
+                              setSelectedRentalForVerification(property);
+                              setShowVerificationModal(true);
+                            }}
+                            style={{
+                              padding: '0.375rem 0.75rem',
+                              border: '1px solid hsl(40 20% 88%)',
+                              borderRadius: '0.375rem',
+                              backgroundColor: 'white',
+                              color: 'hsl(174 62% 32%)',
+                              fontSize: '0.875rem',
+                              fontWeight: '500',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            Request Verification
+                          </button>
                         </div>
                       ))
                     ) : (
@@ -881,12 +880,12 @@ const renderStars = (rating) => {
             </div>
           </div>
         )}
-                <VerificationRequestModal
-  isOpen={showVerificationModal}
-  onClose={() => setShowVerificationModal(false)}
-  agentData={agentData}
-  selectedRental={selectedRentalForVerification}
-/>
+        <VerificationRequestModal
+          isOpen={showVerificationModal}
+          onClose={() => setShowVerificationModal(false)}
+          agentData={agentData}
+          selectedRental={selectedRentalForVerification}
+        />
       </div>
     </>
   );
