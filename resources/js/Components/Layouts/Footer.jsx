@@ -139,7 +139,7 @@ const Footer = () => {
               © {new Date().getFullYear()} RentTrust Ghana. All rights reserved.
             </p>
             <p className="text-sm" style={{ color: 'hsl(200 15% 45%)' }}>
-               Made with <span style={{border:'5px solid #1f847a'}}>✌️</span>by Alpha Dev
+               Made with ❤️✌️by Alpha Dev
             </p>
             <p 
               className="text-xs px-3 py-1.5 rounded-lg"

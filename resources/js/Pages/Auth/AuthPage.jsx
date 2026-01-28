@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useForm } from "@inertiajs/react";
+import { useForm, Link } from "@inertiajs/react";
 
 // Icon components
 const Mail = ({ className, style }) => (
@@ -284,6 +284,17 @@ const AuthPage = () => {
                   {processing ? "Please wait..." : isLogin ? "Sign In" : "Create Account"}
                 </button>
                 </form>
+                <Link style={{
+                    border: 'none',
+                    background: 'transparent',
+                    color: 'hsl(174 62% 32%)',
+                    cursor: 'pointer',
+                    fontSize: '0.875rem',
+                    fontWeight: '500',
+                    textDecoration: 'underline'
+                  }}>
+                forgot password
+                </Link>
               </div>
 
               {/* Toggle Login/Signup */}

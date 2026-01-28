@@ -5,6 +5,7 @@ import Footer from "@/Components/Layouts/Footer";
 import AddRentalPage from "@/Pages/AddRentals";
 import EditRentals from "@/Pages/EditRentals";
 import VerificationRequestModal from "../VerifyRentals";
+import ViewRentals from "../ViewRental";
 
 
 // Icon components
@@ -72,6 +73,8 @@ const AgentDashboardPage = ({ agentData, rentals, reviews }) => {
   const [selectedRental, setSelectedRental] = useState(null);
   const [showVerificationModal, setShowVerificationModal] = useState(false);
   const [selectedRentalForVerification, setSelectedRentalForVerification] = useState(null);
+  const [showViewModal, setShowViewModal] = useState(false);
+  
 
   const { data, setData, put, processing, reset } = useForm({
     'response': "",
@@ -108,8 +111,13 @@ const AgentDashboardPage = ({ agentData, rentals, reviews }) => {
     const selectedRentalData = rentals.find(r => r.id === rental.id);
     setSelectedRental(selectedRentalData);
     setShowEditListingModal(true);
-    console.log('Selected Rental:', selectedRental);
+  };
 
+  const handleViewClick = (rental) => {
+    const selectViewData = rentals.find(r => r.id === rental.id);
+    setSelectedRental(selectViewData);
+    setShowViewModal(true);
+    console.log("View Data:", selectViewData);
   };
 
   const agent = {
@@ -402,33 +410,37 @@ const renderStars = (rating) => {
                             </div>
                             {getStatusBadge(property.listing_status)}
                           </div>
-                          <div style={{ display: 'flex', gap: '0.5rem' }}>
-                            <button style={{
-                              padding: '0.375rem 0.75rem',
-                              border: '1px solid hsl(40 20% 88%)',
-                              borderRadius: '0.375rem',
-                              backgroundColor: 'white',
-                              color: 'hsl(174 62% 32%)',
-                              fontSize: '0.875rem',
-                              fontWeight: '500',
-                              cursor: 'pointer'
-                            }}>
+                          <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                            <button 
+                              onClick={() => handleViewClick(property)}
+                              style={{
+                                flex: 1,
+                                padding: '0.375rem 0.75rem',
+                                border: '1px solid hsl(40 20% 88%)',
+                                borderRadius: '0.375rem',
+                                backgroundColor: 'white',
+                                color: 'hsl(174 62% 32%)',
+                                fontSize: '0.875rem',
+                                fontWeight: '500',
+                                cursor: 'pointer'
+                              }}>
                               View
                             </button>
                             <button 
-                            onClick={() => handleEditClick(property)}  // Pass the specific property
-                            style={{
-                              padding: '0.375rem 0.75rem',
-                              border: '1px solid hsl(40 20% 88%)',
-                              borderRadius: '0.375rem',
-                              backgroundColor: 'white',
-                              color: 'hsl(174 62% 32%)',
-                              fontSize: '0.875rem',
-                              fontWeight: '500',
-                              cursor: 'pointer'
-                            }}>
-                            Edit
-                          </button>
+                              onClick={() => handleEditClick(property)}
+                              style={{
+                                flex: 1,
+                                padding: '0.375rem 0.75rem',
+                                border: '1px solid hsl(40 20% 88%)',
+                                borderRadius: '0.375rem',
+                                backgroundColor: 'white',
+                                color: 'hsl(174 62% 32%)',
+                                fontSize: '0.875rem',
+                                fontWeight: '500',
+                                cursor: 'pointer'
+                              }}>
+                              Edit
+                            </button>
                           </div>
                           <button 
                             onClick={() => {
@@ -436,6 +448,7 @@ const renderStars = (rating) => {
                               setShowVerificationModal(true);
                             }}
                             style={{
+                              width: '100%',
                               padding: '0.375rem 0.75rem',
                               border: '1px solid hsl(40 20% 88%)',
                               borderRadius: '0.375rem',
@@ -628,7 +641,6 @@ const renderStars = (rating) => {
                                 resize: 'vertical'
                               }}
                             />
-                            {/* <input type="text" name="response_name" value={agentData?.fullName} /> */}
                             <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
                               <button
                                 type="submit"
@@ -880,12 +892,48 @@ const renderStars = (rating) => {
             </div>
           </div>
         )}
+
+        {/* Verification Modal */}
         <VerificationRequestModal
           isOpen={showVerificationModal}
           onClose={() => setShowVerificationModal(false)}
           agentData={agentData}
           selectedRental={selectedRentalForVerification}
         />
+
+        {/* View Rental Modal */}
+        {showViewModal && selectedRental && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 50,
+            padding: '1rem'
+          }}>
+            <div style={{
+              backgroundColor: 'white',
+              borderRadius: '1rem',
+              maxHeight: '90vh',
+              overflow: 'auto',
+              maxWidth: '60%',
+              width: '100%',
+              position: 'relative'
+            }}>
+            <ViewRentals 
+            rental={selectedRental} 
+            setShowViewModal={setShowViewModal} 
+          />
+          </div>
+          </div>
+          
+          
+        )}
       </div>
     </>
   );

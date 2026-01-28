@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Star, X } from "lucide-react";
 import { useForm } from "@inertiajs/react";
+import { User } from "lucide-react";
 
-const AppReview = ({ propertyId, agentId, onSuccess }) => {
+const AppReview = ({ onSuccess, setShowReviewForm }) => {
   const [hoveredRating, setHoveredRating] = useState(0);
   const [toast, setToast] = useState(null);
 
@@ -20,7 +21,7 @@ const AppReview = ({ propertyId, agentId, onSuccess }) => {
         showToast("Review Submitted", "Thank you!!", "success");
         reset();
         setTimeout(() => {
-          if (setShowReviewForm) setShowReviewForm(false);
+          setShowReviewForm(false);
         }, 1500);
       },
       onError: (errors) => {
@@ -176,10 +177,9 @@ const AppReview = ({ propertyId, agentId, onSuccess }) => {
             </p>
           )}
         </div>
-
+        <br />
         {/* Submit Button */}
         <button
-          // onClick={handleSubmit}
           type="submit"
           disabled={processing}
           style={{
@@ -279,11 +279,7 @@ export default function App({ setShowReviewForm }) {
           </p>
         </div>
 
-        <AppReview
-          propertyId="prop123"
-          agentId="agent456"
-          onSuccess={handleSuccess}
-        />
+        <AppReview />
       </div>
     </div>
   );

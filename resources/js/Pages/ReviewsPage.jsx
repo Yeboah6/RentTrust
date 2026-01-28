@@ -2,6 +2,7 @@ import { useState } from "react";
 import Header from '../Components/Layouts/Header';
 import Footer from '../Components/Layouts/Footer';
 import AppReview from './AppReview';
+import { User } from 'lucide-react';
 
 // Icons
 const MessageSquare = ({ style }) => (
@@ -40,98 +41,7 @@ const Phone = ({ style }) => (
   </svg>
 );
 
-// const rentReviews = [
-//   {
-//     id: "1",
-//     overall_rating: 5,
-//     landlord_responsive: true,
-//     property_matched_description: true,
-//     fair_pricing: true,
-//     timely_repairs: true,
-//     good_communication: true,
-//     respected_privacy: true,
-//     refunded_deposit: true,
-//     comment: "Great experience! The landlord was very responsive and the property was exactly as described. Highly recommend!",
-//     agent_response: "Thank you for your positive feedback! We're glad you had a great experience.",
-//     is_anonymous: false,
-//     created_at: "2024-01-01"
-//   },
-//   {
-//     id: "2",
-//     overall_rating: 4,
-//     landlord_responsive: true,
-//     property_matched_description: true,
-//     fair_pricing: false,
-//     timely_repairs: true,
-//     good_communication: true,
-//     respected_privacy: true,
-//     refunded_deposit: null,
-//     comment: "Good property overall, though I felt the rent was a bit high for the area. Landlord was very helpful with maintenance issues.",
-//     agent_response: null,
-//     is_anonymous: true,
-//     created_at: "2023-12-15"
-//   },
-//   {
-//     id: "3",
-//     overall_rating: 3,
-//     landlord_responsive: false,
-//     property_matched_description: true,
-//     fair_pricing: true,
-//     timely_repairs: false,
-//     good_communication: false,
-//     respected_privacy: true,
-//     refunded_deposit: false,
-//     comment: "Property was nice but landlord took long to respond to repair requests. Deposit refund process was complicated.",
-//     agent_response: "We apologize for the delay. We've improved our response time and processes. Thank you for the feedback.",
-//     is_anonymous: false,
-//     created_at: "2023-11-20"
-//   }
-// ];
-
-// const reports = [
-//   {
-//     id: "1",
-//     type: "Scam Listing",
-//     property: "2-Bedroom Apartment in East Legon",
-//     description: "This listing appears to be a scam. The agent requested payment before viewing and the photos seem to be stock images.",
-//     status: "Under Investigation",
-//     created_at: "2024-01-15"
-//   },
-//   {
-//     id: "2",
-//     type: "Misleading Information",
-//     property: "Studio in Osu",
-//     description: "Property was advertised as newly renovated but was in poor condition. Photos were heavily edited.",
-//     status: "Resolved",
-//     created_at: "2024-01-10"
-//   }
-// ];
-
-const appReviews = [
-  {
-    id: "1",
-    overall_rating: 5,
-    comment: "This app has made finding a rental so much easier! The interface is clean and the verification system gives me peace of mind.",
-    user_name: "Sarah K.",
-    created_at: "2024-01-20"
-  },
-  {
-    id: "2",
-    overall_rating: 4,
-    comment: "Great app overall. Would love to see a map view feature added in the future. Customer support is excellent!",
-    user_name: "Michael A.",
-    created_at: "2024-01-18"
-  },
-  {
-    id: "3",
-    overall_rating: 5,
-    comment: "Finally, a trustworthy platform for rentals in Ghana! The review system is incredibly helpful.",
-    user_name: "Akosua M.",
-    created_at: "2024-01-12"
-  }
-];
-
-const ReviewsSection = ({ reviews, reports }) => {
+const ReviewsSection = ({ reviews, reports, appReviews }) => {
   const [activeTab, setActiveTab] = useState("rent");
   const [showReviewForm, setShowReviewForm] = useState(false);
 
@@ -313,7 +223,7 @@ const ReviewsSection = ({ reviews, reports }) => {
                 <>
                   {reviews.map((review, reviewIndex) => (
                     <div key={review.id}>
-                      <div style={{ display: 'flex', gap: '1rem', marginBottom: reviewIndex < reviews.length - 1 ? '1.5rem' : 0 }}>
+                      <div style={{ display: 'flex', gap: '1rem', marginBottom: reviewIndex < review.length - 1 ? '1.5rem' : 0 }}>
                         <div style={{
                           width: '2.5rem',
                           height: '2.5rem',
@@ -327,7 +237,7 @@ const ReviewsSection = ({ reviews, reports }) => {
                           fontWeight: '600',
                           flexShrink: 0
                         }}>
-                          {review.full_name ? '?' : 'T'}
+                          {review.full_name ?  <User /> : 'T'}
                         </div>
 
                         <div style={{ flex: 1 }}>
@@ -339,7 +249,7 @@ const ReviewsSection = ({ reviews, reports }) => {
                             flexWrap: 'wrap'
                           }}>
                             <span style={{ fontWeight: '500', color: 'hsl(200 25% 15%)' }}>
-                              {review.full_name ? 'Anonymous Tenant' : 'Verified Tenant'}
+                              {review.full_name}
                             </span>
                             <div style={{ display: 'flex' }}>
                               {renderStars(review.overall_rating)}
@@ -455,7 +365,7 @@ const ReviewsSection = ({ reviews, reports }) => {
                               color: 'hsl(174 62% 32%)',
                               fontWeight: '500'
                             }}>
-                              {report.rental_id}
+                              {report.title}
                             </p>
                           </div>
                           <span style={{
@@ -515,7 +425,7 @@ const ReviewsSection = ({ reviews, reports }) => {
                           fontWeight: '600',
                           flexShrink: 0
                         }}>
-                          {review.user_name.charAt(0)}
+                          {review.full_name ?  <User /> : "T"}
                         </div>
 
                         <div style={{ flex: 1 }}>
@@ -527,7 +437,7 @@ const ReviewsSection = ({ reviews, reports }) => {
                             flexWrap: 'wrap'
                           }}>
                             <span style={{ fontWeight: '500', color: 'hsl(200 25% 15%)' }}>
-                              {review.user_name}
+                              {review.full_name}
                             </span>
                             <div style={{ display: 'flex' }}>
                               {renderStars(review.overall_rating)}

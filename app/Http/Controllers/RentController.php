@@ -8,6 +8,7 @@ use App\Models\Report;
 use App\Models\Agent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
@@ -285,15 +286,19 @@ class RentController extends Controller
     }
 
     public function reviews() {
-        $reviews = Review::latest()->get();
-        $reports = Report::latest()->get();
+        $reviews = Review::where('review_type', 'rent')->get();
+        $reports = DB::table('reports')
+        ->join('rentals', 'reports.rental_id', '=', 'rentals.id')
+        ->get();
+        // $reports = Report::latest()->get();
+        $appReviews = Review::where('review_type', 'app')->get();
         // dd($reviews, $reports);
 
         return inertia('ReviewsPage',
         [
             'reviews' => $reviews,
-            'reports' => $reports
-
+            'reports' => $reports,
+            'appReviews' => $appReviews
         ]);
     }
 
