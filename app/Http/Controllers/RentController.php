@@ -290,7 +290,6 @@ class RentController extends Controller
         $reports = DB::table('reports')
         ->join('rentals', 'reports.rental_id', '=', 'rentals.id')
         ->get();
-        // $reports = Report::latest()->get();
         $appReviews = Review::where('review_type', 'app')->get();
         // dd($reviews, $reports);
 

@@ -293,7 +293,7 @@ const AuthPage = () => {
                     fontWeight: '500',
                     textDecoration: 'underline'
                   }}>
-                forgot password
+                  Forgot password
                 </Link>
               </div>
 

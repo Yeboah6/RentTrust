@@ -13,11 +13,30 @@ const PropertyCard = ({
   agent_name, 
   is_verified, 
   is_claimed,
+  images = []
 }) => {
   const [isHovered, setIsHovered] = useState(false);
+  const [imageError, setImageError] = useState(false);
 
   const formatPrice = (price) => `GH₵${price.toLocaleString()}`;
   
+  // Parse images if they're stored as JSON string
+  let imagesArray = [];
+  try {
+    if (images) {
+      imagesArray = typeof images === 'string' ? JSON.parse(images) : images;
+      // Ensure it's an array
+      if (!Array.isArray(imagesArray)) {
+        imagesArray = [];
+      }
+    }
+  } catch (e) {
+    console.error('Error parsing images:', e);
+    imagesArray = [];
+  }
+
+  // Get the first image or null
+  const firstImage = imagesArray.length > 0 ? imagesArray[0] : null;
 
   return (
     <Link
@@ -33,14 +52,60 @@ const PropertyCard = ({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Image placeholder */}
-      <div 
-        className="w-full h-48 flex items-center justify-center text-white font-semibold"
-        style={{ 
-          background: `linear-gradient(135deg, hsl(174 62% 32%) 0%, hsl(174 50% 25%) 100%)`
-        }}
-      >
-        {title}
+      {/* Image section */}
+      <div style={{
+        width: '100%',
+        height: '200px',
+        backgroundColor: 'hsl(40 30% 94%)',
+        position: 'relative',
+        overflow: 'hidden'
+      }}>
+        {firstImage && !imageError ? (
+          <img 
+            src={`/storage/rental_images/${firstImage}`}
+            alt={`${title || 'Property'} image`}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              objectPosition: 'center',
+              transition: 'transform 0.3s ease-in-out',
+              transform: isHovered ? 'scale(1.05)' : 'scale(1)'
+            }}
+            onError={() => setImageError(true)}
+          />
+        ) : (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '100%',
+            height: '100%',
+            flexDirection: 'column'
+          }}>
+            <MapPin style={{ height: '3rem', width: '3rem', color: 'hsl(200 25% 15% / 0.2)' }} />
+            <div style={{ fontSize: '12px', color: 'hsl(200 15% 45%)', marginTop: '8px' }}>
+              No image available
+            </div>
+          </div>
+        )}
+        
+        {/* Image count badge */}
+        {imagesArray.length > 1 && !imageError && (
+          <div style={{
+            position: 'absolute',
+            bottom: '8px',
+            right: '8px',
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            color: 'white',
+            padding: '4px 8px',
+            borderRadius: '4px',
+            fontSize: '12px',
+            fontWeight: '500'
+          }}>
+            +{imagesArray.length - 1} more
+          </div>
+        )}
       </div>
 
       <div className="p-4">
@@ -80,23 +145,17 @@ const PropertyCard = ({
               )}
             </div>
           </div>
-        )}
+         )} 
 
         {/* Rating and Reviews */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1">
             <Star className="h-4 w-4 fill-current" style={{ color: 'hsl(38 92% 50%)' }} />
-            <span className="font-semibold" style={{ color: 'hsl(200 25% 15%)' }}>
-              {/* {rating.toFixed(1)} */}
-            </span>
-            <span className="text-sm" style={{ color: 'hsl(200 15% 45%)' }}>
-              {/* ({reviewCount}) */}
-            </span>
           </div>
           
           {/* Badges */}
           <div className="flex gap-2">
-            {is_verified && (
+            { is_verified !== "unverified" && (
               <span 
                 className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium"
                 style={{ 

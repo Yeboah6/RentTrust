@@ -27,7 +27,8 @@ class AuthController extends Controller
 
         $tenant = Tenant::create($signUpData);
         
-        Auth::login($tenant);
+        Auth::guard('tenant')->login($tenant);
+        // Auth::guard('agent')->login($agent);
         
         return redirect('/');
     }
