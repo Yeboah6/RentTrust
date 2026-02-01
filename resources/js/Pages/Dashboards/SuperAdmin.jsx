@@ -3,6 +3,8 @@ import Header from "@/Components/Layouts/Header";
 import Footer from "@/Components/Layouts/Footer";
 import { Link, useForm, router } from "@inertiajs/react";
 import VerifyAgentDialog from '../VerifyAgent';
+import ViewRentals from "../ViewRental";
+import { MapPin} from 'lucide-react';
 
 // Icon components
 const Shield = ({ style }) => (
@@ -71,16 +73,12 @@ const SuperAdminDashboard = ({ adminData, rentals, agentData, reviews, reports }
   const [responseText, setResponseText] = useState("");
   const [selectedAgent, setSelectedAgent] = useState(null);
   const [showDialog, setShowDialog] = useState(false);
+  const [selectedRental, setSelectedRental] = useState(null);
+  const [showViewModal, setShowViewModal] = useState(false);
 
-  const { post } = useForm();
   const { put, data, setData, processing } = useForm({
     status: ''
   });
-
-  const handleLogout = (e) => {
-    e.preventDefault();
-    post('/logout');
-  };
 
   const mockAdmin = {
     name: adminData?.fullName || "Super Admin",
@@ -101,6 +99,13 @@ const SuperAdminDashboard = ({ adminData, rentals, agentData, reviews, reports }
     const verifyAgent = agents.find(a => a.id === agentId);
     setSelectedAgent(verifyAgent);
     setShowDialog(true);
+  };
+
+  const handleViewClick = (rental) => {
+    const selectViewData = rentals.find(r => r.id === rental.id);
+    setSelectedRental(selectViewData);
+    setShowViewModal(true);
+    // console.log("View Data:", selectViewData);
   };
 
 const handleSuspendAgent = (agentId) => {
@@ -341,21 +346,6 @@ const handleSuspendAgent = (agentId) => {
                   }}>
                     Settings
                   </Link>
-                  <button 
-                  onClick={handleLogout}
-                  style={{
-                    padding: '0.5rem 1rem',
-                    border: '1px solid hsl(0 70% 50%)',
-                    borderRadius: '0.5rem',
-                    backgroundColor: 'white',
-                    color: 'hsl(0 70% 50%)',
-                    textDecoration: 'none',
-                    fontWeight: '500',
-                    cursor: 'pointer',
-                    alignSelf: 'flex-start'
-                  }}>
-                    Logout
-                  </button>
                 </div>
               </div>
             </div>
@@ -562,7 +552,9 @@ const handleSuspendAgent = (agentId) => {
                           {getStatusBadge(property.status)}
                         </div>
                         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                          <button style={{
+                          <button
+                           onClick={() => handleViewClick(property)}
+                            style={{
                             padding: '0.375rem 0.75rem',
                             border: '1px solid hsl(40 20% 88%)',
                             borderRadius: '0.375rem',
@@ -787,7 +779,7 @@ const handleSuspendAgent = (agentId) => {
                                     )}
                                   </div>
                                   <button
-                                    onClick={() => window.location.href = `/rentals/${report.rental_id}`}
+                                    onClick={() => handleViewClick(report.rental)}
                                     style={{
                                       padding: '0.375rem 0.75rem',
                                       border: '1px solid hsl(174 62% 32%)',
@@ -797,8 +789,11 @@ const handleSuspendAgent = (agentId) => {
                                       fontSize: '0.75rem',
                                       fontWeight: '500',
                                       cursor: 'pointer',
-                                      whiteSpace: 'nowrap'
+                                      whiteSpace: 'nowrap',
+                                      transition: 'all 0.2s'
                                     }}
+                                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(174 62% 32% / 0.05)'}
+                                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
                                   >
                                     View Property
                                   </button>
@@ -1131,8 +1126,12 @@ const handleSuspendAgent = (agentId) => {
 
                           {/* Action Buttons */}
                           <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem', flexWrap: 'wrap' }}>
-                            <button
-                              onClick={() => window.location.href = `/rentals/${review.rental_id}`}
+                            { review.review_type === 'rent' && (
+                              <button
+                              onClick={() => {
+                                const rental = properties.find(p => p.id === review.rental_id);
+                                if (rental) handleViewClick(rental);
+                              }}
                               style={{
                                 padding: '0.375rem 0.75rem',
                                 border: '1px solid hsl(40 20% 88%)',
@@ -1153,6 +1152,8 @@ const handleSuspendAgent = (agentId) => {
                             >
                               View Property
                             </button>
+                            ) }
+                            
                             <button
                               onClick={() => {
                                 if (confirm("Are you sure you want to delete this review? This action cannot be undone.")) {
@@ -1232,6 +1233,36 @@ const handleSuspendAgent = (agentId) => {
             isOpen={showDialog}
             onClose={() => setShowDialog(false)}
           />
+        )}
+        {showViewModal && selectedRental && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 50,
+            padding: '1rem'
+          }}>
+            <div style={{
+              backgroundColor: 'white',
+              borderRadius: '1rem',
+              maxHeight: '90vh',
+              overflow: 'auto',
+              maxWidth: '60%',
+              width: '100%',
+              position: 'relative'
+            }}>
+              <ViewRentals
+                rental={selectedRental}
+                setShowViewModal={setShowViewModal}
+              />
+            </div>
+          </div>
         )}
       </div>
     </>

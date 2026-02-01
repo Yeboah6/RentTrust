@@ -3,6 +3,7 @@ import Header from '../Components/Layouts/Header';
 import Footer from '../Components/Layouts/Footer';
 import AppReview from './AppReview';
 import { User } from 'lucide-react';
+import { usePage } from '@inertiajs/react';
 
 // Icons
 const MessageSquare = ({ style }) => (
@@ -44,6 +45,7 @@ const Phone = ({ style }) => (
 const ReviewsSection = ({ reviews, reports, appReviews }) => {
   const [activeTab, setActiveTab] = useState("rent");
   const [showReviewForm, setShowReviewForm] = useState(false);
+  const { auth } = usePage().props;
 
   const renderStars = (rating) => {
     return Array.from({ length: 5 }).map((_, i) => (
@@ -210,7 +212,7 @@ const ReviewsSection = ({ reviews, reports, appReviews }) => {
                       width: '100%',
                       position: 'relative'
                     }}>
-                      <AppReview setShowReviewForm={setShowReviewForm} />
+                      <AppReview setShowReviewForm={setShowReviewForm} auth={auth} />
                     </div>
                   </div>
                 )}
@@ -457,7 +459,7 @@ const ReviewsSection = ({ reviews, reports, appReviews }) => {
                           </p>
 
                           <p style={{ color: 'hsl(200 15% 45%)', lineHeight: '1.6' }}>
-                            {review.comment}
+                            {review.comments}
                           </p>
                         </div>
                       </div>

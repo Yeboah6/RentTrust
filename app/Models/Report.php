@@ -14,4 +14,9 @@ class Report extends Model
         'full_name',
         'status'
     ];
+
+    public function rental()
+    {
+        return $this->belongsTo(Rental::class);
+    }
 }

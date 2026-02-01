@@ -9,6 +9,7 @@ use App\Models\Agent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
@@ -151,7 +152,7 @@ class RentController extends Controller
                 ->with('success', 'Rental listing created successfully! It will be reviewed and activated soon.');
 
         } catch (\Exception $e) {
-            \Log::error('Failed to create rental listing: ' . $e->getMessage());
+            Log::error('Failed to create rental listing: ' . $e->getMessage());
 
             return redirect()->back()
                 ->with('error', 'Failed to create rental listing. Please try again.')
@@ -161,6 +162,17 @@ class RentController extends Controller
 
     public function reportListing(Request $request)
     {
+        // If the reporter did not provide a name, try to use the authenticated user's full name
+        $agentUser = Auth::guard('agent')->user();
+        $tenantUser = Auth::guard('tenant')->user();
+        $superUser = Auth::guard('super')->user();
+        if ((!$request->has('name') || trim($request->input('name')) === '') && ($agentUser || $tenantUser || $superUser)) {
+            $name = $agentUser->fullName ?? $tenantUser->fullName ?? $superUser->fullName ?? null;
+            if ($name) {
+                $request->merge(['name' => $name]);
+            }
+        }
+
         $validated = $request->validate([
             'property_id' => 'required',
             'description' => 'required|max:255',
@@ -307,6 +319,17 @@ class RentController extends Controller
 
    
     public function storeReviewForms(Request $request) {
+        // If the reviewer did not provide a full_name, attempt to populate it from the authenticated user
+        $agentUser = Auth::guard('agent')->user();
+        $tenantUser = Auth::guard('tenant')->user();
+        $superUser = Auth::guard('super')->user();
+        if ((!$request->has('full_name') || trim($request->input('full_name')) === '') && ($agentUser || $tenantUser || $superUser)) {
+            $name = $agentUser->fullName ?? $tenantUser->fullName ?? $superUser->fullName ?? null;
+            if ($name) {
+                $request->merge(['full_name' => $name]);
+            }
+        }
+
         $validated = $request->validate([
             'overall_rating' => 'required|integer|min:1|max:5',
             'landlord_responsive' => 'nullable|boolean',
@@ -341,7 +364,6 @@ class RentController extends Controller
 
             // Create the review
             $review = Review::create([
-                // 'review_type' => "rent",
                 'rental_id' => $validated['rental_id'],
                 'overall_rating' => $validated['overall_rating'],
                 'landlord_responsive' => $validated['landlord_responsive'] ?? false,
@@ -357,7 +379,7 @@ class RentController extends Controller
                 ->with('success', 'Thank you for your review! Your feedback has been submitted.');
 
         } catch (\Exception $e) {
-            \Log::error('Failed to store review: ' . $e->getMessage());
+            Log::error('Failed to store review: ' . $e->getMessage());
 
             return redirect()->back()
                 ->with('error', 'Failed to submit review. Please try again.')
@@ -425,6 +447,16 @@ class RentController extends Controller
     }
 
     public function storeReviewApp(Request $request) {
+        $agentUser = Auth::guard('agent')->user();
+        $tenantUser = Auth::guard('tenant')->user();
+        $superUser = Auth::guard('super')->user();
+        if ((!$request->has('name') || trim($request->input('name')) === '') && ($agentUser || $tenantUser || $superUser)) {
+            $name = $agentUser->fullName ?? $tenantUser->fullName ?? $superUser->fullName ?? null;
+            if ($name) {
+                $request->merge(['name' => $name]);
+            }
+        }
+
         $validated = $request->validate([
             'overall_rating' => 'required|integer|min:1|max:5',
             'name' => 'required|string|max:255',

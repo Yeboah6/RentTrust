@@ -2,10 +2,14 @@ import { useState } from "react";
 import { Star, X } from "lucide-react";
 import { useForm } from "@inertiajs/react";
 import { User } from "lucide-react";
+import { usePage } from '@inertiajs/react';
 
 const AppReview = ({ onSuccess, setShowReviewForm }) => {
   const [hoveredRating, setHoveredRating] = useState(0);
   const [toast, setToast] = useState(null);
+  const { auth } = usePage().props;
+
+  const userFullName = auth?.agent?.fullName || auth?.tenant?.fullName || auth?.super?.fullName || "";
 
   const { data, setData, post, processing, reset, errors } = useForm({
     'overall_rating': 0,
@@ -16,7 +20,14 @@ const AppReview = ({ onSuccess, setShowReviewForm }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
 
+    // Ensure name is populated from authenticated user when empty
+    const finalData = {
+      ...data,
+      name: (data.name && data.name.trim() !== "") ? data.name : userFullName
+    };
+
     post("/reviews/app", {
+      data: finalData,
       onSuccess: () => {
         showToast("Review Submitted", "Thank you!!", "success");
         reset();
@@ -31,8 +42,8 @@ const AppReview = ({ onSuccess, setShowReviewForm }) => {
     });
   }
 
-  const showToast = (name, comment, overall_rating = "success") => {
-    setToast({ name, comment, overall_rating });
+  const showToast = (name, comment = "success") => {
+    setToast({ name, comment, variant: comment });
     setTimeout(() => setToast(null), 3000);
   };
 
@@ -53,8 +64,8 @@ const AppReview = ({ onSuccess, setShowReviewForm }) => {
           maxWidth: '400px',
           animation: 'slideIn 0.3s ease-out'
         }}>
-          <div style={{ fontWeight: '600', marginBottom: '0.25rem' }}>{toast.title}</div>
-          <div style={{ fontSize: '0.875rem' }}>{toast.description}</div>
+          <div style={{ fontWeight: '600', marginBottom: '0.25rem' }}>{toast.name}</div>
+          <div style={{ fontSize: '0.875rem' }}>{toast.comment}</div>
         </div>
       )}
 
@@ -157,7 +168,7 @@ const AppReview = ({ onSuccess, setShowReviewForm }) => {
             Full name
           </label>
           <input
-            value={data.name}
+            value={data.name || userFullName }
             onChange={(e) => setData({ ...data, name: e.target.value })}
             placeholder="Solomon Yeboah"
             style={{
@@ -243,7 +254,7 @@ export default function App({ setShowReviewForm }) {
       <br />
 
       <button
-        onClick={() => onOpenChange(false)}
+        onClick={() => setShowReviewForm(false)}
         style={{
           position: 'absolute',
           right: '1rem',
@@ -255,7 +266,7 @@ export default function App({ setShowReviewForm }) {
           padding: '0.25rem'
         }}
       >
-      <X size={20} onClick={() => setShowReviewForm(false)}/>
+      <X size={20} />
       </button>
       <div style={{
         maxWidth: '800px',
@@ -279,7 +290,7 @@ export default function App({ setShowReviewForm }) {
           </p>
         </div>
 
-        <AppReview />
+        <AppReview setShowReviewForm={setShowReviewForm} onSuccess={handleSuccess} />
       </div>
     </div>
   );

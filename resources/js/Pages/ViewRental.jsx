@@ -1,7 +1,9 @@
 import React from 'react';
 import { Home, MapPin, DollarSign, Calendar, User, Phone, Mail, Bed, Bath, CheckCircle2, X } from 'lucide-react';
+import { usePage } from '@inertiajs/react';
 
 const ViewRentals = ({ rental, setShowViewModal }) => {
+  const { auth } = usePage().props;
   // Parse amenities if they're stored as JSON string
   let parsedAmenities = [];
   try {
@@ -297,13 +299,16 @@ const ViewRentals = ({ rental, setShowViewModal }) => {
               >
                 Close
               </button>
-              <a
+              { auth?.super && (
+                <a
                 href={`tel:${rental.agent_phone || rental.agentPhone}`}
                 className="flex-1 px-6 py-3 rounded-lg font-semibold text-white transition-all duration-200 active:scale-95 text-center"
                 style={{ backgroundColor: 'hsl(174 62% 32%)' }}
               >
                 Call Agent
               </a>
+              ) }
+              
             </div>
           </div>
         </div>

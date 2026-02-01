@@ -1,7 +1,7 @@
 import { useState } from "react";
 import Header from '../Components/Layouts/Header';
 import Footer from '../Components/Layouts/Footer';
-import { Link } from "@inertiajs/react";
+import { Link, usePage } from "@inertiajs/react";
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import ReportListingDialog from "./ReportListingDialog";
 import ReviewForm from "./ReviewForm";
@@ -68,30 +68,31 @@ const MessageSquare = ({ style }) => (
 );
 
 const PropertyDetailsPage = ({ rental, reviews }) => {
+  const { auth } = usePage().props;
   const formatCurrency = (amount) => `GH₵${amount?.toLocaleString() || '0'}`;
   const [showAddListingModal, setShowAddListingModal] = useState(false);
   const [showAddReviewForm, setShowAddReviewForm] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-const handlePrevImage = (e) => {
-  e.stopPropagation(); // Prevent card click when clicking arrow
-  setCurrentImageIndex((prev) => 
-    prev === 0 ? rental.images.length - 1 : prev - 1
-  );
-};
+  const handlePrevImage = (e) => {
+    e.stopPropagation(); // Prevent card click when clicking arrow
+    setCurrentImageIndex((prev) =>
+      prev === 0 ? rental.images.length - 1 : prev - 1
+    );
+  };
 
-const handleNextImage = (e) => {
-  e.stopPropagation(); // Prevent card click when clicking arrow
-  setCurrentImageIndex((prev) => 
-    prev === rental.images.length - 1 ? 0 : prev + 1
-  );
-};
-  
+  const handleNextImage = (e) => {
+    e.stopPropagation(); // Prevent card click when clicking arrow
+    setCurrentImageIndex((prev) =>
+      prev === rental.images.length - 1 ? 0 : prev + 1
+    );
+  };
+
   // Parse amenities if it's a string
-  const amenities = typeof rental.amenities === 'string' 
-    ? JSON.parse(rental.amenities) 
+  const amenities = typeof rental.amenities === 'string'
+    ? JSON.parse(rental.amenities)
     : (rental.amenities || []);
-  
+
   // Calculate costs
   const totalUpfront = (rental.rent_max || 0) * (rental.advance_months || 0);
   const agentFee = (rental.rent_max || 0) * ((rental.agent?.fee_percentage || 0) / 100);
@@ -131,142 +132,142 @@ const handleNextImage = (e) => {
           {/* Hero Image */}
           <div style={{ position: 'relative', height: '20rem', background: 'linear-gradient(135deg, hsl(174 62% 32% / 0.2) 0%, hsl(174 62% 32% / 0.05) 100%)' }}>
             <div style={{
-              height: '100%', 
-              display: 'flex', 
-              alignItems: 'center', 
+              height: '100%',
+              display: 'flex',
+              alignItems: 'center',
               justifyContent: 'center',
               position: 'relative',
               overflow: 'hidden',
               backgroundColor: 'hsl(40 30% 94%)'
             }}>
-            {/* Image */}
-            {rental.images && rental.images.length > 0 ? (
-              <img 
-                src={`/storage/rental_images/${rental.images[currentImageIndex]}`}
-                alt={`Property image ${currentImageIndex + 1}`}
-                style={{
-                  height: '100%',
-                  transition: 'opacity 0.3s ease-in-out'
-                }}
-              />
-            ) : (
-              <MapPin style={{ height: '4rem', width: '4rem', color: 'hsl(200 25% 15% / 0.2)' }} />
-            )}
+              {/* Image */}
+              {rental.images && rental.images.length > 0 ? (
+                <img
+                  src={`/storage/rental_images/${rental.images[currentImageIndex]}`}
+                  alt={`Property image ${currentImageIndex + 1}`}
+                  style={{
+                    height: '100%',
+                    transition: 'opacity 0.3s ease-in-out'
+                  }}
+                />
+              ) : (
+                <MapPin style={{ height: '4rem', width: '4rem', color: 'hsl(200 25% 15% / 0.2)' }} />
+              )}
 
-            {/* Carousel Controls - Only show if there are multiple images */}
-            {rental.images && rental.images.length > 1 && (
-              <>
-                {/* Previous Button */}
-                <button
-                  onClick={handlePrevImage}
-                  style={{
+              {/* Carousel Controls - Only show if there are multiple images */}
+              {rental.images && rental.images.length > 1 && (
+                <>
+                  {/* Previous Button */}
+                  <button
+                    onClick={handlePrevImage}
+                    style={{
+                      position: 'absolute',
+                      left: '0.5rem',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                      border: 'none',
+                      borderRadius: '50%',
+                      width: '2rem',
+                      height: '2rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+                      zIndex: 10,
+                      transition: 'all 0.2s'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 1)';
+                      e.currentTarget.style.transform = 'translateY(-50%) scale(1.1)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+                      e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
+                    }}
+                  >
+                    <ChevronLeft size={20} style={{ color: '#374151' }} />
+                  </button>
+
+                  {/* Next Button */}
+                  <button
+                    onClick={handleNextImage}
+                    style={{
+                      position: 'absolute',
+                      right: '0.5rem',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                      border: 'none',
+                      borderRadius: '50%',
+                      width: '2rem',
+                      height: '2rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+                      zIndex: 10,
+                      transition: 'all 0.2s'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 1)';
+                      e.currentTarget.style.transform = 'translateY(-50%) scale(1.1)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+                      e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
+                    }}
+                  >
+                    <ChevronRight size={20} style={{ color: '#374151' }} />
+                  </button>
+
+                  {/* Dot Indicators */}
+                  <div style={{
                     position: 'absolute',
-                    left: '0.5rem',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                    border: 'none',
-                    borderRadius: '50%',
-                    width: '2rem',
-                    height: '2rem',
+                    bottom: '0.75rem',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
                     display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
-                    zIndex: 10,
-                    transition: 'all 0.2s'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 1)';
-                    e.currentTarget.style.transform = 'translateY(-50%) scale(1.1)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
-                    e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
-                  }}
-                >
-                  <ChevronLeft size={20} style={{ color: '#374151' }} />
-                </button>
-                
-                {/* Next Button */}
-                <button
-                  onClick={handleNextImage}
-                  style={{
+                    gap: '0.375rem',
+                    padding: '0.375rem 0.625rem',
+                    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                    borderRadius: '9999px',
+                    zIndex: 10
+                  }}>
+                    {rental.images.map((_, index) => (
+                      <div
+                        key={index}
+                        style={{
+                          width: '0.375rem',
+                          height: '0.375rem',
+                          borderRadius: '50%',
+                          backgroundColor: index === currentImageIndex ? 'white' : 'rgba(255, 255, 255, 0.5)',
+                          transition: 'all 0.2s'
+                        }}
+                      />
+                    ))}
+                  </div>
+
+                  {/* Image Counter Badge */}
+                  <div style={{
                     position: 'absolute',
-                    right: '0.5rem',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                    border: 'none',
-                    borderRadius: '50%',
-                    width: '2rem',
-                    height: '2rem',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
-                    zIndex: 10,
-                    transition: 'all 0.2s'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 1)';
-                    e.currentTarget.style.transform = 'translateY(-50%) scale(1.1)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
-                    e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
-                  }}
-                >
-                  <ChevronRight size={20} style={{ color: '#374151' }} />
-                </button>
-                
-                {/* Dot Indicators */}
-                <div style={{
-                  position: 'absolute',
-                  bottom: '0.75rem',
-                  left: '50%',
-                  transform: 'translateX(-50%)',
-                  display: 'flex',
-                  gap: '0.375rem',
-                  padding: '0.375rem 0.625rem',
-                  backgroundColor: 'rgba(0, 0, 0, 0.6)',
-                  borderRadius: '9999px',
-                  zIndex: 10
-                }}>
-                  {rental.images.map((_, index) => (
-                    <div
-                      key={index}
-                      style={{
-                        width: '0.375rem',
-                        height: '0.375rem',
-                        borderRadius: '50%',
-                        backgroundColor: index === currentImageIndex ? 'white' : 'rgba(255, 255, 255, 0.5)',
-                        transition: 'all 0.2s'
-                      }}
-                    />
-                  ))}
-                </div>
-                
-                {/* Image Counter Badge */}
-                <div style={{
-                  position: 'absolute',
-                  top: '0.75rem',
-                  right: '0.75rem',
-                  backgroundColor: 'rgba(0, 0, 0, 0.7)',
-                  color: 'white',
-                  padding: '0.25rem 0.5rem',
-                  borderRadius: '0.375rem',
-                  fontSize: '0.75rem',
-                  fontWeight: '500',
-                  zIndex: 10
-                }}>
-                  {currentImageIndex + 1} / {rental.images.length}
-                </div>
-              </>
-            )}
-          </div>
+                    top: '0.75rem',
+                    right: '0.75rem',
+                    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                    color: 'white',
+                    padding: '0.25rem 0.5rem',
+                    borderRadius: '0.375rem',
+                    fontSize: '0.75rem',
+                    fontWeight: '500',
+                    zIndex: 10
+                  }}>
+                    {currentImageIndex + 1} / {rental.images.length}
+                  </div>
+                </>
+              )}
+            </div>
             {rental.listing_status === "verified" && (
               <div style={{ position: 'absolute', top: '1rem', right: '1rem' }}>
                 <span style={{
@@ -410,7 +411,7 @@ const handleNextImage = (e) => {
                                 {renderStars(review.overall_rating)}
                               </div>
                             </div>
-                            
+
                             {/* Review Attributes */}
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.75rem' }}>
                               {review.landlord_responsive === 1 && (
@@ -494,7 +495,7 @@ const handleNextImage = (e) => {
                   )}
                 </div>
 
-                
+
 
                 {/* Sidebar */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -602,42 +603,54 @@ const handleNextImage = (e) => {
                     </div>
                   )}
 
-                  {/* Report Button */}
-                  <button 
-                  onClick={() => setShowAddListingModal(true)}
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    border: '1px solid hsl(0 72% 51%)',
-                    borderRadius: '0.5rem',
-                    backgroundColor: 'white',
-                    color: 'hsl(0 72% 51%)',
-                    fontWeight: '500',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '0.5rem'
-                  }}>
+                  {/* Report and Review Buttons */}
+                  <button
+                    onClick={() => {
+                      if (!auth?.agent && !auth?.super && !auth?.tenant) {
+                        window.location.href = '/sign-up';
+                      } else {
+                        setShowAddListingModal(true);
+                      }
+                    }}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      border: '1px solid hsl(0 72% 51%)',
+                      borderRadius: '0.5rem',
+                      backgroundColor: 'white',
+                      color: 'hsl(0 72% 51%)',
+                      fontWeight: '500',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.5rem'
+                    }}>
                     <Flag style={{ height: '1rem', width: '1rem' }} />
                     Report Listing
                   </button>
-                  <button 
-                  onClick={() => setShowAddReviewForm(true)}
-                  style={{
-                    width: '100%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '0.5rem',
-                    padding: '0.75rem',
-                    border: '1px solid hsl(40 20% 88%)',
-                    borderRadius: '0.5rem',
-                    backgroundColor: 'white',
-                    color: 'hsl(174 62% 32%)',
-                    fontWeight: '500',
-                    cursor: 'pointer'
-                  }}>
+                  <button
+                    onClick={() => {
+                      if (!auth?.agent && !auth?.super && !auth?.tenant) {
+                        window.location.href = '/sign-up';
+                      } else {
+                        setShowAddReviewForm(true);
+                      }
+                    }}
+                    style={{
+                      width: '100%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.5rem',
+                      padding: '0.75rem',
+                      border: '1px solid hsl(40 20% 88%)',
+                      borderRadius: '0.5rem',
+                      backgroundColor: 'white',
+                      color: 'hsl(174 62% 32%)',
+                      fontWeight: '500',
+                      cursor: 'pointer'
+                    }}>
                     <MessageSquare style={{ height: '1.25rem', width: '1.25rem' }} />
                     Write Review
                   </button>
@@ -673,7 +686,7 @@ const handleNextImage = (e) => {
               width: '100%',
               position: 'relative'
             }}>
-              <ReportListingDialog setShowAddListingModal={setShowAddListingModal} rental={rental} />
+              <ReportListingDialog setShowAddListingModal={setShowAddListingModal} rental={rental} auth={auth} />
             </div>
           </div>
         )}
@@ -701,7 +714,7 @@ const handleNextImage = (e) => {
               width: '100%',
               position: 'relative'
             }}>
-              <ReviewForm setShowAddReviewForm={setShowAddReviewForm} rental={rental} />
+              <ReviewForm setShowAddReviewForm={setShowAddReviewForm} rental={rental} auth={auth} />
             </div>
           </div>
         )}

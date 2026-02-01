@@ -25,10 +25,11 @@ class DashboardController extends Controller
 
     public function superAdmin() {
         $adminData = Auth::guard('super')->user();
+        
         $rentals = Rental::all();
         $agentData = Agent::all();
-        $reports = Report::all();
-        $reviews = Review::all();
+        $reports = Report::with('rental', 'rental.agent')->get();
+        $reviews = Review::with('rental')->get();
         return inertia('Dashboards/SuperAdmin', [
             'adminData' => $adminData,
             'rentals' => $rentals,

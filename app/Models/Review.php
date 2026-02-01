@@ -24,4 +24,9 @@ class Review extends Model
     protected $cast = [
         'overall_rating'=>'array',
     ];
+
+    public function rental()
+    {
+        return $this->belongsTo(Rental::class);
+    }
 }

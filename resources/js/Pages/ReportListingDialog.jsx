@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Upload, X } from "lucide-react";
-import { useForm } from "@inertiajs/react";
+import { useForm, usePage } from "@inertiajs/react";
 
 const ReportListingDialog = ({ setShowAddListingModal, rental }) => {
   const [uploadedFiles, setUploadedFiles] = useState([]);
@@ -15,6 +15,10 @@ const ReportListingDialog = ({ setShowAddListingModal, rental }) => {
   });
 
   const [toast, setToast] = useState(null);
+
+  // Get auth from page props (agent/tenant/super)
+  const { auth } = usePage().props;
+  const userFullName = auth?.agent?.fullName || auth?.tenant?.fullName || auth?.super?.fullName || "";
 
   const subjectOptions = [
     "Misleading listing information",
@@ -64,7 +68,9 @@ const ReportListingDialog = ({ setShowAddListingModal, rental }) => {
     formData.append('property_id', data.property_id);
     formData.append('description', data.description);
     formData.append('report_type', data.report_type);
-    formData.append('name', data.name);
+    // Use provided name or fall back to authenticated user's full name
+    const nameToUse = (data.name && data.name.trim() !== "") ? data.name : userFullName;
+    formData.append('name', nameToUse);
     
     // Add files
     if (data.evidence && data.evidence.length > 0) {
@@ -370,7 +376,7 @@ const ReportListingDialog = ({ setShowAddListingModal, rental }) => {
                 </label>
                 <input
                   type="text"
-                  value={data.name}
+                  value={data.name || userFullName}
                   onChange={(e) => setData('name', e.target.value)}
                   placeholder="Solomon Yeboah"
                   style={{

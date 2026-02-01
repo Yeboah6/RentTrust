@@ -31,36 +31,7 @@ const areasByCity = {
   ],
 };
 
-// const Header = () => {
-//   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  
-//   return (
-    <Header />
-    // <header className="sticky top-0 z-50 w-full border-b backdrop-blur-sm" style={{ backgroundColor: 'hsl(0 0% 100% / 0.95)', borderColor: 'hsl(40 20% 88%)' }}>
-    //   <div className="container mx-auto px-4 flex h-16 items-center justify-between">
-    //     <button className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-    //       <div className="flex h-9 w-9 items-center justify-center rounded-lg" style={{ backgroundColor: 'hsl(174 62% 32%)' }}>
-    //         <span className="text-lg font-bold text-white">R</span>
-    //       </div>
-    //       <span className="text-xl font-bold tracking-tight" style={{ color: 'hsl(200 25% 15%)' }}>RentTrust</span>
-    //     </button>
-    //     <button className="md:hidden h-10 w-10 flex items-center justify-center rounded-lg" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-    //       {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-    //     </button>
-    //   </div>
-    // </header>
-//   );
-// };
-
-// const Footer = () => (
-//   <footer className="border-t bg-white" style={{ borderColor: 'hsl(40 20% 88%)' }}>
-//     <div className="container mx-auto px-4 py-8">
-//       <div className="text-center" style={{ color: 'hsl(200 15% 45%)' }}>
-//         <p className="text-sm">© {new Date().getFullYear()} RentTrust Ghana. All rights reserved.</p>
-//       </div>
-//     </div>
-//   </footer>
-// );
+  <Header />
 
 const AreaCard = ({ area, cityName }) => {
   const [isHovered, setIsHovered] = useState(false);

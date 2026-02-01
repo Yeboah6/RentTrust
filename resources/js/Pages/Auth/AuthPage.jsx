@@ -45,8 +45,10 @@ const validateEmail = (email) => {
 };
 
 const AuthPage = () => {
+  const [isLogin, setIsLogin] = useState(true);
+  const [showPassword, setShowPassword] = useState(false);
 
-  const { data, setData, post, processing, errors } = useForm({
+  const { data, setData, post, processing, errors, reset } = useForm({
     fullName: '',
     email: '',
     password: '',
@@ -55,8 +57,19 @@ const AuthPage = () => {
   const handleSignUp = (e) => {
     e.preventDefault();
     
+    // Client-side validation
+    if (!data.fullName.trim()) {
+      alert('Please enter your full name');
+      return;
+    }
+    
     if (!validateEmail(data.email)) {
       alert('Please enter a valid email address');
+      return;
+    }
+    
+    if (data.password.length < 8) {
+      alert('Password must be at least 8 characters long');
       return;
     }
     
@@ -71,18 +84,23 @@ const AuthPage = () => {
       return;
     }
     
-    post('/login', {
-      email: data.email,
-      password: data.password,
-    });
+    if (!data.password) {
+      alert('Please enter your password');
+      return;
+    }
+    
+    post('/login');
   }
 
   const handleBack = () => {
     window.location.href = "/";
   }
 
-  const [isLogin, setIsLogin] = useState(true);
-  const [showPassword, setShowPassword] = useState(false);
+  const toggleAuthMode = () => {
+    setIsLogin(!isLogin);
+    reset(); // Clear form data when switching modes
+    setShowPassword(false); // Reset password visibility
+  }
 
   return (
     <>
@@ -154,8 +172,7 @@ const AuthPage = () => {
             {/* Content */}
             <div style={{ padding: '0 2rem 2rem' }}>
               {/* Form */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                <form onSubmit={isLogin ? handleLogin : handleSignUp}>
+              <form onSubmit={isLogin ? handleLogin : handleSignUp} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 {/* Full Name - Show only for signup */}
                 {!isLogin && (
                   <div>
@@ -283,26 +300,30 @@ const AuthPage = () => {
                 >
                   {processing ? "Please wait..." : isLogin ? "Sign In" : "Create Account"}
                 </button>
-                </form>
-                <Link style={{
-                    border: 'none',
-                    background: 'transparent',
-                    color: 'hsl(174 62% 32%)',
-                    cursor: 'pointer',
-                    fontSize: '0.875rem',
-                    fontWeight: '500',
-                    textDecoration: 'underline'
-                  }}>
-                  Forgot password
-                </Link>
-              </div>
+
+                {isLogin && (
+                  <Link 
+                    href="/forgot-password"
+                    style={{
+                      border: 'none',
+                      background: 'transparent',
+                      color: 'hsl(174 62% 32%)',
+                      cursor: 'pointer',
+                      fontSize: '0.875rem',
+                      fontWeight: '500',
+                      textDecoration: 'underline',
+                      textAlign: 'center'
+                    }}
+                  >
+                    Forgot password?
+                  </Link>
+                )}
+              </form>
 
               {/* Toggle Login/Signup */}
               <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
                 <button
-                  onClick={() => {
-                    setIsLogin(!isLogin);
-                  }}
+                  onClick={toggleAuthMode}
                   style={{
                     border: 'none',
                     background: 'transparent',

@@ -1,10 +1,14 @@
 import { useState } from "react";
 import { Star, X } from "lucide-react";
-import { useForm } from '@inertiajs/react';
+import { useForm, usePage } from '@inertiajs/react';
 
 const ReviewForm = ({ propertyId, agentId, onSuccess, rental, setShowAddReviewForm }) => {
+  const { auth } = usePage().props;
   const [hoveredRating, setHoveredRating] = useState(0);
   const [toast, setToast] = useState(null);
+
+  const userFullName = auth?.agent?.fullName || auth?.tenant?.fullName || auth?.super?.fullName || "";
+  console.log("Auth in ReviewForm:", auth);
   
   const { data, setData, post, processing, errors, reset } = useForm({
     overall_rating: 0,
@@ -31,6 +35,10 @@ const ReviewForm = ({ propertyId, agentId, onSuccess, rental, setShowAddReviewFo
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if ((!data.full_name || data.full_name.trim() === "") && userFullName) {
+      setData("full_name", userFullName);
+    }
+
     post("/review-forms", {
       onSuccess: () => {
         showToast("Review Submitted", "Thank you for helping us maintain trust.", "success");
@@ -240,7 +248,7 @@ const ReviewForm = ({ propertyId, agentId, onSuccess, rental, setShowAddReviewFo
               Full name
             </label>
             <input
-              value={data.full_name}
+              value={data.full_name || userFullName}
               onChange={(e) => setData("full_name", e.target.value)}
               placeholder="Solomon Yeboah"
               style={{
@@ -308,6 +316,7 @@ const ReviewForm = ({ propertyId, agentId, onSuccess, rental, setShowAddReviewFo
 };
 
 export default function App({ setShowAddReviewForm, rental }) {
+  const { auth } = usePage().props;
 
   const handleSuccess = () => {
     console.log("Review submitted successfully!");
@@ -376,6 +385,7 @@ export default function App({ setShowAddReviewForm, rental }) {
           propertyId={rental?.id}
           rental={rental}
           onSuccess={handleSuccess}
+          auth={auth}
           setShowAddReviewForm={setShowAddReviewForm}
         />
       </div>
