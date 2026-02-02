@@ -5,6 +5,7 @@ use App\Http\Controllers\RentController;
 use App\Http\Controllers\AgentController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\PasswordResetController;
 
 Route::resource('rent', RentController::class) -> except('index');
 
@@ -47,6 +48,8 @@ Route::middleware('super')->group(function () {
 });
 
 Route::get('settings', [AuthController::class, 'settings'])->name('settings.page');
+Route::put('settings/profile/agent', [AuthController::class, 'updateAgentProfile'])->name('settings.agent.page');
+Route::put('settings/profile/admin', [AuthController::class, 'updateAdminProfile'])->name('settings.admin.page');
 
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
@@ -54,3 +57,16 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::get('/sign-up', [AuthController::class, 'signUp']) -> name('sign-up.page');
 Route::post('/sign-up', [AuthController::class, 'store']);
 Route::post('/login', [AuthController::class, 'login']);
+
+Route::get('/forgot-password', [PasswordResetController::class, 'showForgotPasswordForm'])
+    ->name('password.request');
+
+Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLink'])
+    ->name('password.email');
+
+Route::get('/reset-password/{token}', [PasswordResetController::class, 'showResetPasswordForm'])
+        ->name('password.reset');
+
+// Handle reset password form submission
+Route::post('/reset-password', [PasswordResetController::class, 'resetPassword'])
+    ->name('password.update');

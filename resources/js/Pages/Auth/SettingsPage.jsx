@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Shield, Bell, Lock, User, Mail, Globe, Save, Eye, EyeOff, Check } from "lucide-react";
 import Header from "../../Components/Layouts/Header";
 import Footer from "../../Components/Layouts/Footer";
+import { usePage, useForm } from "@inertiajs/react";
 
 const AdminSettingsPage = () => {
   const [activeTab, setActiveTab] = useState("profile");
@@ -10,14 +11,42 @@ const AdminSettingsPage = () => {
   const [toast, setToast] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Profile settings
-  const [profileData, setProfileData] = useState({
-    name: "Super Admin",
-    email: "admin@ratemylandlord.com",
-    role: "Platform Administrator",
-    phone: "+233 24 123 4567",
-    bio: "Managing the RateMyLandlord platform to ensure transparency in the rental market.",
+  const { auth } = usePage().props;
+
+  const userAgent = !!auth?.agent;
+  const userAdmin = !!auth?.super;
+
+  // console.log("Auth Data:", userAgent, userAdmin);
+
+  const userFullName = auth?.agent?.fullName || auth?.super?.fullName || "";
+  const userEmail = auth?.agent?.email || auth?.super?.email || "";
+  const userphone = auth?.agent?.phone || auth?.super?.phone || "";
+  const userbio = auth?.agent?.bio || auth?.super?.bio || "";
+  const userCompany = auth?.agent?.company || auth?.super?.company || "";
+  const userType = auth?.agent?.type || auth?.super?.type || "";
+  const userFee = auth?.agent?.fee || auth?.super?.fee || "";
+  const userStatus = auth?.agent?.status || auth?.super?.status || "";
+
+  // Separate forms for agent and admin
+  const agentForm = useForm({
+    name: userFullName,
+    email: userEmail,
+    phone: userphone,
+    bio: userbio,
+    company: userCompany,
+    fee: userFee,
+    role: userType,
   });
+
+  const adminForm = useForm({
+    name: userFullName,
+    email: userEmail,
+    phone: userphone,
+    bio: userbio,
+  });
+
+  // Use the appropriate form based on user type
+  const { data, setData, errors, put, processing } = userAgent ? agentForm : adminForm;
 
   // Security settings
   const [securityData, setSecurityData] = useState({
@@ -33,13 +62,28 @@ const AdminSettingsPage = () => {
     setTimeout(() => setToast(null), 3000);
   };
 
-  const handleSaveProfile = () => {
-    setIsSaving(true);
-    setTimeout(() => {
-      console.log("Profile saved:", profileData);
-      showToast("Profile updated", "Your profile information has been saved successfully");
-      setIsSaving(false);
-    }, 1000);
+  const handleSaveAgentProfile = () => {
+    agentForm.put("/settings/profile/agent", {
+      onSuccess: () => {
+        showToast("Profile updated", "Your profile information has been saved successfully");
+      },
+      onError: (errors) => {
+        showToast("Error", "Failed to update profile. Please check the form.", "error");
+        console.error("Validation errors:", errors);
+      },
+    });
+  };
+
+  const handleSaveAdminProfile = () => {
+    adminForm.put("/settings/profile/admin", {
+      onSuccess: () => {
+        showToast("Profile updated", "Your profile information has been saved successfully");
+      },
+      onError: (errors) => {
+        showToast("Error", "Failed to update profile. Please check the form.", "error");
+        console.error("Validation errors:", errors);
+      },
+    });
   };
 
   const handleSaveSecurity = () => {
@@ -186,20 +230,8 @@ const AdminSettingsPage = () => {
                           fontSize: '2rem',
                           fontWeight: '600'
                         }}>
-                          {profileData.name[0]}
+                          {data.name.split(" ").map((n) => n[0]).join("")}
                         </div>
-                        <button style={{
-                          padding: '0.5rem 1rem',
-                          border: '1px solid #d1d5db',
-                          borderRadius: '0.375rem',
-                          backgroundColor: 'white',
-                          color: '#374151',
-                          fontWeight: '500',
-                          cursor: 'pointer',
-                          fontSize: '0.875rem'
-                        }}>
-                          Change Photo
-                        </button>
                       </div>
                     </div>
 
@@ -216,8 +248,8 @@ const AdminSettingsPage = () => {
                       </label>
                       <input
                         type="text"
-                        value={profileData.name}
-                        onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
+                        value={data.name}
+                        onChange={(e) => setData('name', e.target.value)}
                         style={{
                           width: '100%',
                           padding: '0.5rem 0.75rem',
@@ -227,6 +259,7 @@ const AdminSettingsPage = () => {
                           outline: 'none'
                         }}
                       />
+                      {errors.name && <p style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '0.25rem' }}>{errors.name}</p>}
                     </div>
 
                     {/* Email */}
@@ -242,8 +275,8 @@ const AdminSettingsPage = () => {
                       </label>
                       <input
                         type="email"
-                        value={profileData.email}
-                        onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
+                        value={data.email}
+                        onChange={(e) => setData('email', e.target.value)}
                         style={{
                           width: '100%',
                           padding: '0.5rem 0.75rem',
@@ -253,118 +286,267 @@ const AdminSettingsPage = () => {
                           outline: 'none'
                         }}
                       />
+                      {errors.email && <p style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '0.25rem' }}>{errors.email}</p>}
                     </div>
 
-                    {/* Phone */}
-                    <div>
-                      <label style={{
-                        display: 'block',
-                        fontSize: '0.875rem',
-                        fontWeight: '500',
-                        color: '#374151',
-                        marginBottom: '0.5rem'
-                      }}>
-                        Phone Number
-                      </label>
-                      <input
-                        type="tel"
-                        value={profileData.phone}
-                        onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
-                        style={{
-                          width: '100%',
-                          padding: '0.5rem 0.75rem',
-                          border: '1px solid #d1d5db',
-                          borderRadius: '0.375rem',
-                          fontSize: '0.875rem',
-                          outline: 'none'
-                        }}
-                      />
-                    </div>
+                    {!userAdmin && (
+                      <>
+                        <div>
+                          <label style={{
+                            display: 'block',
+                            fontSize: '0.875rem',
+                            fontWeight: '500',
+                            color: '#374151',
+                            marginBottom: '0.5rem'
+                          }}>
+                            Phone Number
+                          </label>
+                          <input
+                            type="tel"
+                            value={data.phone}
+                            onChange={(e) => setData('phone', e.target.value)}
+                            style={{
+                              width: '100%',
+                              padding: '0.5rem 0.75rem',
+                              border: '1px solid #d1d5db',
+                              borderRadius: '0.375rem',
+                              fontSize: '0.875rem',
+                              outline: 'none'
+                            }}
+                          />
+                          {errors.phone && <p style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '0.25rem' }}>{errors.phone}</p>}
+                        </div>
 
-                    {/* Role */}
-                    <div>
-                      <label style={{
-                        display: 'block',
-                        fontSize: '0.875rem',
-                        fontWeight: '500',
-                        color: '#374151',
-                        marginBottom: '0.5rem'
-                      }}>
-                        Role
-                      </label>
-                      <input
-                        type="text"
-                        value={profileData.role}
-                        disabled
-                        style={{
-                          width: '100%',
-                          padding: '0.5rem 0.75rem',
-                          border: '1px solid #d1d5db',
-                          borderRadius: '0.375rem',
-                          fontSize: '0.875rem',
-                          backgroundColor: '#f9fafb',
-                          color: '#6b7280',
-                          cursor: 'not-allowed'
-                        }}
-                      />
-                    </div>
+                        {/* Role */}
+                        <div>
+                          <label style={{
+                            display: 'block',
+                            fontSize: '0.875rem',
+                            fontWeight: '500',
+                            color: '#374151',
+                            marginBottom: '0.5rem'
+                          }}>
+                            Role
+                          </label>
+                          <input
+                            type="text"
+                            value={data.role}
+                            disabled
+                            style={{
+                              width: '100%',
+                              padding: '0.5rem 0.75rem',
+                              border: '1px solid #d1d5db',
+                              borderRadius: '0.375rem',
+                              fontSize: '0.875rem',
+                              backgroundColor: '#f9fafb',
+                              color: '#6b7280',
+                              cursor: 'not-allowed'
+                            }}
+                          />
+                        </div>
 
-                    {/* Bio */}
-                    <div>
-                      <label style={{
-                        display: 'block',
-                        fontSize: '0.875rem',
-                        fontWeight: '500',
-                        color: '#374151',
-                        marginBottom: '0.5rem'
-                      }}>
-                        Bio
-                      </label>
-                      <textarea
-                        value={profileData.bio}
-                        onChange={(e) => setProfileData({ ...profileData, bio: e.target.value })}
-                        rows={3}
-                        style={{
-                          width: '100%',
-                          padding: '0.5rem 0.75rem',
-                          border: '1px solid #d1d5db',
-                          borderRadius: '0.375rem',
-                          fontSize: '0.875rem',
-                          outline: 'none',
-                          resize: 'vertical',
-                          fontFamily: 'inherit'
-                        }}
-                      />
-                    </div>
+                        {/* Status */}
+                        <div>
+                          <label style={{
+                            display: 'block',
+                            fontSize: '0.875rem',
+                            fontWeight: '500',
+                            color: '#374151',
+                            marginBottom: '0.5rem'
+                          }}>
+                            Status
+                          </label>
+                          <input
+                            type="text"
+                            value={userStatus}
+                            disabled
+                            style={{
+                              width: '100%',
+                              padding: '0.5rem 0.75rem',
+                              border: '1px solid #d1d5db',
+                              borderRadius: '0.375rem',
+                              fontSize: '0.875rem',
+                              backgroundColor: '#f9fafb',
+                              color: '#6b7280',
+                              cursor: 'not-allowed'
+                            }}
+                          />
+                        </div>
+
+                        {/* Company */}
+                        <div>
+                          <label style={{
+                            display: 'block',
+                            fontSize: '0.875rem',
+                            fontWeight: '500',
+                            color: '#374151',
+                            marginBottom: '0.5rem'
+                          }}>
+                            Company
+                          </label>
+                          <input
+                            type="text"
+                            value={data.company}
+                            onChange={(e) => setData('company', e.target.value)}
+                            style={{
+                              width: '100%',
+                              padding: '0.5rem 0.75rem',
+                              border: '1px solid #d1d5db',
+                              borderRadius: '0.375rem',
+                              fontSize: '0.875rem',
+                              outline: 'none'
+                            }}
+                          />
+                          {errors.company && <p style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '0.25rem' }}>{errors.company}</p>}
+                        </div>
+
+                        {/* Fee */}
+                        <div>
+                          <label style={{
+                            display: 'block',
+                            fontSize: '0.875rem',
+                            fontWeight: '500',
+                            color: '#374151',
+                            marginBottom: '0.5rem'
+                          }}>
+                            Fee
+                          </label>
+                          <input
+                            type="number"
+                            value={data.fee}
+                            onChange={(e) => setData('fee', e.target.value)}
+                            min="0"
+                            step="0.01"
+                            style={{
+                              width: '100%',
+                              padding: '0.5rem 0.75rem',
+                              border: '1px solid #d1d5db',
+                              borderRadius: '0.375rem',
+                              fontSize: '0.875rem',
+                              outline: 'none'
+                            }}
+                          />
+                          {errors.fee && <p style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '0.25rem' }}>{errors.fee}</p>}
+                        </div>
+
+                        {/* Bio */}
+                        <div>
+                          <label style={{
+                            display: 'block',
+                            fontSize: '0.875rem',
+                            fontWeight: '500',
+                            color: '#374151',
+                            marginBottom: '0.5rem'
+                          }}>
+                            Bio
+                          </label>
+                          <textarea
+                            value={data.bio}
+                            onChange={(e) => setData('bio', e.target.value)}
+                            rows={3}
+                            style={{
+                              width: '100%',
+                              padding: '0.5rem 0.75rem',
+                              border: '1px solid #d1d5db',
+                              borderRadius: '0.375rem',
+                              fontSize: '0.875rem',
+                              outline: 'none',
+                              resize: 'vertical',
+                              fontFamily: 'inherit'
+                            }}
+                          />
+                          {errors.bio && <p style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '0.25rem' }}>{errors.bio}</p>}
+                        </div>
+                      </>
+                    )}
+
+                    {!userAdmin && (
+                      <>
+                        {/* Phone Number for Admin */}
+                        <div>
+                          <label style={{
+                            display: 'block',
+                            fontSize: '0.875rem',
+                            fontWeight: '500',
+                            color: '#374151',
+                            marginBottom: '0.5rem'
+                          }}>
+                            Phone Number
+                          </label>
+                          <input
+                            type="tel"
+                            value={data.phone}
+                            onChange={(e) => setData('phone', e.target.value)}
+                            style={{
+                              width: '100%',
+                              padding: '0.5rem 0.75rem',
+                              border: '1px solid #d1d5db',
+                              borderRadius: '0.375rem',
+                              fontSize: '0.875rem',
+                              outline: 'none'
+                            }}
+                          />
+                          {errors.phone && <p style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '0.25rem' }}>{errors.phone}</p>}
+                        </div>
+
+                        {/* Bio for Admin */}
+                        <div>
+                          <label style={{
+                            display: 'block',
+                            fontSize: '0.875rem',
+                            fontWeight: '500',
+                            color: '#374151',
+                            marginBottom: '0.5rem'
+                          }}>
+                            Bio
+                          </label>
+                          <textarea
+                            value={data.bio}
+                            onChange={(e) => setData('bio', e.target.value)}
+                            rows={3}
+                            style={{
+                              width: '100%',
+                              padding: '0.5rem 0.75rem',
+                              border: '1px solid #d1d5db',
+                              borderRadius: '0.375rem',
+                              fontSize: '0.875rem',
+                              outline: 'none',
+                              resize: 'vertical',
+                              fontFamily: 'inherit'
+                            }}
+                          />
+                          {errors.bio && <p style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '0.25rem' }}>{errors.bio}</p>}
+                        </div>
+                      </>
+                    )}
 
                     {/* Save Button */}
                     <button
-                      onClick={handleSaveProfile}
-                      disabled={isSaving}
+                      onClick={userAgent ? handleSaveAgentProfile : handleSaveAdminProfile}
+                      disabled={processing}
                       style={{
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         gap: '0.5rem',
                         padding: '0.625rem 1.5rem',
-                        backgroundColor: isSaving ? '#9ca3af' : '#3b82f6',
+                        backgroundColor: processing ? '#9ca3af' : '#3b82f6',
                         color: 'white',
                         border: 'none',
                         borderRadius: '0.375rem',
                         fontWeight: '500',
-                        cursor: isSaving ? 'not-allowed' : 'pointer',
+                        cursor: processing ? 'not-allowed' : 'pointer',
                         fontSize: '0.875rem',
                         alignSelf: 'flex-start'
                       }}
                     >
                       <Save size={16} />
-                      {isSaving ? "Saving..." : "Save Changes"}
+                      {processing ? "Saving..." : "Save Changes"}
                     </button>
                   </div>
                 </div>
               )}
 
-              {/* Security Tab */}
               {activeTab === "security" && (
                 <div>
                   <h2 style={{

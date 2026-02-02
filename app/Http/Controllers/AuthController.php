@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\Tenant;
 use App\Models\Agent;
 use App\Models\SuperAdmin;
+use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
 {
@@ -80,5 +81,47 @@ class AuthController extends Controller
 
     public function settings() {
         return inertia('Auth/SettingsPage');
+    }
+
+    public function updateAgentProfile(Request $request) {
+        $validated = $request->validate([
+            'name'=>'nullable|string|max:255',
+            'email' => 'nullable|email' . Auth::guard('agent')->user()->id,
+            'phone'=>'nullable|string|max:15',
+            'bio'=>'nullable|string|max:500',
+            'company'=>'nullable|string|max:255',
+            'fee'=>'nullable|numeric|min:0',
+            'role'=>'nullable|string|max:255',
+        ]);
+
+        $agent = Auth::guard('agent')->user();
+        
+        $agent->update([
+            'fullName' => $validated['name'] ?? $agent->fullName,
+            'email' => $validated['email'] ?? $agent->email,
+            'phone' => $validated['phone'] ?? $agent->phone,
+            'bio' => $validated['bio'] ?? $agent->bio,
+            'company' => $validated['company'] ?? $agent->company,
+            'fee' => $validated['fee'] ?? $agent->fee,
+            'type' => $validated['role'] ?? $agent->type,
+        ]);
+
+        return redirect()->back()->with('success', 'Profile updated successfully');
+    }
+
+    public function updateAdminProfile(Request $request) {
+        $validated = $request->validate([
+            'name'=>'nullable|string|max:255',
+            'email' => 'nullable|email',
+        ]);
+    
+        $admin = Auth::guard('super')->user();
+        
+        $admin->update([
+            'fullName' => $validated['name'] ?? $admin->fullName,
+            'email' => $validated['email'] ?? $admin->email,
+        ]);
+
+        return redirect()->back()->with('success', 'Profile updated successfully');
     }
 }

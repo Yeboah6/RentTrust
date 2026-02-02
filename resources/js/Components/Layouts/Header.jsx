@@ -14,15 +14,17 @@ const Header = () => {
   const isSuperAdminLoggedIn = !!auth?.super;
   const isAnyUserLoggedIn = isAgentLoggedIn || isTenantLoggedIn || isSuperAdminLoggedIn;
 
+  // console.log(auth)
+
   // Store user data separately
   const agentData = auth?.agent;
   const tenantData = auth?.tenant;
   const superAdminData = auth?.super;
 
-  console.log('Auth state:', { 
-    isAgentLoggedIn, 
-    isTenantLoggedIn, 
-    isSuperAdminLoggedIn, 
+  console.log('Auth state:', {
+    isAgentLoggedIn,
+    isTenantLoggedIn,
+    isSuperAdminLoggedIn,
     isAnyUserLoggedIn,
     tenantData
   });
@@ -46,9 +48,9 @@ const Header = () => {
         }
       `}</style>
 
-      <header 
+      <header
         className="sticky top-0 z-50 w-full backdrop-blur-sm"
-        style={{ 
+        style={{
           backgroundColor: 'hsl(0 0% 100% / 0.95)',
           borderBottom: '1px solid hsl(40 20% 88%)'
         }}
@@ -56,10 +58,10 @@ const Header = () => {
         <div className="container mx-auto px-4 flex h-16 items-center justify-between">
           {/* Logo */}
           <Link
-            href="/" 
+            href="/"
             className="flex items-center gap-2 hover:opacity-80 transition-opacity"
           >
-            <div 
+            <div
               className="flex h-9 w-9 items-center justify-center rounded-lg"
               style={{ backgroundColor: 'hsl(174 62% 32%)' }}
             >
@@ -72,70 +74,68 @@ const Header = () => {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-1">
-            {isAnyUserLoggedIn && (
-              <>
-                <Link
-                  href="/listings"
-                  onMouseEnter={() => setActiveLink('listings')}
-                  onMouseLeave={() => setActiveLink(null)}
-                  className="px-4 py-2 text-sm font-medium transition-all rounded-lg"
-                  style={{ 
-                    color: activeLink === 'listings' ? 'hsl(200 25% 15%)' : 'hsl(200 15% 45%)',
-                    backgroundColor: activeLink === 'listings' ? 'hsl(40 30% 94%)' : 'transparent'
-                  }}
-                >
-                  Find Rentals
-                </Link>
-                <Link
-                  href="/areas"
-                  onMouseEnter={() => setActiveLink('areas')}
-                  onMouseLeave={() => setActiveLink(null)}
-                  className="px-4 py-2 text-sm font-medium transition-all rounded-lg"
-                  style={{ 
-                    color: activeLink === 'areas' ? 'hsl(200 25% 15%)' : 'hsl(200 15% 45%)',
-                    backgroundColor: activeLink === 'areas' ? 'hsl(40 30% 94%)' : 'transparent'
-                  }}
-                >
-                  Areas
-                </Link>
-                <Link
-                  href="/agents"
-                  onMouseEnter={() => setActiveLink('agents')}
-                  onMouseLeave={() => setActiveLink(null)}
-                  className="px-4 py-2 text-sm font-medium transition-all rounded-lg"
-                  style={{ 
-                    color: activeLink === 'agents' ? 'hsl(200 25% 15%)' : 'hsl(200 15% 45%)',
-                    backgroundColor: activeLink === 'agents' ? 'hsl(40 30% 94%)' : 'transparent'
-                  }}
-                >
-                  Agents
-                </Link>
-                <Link
-                  href="/calculator"
-                  onMouseEnter={() => setActiveLink('calculator')}
-                  onMouseLeave={() => setActiveLink(null)}
-                  className="px-4 py-2 text-sm font-medium transition-all rounded-lg"
-                  style={{ 
-                    color: activeLink === 'calculator' ? 'hsl(200 25% 15%)' : 'hsl(200 15% 45%)',
-                    backgroundColor: activeLink === 'calculator' ? 'hsl(40 30% 94%)' : 'transparent'
-                  }}
-                >
-                  Calculator
-                </Link>
-                <Link
-                  href="/reviews-reports"
-                  onMouseEnter={() => setActiveLink('reviews')}
-                  onMouseLeave={() => setActiveLink(null)}
-                  className="px-4 py-2 text-sm font-medium transition-all rounded-lg"
-                  style={{ 
-                    color: activeLink === 'reviews' ? 'hsl(200 25% 15%)' : 'hsl(200 15% 45%)',
-                    backgroundColor: activeLink === 'reviews' ? 'hsl(40 30% 94%)' : 'transparent'
-                  }}
-                >
-                  Reports & Reviews
-                </Link>
-              </>
-            )}
+            <>
+              <Link
+                href="/listings"
+                onMouseEnter={() => setActiveLink('listings')}
+                onMouseLeave={() => setActiveLink(null)}
+                className="px-4 py-2 text-sm font-medium transition-all rounded-lg"
+                style={{
+                  color: activeLink === 'listings' ? 'hsl(200 25% 15%)' : 'hsl(200 15% 45%)',
+                  backgroundColor: activeLink === 'listings' ? 'hsl(40 30% 94%)' : 'transparent'
+                }}
+              >
+                Find Rentals
+              </Link>
+              <Link
+                href="/areas"
+                onMouseEnter={() => setActiveLink('areas')}
+                onMouseLeave={() => setActiveLink(null)}
+                className="px-4 py-2 text-sm font-medium transition-all rounded-lg"
+                style={{
+                  color: activeLink === 'areas' ? 'hsl(200 25% 15%)' : 'hsl(200 15% 45%)',
+                  backgroundColor: activeLink === 'areas' ? 'hsl(40 30% 94%)' : 'transparent'
+                }}
+              >
+                Areas
+              </Link>
+              <Link
+                href="/agents"
+                onMouseEnter={() => setActiveLink('agents')}
+                onMouseLeave={() => setActiveLink(null)}
+                className="px-4 py-2 text-sm font-medium transition-all rounded-lg"
+                style={{
+                  color: activeLink === 'agents' ? 'hsl(200 25% 15%)' : 'hsl(200 15% 45%)',
+                  backgroundColor: activeLink === 'agents' ? 'hsl(40 30% 94%)' : 'transparent'
+                }}
+              >
+                Agents
+              </Link>
+              <Link
+                href="/calculator"
+                onMouseEnter={() => setActiveLink('calculator')}
+                onMouseLeave={() => setActiveLink(null)}
+                className="px-4 py-2 text-sm font-medium transition-all rounded-lg"
+                style={{
+                  color: activeLink === 'calculator' ? 'hsl(200 25% 15%)' : 'hsl(200 15% 45%)',
+                  backgroundColor: activeLink === 'calculator' ? 'hsl(40 30% 94%)' : 'transparent'
+                }}
+              >
+                Calculator
+              </Link>
+              <Link
+                href="/reviews-reports"
+                onMouseEnter={() => setActiveLink('reviews')}
+                onMouseLeave={() => setActiveLink(null)}
+                className="px-4 py-2 text-sm font-medium transition-all rounded-lg"
+                style={{
+                  color: activeLink === 'reviews' ? 'hsl(200 25% 15%)' : 'hsl(200 15% 45%)',
+                  backgroundColor: activeLink === 'reviews' ? 'hsl(40 30% 94%)' : 'transparent'
+                }}
+              >
+                Reports & Reviews
+              </Link>
+            </>
           </nav>
 
           {/* Desktop Actions */}
@@ -144,7 +144,7 @@ const Header = () => {
               <>
                 <button
                   className="p-2 rounded-lg transition-colors"
-                  style={{ 
+                  style={{
                     color: 'hsl(200 15% 45%)',
                     backgroundColor: 'transparent'
                   }}
@@ -159,7 +159,7 @@ const Header = () => {
                   onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(40 30% 94%)'}
                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
                   className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg border transition-colors"
-                  style={{ 
+                  style={{
                     borderColor: 'hsl(40 20% 88%)',
                     color: 'hsl(200 25% 15%)',
                     backgroundColor: 'white'
@@ -170,51 +170,17 @@ const Header = () => {
                 </Link>
               </>
             )}
-            
+
             {/* Agent Logged In */}
-                  {isAgentLoggedIn && (
-                    <>
-                    {/* <div className="hidden md:flex items-center gap-3"> */}
-                      <Link
-                      href="/agent-dashboard"
-                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(40 30% 94%)'}
-                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
-                      className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg border transition-colors"
-                      style={{ 
-                        borderColor: 'hsl(40 20% 88%)',
-                        color: 'hsl(200 25% 15%)',
-                        backgroundColor: 'white'
-                      }}
-                      >
-                      <LayoutDashboard className="h-4 w-4 mr-2" />
-                      Dashboard
-                      </Link>
-                      <button
-                      type="button"
-                      className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg border transition-colors"
-                      style={{ 
-                        borderColor: 'hsl(0 70% 50%)',
-                        color: 'hsl(0 70% 50%)',
-                        backgroundColor: 'white'
-                      }}
-                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(0 70% 50% / 0.1)'}
-                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
-                      onClick={handleLogout}
-                      >
-                      <LogOut className="h-4 w-4 mr-2" />
-                      Logout
-                      </button>
-                    {/* </div> */}
-                    </>
-                  )}
-            {isSuperAdminLoggedIn && (
+            {isAgentLoggedIn && (
               <>
+                {/* <div className="hidden md:flex items-center gap-3"> */}
                 <Link
-                  href="/super-admin"
+                  href="/agent-dashboard"
                   onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(40 30% 94%)'}
                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
                   className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg border transition-colors"
-                  style={{ 
+                  style={{
                     borderColor: 'hsl(40 20% 88%)',
                     color: 'hsl(200 25% 15%)',
                     backgroundColor: 'white'
@@ -226,7 +192,41 @@ const Header = () => {
                 <button
                   type="button"
                   className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg border transition-colors"
-                  style={{ 
+                  style={{
+                    borderColor: 'hsl(0 70% 50%)',
+                    color: 'hsl(0 70% 50%)',
+                    backgroundColor: 'white'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(0 70% 50% / 0.1)'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
+                  onClick={handleLogout}
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Logout
+                </button>
+                {/* </div> */}
+              </>
+            )}
+            {isSuperAdminLoggedIn && (
+              <>
+                <Link
+                  href="/super-admin"
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(40 30% 94%)'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
+                  className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg border transition-colors"
+                  style={{
+                    borderColor: 'hsl(40 20% 88%)',
+                    color: 'hsl(200 25% 15%)',
+                    backgroundColor: 'white'
+                  }}
+                >
+                  <LayoutDashboard className="h-4 w-4 mr-2" />
+                  Dashboard
+                </Link>
+                <button
+                  type="button"
+                  className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg border transition-colors"
+                  style={{
                     borderColor: 'hsl(0 70% 50%)',
                     color: 'hsl(0 70% 50%)',
                     backgroundColor: 'white'
@@ -244,7 +244,7 @@ const Header = () => {
             {/* Tenant Logged In */}
             {isTenantLoggedIn && !isAgentLoggedIn && !isSuperAdminLoggedIn && (
               <>
-                <Link
+                {/* <Link
                   href="/listings"
                   onMouseEnter={() => setActiveLink('listings')}
                   onMouseLeave={() => setActiveLink(null)}
@@ -291,9 +291,9 @@ const Header = () => {
                   }}
                 >
                   Calculator
-                </Link>
-                <p style={{ 
-                  fontSize: '0.875rem', 
+                </Link> */}
+                <p style={{
+                  fontSize: '0.875rem',
                   fontWeight: '500',
                   color: 'hsl(200 25% 15%)'
                 }}>
@@ -302,7 +302,7 @@ const Header = () => {
                 <button
                   type="button"
                   className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg border transition-colors"
-                  style={{ 
+                  style={{
                     borderColor: 'hsl(0 70% 50%)',
                     color: 'hsl(0 70% 50%)',
                     backgroundColor: 'white'
@@ -332,7 +332,7 @@ const Header = () => {
         {/* Mobile Menu */}
         <div
           className="mobile-menu md:hidden overflow-hidden bg-white"
-          style={{ 
+          style={{
             maxHeight: isMenuOpen ? '500px' : '0',
             borderTop: isMenuOpen ? '1px solid hsl(40 20% 88%)' : 'none'
           }}
@@ -378,7 +378,7 @@ const Header = () => {
                 </Link>
               </>
             )}
-            
+
             <div className="pt-4 space-y-2 border-t mt-4" style={{ borderColor: 'hsl(40 20% 88%)' }}>
               {/* Not Logged In */}
               {!isAnyUserLoggedIn && (
@@ -386,7 +386,7 @@ const Header = () => {
                   <Link
                     href="/sign-up"
                     className="w-full inline-flex items-center justify-start px-4 py-3 text-sm font-medium rounded-lg border transition-colors"
-                    style={{ 
+                    style={{
                       borderColor: 'hsl(40 20% 88%)',
                       color: 'hsl(200 25% 15%)',
                       backgroundColor: 'white'
@@ -404,14 +404,14 @@ const Header = () => {
                   </Link>
                 </>
               )}
-              
+
               {/* Agent Logged In */}
               {isAgentLoggedIn && (
                 <>
                   <Link
                     href="/agent-dashboard"
                     className="w-full inline-flex items-center justify-start px-4 py-3 text-sm font-medium rounded-lg border transition-colors"
-                    style={{ 
+                    style={{
                       borderColor: 'hsl(40 20% 88%)',
                       color: 'hsl(200 25% 15%)',
                       backgroundColor: 'white'
@@ -423,7 +423,7 @@ const Header = () => {
                   <button
                     type="button"
                     className="w-full inline-flex items-center justify-start px-4 py-3 text-sm font-medium rounded-lg border transition-colors"
-                    style={{ 
+                    style={{
                       borderColor: 'hsl(0 70% 50%)',
                       color: 'hsl(0 70% 50%)',
                       backgroundColor: 'white'
@@ -439,8 +439,8 @@ const Header = () => {
               {/* Tenant Logged In */}
               {isTenantLoggedIn && !isAgentLoggedIn && !isSuperAdminLoggedIn && (
                 <>
-                  <p className="px-4 py-2" style={{ 
-                    fontSize: '0.875rem', 
+                  <p className="px-4 py-2" style={{
+                    fontSize: '0.875rem',
                     fontWeight: '500',
                     color: 'hsl(200 25% 15%)'
                   }}>
@@ -449,7 +449,7 @@ const Header = () => {
                   <button
                     type="button"
                     className="w-full inline-flex items-center justify-start px-4 py-3 text-sm font-medium rounded-lg border transition-colors"
-                    style={{ 
+                    style={{
                       borderColor: 'hsl(0 70% 50%)',
                       color: 'hsl(0 70% 50%)',
                       backgroundColor: 'white'

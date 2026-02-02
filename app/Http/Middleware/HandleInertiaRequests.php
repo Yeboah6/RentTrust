@@ -40,7 +40,7 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
            'auth' => [
                 'agent' => Auth::guard('agent')->user(),
-                'user' => Auth::guard('tenant')->user(),
+                'tenant' => Auth::guard('tenant')->user(),
                 'super' => Auth::guard('super')->user(),
             ],
         ];
