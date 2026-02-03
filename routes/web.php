@@ -12,7 +12,12 @@ Route::resource('rent', RentController::class) -> except('index');
 Route::get('/', [RentController::class, 'index']);
 
 Route::get('/listings', [RentController::class, 'listings']);
-Route::get('/areas', [RentController::class, 'area']);
+
+Route::get('/areas', [RentController::class, 'areas']);
+Route::get('/areas/{city}/{area}', [RentController::class, 'showArea'])->name('areas.show');
+Route::get('/api/areas/search', [RentController::class, 'searchAreas'])->name('areas.search');
+Route::get('/api/areas/city/{city}', [RentController::class, 'getAreasByCity'])->name('areas.by-city');
+
 
 Route::get('/calculator', [RentController::class, 'calculate']);
 Route::get('/claim-listings', [RentController::class, 'claimListings']);

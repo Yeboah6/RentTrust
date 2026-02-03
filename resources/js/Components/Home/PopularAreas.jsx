@@ -2,57 +2,6 @@ import React, { useState } from 'react';
 import { Link } from "@inertiajs/react";
 import { ArrowRight, MapPin, Home, TrendingUp, TrendingDown } from 'lucide-react';
 
-const areas = [
-  {
-    name: "East Legon",
-    city: "Accra",
-    listingCount: 45,
-    avgRent: 2500,
-    trend: "+5%",
-    color: "primary",
-  },
-  {
-    name: "Spintex",
-    city: "Accra",
-    listingCount: 67,
-    avgRent: 1200,
-    trend: "+3%",
-    color: "accent",
-  },
-  {
-    name: "Osu",
-    city: "Accra",
-    listingCount: 32,
-    avgRent: 1800,
-    trend: "-2%",
-    color: "success",
-  },
-  {
-    name: "Tema Community 25",
-    city: "Tema",
-    listingCount: 28,
-    avgRent: 900,
-    trend: "+8%",
-    color: "primary",
-  },
-  {
-    name: "Achimota",
-    city: "Accra",
-    listingCount: 54,
-    avgRent: 700,
-    trend: "+2%",
-    color: "accent",
-  },
-  {
-    name: "Adum",
-    city: "Kumasi",
-    listingCount: 23,
-    avgRent: 600,
-    trend: "+4%",
-    color: "success",
-  },
-];
-
 const AreaCard = ({ area }) => {
   const [isHovered, setIsHovered] = useState(false);
   
@@ -129,7 +78,18 @@ const AreaCard = ({ area }) => {
   );
 };
 
-const PopularAreas = () => {
+const PopularAreas = ({ areas: areasByCity }) => {
+  // Flatten grouped areas and add city name, then sort by listingCount and get top 6
+  const flattenedAreas = areasByCity ? 
+    Object.entries(areasByCity).flatMap(([city, cityAreas]) => 
+      Object.values(cityAreas).map(area => ({
+        ...area,
+        city: city.charAt(0).toUpperCase() + city.slice(1),
+        color: ['primary', 'accent', 'success'][Math.floor(Math.random() * 3)]
+      }))
+    ).sort((a, b) => b.listingCount - a.listingCount)
+    .slice(0, 6)
+  : [];
 
   return (
     <>
@@ -168,8 +128,8 @@ const PopularAreas = () => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {areas.map((area) => (
-              <AreaCard key={area.name} area={area} />
+            {flattenedAreas.map((area, idx) => (
+              <AreaCard key={`${area.city}-${area.name}-${idx}`} area={area} />
             ))}
           </div>
         </div>
