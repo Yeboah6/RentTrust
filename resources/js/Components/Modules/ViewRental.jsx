@@ -62,7 +62,7 @@ const ViewRentals = ({ rental, setShowViewModal }) => {
               onClick={() => setShowViewModal && setShowViewModal(false)}
               className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
             >
-              <X className="h-6 w-6" style={{ color: 'hsl(200 15% 45%)' }} />
+              <X className="h-6 w-6" style={{ color: '#627884' }} />
             </button>
           </div>
 

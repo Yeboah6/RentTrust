@@ -5,7 +5,7 @@ import Footer from "@/Components/Layouts/Footer";
 import AddRentalPage from "@/Pages/AddRentals";
 import EditRentals from "@/Pages/EditRentals";
 import VerificationRequestModal from "../VerifyRentals";
-import ViewRentals from "../ViewRental";
+import ViewRentals from "@/Components/Modules/ViewRental";
 
 
 // Icon components

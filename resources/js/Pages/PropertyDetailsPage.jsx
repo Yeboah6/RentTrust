@@ -3,8 +3,9 @@ import Header from '../Components/Layouts/Header';
 import Footer from '../Components/Layouts/Footer';
 import { Link, usePage } from "@inertiajs/react";
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import ReportListingDialog from "./ReportListingDialog";
-import ReviewForm from "./ReviewForm";
+import ReportListingDialog from "../Components/Modules/ReportListingDialog";
+import ReviewForm from "../Components/Modules/ReviewForm";
+import AgentProfileModal from '../Components/Modules/AgentProfileModal';
 
 // Icon components
 const MapPin = ({ style }) => (
@@ -72,6 +73,7 @@ const PropertyDetailsPage = ({ rental, reviews }) => {
   const formatCurrency = (amount) => `GH₵${amount?.toLocaleString() || '0'}`;
   const [showAddListingModal, setShowAddListingModal] = useState(false);
   const [showAddReviewForm, setShowAddReviewForm] = useState(false);
+  const [showAgentProfile, setShowAgentProfile] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const handlePrevImage = (e) => {
@@ -587,16 +589,18 @@ const PropertyDetailsPage = ({ rental, reviews }) => {
                         <p style={{ fontSize: '0.875rem' }}>
                           Agent Fee: <span className="font-medium">{rental.agent.fee || 0}%</span>
                         </p>
-                        <button style={{
-                          width: '100%',
-                          padding: '0.5rem',
-                          border: '1px solid hsl(40 20% 88%)',
-                          borderRadius: '0.5rem',
-                          backgroundColor: 'white',
-                          color: 'hsl(174 62% 32%)',
-                          fontWeight: '500',
-                          cursor: 'pointer'
-                        }}>
+                        <button 
+                          onClick={() => setShowAgentProfile(true)}
+                          style={{
+                            width: '100%',
+                            padding: '0.5rem',
+                            border: '1px solid hsl(40 20% 88%)',
+                            borderRadius: '0.5rem',
+                            backgroundColor: 'white',
+                            color: 'hsl(174 62% 32%)',
+                            fontWeight: '500',
+                            cursor: 'pointer'
+                          }}>
                           View Profile
                         </button>
                       </div>
@@ -661,6 +665,14 @@ const PropertyDetailsPage = ({ rental, reviews }) => {
         </main>
 
         <Footer />
+
+        {/* Agent Profile Modal */}
+        <AgentProfileModal 
+          agent={rental.agent} 
+          isOpen={showAgentProfile} 
+          onClose={() => setShowAgentProfile(false)}
+          auth={auth}
+        />
 
         {/* Add Listing Modal */}
         {showAddListingModal && (

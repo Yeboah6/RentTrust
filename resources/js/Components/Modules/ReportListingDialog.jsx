@@ -5,7 +5,6 @@ import { useForm, usePage } from "@inertiajs/react";
 const ReportListingDialog = ({ setShowAddListingModal, rental }) => {
   const [uploadedFiles, setUploadedFiles] = useState([]);
   
-  // FIXED: Ensure property_id is properly set
   const {data, setData, post, processing, errors, reset} = useForm({
     report_type: "",
     description: "",
@@ -61,7 +60,6 @@ const ReportListingDialog = ({ setShowAddListingModal, rental }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     
-    // FIXED: Prepare FormData for file uploads
     const formData = new FormData();
     
     // Add text fields
@@ -171,7 +169,8 @@ const ReportListingDialog = ({ setShowAddListingModal, rental }) => {
               <X size={20} />
             </button>
 
-            <div style={{
+            <div className="hide-scrollbar"
+             style={{
               backgroundColor: '#f3f4f6',
               padding: '1.5rem',
               borderRadius: '0.5rem',
@@ -429,6 +428,14 @@ const ReportListingDialog = ({ setShowAddListingModal, rental }) => {
             transform: translateX(0);
             opacity: 1;
           }
+        }
+        .hide-scrollbar {
+          scrollbar-width: none; /* Firefox */
+          -ms-overflow-style: none; /* IE and Edge */
+        }
+
+        .hide-scrollbar::-webkit-scrollbar {
+          display: none; /* Chrome, Safari, Opera */
         }
       `}</style>
     </>

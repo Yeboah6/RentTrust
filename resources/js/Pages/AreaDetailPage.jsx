@@ -6,10 +6,28 @@ import Footer from "../Components/Layouts/Footer";
 
 const PropertyCard = ({ property }) => {
   const [isHovered, setIsHovered] = React.useState(false);
+  const [imageError, setImageError] = React.useState(false);
+
+  // Parse images if they're stored as JSON string
+  let imagesArray = [];
+  try {
+    if (property.images) {
+      imagesArray = typeof property.images === 'string' ? JSON.parse(property.images) : property.images;
+      if (!Array.isArray(imagesArray)) {
+        imagesArray = [];
+      }
+    }
+  } catch (e) {
+    console.error('Error parsing images:', e);
+    imagesArray = [];
+  }
+
+  // Get the first image or null
+  const firstImage = imagesArray.length > 0 ? imagesArray[0] : property.image;
 
   return (
     <Link
-      href={`/rentals/${property.id}`}
+      href={`/rent/${property.id}`}
       className="block overflow-hidden border rounded-xl bg-white transition-all duration-300"
       style={{
         borderColor: 'hsl(40 20% 88%)',
@@ -24,16 +42,58 @@ const PropertyCard = ({ property }) => {
     >
       {/* Property Image */}
       <div 
-        className="h-48 bg-cover bg-center"
         style={{
-          backgroundImage: property.image 
-            ? `url(${property.image})` 
-            : 'linear-gradient(135deg, hsl(174 62% 32% / 0.2) 0%, hsl(174 62% 32% / 0.05) 100%)'
+          width: '100%',
+          height: '200px',
+          backgroundColor: 'hsl(40 30% 94%)',
+          position: 'relative',
+          overflow: 'hidden'
         }}
       >
-        {!property.image && (
-          <div className="h-full flex items-center justify-center">
-            <Building className="h-12 w-12" style={{ color: 'hsl(200 25% 15% / 0.2)' }} />
+        {firstImage && !imageError ? (
+          <img 
+            src={`/storage/rental_images/${firstImage}`}
+            alt={`${property.property_type || 'Property'} image`}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              objectPosition: 'center',
+              transition: 'transform 0.3s ease-in-out',
+              transform: isHovered ? 'scale(1.05)' : 'scale(1)'
+            }}
+            onError={() => setImageError(true)}
+          />
+        ) : (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '100%',
+            height: '100%',
+            flexDirection: 'column'
+          }}>
+            <MapPin style={{ height: '3rem', width: '3rem', color: 'hsl(200 25% 15% / 0.2)' }} />
+            <div style={{ fontSize: '12px', color: 'hsl(200 15% 45%)', marginTop: '8px' }}>
+              No image available
+            </div>
+          </div>
+        )}
+        
+        {/* Image count badge */}
+        {imagesArray.length > 1 && !imageError && (
+          <div style={{
+            position: 'absolute',
+            bottom: '8px',
+            right: '8px',
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            color: 'white',
+            padding: '4px 8px',
+            borderRadius: '4px',
+            fontSize: '12px',
+            fontWeight: '500'
+          }}>
+            +{imagesArray.length - 1} more
           </div>
         )}
       </div>

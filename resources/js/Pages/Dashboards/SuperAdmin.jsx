@@ -3,7 +3,7 @@ import Header from "@/Components/Layouts/Header";
 import Footer from "@/Components/Layouts/Footer";
 import { Link, useForm, router } from "@inertiajs/react";
 import VerifyAgentDialog from '../VerifyAgent';
-import ViewRentals from "../ViewRental";
+import ViewRentals from "@/Components/Modules/ViewRental";
 import { MapPin} from 'lucide-react';
 
 // Icon components

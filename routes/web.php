@@ -27,7 +27,6 @@ Route::get('/reviews-reports', [RentController::class, 'reviews']);
 
 Route::post('/report-listing', [RentController::class, 'reportListing'])->name('report.listing');
 
-// Route::get('/review-forms', [RentController::class, 'reviewForms']);
 Route::post('/review-forms', [RentController::class, 'storeReviewForms']);
 Route::post('/reviews/app', [RentController::class, 'storeReviewApp'])->name('reviews.app');
 

@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Link } from "@inertiajs/react";
+import { Link, usePage } from "@inertiajs/react";
 import Header from "../Components/Layouts/Header";
 import Footer from "../Components/Layouts/Footer";
+import AgentProfileModal from '../Components/Modules/AgentProfileModal';
 
 // Icon components
 const Search = ({ className, style }) => (
@@ -35,85 +36,7 @@ const Building2 = ({ className, style }) => (
   </svg>
 );
 
-const agents = [
-  {
-    id: "1",
-    name: "Kofi Mensah",
-    isVerified: true,
-    rating: 4.7,
-    reviewCount: 24,
-    listingsCount: 12,
-    areas: ["East Legon", "Cantonments"],
-    feePercent: 10,
-    responseRate: 92,
-  },
-  {
-    id: "2",
-    name: "Ama Serwaa",
-    isVerified: true,
-    rating: 4.5,
-    reviewCount: 18,
-    listingsCount: 8,
-    areas: ["Spintex", "Tema"],
-    feePercent: 8,
-    responseRate: 88,
-  },
-  {
-    id: "3",
-    name: "Emmanuel Boateng",
-    isVerified: false,
-    rating: 4.0,
-    reviewCount: 6,
-    listingsCount: 5,
-    areas: ["Achimota", "Madina"],
-    feePercent: 10,
-    responseRate: 75,
-  },
-  {
-    id: "4",
-    name: "Grace Owusu",
-    isVerified: true,
-    rating: 4.8,
-    reviewCount: 32,
-    listingsCount: 15,
-    areas: ["Osu", "Labone"],
-    feePercent: 12,
-    responseRate: 95,
-  },
-  {
-    id: "5",
-    name: "Daniel Asare",
-    isVerified: true,
-    rating: 4.3,
-    reviewCount: 11,
-    listingsCount: 7,
-    areas: ["Cantonments", "Airport Residential"],
-    feePercent: 15,
-    responseRate: 80,
-  },
-  {
-    id: "6",
-    name: "Abena Osei",
-    isVerified: false,
-    rating: 3.8,
-    reviewCount: 4,
-    listingsCount: 3,
-    areas: ["Dansoman"],
-    feePercent: 8,
-    responseRate: 70,
-  },
-];
-
-  // const agents = {
-  //   name: agentData?.fullName || "Unknown Agent",
-  //   company: agentData?.company || null,
-  //   verification_status: "verified",
-  //   avatar_url: null,
-  //   average_rating: 4.7,
-  //   total_reviews: 24
-  // };
-
-const AgentCard = ({ agent }) => {
+const AgentCard = ({ agent, onViewProfile }) => {
   const [isHovered, setIsHovered] = useState(false);
 
   return (
@@ -225,6 +148,7 @@ const AgentCard = ({ agent }) => {
 
         <button
           className="w-full mt-4 px-4 py-2 rounded-lg font-medium transition-colors"
+          onClick={() => onViewProfile(agent)}
           style={{
             border: '1px solid hsl(40 20% 88%)',
             backgroundColor: 'white',
@@ -232,7 +156,6 @@ const AgentCard = ({ agent }) => {
           }}
           onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(174 62% 32% / 0.05)'}
           onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
-          onClick={() => alert(`View ${agent.name}'s profile`)}
         >
           View Profile
         </button>
@@ -243,6 +166,9 @@ const AgentCard = ({ agent }) => {
 
 const AgentsPage = ({ agent, listingsCount }) => {
   const [searchQuery, setSearchQuery] = useState("");
+  const [showAgentProfile, setShowAgentProfile] = useState(false);
+  const [selectedAgent, setSelectedAgent] = useState(null);
+  const { auth } = usePage().props;
 
   const agentsData = agent.map((agentItem) => ({
     id: agentItem.id,
@@ -254,8 +180,15 @@ const AgentsPage = ({ agent, listingsCount }) => {
     areas: agentItem.service_areas ? agentItem.service_areas.split(',').map(a => a.trim()) : [],
     feePercent: agentItem.fee || 0,
     responseRate: agentItem.response_rate || 0,
-    company: agentItem.company
+    company: agentItem.company,
+    _original: agentItem // Store original data
   }));
+
+  const handleViewProfile = (agentData) => {
+    // Use the original agent data for the modal
+    setSelectedAgent(agentData._original);
+    setShowAgentProfile(true);
+  };
 
   const filteredAgents = agentsData.filter(
     (agent) =>
@@ -344,7 +277,7 @@ const AgentsPage = ({ agent, listingsCount }) => {
           <div className="container mx-auto px-4 py-8">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredAgents.map((agent) => (
-                <AgentCard key={agent.id} agent={agent} />
+                <AgentCard key={agent.id} agent={agent} onViewProfile={handleViewProfile} />
               ))}
             </div>
 
@@ -361,6 +294,14 @@ const AgentsPage = ({ agent, listingsCount }) => {
         </main>
 
         <Footer />
+
+        {/* Agent Profile Modal */}
+        <AgentProfileModal
+          agent={selectedAgent}
+          isOpen={showAgentProfile} 
+          onClose={() => setShowAgentProfile(false)}
+          auth={auth}
+        />
       </div>
     </>
   );
