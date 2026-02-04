@@ -2,7 +2,7 @@ import { useState } from "react";
 import Header from "@/Components/Layouts/Header";
 import Footer from "@/Components/Layouts/Footer";
 import { Link, useForm, router } from "@inertiajs/react";
-import VerifyAgentDialog from '../VerifyAgent';
+import VerifyAgentDialog from '@/Components/Modules/VerifyAgent';
 import ViewRentals from "@/Components/Modules/ViewRental";
 import { MapPin} from 'lucide-react';
 

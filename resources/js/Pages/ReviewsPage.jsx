@@ -1,7 +1,7 @@
 import { useState } from "react";
 import Header from '../Components/Layouts/Header';
 import Footer from '../Components/Layouts/Footer';
-import AppReview from './AppReview';
+import AppReview from '../Components/Modules/AppReview';
 import { User } from 'lucide-react';
 import { usePage } from '@inertiajs/react';
 

@@ -4,7 +4,7 @@ import Header from "@/Components/Layouts/Header";
 import Footer from "@/Components/Layouts/Footer";
 import AddRentalPage from "@/Pages/AddRentals";
 import EditRentals from "@/Pages/EditRentals";
-import VerificationRequestModal from "../VerifyRentals";
+import VerificationRequestModal from "@/Components/Modules/VerifyRentals";
 import ViewRentals from "@/Components/Modules/ViewRental";
 
 
