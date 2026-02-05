@@ -60,23 +60,23 @@ const RentCalculator = () => {
     <div className="container mx-auto px-4">
       <div style={{ maxWidth: '56rem', margin: '0 auto' }}>
         {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+        <div style={{ textAlign: 'center', marginBottom: 'clamp(1.5rem, 4vw, 2rem)' }}>
           <div style={{ 
             display: 'inline-flex', 
             alignItems: 'center', 
             justifyContent: 'center',
-            width: '4rem',
-            height: '4rem',
+            width: '3.5rem',
+            height: '3.5rem',
             borderRadius: '50%',
             background: 'linear-gradient(135deg, hsl(174 62% 32% / 0.2) 0%, hsl(174 62% 32% / 0.05) 100%)',
             marginBottom: '1rem'
           }}>
-            <Calculator style={{ height: '2rem', width: '2rem', color: 'hsl(174 62% 32%)' }} />
+            <Calculator style={{ height: '1.75rem', width: '1.75rem', color: 'hsl(174 62% 32%)' }} />
           </div>
-          <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-3" style={{ color: 'hsl(200 25% 15%)' }}>
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight mb-3" style={{ color: 'hsl(200 25% 15%)' }}>
             Rent Calculator
           </h1>
-          <p style={{ color: 'hsl(200 15% 45%)', fontSize: '1.125rem', maxWidth: '42rem', margin: '0 auto' }}>
+          <p style={{ color: 'hsl(200 15% 45%)', fontSize: 'clamp(0.875rem, 2vw, 1.125rem)', maxWidth: '42rem', margin: '0 auto' }}>
             Calculate your total move-in costs including advance rent, agent fees, and utilities
           </p>
         </div>
@@ -88,11 +88,11 @@ const RentCalculator = () => {
               backgroundColor: 'white',
               border: '1px solid hsl(40 20% 88%)',
               borderRadius: '1rem',
-              padding: '2rem',
+              padding: 'clamp(1.5rem, 4vw, 2rem)',
               boxShadow: '0 2px 8px -2px hsl(200 25% 15% / 0.1), 0 1px 3px -1px hsl(200 25% 15% / 0.06)'
             }}
           >
-            <h2 className="text-xl font-semibold tracking-tight mb-6" style={{ color: 'hsl(200 25% 15%)' }}>
+            <h2 className="text-lg sm:text-xl font-semibold tracking-tight mb-6" style={{ color: 'hsl(200 25% 15%)' }}>
               Input Details
             </h2>
 

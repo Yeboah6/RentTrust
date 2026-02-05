@@ -290,11 +290,9 @@ public function index()
                 'is_claimed' => $listing->is_claimed ?? false,
                 'is_verified' => $listing->is_verified ?? false,
                 'status' => $listing->status,
-                // Parse images to array
                 'images' => $listing->images ? 
                     (is_string($listing->images) ? json_decode($listing->images, true) : $listing->images) 
                     : [],
-                // Parse amenities to array
                 'amenities' => $listing->amenities ? 
                     (is_string($listing->amenities) ? json_decode($listing->amenities, true) : $listing->amenities) 
                     : [],
@@ -309,33 +307,33 @@ public function index()
     }
 
     public function areas() 
-{
-    // Get areas grouped by city with proper structure
-    $areas = Rental::select('city', 'area', 'rent_min', 'rent_max', 'created_at')
-        ->get()
-        ->groupBy('city')
-        ->map(function ($cityAreas, $cityName) {
-            return $cityAreas->groupBy('area')->map(function ($areaRentals) {
-                $avgRent = $areaRentals->avg(function ($rental) {
-                    return ($rental->rent_min + $rental->rent_max) / 2;
-                });
-                
-                $minRent = $areaRentals->min('rent_min');
-                $maxRent = $areaRentals->max('rent_max');
-                
-                return [
-                    'name' => $areaRentals->first()->area,
-                    'listingCount' => $areaRentals->count(),
-                    'avgRent' => round($avgRent),
-                    'minRent' => $minRent,
-                    'maxRent' => $maxRent,
-                    'trend' => $this->calculateTrend($areaRentals)
-                ];
-            });
-        });
+    {
+        // Get areas grouped by city with proper structure
+        $areas = Rental::select('city', 'area', 'rent_min', 'rent_max', 'created_at')
+            ->get()
+            ->groupBy('city')
+            ->map(function ($cityAreas, $cityName) {
+                return $cityAreas->groupBy('area')->map(function ($areaRentals) {
+                    $avgRent = $areaRentals->avg(function ($rental) {
+                        return ($rental->rent_min + $rental->rent_max) / 2;
+                    });
 
-    return inertia('AreasPage', ['areas' => $areas]);
-}
+                    $minRent = $areaRentals->min('rent_min');
+                    $maxRent = $areaRentals->max('rent_max');
+
+                    return [
+                        'name' => $areaRentals->first()->area,
+                        'listingCount' => $areaRentals->count(),
+                        'avgRent' => round($avgRent),
+                        'minRent' => $minRent,
+                        'maxRent' => $maxRent,
+                        'trend' => $this->calculateTrend($areaRentals)
+                    ];
+                });
+            });
+
+        return inertia('AreasPage', ['areas' => $areas]);
+    }
 
     public function calculate() {
         return inertia('CalculatorPage');
@@ -350,8 +348,8 @@ public function index()
         $reports = DB::table('reports')
         ->join('rentals', 'reports.rental_id', '=', 'rentals.id')
         ->get();
+        
         $appReviews = Review::where('review_type', 'app')->get();
-        // dd($reviews, $reports);
 
         return inertia('ReviewsPage',
         [
@@ -584,41 +582,41 @@ public function index()
     }
 
     public function showArea($city, $area)
-{
-    // Decode the area name from URL (replace hyphens with spaces)
-    $areaName = str_replace('-', ' ', $area);
-    $cityName = str_replace('-', ' ', $city);
-    
-    // Get all rentals for this specific area
-    $properties = Rental::where('city', 'like', $cityName)
-        ->where('area', 'like', $areaName)
-        ->latest()
-        ->get();
+    {
+        // Decode the area name from URL (replace hyphens with spaces)
+        $areaName = str_replace('-', ' ', $area);
+        $cityName = str_replace('-', ' ', $city);
 
-    if ($properties->isEmpty()) {
-        abort(404, 'Area not found');
+        // Get all rentals for this specific area
+        $properties = Rental::where('city', 'like', $cityName)
+            ->where('area', 'like', $areaName)
+            ->latest()
+            ->get();
+
+        if ($properties->isEmpty()) {
+            abort(404, 'Area not found');
+        }
+
+        // Calculate area statistics
+        $avgRent = $properties->avg(function ($rental) {
+            return ($rental->rent_min + $rental->rent_max) / 2;
+        });
+
+        $areaData = [
+            'name' => $properties->first()->area,
+            'listingCount' => $properties->count(),
+            'avgRent' => round($avgRent),
+            'minRent' => $properties->min('rent_min'),
+            'maxRent' => $properties->max('rent_max'),
+            'trend' => $this->calculateTrend($properties)
+        ];
+
+        return inertia('AreaDetailPage', [
+            'area' => $areaData,
+            'city' => $cityName,
+            'properties' => $properties
+        ]);
     }
-
-    // Calculate area statistics
-    $avgRent = $properties->avg(function ($rental) {
-        return ($rental->rent_min + $rental->rent_max) / 2;
-    });
-
-    $areaData = [
-        'name' => $properties->first()->area,
-        'listingCount' => $properties->count(),
-        'avgRent' => round($avgRent),
-        'minRent' => $properties->min('rent_min'),
-        'maxRent' => $properties->max('rent_max'),
-        'trend' => $this->calculateTrend($properties)
-    ];
-
-    return inertia('AreaDetailPage', [
-        'area' => $areaData,
-        'city' => $cityName,
-        'properties' => $properties
-    ]);
-}
 
 /**
  * Search areas by name or city
@@ -686,48 +684,48 @@ public function getAreasByCity($city)
 /**
  * Calculate trend for an area based on recent vs older rentals
  */
-private function calculateTrend($areaRentals)
-{
-    if ($areaRentals->count() < 2) {
-        return '+0%';
+    private function calculateTrend($areaRentals)
+    {
+        if ($areaRentals->count() < 2) {
+            return '+0%';
+        }
+
+        $thirtyDaysAgo = now()->subDays(30);
+
+        $recentRentals = $areaRentals->filter(function ($rental) use ($thirtyDaysAgo) {
+            return $rental->created_at >= $thirtyDaysAgo;
+        });
+
+        $olderRentals = $areaRentals->filter(function ($rental) use ($thirtyDaysAgo) {
+            return $rental->created_at < $thirtyDaysAgo;
+        });
+
+        if ($recentRentals->isEmpty() || $olderRentals->isEmpty()) {
+            return '+0%';
+        }
+
+        $recentAvg = $recentRentals->avg(function ($rental) {
+            return ($rental->rent_min + $rental->rent_max) / 2;
+        });
+
+        $olderAvg = $olderRentals->avg(function ($rental) {
+            return ($rental->rent_min + $rental->rent_max) / 2;
+        });
+
+        if ($olderAvg == 0) {
+            return '+0%';
+        }
+
+        $percentageChange = (($recentAvg - $olderAvg) / $olderAvg) * 100;
+        $percentageChange = round($percentageChange);
+
+        if ($percentageChange > 0) {
+            return "+{$percentageChange}%";
+        } elseif ($percentageChange < 0) {
+            return "{$percentageChange}%";
+        } else {
+            return '+0%';
+        }
     }
-
-    $thirtyDaysAgo = now()->subDays(30);
-    
-    $recentRentals = $areaRentals->filter(function ($rental) use ($thirtyDaysAgo) {
-        return $rental->created_at >= $thirtyDaysAgo;
-    });
-    
-    $olderRentals = $areaRentals->filter(function ($rental) use ($thirtyDaysAgo) {
-        return $rental->created_at < $thirtyDaysAgo;
-    });
-
-    if ($recentRentals->isEmpty() || $olderRentals->isEmpty()) {
-        return '+0%';
-    }
-
-    $recentAvg = $recentRentals->avg(function ($rental) {
-        return ($rental->rent_min + $rental->rent_max) / 2;
-    });
-    
-    $olderAvg = $olderRentals->avg(function ($rental) {
-        return ($rental->rent_min + $rental->rent_max) / 2;
-    });
-
-    if ($olderAvg == 0) {
-        return '+0%';
-    }
-    
-    $percentageChange = (($recentAvg - $olderAvg) / $olderAvg) * 100;
-    $percentageChange = round($percentageChange);
-
-    if ($percentageChange > 0) {
-        return "+{$percentageChange}%";
-    } elseif ($percentageChange < 0) {
-        return "{$percentageChange}%";
-    } else {
-        return '+0%';
-    }
-}
 
 }

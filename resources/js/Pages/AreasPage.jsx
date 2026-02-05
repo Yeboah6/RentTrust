@@ -22,47 +22,47 @@ const AreaCard = ({ area, cityName }) => {
       onClick={() => window.location.href = `/areas/${cityName.toLowerCase()}/${area.name.toLowerCase().replace(/\s+/g, '-')}`}
     >
       <div 
-        className="h-20 flex items-center justify-center"
+        className="h-16 sm:h-20 flex items-center justify-center"
         style={{ background: 'linear-gradient(135deg, hsl(174 62% 32% / 0.2) 0%, hsl(174 62% 32% / 0.05) 100%)' }}
       >
-        <MapPin className="h-6 w-6" style={{ color: 'hsl(200 25% 15% / 0.2)' }} />
+        <MapPin className="h-5 sm:h-6 w-5 sm:w-6" style={{ color: 'hsl(200 25% 15% / 0.2)' }} />
       </div>
-      <div className="p-4">
+      <div className="p-3 sm:p-4">
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1">
-            <h3 className="font-semibold tracking-tight" style={{ color: 'hsl(200 25% 15%)' }}>
+            <h3 className="font-semibold tracking-tight text-sm" style={{ color: 'hsl(200 25% 15%)' }}>
               {area.name}
             </h3>
-            <p className="text-sm" style={{ color: 'hsl(200 15% 45%)' }}>
+            <p className="text-xs sm:text-sm" style={{ color: 'hsl(200 15% 45%)' }}>
               {cityName}
             </p>
           </div>
           <div 
-            className="flex items-center gap-1 text-sm font-medium ml-2"
-            style={{ color: isPositiveTrend ? 'hsl(152 60% 40%)' : 'hsl(0 72% 51%)' }}
+            className="flex items-center gap-1 text-xs sm:text-sm font-medium ml-2"
+            style={{ color: isPositiveTrend ? 'hsl(152 60% 40%)' : 'hsl(0 72% 51%)', flexShrink: 0 }}
           >
-            {isPositiveTrend ? <TrendingUp className="h-3.5 w-3.5" /> : <TrendingDown className="h-3.5 w-3.5" />}
+            {isPositiveTrend ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
             {area.trend}
           </div>
         </div>
-        <div className="flex items-center justify-between text-sm mb-3">
+        <div className="flex items-center justify-between text-xs sm:text-sm mb-3">
           <div className="flex items-center gap-1" style={{ color: 'hsl(200 15% 45%)' }}>
-            <Home className="h-4 w-4" />
+            <Home className="h-3.5 w-3.5" />
             <span>{area.listingCount} listings</span>
           </div>
-          <div className="font-semibold" style={{ color: 'hsl(174 62% 32%)' }}>
+          <div className="font-semibold text-xs" style={{ color: 'hsl(174 62% 32%)' }}>
             ~GH₵{area.avgRent.toLocaleString()}/mo
           </div>
         </div>
         <button 
-          className="w-full flex items-center justify-between px-3 py-2 text-sm rounded-lg transition-colors"
+          className="w-full flex items-center justify-between px-3 py-2 text-xs sm:text-sm rounded-lg transition-colors"
           style={{ 
             backgroundColor: isHovered ? 'hsl(40 30% 94%)' : 'transparent',
             color: 'hsl(174 62% 32%)'
           }}
         >
           View Properties
-          <ChevronRight className="h-4 w-4" />
+          <ChevronRight className="h-3.5 w-3.5" />
         </button>
       </div>
     </div>
@@ -137,21 +137,21 @@ const AreasPage = ({ areas: areasByCity }) => {
 
         <main className="flex-1">
           {/* Page Header */}
-          <div className="bg-white border-b py-8" style={{ borderColor: 'hsl(40 20% 88%)' }}>
+          <div className="bg-white border-b py-4 sm:py-8" style={{ borderColor: 'hsl(40 20% 88%)' }}>
             <div className="container mx-auto px-4">
-              <h1 className="text-2xl md:text-3xl font-bold mb-2 tracking-tight" style={{ color: 'hsl(200 25% 15%)' }}>
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2 tracking-tight" style={{ color: 'hsl(200 25% 15%)' }}>
                 Browse Areas
               </h1>
-              <p className="mb-6" style={{ color: 'hsl(200 15% 45%)' }}>
+              <p className="mb-6 text-sm sm:text-base" style={{ color: 'hsl(200 15% 45%)' }}>
                 Explore rent prices and insights across different neighborhoods in Ghana
               </p>
 
-              <div className="relative max-w-md">
+              <div className="relative w-full sm:max-w-md">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 pointer-events-none" style={{ color: 'hsl(200 15% 45%)' }} />
                 <input
                   type="text"
                   placeholder="Search for an area..."
-                  className="w-full pl-10 h-12 border rounded-lg px-4 focus:outline-none focus:ring-2 transition-all"
+                  className="w-full pl-10 h-10 sm:h-12 border rounded-lg px-4 focus:outline-none focus:ring-2 transition-all text-sm sm:text-base"
                   style={{ 
                     borderColor: 'hsl(40 20% 88%)',
                     '--tw-ring-color': 'hsl(174 62% 32%)'
@@ -164,7 +164,7 @@ const AreasPage = ({ areas: areasByCity }) => {
           </div>
 
           {/* City Tabs & Areas */}
-          <div className="container mx-auto px-4 py-8">
+          <div className="container mx-auto px-4 py-4 sm:py-8">
             {/* City Tabs */}
             {cities.length > 1 && (
               <div className="mb-6 flex gap-2 overflow-x-auto pb-2">
@@ -172,7 +172,7 @@ const AreasPage = ({ areas: areasByCity }) => {
                   <button
                     key={city.value}
                     onClick={() => setSelectedCity(city.value)}
-                    className="px-4 py-2 rounded-lg font-medium text-sm whitespace-nowrap transition-all"
+                    className="px-3 sm:px-4 py-2 rounded-lg font-medium text-xs sm:text-sm whitespace-nowrap transition-all"
                     style={{
                       backgroundColor: selectedCity === city.value ? 'hsl(174 62% 32%)' : 'hsl(0 0% 100%)',
                       color: selectedCity === city.value ? 'hsl(0 0% 100%)' : 'hsl(200 25% 15%)',
@@ -187,16 +187,16 @@ const AreasPage = ({ areas: areasByCity }) => {
 
             {/* City Statistics */}
             {filteredAreas.length > 0 && (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <div className="bg-white rounded-lg p-4 border" style={{ borderColor: 'hsl(40 20% 88%)' }}>
-                  <p className="text-sm mb-1" style={{ color: 'hsl(200 15% 45%)' }}>Total Areas</p>
-                  <p className="text-2xl font-bold" style={{ color: 'hsl(200 25% 15%)' }}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 mb-6">
+                <div className="bg-white rounded-lg p-3 sm:p-4 border" style={{ borderColor: 'hsl(40 20% 88%)' }}>
+                  <p className="text-xs sm:text-sm mb-1" style={{ color: 'hsl(200 15% 45%)' }}>Total Areas</p>
+                  <p className="text-xl sm:text-2xl font-bold" style={{ color: 'hsl(200 25% 15%)' }}>
                     {filteredAreas.length}
                   </p>
                 </div>
-                <div className="bg-white rounded-lg p-4 border" style={{ borderColor: 'hsl(40 20% 88%)' }}>
-                  <p className="text-sm mb-1" style={{ color: 'hsl(200 15% 45%)' }}>Total Listings</p>
-                  <p className="text-2xl font-bold" style={{ color: 'hsl(200 25% 15%)' }}>
+                <div className="bg-white rounded-lg p-3 sm:p-4 border" style={{ borderColor: 'hsl(40 20% 88%)' }}>
+                  <p className="text-xs sm:text-sm mb-1" style={{ color: 'hsl(200 15% 45%)' }}>Total Listings</p>
+                  <p className="text-xl sm:text-2xl font-bold" style={{ color: 'hsl(200 25% 15%)' }}>
                     {totalListings.toLocaleString()}
                   </p>
                 </div>
@@ -211,7 +211,7 @@ const AreasPage = ({ areas: areasByCity }) => {
 
             {/* Areas Grid */}
             {filteredAreas.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                 {filteredAreas.map((area, idx) => (
                   <AreaCard key={`${area.name}-${idx}`} area={area} cityName={cityLabel} />
                 ))}

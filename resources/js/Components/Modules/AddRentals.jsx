@@ -206,26 +206,26 @@ const AddRentalPage = ({ agentData, setShowAddListingModal }) => {
 
         {/* Progress Steps */}
         <div className="bg-white shadow-sm">
-          <div className="container mx-auto px-4 py-6">
-            <div className="flex items-center justify-between max-w-3xl mx-auto">
+          <div className="container mx-auto px-4 py-4 sm:py-6">
+            <div className="flex items-center justify-between max-w-3xl mx-auto overflow-x-auto">
               {steps.map((step, index) => (
                 <React.Fragment key={step.number}>
-                  <div className="flex flex-col items-center gap-2">
+                  <div className="flex flex-col items-center gap-1 sm:gap-2 flex-shrink-0">
                     <div 
-                      className="w-12 h-12 rounded-full flex items-center justify-center font-semibold transition-all duration-300"
+                      className="w-10 sm:w-12 h-10 sm:h-12 rounded-full flex items-center justify-center font-semibold transition-all duration-300 text-xs sm:text-base"
                       style={{
                         backgroundColor: currentStep >= step.number ? 'hsl(174 62% 32%)' : 'hsl(40 30% 94%)',
                         color: currentStep >= step.number ? 'white' : 'hsl(200 15% 45%)'
                       }}
                     >
                       {currentStep > step.number ? (
-                        <CheckCircle2 className="h-6 w-6" />
+                        <CheckCircle2 className="h-5 w-5 sm:h-6 sm:w-6" />
                       ) : (
-                        <step.icon className="h-6 w-6" />
+                        <step.icon className="h-5 w-5 sm:h-6 sm:w-6" />
                       )}
                     </div>
                     <span 
-                      className="text-xs font-medium hidden sm:block text-center"
+                      className="text-xs font-medium hidden sm:block text-center leading-tight"
                       style={{ color: currentStep >= step.number ? 'hsl(174 62% 32%)' : 'hsl(200 15% 45%)' }}
                     >
                       {step.title}
@@ -233,7 +233,7 @@ const AddRentalPage = ({ agentData, setShowAddListingModal }) => {
                   </div>
                   {index < steps.length - 1 && (
                     <div 
-                      className="flex-1 h-1 mx-2 rounded transition-all duration-300"
+                      className="flex-1 h-1 mx-1 sm:mx-2 rounded transition-all duration-300"
                       style={{ 
                         backgroundColor: currentStep > step.number ? 'hsl(174 62% 32%)' : 'hsl(40 20% 88%)'
                       }}
@@ -246,24 +246,24 @@ const AddRentalPage = ({ agentData, setShowAddListingModal }) => {
         </div>
 
         {/* Form Content */}
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-4 sm:py-8">
           <div className="max-w-3xl mx-auto">
-            <div className="bg-white rounded-xl shadow-lg p-6 md:p-8" style={{ borderColor: 'hsl(40 20% 88%)' }}>
+            <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 md:p-8" style={{ borderColor: 'hsl(40 20% 88%)' }}>
               <form onSubmit={handleSubmit}>
               {/* Step 1: Property Details */}
               {currentStep === 1 && (
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-xl font-bold mb-1 tracking-tight" style={{ color: 'hsl(200 25% 15%)' }}>
+                    <h2 className="text-lg sm:text-xl font-bold mb-1 tracking-tight" style={{ color: 'hsl(200 25% 15%)' }}>
                       Property Details
                     </h2>
-                    <p className="text-sm" style={{ color: 'hsl(200 15% 45%)' }}>
+                    <p className="text-xs sm:text-sm" style={{ color: 'hsl(200 15% 45%)' }}>
                       Tell us about the property you're listing
                     </p>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2" style={{ color: 'hsl(200 25% 15%)' }}>
+                    <label className="block text-xs sm:text-sm font-medium mb-2" style={{ color: 'hsl(200 25% 15%)' }}>
                       Property Title *
                     </label>
                     <input
@@ -271,11 +271,11 @@ const AddRentalPage = ({ agentData, setShowAddListingModal }) => {
                       value={data.title}
                       onChange={(e) => setData('title', e.target.value)}
                       placeholder="e.g., 2 Bedroom Self-Contained Apartment"
-                      className="w-full px-4 py-3 border rounded-lg focus:ring-2 transition-all"
+                      className="w-full px-3 sm:px-4 py-2 sm:py-3 border rounded-lg focus:ring-2 transition-all text-sm"
                       style={{ borderColor: errors.title ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)' }}
                     />
                     {errors.title && (
-                      <p className="text-sm mt-1 flex items-center gap-1" style={{ color: 'hsl(0 72% 51%)' }}>
+                      <p className="text-xs sm:text-sm mt-1 flex items-center gap-1" style={{ color: 'hsl(0 72% 51%)' }}>
                         <AlertCircle className="h-4 w-4" /> {errors.title}
                       </p>
                     )}

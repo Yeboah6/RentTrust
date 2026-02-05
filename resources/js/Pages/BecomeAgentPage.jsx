@@ -83,7 +83,7 @@ const BecomeAgentPage = () => {
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'hsl(40 33% 98%)' }}>
         <Header />
 
-        <main style={{ flex: 1, padding: '3rem 1rem' }}>
+        <main style={{ flex: 1, padding: 'clamp(1.5rem, 4vw, 3rem) 1rem' }}>
           <div className="container mx-auto" style={{ maxWidth: '32rem' }}>
             <div
               style={{
@@ -94,7 +94,7 @@ const BecomeAgentPage = () => {
               }}
             >
               {/* Header */}
-              <div style={{ padding: '2rem', textAlign: 'center', borderBottom: '1px solid hsl(40 20% 88%)' }}>
+              <div style={{ padding: 'clamp(1.5rem, 4vw, 2rem)', textAlign: 'center', borderBottom: '1px solid hsl(40 20% 88%)' }}>
                 <div
                   style={{
                     width: '3rem',
@@ -109,16 +109,16 @@ const BecomeAgentPage = () => {
                 >
                   <Shield style={{ height: '1.5rem', width: '1.5rem', color: 'hsl(174 62% 32%)' }} />
                 </div>
-                <h1 className="text-2xl font-bold tracking-tight mb-2" style={{ color: 'hsl(200 25% 15%)' }}>
+                <h1 className="text-xl sm:text-2xl font-bold tracking-tight mb-2" style={{ color: 'hsl(200 25% 15%)' }}>
                   Register as Agent/Landlord
                 </h1>
-                <p style={{ color: 'hsl(200 15% 45%)', fontSize: '0.875rem' }}>
+                <p style={{ color: 'hsl(200 15% 45%)', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)' }}>
                   Build your reputation and connect with tenants on RentTrust
                 </p>
               </div>
 
               {/* Content */}
-              <div style={{ padding: '2rem' }}>
+              <div style={{ padding: 'clamp(1.5rem, 4vw, 2rem)' }}>
                 <form onSubmit={handleSubmit}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                   {/* Full Name */}
@@ -151,7 +151,7 @@ const BecomeAgentPage = () => {
                   </div>
 
                   {/* Phone and Email */}
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem' }}>
                     <div>
                       <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', fontSize: '0.875rem', color: 'hsl(200 25% 15%)' }}>
                         Phone Number *

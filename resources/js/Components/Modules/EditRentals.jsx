@@ -1,0 +1,2047 @@
+import React, { useState, useEffect } from 'react';
+import { useForm } from '@inertiajs/react';
+import { Home, MapPin, DollarSign, Calendar, Image, FileText, CheckCircle2, AlertCircle, Upload, X } from 'lucide-react';
+
+const EditRentals = ({ agentData, setShowEditListingModal, rental }) => {
+  // Use put instead of post for updates
+  const { data, setData, put, processing, errors, reset } = useForm({
+    id: rental?.id,
+    title: rental?.title,
+    propertyType: '',
+    area: '',
+    city: '',
+    address: '',
+    rentMin: '',
+    rentMax: '',
+    advanceDuration: '1',
+    bedrooms: '',
+    bathrooms: '',
+    amenities: [],
+    images: [],
+    existingImages: [], // Add this to track existing images
+    description: '',
+    agentName: agentData?.fullName || '',
+    agentPhone: agentData?.phone || '',
+    agentEmail: agentData?.email || ''
+  });
+
+  const [images, setImages] = useState([]);
+  const [existingImages, setExistingImages] = useState([]);
+  const [currentStep, setCurrentStep] = useState(1);
+  const [toast, setToast] = useState(null);
+  const allImages = [...existingImages, ...images];
+
+  useEffect(() => {
+    if (rental) {
+      console.log('Rentals data received:', rental); // Debug log
+      
+      // Parse amenities if they're stored as JSON string
+      let parsedAmenities = [];
+      try {
+        if (rental.amenities) {
+          parsedAmenities = typeof rental.amenities === 'string' 
+            ? JSON.parse(rental.amenities) 
+            : rental.amenities;
+        }
+      } catch (e) {
+        console.error('Error parsing amenities:', e);
+        parsedAmenities = [];
+      }
+
+      // Handle existing images - assuming rental.images is an array of image URLs or objects
+      const imagesArray = rental.images || [];
+      const existingImagesList = imagesArray.map((img, index) => ({
+        id: `existing-${index}`,
+        name: `image-${index}`,
+        preview: img.url || img, // Adjust based on your data structure
+        isExisting: true
+      }));
+
+      setExistingImages(existingImagesList);
+      
+      setData({
+        id: rental.id || '',
+        title: rental.title || '',
+        propertyType: rental.property_type || rental.propertyType || '',
+        area: rental.area || '',
+        city: rental.city || '',
+        address: rental.address || '',
+        rentMin: rental.rent_min || rental.rentMin || '',
+        rentMax: rental.rent_max || rental.rentMax || '',
+        advanceDuration: rental.advance_duration || rental.advanceDuration || '1',
+        bedrooms: rental.bedrooms || '',
+        bathrooms: rental.bathrooms || '',
+        amenities: parsedAmenities,
+        images: [],
+        existingImages: imagesArray, // Store existing images
+        description: rental.description || '',
+        agentName: rental.agent_name || rental.agentName || agentData?.fullName || '',
+        agentPhone: rental.agent_phone || rental.agentPhone || agentData?.phone || '',
+        agentEmail: rental.agent_email || rental.agentEmail || agentData?.email || ''
+      });
+    }
+  }, [rental]);
+
+  console.log('EditRentals received rental prop:', rental);
+
+
+ const propertyTypes = ['Apartment', 'House', 'Studio', 'Chamber and Hall', 'Self-Contained', 'Condo', 'Townhouse'];
+  const cities = ['Accra', 'Kumasi', 'Tema', 'Takoradi', 'Cape Coast', 'Tamale'];
+  const amenitiesList = ['Wi-Fi', 'Parking', 'Security', 'Water Supply', 'Backup Generator', 'Air Conditioning', 'Furnished', 'Gym', 'Swimming Pool', 'Garden'];
+
+  const handleAmenityToggle = (amenity) => {
+    const updatedAmenities = data.amenities.includes(amenity)
+      ? data.amenities.filter(a => a !== amenity)
+      : [...data.amenities, amenity];
+    setData('amenities', updatedAmenities);
+  };
+
+  const handleImageUpload = (e) => {
+    const files = Array.from(e.target.files);
+    
+    // Filter valid files
+    const validFiles = files.filter(file => {
+      if (file.size > 5 * 1024 * 1024) {
+        showToast("File too large", `${file.name} is larger than 5MB`, "error");
+        return false;
+      }
+      return true;
+    });
+
+    const newImages = validFiles.map(file => ({
+      id: Math.random().toString(36).substr(2, 9),
+      name: file.name,
+      file: file,
+      preview: URL.createObjectURL(file),
+      isExisting: false
+    }));
+    
+    const totalImages = [...existingImages, ...images, ...newImages];
+    if (totalImages.length > 6) {
+      showToast("Too many images", "Maximum 6 images allowed", "error");
+      return;
+    }
+    
+    const updatedImages = [...images, ...newImages];
+    setImages(updatedImages);
+    setData('images', updatedImages.map(img => img.file));
+  };
+
+  const removeImage = (id) => {
+    // Check if it's an existing image or new upload
+    if (id.startsWith('existing-')) {
+      // Remove from existing images
+      const updatedExistingImages = existingImages.filter(img => img.id !== id);
+      setExistingImages(updatedExistingImages);
+      setData('existingImages', updatedExistingImages.map(img => img.preview));
+    } else {
+      // Remove from new images
+      const updatedImages = images.filter(img => img.id !== id);
+      setImages(updatedImages);
+      setData('images', updatedImages.map(img => img.file));
+    }
+  };
+
+  const showToast = (title, description, variant = "success") => {
+    setToast({ title, description, variant });
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  const validateStep = (step) => {
+    if (step === 1) {
+      return data.title && data.propertyType && data.city && data.area;
+    } else if (step === 2) {
+      return data.rentMin && data.rentMax && data.bedrooms && data.advanceDuration;
+    } else if (step === 3) {
+      return data.agentName && data.agentPhone && data.agentEmail;
+    }
+    return true;
+  };
+
+  const handleNext = (e) => {
+    e.preventDefault();
+    if (validateStep(currentStep)) {
+      setCurrentStep(prev => Math.min(prev + 1, 4));
+    } else {
+      showToast("Missing Information", "Please fill all required fields before proceeding.", "error");
+    }
+  };
+
+  const handlePrevious = (e) => {
+    e.preventDefault();
+    setCurrentStep(prev => Math.max(prev - 1, 1));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    
+    if (!validateStep(currentStep)) {
+      showToast("Missing Information", "Please fill all required fields.", "error");
+      return;
+    }
+
+    const formData = new FormData();
+    
+    // Add ID for update
+    formData.append('id', data.id);
+    
+    // Add all form fields
+    formData.append('title', data.title);
+    formData.append('propertyType', data.propertyType);
+    formData.append('area', data.area);
+    formData.append('city', data.city);
+    formData.append('address', data.address || '');
+    formData.append('rentMin', data.rentMin);
+    formData.append('rentMax', data.rentMax);
+    formData.append('advanceDuration', data.advanceDuration);
+    formData.append('bedrooms', data.bedrooms);
+    formData.append('bathrooms', data.bathrooms || '0');
+
+    // Ensure amenities is always a string
+    const amenitiesString = Array.isArray(data.amenities) 
+      ? JSON.stringify(data.amenities) 
+      : data.amenities || '[]';
+    formData.append('amenities', amenitiesString);
+
+    formData.append('description', data.description || '');
+    formData.append('agentName', data.agentName);
+    formData.append('agentPhone', data.agentPhone);
+    formData.append('agentEmail', data.agentEmail);
+    
+    // Add existing images to be kept
+    if (data.existingImages && data.existingImages.length > 0) {
+      data.existingImages.forEach((img, index) => {
+        formData.append(`existingImages[${index}]`, img);
+      });
+    }
+    
+    // Add new images
+    if (data.images && data.images.length > 0) {
+      data.images.forEach((file, index) => {
+        if (file) {
+          formData.append(`images[${index}]`, file);
+        }
+      });
+    }
+    
+    // Use PUT for update and include the ID in the URL
+    put(`/rent/${data.id}`, {
+      data: formData,
+      forceFormData: true,
+      preserveScroll: true,
+      onSuccess: () => {
+        showToast("Listing Updated", "Your rental listing has been updated.", "success");
+        reset();
+        setImages([]);
+        setExistingImages([]);
+        setCurrentStep(1);
+        setTimeout(() => {
+          if (setShowEditListingModal) setShowEditListingModal(false);
+        }, 1500);
+      },
+      onError: (errors) => {
+        console.error('Update errors:', errors);
+        showToast("Update Failed", "Please correct the errors and try again.", "error");
+      },
+    });
+  };
+
+
+  const steps = [
+    { number: 1, title: 'Property Details', icon: Home },
+    { number: 2, title: 'Pricing & Features', icon: DollarSign },
+    { number: 3, title: 'Contact Information', icon: FileText },
+    { number: 4, title: 'Review & Submit', icon: CheckCircle2 }
+  ];
+
+  return (
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        
+        * {
+          font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+        }
+        
+        input:focus, textarea:focus, select:focus {
+          outline: none;
+          ring: 2px;
+          ring-color: hsl(174 62% 32%);
+        }
+
+        /* Responsive styles */
+        @media (max-width: 768px) {
+          .modal-content {
+            max-height: 85vh !important;
+            margin: 0.5rem !important;
+            max-width: 95% !important;
+          }
+
+          .steps-container {
+            padding: 1rem 0.5rem !important;
+          }
+
+          .step-icon {
+            width: clamp(2rem, 10vw, 3rem) !important;
+            height: clamp(2rem, 10vw, 3rem) !important;
+          }
+
+          .step-title {
+            display: none !important;
+          }
+
+          .step-connector {
+            flex: 1 !important;
+            margin: 0 0.25rem !important;
+          }
+
+          .form-grid {
+            grid-template-columns: 1fr !important;
+          }
+
+          .amenities-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+          }
+
+          .images-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+          }
+
+          .action-button {
+            min-height: 44px;
+            -webkit-tap-highlight-color: transparent;
+            padding: 0.75rem 1rem !important;
+            font-size: 0.875rem !important;
+          }
+
+          .form-padding {
+            padding: clamp(0.75rem, 3vw, 1rem) !important;
+          }
+        }
+
+        /* Extra small devices */
+        @media (max-width: 480px) {
+          .amenities-grid {
+            grid-template-columns: 1fr !important;
+          }
+
+          .images-grid {
+            grid-template-columns: 1fr !important;
+          }
+
+          .review-grid {
+            grid-template-columns: 1fr !important;
+          }
+
+          .button-container {
+            flex-direction: column !important;
+            gap: 0.5rem !important;
+          }
+
+          .button-container button {
+            width: 100% !important;
+          }
+        }
+
+        /* Landscape mobile */
+        @media (max-height: 600px) and (orientation: landscape) {
+          .modal-content {
+            max-height: 75vh !important;
+          }
+
+          .steps-container {
+            padding: 0.5rem !important;
+          }
+        }
+
+        /* Prevent zoom on input focus for iOS */
+        @media (max-width: 768px) {
+          input[type="text"],
+          input[type="email"],
+          input[type="number"],
+          input[type="tel"],
+          textarea,
+          select {
+            font-size: 16px !important;
+          }
+        }
+
+        /* Tablet */
+        @media (min-width: 481px) and (max-width: 768px) {
+          .form-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+          }
+
+          .amenities-grid {
+            grid-template-columns: repeat(3, 1fr) !important;
+          }
+
+          .images-grid {
+            grid-template-columns: repeat(3, 1fr) !important;
+          }
+        }
+
+        /* Desktop */
+        @media (min-width: 769px) {
+          .amenities-grid {
+            grid-template-columns: repeat(3, 1fr) !important;
+          }
+
+          .images-grid {
+            grid-template-columns: repeat(3, 1fr) !important;
+          }
+        }
+
+        /* Large desktop */
+        @media (min-width: 1024px) {
+          .modal-content {
+            max-width: 56rem !important;
+          }
+        }
+
+        /* Toast animation */
+        @keyframes slideIn {
+          from {
+            transform: translateX(100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+      `}</style>
+
+      {/* Toast Notification */}
+      {toast && (
+        <div style={{
+          position: 'fixed',
+          top: 'clamp(0.75rem, 3vw, 1rem)',
+          right: 'clamp(0.75rem, 3vw, 1rem)',
+          backgroundColor: toast.variant === 'error' ? 'hsl(0 72% 51%)' : 'hsl(152 60% 40%)',
+          color: 'white',
+          padding: 'clamp(0.75rem, 2vw, 1rem)',
+          borderRadius: 'clamp(0.375rem, 2vw, 0.5rem)',
+          boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
+          zIndex: 9999,
+          maxWidth: 'clamp(300px, 90vw, 400px)',
+          animation: 'slideIn 0.3s ease-out'
+        }}>
+          <div style={{ 
+            fontWeight: '600', 
+            marginBottom: 'clamp(0.125rem, 1vw, 0.25rem)',
+            fontSize: 'clamp(0.875rem, 2vw, 1rem)'
+          }}>
+            {toast.title}
+          </div>
+          <div style={{ 
+            fontSize: 'clamp(0.75rem, 2vw, 0.875rem)',
+            lineHeight: '1.4'
+          }}>
+            {toast.description}
+          </div>
+        </div>
+      )}
+
+      <div className="min-h-screen" style={{ backgroundColor: 'hsl(40 33% 98%)' }}>
+        {/* Progress Steps */}
+        <div className="bg-white shadow-sm">
+          <div className="steps-container" style={{ 
+            padding: 'clamp(1rem, 3vw, 1.5rem) clamp(0.5rem, 2vw, 1rem)' 
+          }}>
+            <div className="flex items-center justify-between" style={{ 
+              maxWidth: '48rem', 
+              margin: '0 auto'
+            }}>
+              {steps.map((step, index) => (
+                <React.Fragment key={step.number}>
+                  <div className="flex flex-col items-center gap-2">
+                    <div 
+                      className="step-icon rounded-full flex items-center justify-center font-semibold transition-all duration-300"
+                      style={{
+                        backgroundColor: currentStep >= step.number ? 'hsl(174 62% 32%)' : 'hsl(40 30% 94%)',
+                        color: currentStep >= step.number ? 'white' : 'hsl(200 15% 45%)',
+                        width: 'clamp(2.5rem, 8vw, 3rem)',
+                        height: 'clamp(2.5rem, 8vw, 3rem)'
+                      }}
+                    >
+                      {currentStep > step.number ? (
+                        <CheckCircle2 style={{ 
+                          height: 'clamp(1rem, 3vw, 1.5rem)', 
+                          width: 'clamp(1rem, 3vw, 1.5rem)' 
+                        }} />
+                      ) : (
+                        <step.icon style={{ 
+                          height: 'clamp(1rem, 3vw, 1.5rem)', 
+                          width: 'clamp(1rem, 3vw, 1.5rem)' 
+                        }} />
+                      )}
+                    </div>
+                    <span 
+                      className="step-title text-xs font-medium text-center hidden sm:block"
+                      style={{ 
+                        color: currentStep >= step.number ? 'hsl(174 62% 32%)' : 'hsl(200 15% 45%)',
+                        fontSize: 'clamp(0.75rem, 2vw, 0.875rem)'
+                      }}
+                    >
+                      {step.title}
+                    </span>
+                  </div>
+                  {index < steps.length - 1 && (
+                    <div 
+                      className="step-connector h-1 mx-2 rounded transition-all duration-300"
+                      style={{ 
+                        backgroundColor: currentStep > step.number ? 'hsl(174 62% 32%)' : 'hsl(40 20% 88%)',
+                        flex: 1
+                      }}
+                    />
+                  )}
+                </React.Fragment>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Form Content */}
+        <div className="form-padding" style={{ 
+          padding: 'clamp(1rem, 3vw, 2rem) clamp(0.5rem, 2vw, 1rem)' 
+        }}>
+          <div style={{ 
+            maxWidth: '48rem', 
+            margin: '0 auto' 
+          }}>
+            <div className="bg-white rounded-xl shadow-lg" style={{ 
+              border: '1px solid hsl(40 20% 88%)',
+              padding: 'clamp(1rem, 3vw, 2rem)'
+            }}>
+              <form onSubmit={handleSubmit}>
+                {/* Step 1: Property Details */}
+                {currentStep === 1 && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(1rem, 3vw, 1.5rem)' }}>
+                    <div>
+                      <h2 style={{ 
+                        color: 'hsl(200 25% 15%)',
+                        fontSize: 'clamp(1.125rem, 4vw, 1.25rem)',
+                        fontWeight: '700',
+                        marginBottom: 'clamp(0.125rem, 1vw, 0.25rem)',
+                        lineHeight: '1.2'
+                      }}>
+                        Property Details
+                      </h2>
+                      <p style={{ 
+                        fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                        color: 'hsl(200 15% 45%)' 
+                      }}>
+                        Tell us about the property you're listing
+                      </p>
+                    </div>
+
+                    <div>
+                      <label style={{ 
+                        fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                        fontWeight: '500',
+                        color: 'hsl(200 25% 15%)',
+                        display: 'block', 
+                        marginBottom: 'clamp(0.375rem, 1.5vw, 0.5rem)' 
+                      }}>
+                        Property Title *
+                      </label>
+                      <input
+                        type="text"
+                        value={data.title}
+                        onChange={(e) => setData('title', e.target.value)}
+                        placeholder="e.g., 2 Bedroom Self-Contained Apartment"
+                        style={{
+                          width: '100%',
+                          padding: 'clamp(0.625rem, 2vw, 0.75rem) clamp(0.75rem, 3vw, 1rem)',
+                          border: `1px solid ${errors.title ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)'}`,
+                          borderRadius: 'clamp(0.375rem, 2vw, 0.5rem)',
+                          fontSize: 'clamp(0.875rem, 2vw, 0.875rem)',
+                          fontFamily: 'inherit',
+                          transition: 'all 0.2s'
+                        }}
+                        onFocus={(e) => {
+                          e.target.style.borderColor = 'hsl(174 62% 32%)';
+                          e.target.style.boxShadow = '0 0 0 2px hsl(174 62% 32% / 0.2)';
+                        }}
+                        onBlur={(e) => {
+                          e.target.style.borderColor = errors.title ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)';
+                          e.target.style.boxShadow = 'none';
+                        }}
+                      />
+                      {errors.title && (
+                        <p style={{ 
+                          fontSize: 'clamp(0.75rem, 2vw, 0.75rem)', 
+                          marginTop: 'clamp(0.25rem, 1vw, 0.375rem)', 
+                          color: 'hsl(0 72% 51%)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 'clamp(0.25rem, 1vw, 0.375rem)'
+                        }}>
+                          <AlertCircle style={{ 
+                            height: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                            width: 'clamp(0.75rem, 2vw, 0.875rem)' 
+                          }} /> 
+                          {errors.title}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="form-grid" style={{
+                      display: 'grid',
+                      gap: 'clamp(0.75rem, 2vw, 1rem)'
+                    }}>
+                      <div>
+                        <label style={{ 
+                          fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                          fontWeight: '500',
+                          color: 'hsl(200 25% 15%)',
+                          display: 'block', 
+                          marginBottom: 'clamp(0.375rem, 1.5vw, 0.5rem)' 
+                        }}>
+                          Property Type *
+                        </label>
+                        <select
+                          value={data.propertyType}
+                          onChange={(e) => setData('propertyType', e.target.value)}
+                          style={{
+                            width: '100%',
+                            padding: 'clamp(0.625rem, 2vw, 0.75rem) clamp(0.75rem, 3vw, 1rem)',
+                            border: `1px solid ${errors.propertyType ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)'}`,
+                            borderRadius: 'clamp(0.375rem, 2vw, 0.5rem)',
+                            fontSize: 'clamp(0.875rem, 2vw, 0.875rem)',
+                            fontFamily: 'inherit',
+                            backgroundColor: 'white',
+                            appearance: 'none',
+                            transition: 'all 0.2s'
+                          }}
+                          onFocus={(e) => {
+                            e.target.style.borderColor = 'hsl(174 62% 32%)';
+                            e.target.style.boxShadow = '0 0 0 2px hsl(174 62% 32% / 0.2)';
+                          }}
+                          onBlur={(e) => {
+                            e.target.style.borderColor = errors.propertyType ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)';
+                            e.target.style.boxShadow = 'none';
+                          }}
+                        >
+                          <option value="">Select type</option>
+                          {propertyTypes.map(type => (
+                            <option key={type} value={type}>{type}</option>
+                          ))}
+                        </select>
+                        {errors.propertyType && (
+                          <p style={{ 
+                            fontSize: 'clamp(0.75rem, 2vw, 0.75rem)', 
+                            marginTop: 'clamp(0.25rem, 1vw, 0.375rem)', 
+                            color: 'hsl(0 72% 51%)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 'clamp(0.25rem, 1vw, 0.375rem)'
+                          }}>
+                            <AlertCircle style={{ 
+                              height: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                              width: 'clamp(0.75rem, 2vw, 0.875rem)' 
+                            }} /> 
+                            {errors.propertyType}
+                          </p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label style={{ 
+                          fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                          fontWeight: '500',
+                          color: 'hsl(200 25% 15%)',
+                          display: 'block', 
+                          marginBottom: 'clamp(0.375rem, 1.5vw, 0.5rem)' 
+                        }}>
+                          City *
+                        </label>
+                        <select
+                          value={data.city}
+                          onChange={(e) => setData('city', e.target.value)}
+                          style={{
+                            width: '100%',
+                            padding: 'clamp(0.625rem, 2vw, 0.75rem) clamp(0.75rem, 3vw, 1rem)',
+                            border: `1px solid ${errors.city ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)'}`,
+                            borderRadius: 'clamp(0.375rem, 2vw, 0.5rem)',
+                            fontSize: 'clamp(0.875rem, 2vw, 0.875rem)',
+                            fontFamily: 'inherit',
+                            backgroundColor: 'white',
+                            appearance: 'none',
+                            transition: 'all 0.2s'
+                          }}
+                          onFocus={(e) => {
+                            e.target.style.borderColor = 'hsl(174 62% 32%)';
+                            e.target.style.boxShadow = '0 0 0 2px hsl(174 62% 32% / 0.2)';
+                          }}
+                          onBlur={(e) => {
+                            e.target.style.borderColor = errors.city ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)';
+                            e.target.style.boxShadow = 'none';
+                          }}
+                        >
+                          <option value="">Select city</option>
+                          {cities.map(city => (
+                            <option key={city} value={city}>{city}</option>
+                          ))}
+                        </select>
+                        {errors.city && (
+                          <p style={{ 
+                            fontSize: 'clamp(0.75rem, 2vw, 0.75rem)', 
+                            marginTop: 'clamp(0.25rem, 1vw, 0.375rem)', 
+                            color: 'hsl(0 72% 51%)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 'clamp(0.25rem, 1vw, 0.375rem)'
+                          }}>
+                            <AlertCircle style={{ 
+                              height: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                              width: 'clamp(0.75rem, 2vw, 0.875rem)' 
+                            }} /> 
+                            {errors.city}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label style={{ 
+                        fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                        fontWeight: '500',
+                        color: 'hsl(200 25% 15%)',
+                        display: 'block', 
+                        marginBottom: 'clamp(0.375rem, 1.5vw, 0.5rem)' 
+                      }}>
+                        Area/Neighborhood *
+                      </label>
+                      <div style={{ position: 'relative' }}>
+                        <MapPin style={{ 
+                          position: 'absolute',
+                          left: 'clamp(0.75rem, 3vw, 1rem)',
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          height: 'clamp(1rem, 3vw, 1.25rem)',
+                          width: 'clamp(1rem, 3vw, 1.25rem)',
+                          color: 'hsl(200 15% 45%)'
+                        }} />
+                        <input
+                          type="text"
+                          value={data.area}
+                          onChange={(e) => setData('area', e.target.value)}
+                          placeholder="e.g., East Legon, Spintex"
+                          style={{
+                            width: '100%',
+                            paddingLeft: 'clamp(2.25rem, 8vw, 2.75rem)',
+                            paddingRight: 'clamp(0.75rem, 3vw, 1rem)',
+                            paddingTop: 'clamp(0.625rem, 2vw, 0.75rem)',
+                            paddingBottom: 'clamp(0.625rem, 2vw, 0.75rem)',
+                            border: `1px solid ${errors.area ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)'}`,
+                            borderRadius: 'clamp(0.375rem, 2vw, 0.5rem)',
+                            fontSize: 'clamp(0.875rem, 2vw, 0.875rem)',
+                            fontFamily: 'inherit',
+                            transition: 'all 0.2s'
+                          }}
+                          onFocus={(e) => {
+                            e.target.style.borderColor = 'hsl(174 62% 32%)';
+                            e.target.style.boxShadow = '0 0 0 2px hsl(174 62% 32% / 0.2)';
+                          }}
+                          onBlur={(e) => {
+                            e.target.style.borderColor = errors.area ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)';
+                            e.target.style.boxShadow = 'none';
+                          }}
+                        />
+                      </div>
+                      {errors.area && (
+                        <p style={{ 
+                          fontSize: 'clamp(0.75rem, 2vw, 0.75rem)', 
+                          marginTop: 'clamp(0.25rem, 1vw, 0.375rem)', 
+                          color: 'hsl(0 72% 51%)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 'clamp(0.25rem, 1vw, 0.375rem)'
+                        }}>
+                          <AlertCircle style={{ 
+                            height: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                            width: 'clamp(0.75rem, 2vw, 0.875rem)' 
+                          }} /> 
+                          {errors.area}
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label style={{ 
+                        fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                        fontWeight: '500',
+                        color: 'hsl(200 25% 15%)',
+                        display: 'block', 
+                        marginBottom: 'clamp(0.375rem, 1.5vw, 0.5rem)' 
+                      }}>
+                        Full Address
+                      </label>
+                      <textarea
+                        value={data.address}
+                        onChange={(e) => setData('address', e.target.value)}
+                        placeholder="Enter the complete address (optional)"
+                        rows={3}
+                        style={{
+                          width: '100%',
+                          padding: 'clamp(0.625rem, 2vw, 0.75rem) clamp(0.75rem, 3vw, 1rem)',
+                          border: '1px solid hsl(40 20% 88%)',
+                          borderRadius: 'clamp(0.375rem, 2vw, 0.5rem)',
+                          fontSize: 'clamp(0.875rem, 2vw, 0.875rem)',
+                          fontFamily: 'inherit',
+                          resize: 'vertical',
+                          minHeight: '5rem',
+                          transition: 'all 0.2s'
+                        }}
+                        onFocus={(e) => {
+                          e.target.style.borderColor = 'hsl(174 62% 32%)';
+                          e.target.style.boxShadow = '0 0 0 2px hsl(174 62% 32% / 0.2)';
+                        }}
+                        onBlur={(e) => {
+                          e.target.style.borderColor = 'hsl(40 20% 88%)';
+                          e.target.style.boxShadow = 'none';
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Step 2: Pricing & Features */}
+                {currentStep === 2 && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(1rem, 3vw, 1.5rem)' }}>
+                    <div>
+                      <h2 style={{ 
+                        color: 'hsl(200 25% 15%)',
+                        fontSize: 'clamp(1.125rem, 4vw, 1.25rem)',
+                        fontWeight: '700',
+                        marginBottom: 'clamp(0.125rem, 1vw, 0.25rem)',
+                        lineHeight: '1.2'
+                      }}>
+                        Pricing & Features
+                      </h2>
+                      <p style={{ 
+                        fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                        color: 'hsl(200 15% 45%)' 
+                      }}>
+                        Help tenants understand the cost and features
+                      </p>
+                    </div>
+
+                    <div className="form-grid" style={{
+                      display: 'grid',
+                      gap: 'clamp(0.75rem, 2vw, 1rem)'
+                    }}>
+                      <div>
+                        <label style={{ 
+                          fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                          fontWeight: '500',
+                          color: 'hsl(200 25% 15%)',
+                          display: 'block', 
+                          marginBottom: 'clamp(0.375rem, 1.5vw, 0.5rem)' 
+                        }}>
+                          Rent Minimum (GH₵) *
+                        </label>
+                        <div style={{ position: 'relative' }}>
+                          <DollarSign style={{ 
+                            position: 'absolute',
+                            left: 'clamp(0.75rem, 3vw, 1rem)',
+                            top: '50%',
+                            transform: 'translateY(-50%)',
+                            height: 'clamp(1rem, 3vw, 1.25rem)',
+                            width: 'clamp(1rem, 3vw, 1.25rem)',
+                            color: 'hsl(200 15% 45%)'
+                          }} />
+                          <input
+                            type="number"
+                            value={data.rentMin}
+                            onChange={(e) => setData('rentMin', e.target.value)}
+                            placeholder="1500"
+                            style={{
+                              width: '100%',
+                              paddingLeft: 'clamp(2.25rem, 8vw, 2.75rem)',
+                              paddingRight: 'clamp(0.75rem, 3vw, 1rem)',
+                              paddingTop: 'clamp(0.625rem, 2vw, 0.75rem)',
+                              paddingBottom: 'clamp(0.625rem, 2vw, 0.75rem)',
+                              border: `1px solid ${errors.rentMin ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)'}`,
+                              borderRadius: 'clamp(0.375rem, 2vw, 0.5rem)',
+                              fontSize: 'clamp(0.875rem, 2vw, 0.875rem)',
+                              fontFamily: 'inherit',
+                              transition: 'all 0.2s'
+                            }}
+                            onFocus={(e) => {
+                              e.target.style.borderColor = 'hsl(174 62% 32%)';
+                              e.target.style.boxShadow = '0 0 0 2px hsl(174 62% 32% / 0.2)';
+                            }}
+                            onBlur={(e) => {
+                              e.target.style.borderColor = errors.rentMin ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)';
+                              e.target.style.boxShadow = 'none';
+                            }}
+                          />
+                        </div>
+                        {errors.rentMin && (
+                          <p style={{ 
+                            fontSize: 'clamp(0.75rem, 2vw, 0.75rem)', 
+                            marginTop: 'clamp(0.25rem, 1vw, 0.375rem)', 
+                            color: 'hsl(0 72% 51%)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 'clamp(0.25rem, 1vw, 0.375rem)'
+                          }}>
+                            <AlertCircle style={{ 
+                              height: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                              width: 'clamp(0.75rem, 2vw, 0.875rem)' 
+                            }} /> 
+                            {errors.rentMin}
+                          </p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label style={{ 
+                          fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                          fontWeight: '500',
+                          color: 'hsl(200 25% 15%)',
+                          display: 'block', 
+                          marginBottom: 'clamp(0.375rem, 1.5vw, 0.5rem)' 
+                        }}>
+                          Rent Maximum (GH₵) *
+                        </label>
+                        <div style={{ position: 'relative' }}>
+                          <DollarSign style={{ 
+                            position: 'absolute',
+                            left: 'clamp(0.75rem, 3vw, 1rem)',
+                            top: '50%',
+                            transform: 'translateY(-50%)',
+                            height: 'clamp(1rem, 3vw, 1.25rem)',
+                            width: 'clamp(1rem, 3vw, 1.25rem)',
+                            color: 'hsl(200 15% 45%)'
+                          }} />
+                          <input
+                            type="number"
+                            value={data.rentMax}
+                            onChange={(e) => setData('rentMax', e.target.value)}
+                            placeholder="2500"
+                            style={{
+                              width: '100%',
+                              paddingLeft: 'clamp(2.25rem, 8vw, 2.75rem)',
+                              paddingRight: 'clamp(0.75rem, 3vw, 1rem)',
+                              paddingTop: 'clamp(0.625rem, 2vw, 0.75rem)',
+                              paddingBottom: 'clamp(0.625rem, 2vw, 0.75rem)',
+                              border: `1px solid ${errors.rentMax ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)'}`,
+                              borderRadius: 'clamp(0.375rem, 2vw, 0.5rem)',
+                              fontSize: 'clamp(0.875rem, 2vw, 0.875rem)',
+                              fontFamily: 'inherit',
+                              transition: 'all 0.2s'
+                            }}
+                            onFocus={(e) => {
+                              e.target.style.borderColor = 'hsl(174 62% 32%)';
+                              e.target.style.boxShadow = '0 0 0 2px hsl(174 62% 32% / 0.2)';
+                            }}
+                            onBlur={(e) => {
+                              e.target.style.borderColor = errors.rentMax ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)';
+                              e.target.style.boxShadow = 'none';
+                            }}
+                          />
+                        </div>
+                        {errors.rentMax && (
+                          <p style={{ 
+                            fontSize: 'clamp(0.75rem, 2vw, 0.75rem)', 
+                            marginTop: 'clamp(0.25rem, 1vw, 0.375rem)', 
+                            color: 'hsl(0 72% 51%)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 'clamp(0.25rem, 1vw, 0.375rem)'
+                          }}>
+                            <AlertCircle style={{ 
+                              height: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                              width: 'clamp(0.75rem, 2vw, 0.875rem)' 
+                            }} /> 
+                            {errors.rentMax}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label style={{ 
+                        fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                        fontWeight: '500',
+                        color: 'hsl(200 25% 15%)',
+                        display: 'block', 
+                        marginBottom: 'clamp(0.375rem, 1.5vw, 0.5rem)' 
+                      }}>
+                        Advance Duration *
+                      </label>
+                      <div style={{ position: 'relative' }}>
+                        <Calendar style={{ 
+                          position: 'absolute',
+                          left: 'clamp(0.75rem, 3vw, 1rem)',
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          height: 'clamp(1rem, 3vw, 1.25rem)',
+                          width: 'clamp(1rem, 3vw, 1.25rem)',
+                          color: 'hsl(200 15% 45%)'
+                        }} />
+                        <select
+                          value={data.advanceDuration}
+                          onChange={(e) => setData('advanceDuration', e.target.value)}
+                          style={{
+                            width: '100%',
+                            paddingLeft: 'clamp(2.25rem, 8vw, 2.75rem)',
+                            paddingRight: 'clamp(0.75rem, 3vw, 1rem)',
+                            paddingTop: 'clamp(0.625rem, 2vw, 0.75rem)',
+                            paddingBottom: 'clamp(0.625rem, 2vw, 0.75rem)',
+                            border: '1px solid hsl(40 20% 88%)',
+                            borderRadius: 'clamp(0.375rem, 2vw, 0.5rem)',
+                            fontSize: 'clamp(0.875rem, 2vw, 0.875rem)',
+                            fontFamily: 'inherit',
+                            backgroundColor: 'white',
+                            appearance: 'none',
+                            transition: 'all 0.2s'
+                          }}
+                          onFocus={(e) => {
+                            e.target.style.borderColor = 'hsl(174 62% 32%)';
+                            e.target.style.boxShadow = '0 0 0 2px hsl(174 62% 32% / 0.2)';
+                          }}
+                          onBlur={(e) => {
+                            e.target.style.borderColor = 'hsl(40 20% 88%)';
+                            e.target.style.boxShadow = 'none';
+                          }}
+                        >
+                          <option value="1">1 Year</option>
+                          <option value="2">2 Years</option>
+                          <option value="3">3 Years</option>
+                          <option value="4">4 Years</option>
+                          <option value="5">5 Years</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="form-grid" style={{
+                      display: 'grid',
+                      gap: 'clamp(0.75rem, 2vw, 1rem)'
+                    }}>
+                      <div>
+                        <label style={{ 
+                          fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                          fontWeight: '500',
+                          color: 'hsl(200 25% 15%)',
+                          display: 'block', 
+                          marginBottom: 'clamp(0.375rem, 1.5vw, 0.5rem)' 
+                        }}>
+                          Bedrooms *
+                        </label>
+                        <input
+                          type="number"
+                          value={data.bedrooms}
+                          onChange={(e) => setData('bedrooms', e.target.value)}
+                          placeholder="2"
+                          min="0"
+                          style={{
+                            width: '100%',
+                            padding: 'clamp(0.625rem, 2vw, 0.75rem) clamp(0.75rem, 3vw, 1rem)',
+                            border: `1px solid ${errors.bedrooms ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)'}`,
+                            borderRadius: 'clamp(0.375rem, 2vw, 0.5rem)',
+                            fontSize: 'clamp(0.875rem, 2vw, 0.875rem)',
+                            fontFamily: 'inherit',
+                            transition: 'all 0.2s'
+                          }}
+                          onFocus={(e) => {
+                            e.target.style.borderColor = 'hsl(174 62% 32%)';
+                            e.target.style.boxShadow = '0 0 0 2px hsl(174 62% 32% / 0.2)';
+                          }}
+                          onBlur={(e) => {
+                            e.target.style.borderColor = errors.bedrooms ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)';
+                            e.target.style.boxShadow = 'none';
+                          }}
+                        />
+                        {errors.bedrooms && (
+                          <p style={{ 
+                            fontSize: 'clamp(0.75rem, 2vw, 0.75rem)', 
+                            marginTop: 'clamp(0.25rem, 1vw, 0.375rem)', 
+                            color: 'hsl(0 72% 51%)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 'clamp(0.25rem, 1vw, 0.375rem)'
+                          }}>
+                            <AlertCircle style={{ 
+                              height: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                              width: 'clamp(0.75rem, 2vw, 0.875rem)' 
+                            }} /> 
+                            {errors.bedrooms}
+                          </p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label style={{ 
+                          fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                          fontWeight: '500',
+                          color: 'hsl(200 25% 15%)',
+                          display: 'block', 
+                          marginBottom: 'clamp(0.375rem, 1.5vw, 0.5rem)' 
+                        }}>
+                          Bathrooms
+                        </label>
+                        <input
+                          type="number"
+                          value={data.bathrooms}
+                          onChange={(e) => setData('bathrooms', e.target.value)}
+                          placeholder="1"
+                          min="0"
+                          style={{
+                            width: '100%',
+                            padding: 'clamp(0.625rem, 2vw, 0.75rem) clamp(0.75rem, 3vw, 1rem)',
+                            border: '1px solid hsl(40 20% 88%)',
+                            borderRadius: 'clamp(0.375rem, 2vw, 0.5rem)',
+                            fontSize: 'clamp(0.875rem, 2vw, 0.875rem)',
+                            fontFamily: 'inherit',
+                            transition: 'all 0.2s'
+                          }}
+                          onFocus={(e) => {
+                            e.target.style.borderColor = 'hsl(174 62% 32%)';
+                            e.target.style.boxShadow = '0 0 0 2px hsl(174 62% 32% / 0.2)';
+                          }}
+                          onBlur={(e) => {
+                            e.target.style.borderColor = 'hsl(40 20% 88%)';
+                            e.target.style.boxShadow = 'none';
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label style={{ 
+                        fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                        fontWeight: '500',
+                        color: 'hsl(200 25% 15%)',
+                        display: 'block', 
+                        marginBottom: 'clamp(0.5rem, 2vw, 0.75rem)' 
+                      }}>
+                        Amenities
+                      </label>
+                      <div className="amenities-grid" style={{
+                        display: 'grid',
+                        gap: 'clamp(0.5rem, 2vw, 0.75rem)'
+                      }}>
+                        {amenitiesList.map(amenity => (
+                          <button
+                            key={amenity}
+                            type="button"
+                            onClick={() => handleAmenityToggle(amenity)}
+                            className="action-button"
+                            style={{
+                              padding: 'clamp(0.5rem, 2vw, 0.625rem) clamp(0.75rem, 3vw, 1rem)',
+                              borderRadius: 'clamp(0.375rem, 2vw, 0.5rem)',
+                              border: `1px solid ${data.amenities.includes(amenity) ? 'hsl(174 62% 32%)' : 'hsl(40 20% 88%)'}`,
+                              backgroundColor: data.amenities.includes(amenity) ? 'hsl(174 62% 32% / 0.1)' : 'white',
+                              color: data.amenities.includes(amenity) ? 'hsl(174 62% 32%)' : 'hsl(200 25% 15%)',
+                              fontSize: 'clamp(0.75rem, 2vw, 0.875rem)',
+                              fontWeight: '500',
+                              cursor: 'pointer',
+                              textAlign: 'center',
+                              transition: 'all 0.2s',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '0.25rem'
+                            }}
+                            onMouseEnter={(e) => {
+                              if (!data.amenities.includes(amenity)) {
+                                e.currentTarget.style.borderColor = 'hsl(174 62% 32%)';
+                                e.currentTarget.style.backgroundColor = 'hsl(174 62% 32% / 0.05)';
+                              }
+                            }}
+                            onMouseLeave={(e) => {
+                              if (!data.amenities.includes(amenity)) {
+                                e.currentTarget.style.borderColor = 'hsl(40 20% 88%)';
+                                e.currentTarget.style.backgroundColor = 'white';
+                              }
+                            }}
+                          >
+                            {data.amenities.includes(amenity) && <CheckCircle2 style={{ 
+                              height: 'clamp(0.875rem, 2.5vw, 1rem)', 
+                              width: 'clamp(0.875rem, 2.5vw, 1rem)' 
+                            }} />}
+                            {amenity}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label style={{ 
+                        fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                        fontWeight: '500',
+                        color: 'hsl(200 25% 15%)',
+                        display: 'block', 
+                        marginBottom: 'clamp(0.375rem, 1.5vw, 0.5rem)' 
+                      }}>
+                        Property Description
+                      </label>
+                      <textarea
+                        value={data.description}
+                        onChange={(e) => setData('description', e.target.value)}
+                        placeholder="Describe the property, its condition, nearby facilities, and any other relevant details..."
+                        rows={5}
+                        style={{
+                          width: '100%',
+                          padding: 'clamp(0.625rem, 2vw, 0.75rem) clamp(0.75rem, 3vw, 1rem)',
+                          border: '1px solid hsl(40 20% 88%)',
+                          borderRadius: 'clamp(0.375rem, 2vw, 0.5rem)',
+                          fontSize: 'clamp(0.875rem, 2vw, 0.875rem)',
+                          fontFamily: 'inherit',
+                          resize: 'vertical',
+                          minHeight: '7.5rem',
+                          transition: 'all 0.2s'
+                        }}
+                        onFocus={(e) => {
+                          e.target.style.borderColor = 'hsl(174 62% 32%)';
+                          e.target.style.boxShadow = '0 0 0 2px hsl(174 62% 32% / 0.2)';
+                        }}
+                        onBlur={(e) => {
+                          e.target.style.borderColor = 'hsl(40 20% 88%)';
+                          e.target.style.boxShadow = 'none';
+                        }}
+                      />
+                    </div>
+
+                    <div>
+                      <label style={{ 
+                        fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                        fontWeight: '500',
+                        color: 'hsl(200 25% 15%)',
+                        display: 'block', 
+                        marginBottom: 'clamp(0.5rem, 2vw, 0.75rem)' 
+                      }}>
+                        Property Images (Max 6)
+                      </label>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(0.75rem, 2vw, 1rem)' }}>
+                        {allImages.length < 6 && (
+                          <label className="action-button" style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            width: '100%',
+                            height: 'clamp(6rem, 25vw, 8rem)',
+                            border: '2px dashed hsl(174 62% 32%)',
+                            borderRadius: 'clamp(0.5rem, 2vw, 0.75rem)',
+                            backgroundColor: 'hsl(174 62% 32% / 0.05)',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            padding: '1rem'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = 'hsl(174 62% 32% / 0.1)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = 'hsl(174 62% 32% / 0.05)';
+                          }}
+                          >
+                            <div style={{ 
+                              display: 'flex', 
+                              flexDirection: 'column', 
+                              alignItems: 'center', 
+                              justifyContent: 'center' 
+                            }}>
+                              <Upload style={{ 
+                                height: 'clamp(1.5rem, 5vw, 2rem)', 
+                                width: 'clamp(1.5rem, 5vw, 2rem)', 
+                                marginBottom: 'clamp(0.25rem, 1vw, 0.375rem)',
+                                color: 'hsl(174 62% 32%)' 
+                              }} />
+                              <p style={{ 
+                                fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                                fontWeight: '500',
+                                color: 'hsl(174 62% 32%)',
+                                marginBottom: 'clamp(0.125rem, 1vw, 0.25rem)'
+                              }}>
+                                Click to upload images
+                              </p>
+                              <p style={{ 
+                                fontSize: 'clamp(0.6875rem, 2vw, 0.75rem)', 
+                                color: 'hsl(200 15% 45%)' 
+                              }}>
+                                PNG, JPG up to 5MB
+                              </p>
+                            </div>
+                            <input
+                              type="file"
+                              style={{ display: 'none' }}
+                              accept="image/*"
+                              multiple
+                              onChange={handleImageUpload}
+                            />
+                          </label>
+                        )}
+
+                        {allImages.length > 0 && (
+                          <div className="images-grid" style={{
+                            display: 'grid',
+                            gap: 'clamp(0.5rem, 2vw, 0.75rem)'
+                          }}>
+                            {allImages.map(image => (
+                              <div key={image.id} style={{ position: 'relative' }}>
+                                <div style={{ 
+                                  aspectRatio: '1 / 1',
+                                  backgroundColor: 'hsl(40 30% 94%)',
+                                  borderRadius: 'clamp(0.375rem, 2vw, 0.5rem)',
+                                  overflow: 'hidden'
+                                }}>
+                                  <img 
+                                    src={image.preview} 
+                                    alt={image.name} 
+                                    style={{
+                                      width: '100%',
+                                      height: '100%',
+                                      objectFit: 'cover'
+                                    }} 
+                                  />
+                                  {image.isExisting && (
+                                    <div style={{ 
+                                      position: 'absolute',
+                                      top: '0.5rem',
+                                      left: '0.5rem',
+                                      padding: '0.25rem 0.5rem',
+                                      borderRadius: '0.25rem',
+                                      fontSize: '0.6875rem',
+                                      fontWeight: '500',
+                                      backgroundColor: 'hsl(217 91% 60%)',
+                                      color: 'white'
+                                    }}>
+                                      Existing
+                                    </div>
+                                  )}
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => removeImage(image.id)}
+                                  className="action-button"
+                                  style={{
+                                    position: 'absolute',
+                                    top: '0.5rem',
+                                    right: '0.5rem',
+                                    padding: '0.25rem',
+                                    borderRadius: '50%',
+                                    backgroundColor: 'hsl(0 72% 51%)',
+                                    color: 'white',
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    transition: 'opacity 0.2s'
+                                  }}
+                                >
+                                  <X style={{ 
+                                    height: 'clamp(0.875rem, 2.5vw, 1rem)', 
+                                    width: 'clamp(0.875rem, 2.5vw, 1rem)' 
+                                  }} />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Step 3: Contact Information */}
+                {currentStep === 3 && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(1rem, 3vw, 1.5rem)' }}>
+                    <div>
+                      <h2 style={{ 
+                        color: 'hsl(200 25% 15%)',
+                        fontSize: 'clamp(1.125rem, 4vw, 1.25rem)',
+                        fontWeight: '700',
+                        marginBottom: 'clamp(0.125rem, 1vw, 0.25rem)',
+                        lineHeight: '1.2'
+                      }}>
+                        Contact Information
+                      </h2>
+                      <p style={{ 
+                        fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                        color: 'hsl(200 15% 45%)' 
+                      }}>
+                        How should tenants reach you?
+                      </p>
+                    </div>
+
+                    <div style={{ 
+                      padding: 'clamp(0.75rem, 3vw, 1rem)',
+                      borderRadius: 'clamp(0.5rem, 2vw, 0.75rem)',
+                      backgroundColor: 'hsl(38 92% 50% / 0.1)',
+                      border: '1px solid hsl(38 92% 50% / 0.2)'
+                    }}>
+                      <p style={{ 
+                        fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                        color: 'hsl(200 25% 10%)',
+                        lineHeight: '1.5'
+                      }}>
+                        <strong>⚠️ Important:</strong> Your contact information will be visible to interested tenants. 
+                        Make sure it's accurate and up-to-date.
+                      </p>
+                    </div>
+
+                    <div>
+                      <label style={{ 
+                        fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                        fontWeight: '500',
+                        color: 'hsl(200 25% 15%)',
+                        display: 'block', 
+                        marginBottom: 'clamp(0.375rem, 1.5vw, 0.5rem)' 
+                      }}>
+                        Your Name *
+                      </label>
+                      <input
+                        type="text"
+                        value={data.agentName || agentData.fullName}
+                        onChange={(e) => setData('agentName', e.target.value)}
+                        style={{
+                          width: '100%',
+                          padding: 'clamp(0.625rem, 2vw, 0.75rem) clamp(0.75rem, 3vw, 1rem)',
+                          border: `1px solid ${errors.agentName ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)'}`,
+                          borderRadius: 'clamp(0.375rem, 2vw, 0.5rem)',
+                          fontSize: 'clamp(0.875rem, 2vw, 0.875rem)',
+                          fontFamily: 'inherit',
+                          transition: 'all 0.2s'
+                        }}
+                        onFocus={(e) => {
+                          e.target.style.borderColor = 'hsl(174 62% 32%)';
+                          e.target.style.boxShadow = '0 0 0 2px hsl(174 62% 32% / 0.2)';
+                        }}
+                        onBlur={(e) => {
+                          e.target.style.borderColor = errors.agentName ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)';
+                          e.target.style.boxShadow = 'none';
+                        }}
+                      />
+                      {errors.agentName && (
+                        <p style={{ 
+                          fontSize: 'clamp(0.75rem, 2vw, 0.75rem)', 
+                          marginTop: 'clamp(0.25rem, 1vw, 0.375rem)', 
+                          color: 'hsl(0 72% 51%)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 'clamp(0.25rem, 1vw, 0.375rem)'
+                        }}>
+                          <AlertCircle style={{ 
+                            height: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                            width: 'clamp(0.75rem, 2vw, 0.875rem)' 
+                          }} /> 
+                          {errors.agentName}
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label style={{ 
+                        fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                        fontWeight: '500',
+                        color: 'hsl(200 25% 15%)',
+                        display: 'block', 
+                        marginBottom: 'clamp(0.375rem, 1.5vw, 0.5rem)' 
+                      }}>
+                        Phone Number *
+                      </label>
+                      <input
+                        type="tel"
+                        value={data.agentPhone || agentData.phone}
+                        onChange={(e) => setData('agentPhone', e.target.value)}
+                        style={{
+                          width: '100%',
+                          padding: 'clamp(0.625rem, 2vw, 0.75rem) clamp(0.75rem, 3vw, 1rem)',
+                          border: `1px solid ${errors.agentPhone ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)'}`,
+                          borderRadius: 'clamp(0.375rem, 2vw, 0.5rem)',
+                          fontSize: 'clamp(0.875rem, 2vw, 0.875rem)',
+                          fontFamily: 'inherit',
+                          transition: 'all 0.2s'
+                        }}
+                        onFocus={(e) => {
+                          e.target.style.borderColor = 'hsl(174 62% 32%)';
+                          e.target.style.boxShadow = '0 0 0 2px hsl(174 62% 32% / 0.2)';
+                        }}
+                        onBlur={(e) => {
+                          e.target.style.borderColor = errors.agentPhone ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)';
+                          e.target.style.boxShadow = 'none';
+                        }}
+                      />
+                      {errors.agentPhone && (
+                        <p style={{ 
+                          fontSize: 'clamp(0.75rem, 2vw, 0.75rem)', 
+                          marginTop: 'clamp(0.25rem, 1vw, 0.375rem)', 
+                          color: 'hsl(0 72% 51%)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 'clamp(0.25rem, 1vw, 0.375rem)'
+                        }}>
+                          <AlertCircle style={{ 
+                            height: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                            width: 'clamp(0.75rem, 2vw, 0.875rem)' 
+                          }} /> 
+                          {errors.agentPhone}
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label style={{ 
+                        fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                        fontWeight: '500',
+                        color: 'hsl(200 25% 15%)',
+                        display: 'block', 
+                        marginBottom: 'clamp(0.375rem, 1.5vw, 0.5rem)' 
+                      }}>
+                        Email Address *
+                      </label>
+                      <input
+                        type="email"
+                        value={data.agentEmail || agentData.email}
+                        onChange={(e) => setData('agentEmail', e.target.value)}
+                        style={{
+                          width: '100%',
+                          padding: 'clamp(0.625rem, 2vw, 0.75rem) clamp(0.75rem, 3vw, 1rem)',
+                          border: `1px solid ${errors.agentEmail ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)'}`,
+                          borderRadius: 'clamp(0.375rem, 2vw, 0.5rem)',
+                          fontSize: 'clamp(0.875rem, 2vw, 0.875rem)',
+                          fontFamily: 'inherit',
+                          transition: 'all 0.2s'
+                        }}
+                        onFocus={(e) => {
+                          e.target.style.borderColor = 'hsl(174 62% 32%)';
+                          e.target.style.boxShadow = '0 0 0 2px hsl(174 62% 32% / 0.2)';
+                        }}
+                        onBlur={(e) => {
+                          e.target.style.borderColor = errors.agentEmail ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)';
+                          e.target.style.boxShadow = 'none';
+                        }}
+                      />
+                      {errors.agentEmail && (
+                        <p style={{ 
+                          fontSize: 'clamp(0.75rem, 2vw, 0.75rem)', 
+                          marginTop: 'clamp(0.25rem, 1vw, 0.375rem)', 
+                          color: 'hsl(0 72% 51%)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 'clamp(0.25rem, 1vw, 0.375rem)'
+                        }}>
+                          <AlertCircle style={{ 
+                            height: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                            width: 'clamp(0.75rem, 2vw, 0.875rem)' 
+                          }} /> 
+                          {errors.agentEmail}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Step 4: Review */}
+                {currentStep === 4 && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(1rem, 3vw, 1.5rem)' }}>
+                    <div>
+                      <h2 style={{ 
+                        color: 'hsl(200 25% 15%)',
+                        fontSize: 'clamp(1.125rem, 4vw, 1.25rem)',
+                        fontWeight: '700',
+                        marginBottom: 'clamp(0.125rem, 1vw, 0.25rem)',
+                        lineHeight: '1.2'
+                      }}>
+                        Review Your Listing
+                      </h2>
+                      <p style={{ 
+                        fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                        color: 'hsl(200 15% 45%)' 
+                      }}>
+                        Please review all details before submitting
+                      </p>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(1rem, 3vw, 1.5rem)' }}>
+                      <div style={{ 
+                        padding: 'clamp(1rem, 3vw, 1.25rem)',
+                        borderRadius: 'clamp(0.5rem, 2vw, 0.75rem)',
+                        backgroundColor: 'hsl(40 30% 94%)'
+                      }}>
+                        <h3 style={{ 
+                          color: 'hsl(200 25% 15%)',
+                          fontSize: 'clamp(0.875rem, 2.5vw, 1rem)',
+                          fontWeight: '600',
+                          marginBottom: 'clamp(0.5rem, 2vw, 0.75rem)'
+                        }}>
+                          Property Details
+                        </h3>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(0.375rem, 1.5vw, 0.5rem)' }}>
+                          <div style={{ 
+                            display: 'flex', 
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            flexWrap: 'wrap',
+                            gap: '0.5rem'
+                          }}>
+                            <span style={{ 
+                              fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                              color: 'hsl(200 15% 45%)' 
+                            }}>
+                              Title:
+                            </span>
+                            <span style={{ 
+                              fontSize: 'clamp(0.875rem, 2.5vw, 0.875rem)', 
+                              color: 'hsl(200 25% 15%)',
+                              fontWeight: '500',
+                              textAlign: 'right'
+                            }}>
+                              {data.title}
+                            </span>
+                          </div>
+                          <div style={{ 
+                            display: 'flex', 
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            flexWrap: 'wrap',
+                            gap: '0.5rem'
+                          }}>
+                            <span style={{ 
+                              fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                              color: 'hsl(200 15% 45%)' 
+                            }}>
+                              Type:
+                            </span>
+                            <span style={{ 
+                              fontSize: 'clamp(0.875rem, 2.5vw, 0.875rem)', 
+                              color: 'hsl(200 25% 15%)',
+                              fontWeight: '500',
+                              textAlign: 'right'
+                            }}>
+                              {data.propertyType}
+                            </span>
+                          </div>
+                          <div style={{ 
+                            display: 'flex', 
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            flexWrap: 'wrap',
+                            gap: '0.5rem'
+                          }}>
+                            <span style={{ 
+                              fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                              color: 'hsl(200 15% 45%)' 
+                            }}>
+                              Location:
+                            </span>
+                            <span style={{ 
+                              fontSize: 'clamp(0.875rem, 2.5vw, 0.875rem)', 
+                              color: 'hsl(200 25% 15%)',
+                              fontWeight: '500',
+                              textAlign: 'right'
+                            }}>
+                              {data.area}, {data.city}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div style={{ 
+                        padding: 'clamp(1rem, 3vw, 1.25rem)',
+                        borderRadius: 'clamp(0.5rem, 2vw, 0.75rem)',
+                        backgroundColor: 'hsl(40 30% 94%)'
+                      }}>
+                        <h3 style={{ 
+                          color: 'hsl(200 25% 15%)',
+                          fontSize: 'clamp(0.875rem, 2.5vw, 1rem)',
+                          fontWeight: '600',
+                          marginBottom: 'clamp(0.5rem, 2vw, 0.75rem)'
+                        }}>
+                          Pricing & Features
+                        </h3>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(0.375rem, 1.5vw, 0.5rem)' }}>
+                          <div style={{ 
+                            display: 'flex', 
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            flexWrap: 'wrap',
+                            gap: '0.5rem'
+                          }}>
+                            <span style={{ 
+                              fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                              color: 'hsl(200 15% 45%)' 
+                            }}>
+                              Monthly Rent:
+                            </span>
+                            <span style={{ 
+                              fontSize: 'clamp(0.875rem, 2.5vw, 1rem)', 
+                              fontWeight: '600',
+                              color: 'hsl(174 62% 32%)',
+                              textAlign: 'right'
+                            }}>
+                              GH₵{data.rentMin ? Number(data.rentMin).toLocaleString() : '0'} - 
+                              GH₵{data.rentMax ? Number(data.rentMax).toLocaleString() : '0'}
+                            </span>
+                          </div>
+                          <div style={{ 
+                            display: 'flex', 
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            flexWrap: 'wrap',
+                            gap: '0.5rem'
+                          }}>
+                            <span style={{ 
+                              fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                              color: 'hsl(200 15% 45%)' 
+                            }}>
+                              Advance Duration:
+                            </span>
+                            <span style={{ 
+                              fontSize: 'clamp(0.875rem, 2.5vw, 0.875rem)', 
+                              color: 'hsl(200 25% 15%)',
+                              fontWeight: '500',
+                              textAlign: 'right'
+                            }}>
+                              {data.advanceDuration} {data.advanceDuration === '1' ? 'Year' : 'Years'}
+                            </span>
+                          </div>
+                          <div style={{ 
+                            display: 'flex', 
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            flexWrap: 'wrap',
+                            gap: '0.5rem'
+                          }}>
+                            <span style={{ 
+                              fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                              color: 'hsl(200 15% 45%)' 
+                            }}>
+                              Bedrooms:
+                            </span>
+                            <span style={{ 
+                              fontSize: 'clamp(0.875rem, 2.5vw, 0.875rem)', 
+                              color: 'hsl(200 25% 15%)',
+                              fontWeight: '500',
+                              textAlign: 'right'
+                            }}>
+                              {data.bedrooms || '0'}
+                            </span>
+                          </div>
+                          <div style={{ 
+                            display: 'flex', 
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            flexWrap: 'wrap',
+                            gap: '0.5rem'
+                          }}>
+                            <span style={{ 
+                              fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                              color: 'hsl(200 15% 45%)' 
+                            }}>
+                              Bathrooms:
+                            </span>
+                            <span style={{ 
+                              fontSize: 'clamp(0.875rem, 2.5vw, 0.875rem)', 
+                              color: 'hsl(200 25% 15%)',
+                              fontWeight: '500',
+                              textAlign: 'right'
+                            }}>
+                              {data.bathrooms || '0'}
+                            </span>
+                          </div>
+                          {data.amenities.length > 0 && (
+                            <div style={{ 
+                              paddingTop: 'clamp(0.75rem, 2vw, 1rem)',
+                              marginTop: 'clamp(0.5rem, 2vw, 0.75rem)',
+                              borderTop: '1px solid hsl(40 20% 88%)'
+                            }}>
+                              <span style={{ 
+                                fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                                color: 'hsl(200 15% 45%)',
+                                display: 'block',
+                                marginBottom: 'clamp(0.5rem, 2vw, 0.5rem)'
+                              }}>
+                                Amenities:
+                              </span>
+                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'clamp(0.375rem, 1.5vw, 0.5rem)' }}>
+                                {data.amenities.map(amenity => (
+                                  <span 
+                                    key={amenity}
+                                    style={{ 
+                                      padding: 'clamp(0.25rem, 1vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem)',
+                                      borderRadius: 'clamp(0.25rem, 1.5vw, 0.375rem)',
+                                      fontSize: 'clamp(0.6875rem, 2vw, 0.75rem)',
+                                      fontWeight: '500',
+                                      backgroundColor: 'hsl(174 62% 32% / 0.1)',
+                                      color: 'hsl(174 62% 32%)'
+                                    }}
+                                  >
+                                    {amenity}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div style={{ 
+                        padding: 'clamp(1rem, 3vw, 1.25rem)',
+                        borderRadius: 'clamp(0.5rem, 2vw, 0.75rem)',
+                        backgroundColor: 'hsl(40 30% 94%)'
+                      }}>
+                        <h3 style={{ 
+                          color: 'hsl(200 25% 15%)',
+                          fontSize: 'clamp(0.875rem, 2.5vw, 1rem)',
+                          fontWeight: '600',
+                          marginBottom: 'clamp(0.5rem, 2vw, 0.75rem)'
+                        }}>
+                          Contact Information
+                        </h3>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(0.375rem, 1.5vw, 0.5rem)' }}>
+                          <div style={{ 
+                            display: 'flex', 
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            flexWrap: 'wrap',
+                            gap: '0.5rem'
+                          }}>
+                            <span style={{ 
+                              fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                              color: 'hsl(200 15% 45%)' 
+                            }}>
+                              Name:
+                            </span>
+                            <span style={{ 
+                              fontSize: 'clamp(0.875rem, 2.5vw, 0.875rem)', 
+                              color: 'hsl(200 25% 15%)',
+                              fontWeight: '500',
+                              textAlign: 'right'
+                            }}>
+                              {data.agentName}
+                            </span>
+                          </div>
+                          <div style={{ 
+                            display: 'flex', 
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            flexWrap: 'wrap',
+                            gap: '0.5rem'
+                          }}>
+                            <span style={{ 
+                              fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                              color: 'hsl(200 15% 45%)' 
+                            }}>
+                              Phone:
+                            </span>
+                            <span style={{ 
+                              fontSize: 'clamp(0.875rem, 2.5vw, 0.875rem)', 
+                              color: 'hsl(200 25% 15%)',
+                              fontWeight: '500',
+                              textAlign: 'right'
+                            }}>
+                              {data.agentPhone}
+                            </span>
+                          </div>
+                          <div style={{ 
+                            display: 'flex', 
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            flexWrap: 'wrap',
+                            gap: '0.5rem'
+                          }}>
+                            <span style={{ 
+                              fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                              color: 'hsl(200 15% 45%)' 
+                            }}>
+                              Email:
+                            </span>
+                            <span style={{ 
+                              fontSize: 'clamp(0.875rem, 2.5vw, 0.875rem)', 
+                              color: 'hsl(200 25% 15%)',
+                              fontWeight: '500',
+                              textAlign: 'right'
+                            }}>
+                              {data.agentEmail}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {images.length > 0 && (
+                        <div style={{ 
+                          padding: 'clamp(1rem, 3vw, 1.25rem)',
+                          borderRadius: 'clamp(0.5rem, 2vw, 0.75rem)',
+                          backgroundColor: 'hsl(40 30% 94%)'
+                        }}>
+                          <h3 style={{ 
+                            color: 'hsl(200 25% 15%)',
+                            fontSize: 'clamp(0.875rem, 2.5vw, 1rem)',
+                            fontWeight: '600',
+                            marginBottom: 'clamp(0.5rem, 2vw, 0.75rem)'
+                          }}>
+                            Images ({images.length})
+                          </h3>
+                          <div className="images-grid" style={{
+                            display: 'grid',
+                            gap: 'clamp(0.5rem, 2vw, 0.75rem)'
+                          }}>
+                            {images.map(image => (
+                              <div key={image.id} style={{ 
+                                aspectRatio: '1 / 1',
+                                backgroundColor: 'hsl(40 30% 94%)',
+                                borderRadius: 'clamp(0.375rem, 2vw, 0.5rem)',
+                                overflow: 'hidden'
+                              }}>
+                                <img 
+                                  src={image.preview} 
+                                  alt={image.name} 
+                                  style={{
+                                    width: '100%',
+                                    height: '100%',
+                                    objectFit: 'cover'
+                                  }} 
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <div style={{ 
+                      padding: 'clamp(0.75rem, 3vw, 1rem)',
+                      borderRadius: 'clamp(0.5rem, 2vw, 0.75rem)',
+                      backgroundColor: 'hsl(152 60% 40% / 0.1)',
+                      border: '1px solid hsl(152 60% 40% / 0.2)'
+                    }}>
+                      <div style={{ display: 'flex', gap: 'clamp(0.5rem, 2vw, 0.75rem)' }}>
+                        <CheckCircle2 style={{ 
+                          height: 'clamp(1rem, 3vw, 1.25rem)', 
+                          width: 'clamp(1rem, 3vw, 1.25rem)',
+                          color: 'hsl(152 60% 40%)',
+                          flexShrink: 0
+                        }} />
+                        <div>
+                          <p style={{ 
+                            fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                            fontWeight: '500',
+                            color: 'hsl(200 25% 15%)',
+                            marginBottom: 'clamp(0.25rem, 1vw, 0.375rem)'
+                          }}>
+                            What happens next?
+                          </p>
+                          <ul style={{ 
+                            fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                            color: 'hsl(200 15% 45%)',
+                            paddingLeft: '1.25rem',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '0.25rem'
+                          }}>
+                            <li>• Our team will review your listing within 24 hours</li>
+                            <li>• You'll receive a confirmation email once approved</li>
+                            <li>• Your listing will be visible to thousands of tenants</li>
+                            <li>• You can manage and update your listing anytime</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Navigation Buttons */}
+                <div className="button-container" style={{ 
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  paddingTop: 'clamp(1rem, 3vw, 1.5rem)',
+                  marginTop: 'clamp(1rem, 3vw, 2rem)',
+                  borderTop: '1px solid hsl(40 20% 88%)',
+                  gap: 'clamp(0.5rem, 2vw, 1rem)'
+                }}>
+                  {currentStep > 1 ? (
+                    <button
+                      type="button"
+                      onClick={handlePrevious}
+                      disabled={processing}
+                      className="action-button"
+                      style={{
+                        padding: 'clamp(0.625rem, 2vw, 0.75rem) clamp(1.5rem, 4vw, 2rem)',
+                        borderRadius: 'clamp(0.375rem, 2vw, 0.5rem)',
+                        border: '1px solid hsl(40 20% 88%)',
+                        color: 'hsl(200 25% 15%)',
+                        backgroundColor: 'white',
+                        fontWeight: '600',
+                        fontSize: 'clamp(0.875rem, 2vw, 0.875rem)',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = 'hsl(40 30% 96%)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'white';
+                      }}
+                    >
+                      Previous
+                    </button>
+                  ) : (
+                    <div />
+                  )}
+
+                  {currentStep < 4 ? (
+                    <button
+                      type="button"
+                      onClick={handleNext}
+                      disabled={processing}
+                      className="action-button"
+                      style={{
+                        padding: 'clamp(0.625rem, 2vw, 0.75rem) clamp(1.5rem, 4vw, 2rem)',
+                        borderRadius: 'clamp(0.375rem, 2vw, 0.5rem)',
+                        backgroundColor: 'hsl(174 62% 32%)',
+                        color: 'white',
+                        fontWeight: '600',
+                        fontSize: 'clamp(0.875rem, 2vw, 0.875rem)',
+                        cursor: 'pointer',
+                        border: 'none',
+                        transition: 'all 0.2s'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = 'hsl(174 50% 25%)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'hsl(174 62% 32%)';
+                      }}
+                    >
+                      Next Step
+                    </button>
+                  ) : (
+                    <button
+                      type="submit"
+                      disabled={processing}
+                      className="action-button"
+                      style={{
+                        padding: 'clamp(0.625rem, 2vw, 0.75rem) clamp(1.5rem, 4vw, 2rem)',
+                        borderRadius: 'clamp(0.375rem, 2vw, 0.5rem)',
+                        background: 'linear-gradient(135deg, hsl(38 92% 50%) 0%, hsl(30 90% 45%) 100%)',
+                        color: 'hsl(200 25% 10%)',
+                        fontWeight: '600',
+                        fontSize: 'clamp(0.875rem, 2vw, 0.875rem)',
+                        cursor: processing ? 'not-allowed' : 'pointer',
+                        border: 'none',
+                        transition: 'all 0.2s',
+                        opacity: processing ? 0.7 : 1
+                      }}
+                    >
+                      {processing ? 'Submitting...' : 'Submit Listing'}
+                    </button>
+                  )}
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+};
+
+export default EditRentals;

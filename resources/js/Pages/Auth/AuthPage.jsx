@@ -119,7 +119,7 @@ const AuthPage = () => {
       `}</style>
 
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'hsl(40 33% 98%)' }}>
-        <main style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '3rem 1rem' }}>
+        <main style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'clamp(1rem, 4vw, 3rem) 1rem' }}>
           <div
             style={{
               width: '100%',
@@ -146,7 +146,7 @@ const AuthPage = () => {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '0.5rem',
-                fontSize: '0.875rem',
+                fontSize: '0.75rem sm:0.875rem',
                 fontWeight: '500',
                 transition: 'color 0.2s'
               }}

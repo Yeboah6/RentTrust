@@ -109,10 +109,11 @@ const AdminSettingsPage = () => {
     <>
       {/* Toast Notification */}
       {toast && (
-        <div style={{
+        <div className="toast-notification" style={{
           position: 'fixed',
           top: '1rem',
           right: '1rem',
+          left: '1rem',
           backgroundColor: toast.variant === 'error' ? '#ef4444' : '#10b981',
           color: 'white',
           padding: '1rem',
@@ -135,23 +136,24 @@ const AdminSettingsPage = () => {
         <Header />
 
         {/* Main Content */}
-        <div style={{
+        <div className="settings-container" style={{
           maxWidth: '1200px',
           margin: '0 auto',
-          padding: '2rem 1.5rem'
+          padding: 'clamp(1rem, 4vw, 2rem) clamp(0.75rem, 3vw, 1rem)'
         }}>
-          <div style={{
+          <div className="settings-grid" style={{
             display: 'grid',
-            gridTemplateColumns: '250px 1fr',
-            gap: '2rem'
+            gap: 'clamp(1rem, 3vw, 2rem)',
           }}>
             {/* Sidebar Navigation */}
-            <div style={{
+            <div className="sidebar-nav" style={{
               backgroundColor: 'white',
               borderRadius: '0.75rem',
-              padding: '1rem',
+              padding: '0.5rem',
               height: 'fit-content',
-              border: '1px solid #e5e7eb'
+              border: '1px solid #e5e7eb',
+              display: 'flex',
+              gap: '0.25rem',
             }}>
               {tabs.map((tab) => {
                 const Icon = tab.icon;
@@ -160,24 +162,26 @@ const AdminSettingsPage = () => {
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
                     style={{
-                      width: '100%',
+                      flex: '1',
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '0.75rem',
-                      padding: '0.75rem 1rem',
+                      justifyContent: 'center',
+                      gap: '0.5rem',
+                      padding: 'clamp(0.5rem, 2vw, 0.75rem)',
                       border: 'none',
                       borderRadius: '0.5rem',
                       backgroundColor: activeTab === tab.id ? '#eff6ff' : 'transparent',
                       color: activeTab === tab.id ? '#1e40af' : '#6b7280',
                       fontWeight: activeTab === tab.id ? '500' : '400',
                       cursor: 'pointer',
-                      marginBottom: '0.25rem',
                       transition: 'all 0.2s',
-                      textAlign: 'left'
+                      textAlign: 'center',
+                      fontSize: 'clamp(0.75rem, 2vw, 0.875rem)',
+                      whiteSpace: 'nowrap'
                     }}
                   >
-                    <Icon size={18} />
-                    {tab.label}
+                    <Icon size={18} style={{ flexShrink: 0 }} />
+                    <span className="tab-label">{tab.label}</span>
                   </button>
                 );
               })}
@@ -187,30 +191,30 @@ const AdminSettingsPage = () => {
             <div style={{
               backgroundColor: 'white',
               borderRadius: '0.75rem',
-              padding: '2rem',
+              padding: 'clamp(1rem, 4vw, 2rem)',
               border: '1px solid #e5e7eb'
             }}>
               {/* Profile Tab */}
               {activeTab === "profile" && (
                 <div>
                   <h2 style={{
-                    fontSize: '1.25rem',
+                    fontSize: 'clamp(1.125rem, 3vw, 1.5rem)',
                     fontWeight: '600',
                     color: '#111827',
                     marginBottom: '0.5rem'
                   }}>
                     Profile Information
                   </h2>
-                  <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '2rem' }}>
+                  <p style={{ fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)', color: '#6b7280', marginBottom: 'clamp(1.5rem, 3vw, 2rem)' }}>
                     Update your personal information and public profile
                   </p>
 
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(1.25rem, 3vw, 1.5rem)' }}>
                     {/* Avatar */}
                     <div>
                       <label style={{
                         display: 'block',
-                        fontSize: '0.875rem',
+                        fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)',
                         fontWeight: '500',
                         color: '#374151',
                         marginBottom: '0.5rem'
@@ -219,15 +223,15 @@ const AdminSettingsPage = () => {
                       </label>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                         <div style={{
-                          width: '80px',
-                          height: '80px',
+                          width: 'clamp(60px, 15vw, 80px)',
+                          height: 'clamp(60px, 15vw, 80px)',
                           borderRadius: '50%',
                           backgroundColor: '#0f766e',
                           color: 'white',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          fontSize: '2rem',
+                          fontSize: 'clamp(1.25rem, 4vw, 2rem)',
                           fontWeight: '600'
                         }}>
                           {data.name.split(" ").map((n) => n[0]).join("")}
@@ -239,7 +243,7 @@ const AdminSettingsPage = () => {
                     <div>
                       <label style={{
                         display: 'block',
-                        fontSize: '0.875rem',
+                        fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)',
                         fontWeight: '500',
                         color: '#374151',
                         marginBottom: '0.5rem'
@@ -252,10 +256,10 @@ const AdminSettingsPage = () => {
                         onChange={(e) => setData('name', e.target.value)}
                         style={{
                           width: '100%',
-                          padding: '0.5rem 0.75rem',
+                          padding: 'clamp(0.625rem, 2vw, 0.75rem)',
                           border: '1px solid #d1d5db',
                           borderRadius: '0.375rem',
-                          fontSize: '0.875rem',
+                          fontSize: 'clamp(0.875rem, 2vw, 1rem)',
                           outline: 'none'
                         }}
                       />
@@ -266,7 +270,7 @@ const AdminSettingsPage = () => {
                     <div>
                       <label style={{
                         display: 'block',
-                        fontSize: '0.875rem',
+                        fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)',
                         fontWeight: '500',
                         color: '#374151',
                         marginBottom: '0.5rem'
@@ -279,49 +283,50 @@ const AdminSettingsPage = () => {
                         onChange={(e) => setData('email', e.target.value)}
                         style={{
                           width: '100%',
-                          padding: '0.5rem 0.75rem',
+                          padding: 'clamp(0.625rem, 2vw, 0.75rem)',
                           border: '1px solid #d1d5db',
                           borderRadius: '0.375rem',
-                          fontSize: '0.875rem',
+                          fontSize: 'clamp(0.875rem, 2vw, 1rem)',
                           outline: 'none'
                         }}
                       />
                       {errors.email && <p style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '0.25rem' }}>{errors.email}</p>}
                     </div>
 
-                    {!userAdmin && (
-                      <>
-                        <div>
-                          <label style={{
-                            display: 'block',
-                            fontSize: '0.875rem',
-                            fontWeight: '500',
-                            color: '#374151',
-                            marginBottom: '0.5rem'
-                          }}>
-                            Phone Number
-                          </label>
-                          <input
-                            type="tel"
-                            value={data.phone}
-                            onChange={(e) => setData('phone', e.target.value)}
-                            style={{
-                              width: '100%',
-                              padding: '0.5rem 0.75rem',
-                              border: '1px solid #d1d5db',
-                              borderRadius: '0.375rem',
-                              fontSize: '0.875rem',
-                              outline: 'none'
-                            }}
-                          />
-                          {errors.phone && <p style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '0.25rem' }}>{errors.phone}</p>}
-                        </div>
+                    {/* Phone Number */}
+                    <div>
+                      <label style={{
+                        display: 'block',
+                        fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)',
+                        fontWeight: '500',
+                        color: '#374151',
+                        marginBottom: '0.5rem'
+                      }}>
+                        Phone Number
+                      </label>
+                      <input
+                        type="tel"
+                        value={data.phone}
+                        onChange={(e) => setData('phone', e.target.value)}
+                        style={{
+                          width: '100%',
+                          padding: 'clamp(0.625rem, 2vw, 0.75rem)',
+                          border: '1px solid #d1d5db',
+                          borderRadius: '0.375rem',
+                          fontSize: 'clamp(0.875rem, 2vw, 1rem)',
+                          outline: 'none'
+                        }}
+                      />
+                      {errors.phone && <p style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '0.25rem' }}>{errors.phone}</p>}
+                    </div>
 
+                    {userAgent && (
+                      <>
                         {/* Role */}
                         <div>
                           <label style={{
                             display: 'block',
-                            fontSize: '0.875rem',
+                            fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)',
                             fontWeight: '500',
                             color: '#374151',
                             marginBottom: '0.5rem'
@@ -334,10 +339,10 @@ const AdminSettingsPage = () => {
                             disabled
                             style={{
                               width: '100%',
-                              padding: '0.5rem 0.75rem',
+                              padding: 'clamp(0.625rem, 2vw, 0.75rem)',
                               border: '1px solid #d1d5db',
                               borderRadius: '0.375rem',
-                              fontSize: '0.875rem',
+                              fontSize: 'clamp(0.875rem, 2vw, 1rem)',
                               backgroundColor: '#f9fafb',
                               color: '#6b7280',
                               cursor: 'not-allowed'
@@ -349,7 +354,7 @@ const AdminSettingsPage = () => {
                         <div>
                           <label style={{
                             display: 'block',
-                            fontSize: '0.875rem',
+                            fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)',
                             fontWeight: '500',
                             color: '#374151',
                             marginBottom: '0.5rem'
@@ -362,10 +367,10 @@ const AdminSettingsPage = () => {
                             disabled
                             style={{
                               width: '100%',
-                              padding: '0.5rem 0.75rem',
+                              padding: 'clamp(0.625rem, 2vw, 0.75rem)',
                               border: '1px solid #d1d5db',
                               borderRadius: '0.375rem',
-                              fontSize: '0.875rem',
+                              fontSize: 'clamp(0.875rem, 2vw, 1rem)',
                               backgroundColor: '#f9fafb',
                               color: '#6b7280',
                               cursor: 'not-allowed'
@@ -377,7 +382,7 @@ const AdminSettingsPage = () => {
                         <div>
                           <label style={{
                             display: 'block',
-                            fontSize: '0.875rem',
+                            fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)',
                             fontWeight: '500',
                             color: '#374151',
                             marginBottom: '0.5rem'
@@ -390,10 +395,10 @@ const AdminSettingsPage = () => {
                             onChange={(e) => setData('company', e.target.value)}
                             style={{
                               width: '100%',
-                              padding: '0.5rem 0.75rem',
+                              padding: 'clamp(0.625rem, 2vw, 0.75rem)',
                               border: '1px solid #d1d5db',
                               borderRadius: '0.375rem',
-                              fontSize: '0.875rem',
+                              fontSize: 'clamp(0.875rem, 2vw, 1rem)',
                               outline: 'none'
                             }}
                           />
@@ -404,7 +409,7 @@ const AdminSettingsPage = () => {
                         <div>
                           <label style={{
                             display: 'block',
-                            fontSize: '0.875rem',
+                            fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)',
                             fontWeight: '500',
                             color: '#374151',
                             marginBottom: '0.5rem'
@@ -419,106 +424,46 @@ const AdminSettingsPage = () => {
                             step="0.01"
                             style={{
                               width: '100%',
-                              padding: '0.5rem 0.75rem',
+                              padding: 'clamp(0.625rem, 2vw, 0.75rem)',
                               border: '1px solid #d1d5db',
                               borderRadius: '0.375rem',
-                              fontSize: '0.875rem',
+                              fontSize: 'clamp(0.875rem, 2vw, 1rem)',
                               outline: 'none'
                             }}
                           />
                           {errors.fee && <p style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '0.25rem' }}>{errors.fee}</p>}
                         </div>
-
-                        {/* Bio */}
-                        <div>
-                          <label style={{
-                            display: 'block',
-                            fontSize: '0.875rem',
-                            fontWeight: '500',
-                            color: '#374151',
-                            marginBottom: '0.5rem'
-                          }}>
-                            Bio
-                          </label>
-                          <textarea
-                            value={data.bio}
-                            onChange={(e) => setData('bio', e.target.value)}
-                            rows={3}
-                            style={{
-                              width: '100%',
-                              padding: '0.5rem 0.75rem',
-                              border: '1px solid #d1d5db',
-                              borderRadius: '0.375rem',
-                              fontSize: '0.875rem',
-                              outline: 'none',
-                              resize: 'vertical',
-                              fontFamily: 'inherit'
-                            }}
-                          />
-                          {errors.bio && <p style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '0.25rem' }}>{errors.bio}</p>}
-                        </div>
                       </>
                     )}
 
-                    {!userAdmin && (
-                      <>
-                        {/* Phone Number for Admin */}
-                        <div>
-                          <label style={{
-                            display: 'block',
-                            fontSize: '0.875rem',
-                            fontWeight: '500',
-                            color: '#374151',
-                            marginBottom: '0.5rem'
-                          }}>
-                            Phone Number
-                          </label>
-                          <input
-                            type="tel"
-                            value={data.phone}
-                            onChange={(e) => setData('phone', e.target.value)}
-                            style={{
-                              width: '100%',
-                              padding: '0.5rem 0.75rem',
-                              border: '1px solid #d1d5db',
-                              borderRadius: '0.375rem',
-                              fontSize: '0.875rem',
-                              outline: 'none'
-                            }}
-                          />
-                          {errors.phone && <p style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '0.25rem' }}>{errors.phone}</p>}
-                        </div>
-
-                        {/* Bio for Admin */}
-                        <div>
-                          <label style={{
-                            display: 'block',
-                            fontSize: '0.875rem',
-                            fontWeight: '500',
-                            color: '#374151',
-                            marginBottom: '0.5rem'
-                          }}>
-                            Bio
-                          </label>
-                          <textarea
-                            value={data.bio}
-                            onChange={(e) => setData('bio', e.target.value)}
-                            rows={3}
-                            style={{
-                              width: '100%',
-                              padding: '0.5rem 0.75rem',
-                              border: '1px solid #d1d5db',
-                              borderRadius: '0.375rem',
-                              fontSize: '0.875rem',
-                              outline: 'none',
-                              resize: 'vertical',
-                              fontFamily: 'inherit'
-                            }}
-                          />
-                          {errors.bio && <p style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '0.25rem' }}>{errors.bio}</p>}
-                        </div>
-                      </>
-                    )}
+                    {/* Bio */}
+                    <div>
+                      <label style={{
+                        display: 'block',
+                        fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)',
+                        fontWeight: '500',
+                        color: '#374151',
+                        marginBottom: '0.5rem'
+                      }}>
+                        Bio
+                      </label>
+                      <textarea
+                        value={data.bio}
+                        onChange={(e) => setData('bio', e.target.value)}
+                        rows={3}
+                        style={{
+                          width: '100%',
+                          padding: 'clamp(0.625rem, 2vw, 0.75rem)',
+                          border: '1px solid #d1d5db',
+                          borderRadius: '0.375rem',
+                          fontSize: 'clamp(0.875rem, 2vw, 1rem)',
+                          outline: 'none',
+                          resize: 'vertical',
+                          fontFamily: 'inherit'
+                        }}
+                      />
+                      {errors.bio && <p style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '0.25rem' }}>{errors.bio}</p>}
+                    </div>
 
                     {/* Save Button */}
                     <button
@@ -529,15 +474,15 @@ const AdminSettingsPage = () => {
                         alignItems: 'center',
                         justifyContent: 'center',
                         gap: '0.5rem',
-                        padding: '0.625rem 1.5rem',
+                        padding: 'clamp(0.625rem, 2vw, 0.75rem) clamp(1rem, 3vw, 1.5rem)',
                         backgroundColor: processing ? '#9ca3af' : '#3b82f6',
                         color: 'white',
                         border: 'none',
                         borderRadius: '0.375rem',
                         fontWeight: '500',
                         cursor: processing ? 'not-allowed' : 'pointer',
-                        fontSize: '0.875rem',
-                        alignSelf: 'flex-start'
+                        fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)',
+                        width: '100%'
                       }}
                     >
                       <Save size={16} />
@@ -550,23 +495,23 @@ const AdminSettingsPage = () => {
               {activeTab === "security" && (
                 <div>
                   <h2 style={{
-                    fontSize: '1.25rem',
+                    fontSize: 'clamp(1.125rem, 3vw, 1.5rem)',
                     fontWeight: '600',
                     color: '#111827',
                     marginBottom: '0.5rem'
                   }}>
                     Security Settings
                   </h2>
-                  <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '2rem' }}>
+                  <p style={{ fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)', color: '#6b7280', marginBottom: 'clamp(1.5rem, 3vw, 2rem)' }}>
                     Manage your password and security preferences
                   </p>
 
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(1.25rem, 3vw, 1.5rem)' }}>
                     {/* Current Password */}
                     <div>
                       <label style={{
                         display: 'block',
-                        fontSize: '0.875rem',
+                        fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)',
                         fontWeight: '500',
                         color: '#374151',
                         marginBottom: '0.5rem'
@@ -580,14 +525,16 @@ const AdminSettingsPage = () => {
                           onChange={(e) => setSecurityData({ ...securityData, currentPassword: e.target.value })}
                           style={{
                             width: '100%',
-                            padding: '0.5rem 2.5rem 0.5rem 0.75rem',
+                            padding: 'clamp(0.625rem, 2vw, 0.75rem)',
+                            paddingRight: '2.5rem',
                             border: '1px solid #d1d5db',
                             borderRadius: '0.375rem',
-                            fontSize: '0.875rem',
+                            fontSize: 'clamp(0.875rem, 2vw, 1rem)',
                             outline: 'none'
                           }}
                         />
                         <button
+                          type="button"
                           onClick={() => setShowPassword(!showPassword)}
                           style={{
                             position: 'absolute',
@@ -598,7 +545,10 @@ const AdminSettingsPage = () => {
                             background: 'none',
                             cursor: 'pointer',
                             color: '#6b7280',
-                            padding: '0.25rem'
+                            padding: '0.25rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
                           }}
                         >
                           {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -610,7 +560,7 @@ const AdminSettingsPage = () => {
                     <div>
                       <label style={{
                         display: 'block',
-                        fontSize: '0.875rem',
+                        fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)',
                         fontWeight: '500',
                         color: '#374151',
                         marginBottom: '0.5rem'
@@ -624,14 +574,16 @@ const AdminSettingsPage = () => {
                           onChange={(e) => setSecurityData({ ...securityData, newPassword: e.target.value })}
                           style={{
                             width: '100%',
-                            padding: '0.5rem 2.5rem 0.5rem 0.75rem',
+                            padding: 'clamp(0.625rem, 2vw, 0.75rem)',
+                            paddingRight: '2.5rem',
                             border: '1px solid #d1d5db',
                             borderRadius: '0.375rem',
-                            fontSize: '0.875rem',
+                            fontSize: 'clamp(0.875rem, 2vw, 1rem)',
                             outline: 'none'
                           }}
                         />
                         <button
+                          type="button"
                           onClick={() => setShowNewPassword(!showNewPassword)}
                           style={{
                             position: 'absolute',
@@ -642,7 +594,10 @@ const AdminSettingsPage = () => {
                             background: 'none',
                             cursor: 'pointer',
                             color: '#6b7280',
-                            padding: '0.25rem'
+                            padding: '0.25rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
                           }}
                         >
                           {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -654,7 +609,7 @@ const AdminSettingsPage = () => {
                     <div>
                       <label style={{
                         display: 'block',
-                        fontSize: '0.875rem',
+                        fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)',
                         fontWeight: '500',
                         color: '#374151',
                         marginBottom: '0.5rem'
@@ -667,10 +622,10 @@ const AdminSettingsPage = () => {
                         onChange={(e) => setSecurityData({ ...securityData, confirmPassword: e.target.value })}
                         style={{
                           width: '100%',
-                          padding: '0.5rem 0.75rem',
+                          padding: 'clamp(0.625rem, 2vw, 0.75rem)',
                           border: '1px solid #d1d5db',
                           borderRadius: '0.375rem',
-                          fontSize: '0.875rem',
+                          fontSize: 'clamp(0.875rem, 2vw, 1rem)',
                           outline: 'none'
                         }}
                       />
@@ -685,15 +640,15 @@ const AdminSettingsPage = () => {
                         alignItems: 'center',
                         justifyContent: 'center',
                         gap: '0.5rem',
-                        padding: '0.625rem 1.5rem',
+                        padding: 'clamp(0.625rem, 2vw, 0.75rem) clamp(1rem, 3vw, 1.5rem)',
                         backgroundColor: isSaving ? '#9ca3af' : '#3b82f6',
                         color: 'white',
                         border: 'none',
                         borderRadius: '0.375rem',
                         fontWeight: '500',
                         cursor: isSaving ? 'not-allowed' : 'pointer',
-                        fontSize: '0.875rem',
-                        alignSelf: 'flex-start'
+                        fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)',
+                        width: '100%'
                       }}
                     >
                       <Save size={16} />
@@ -710,12 +665,14 @@ const AdminSettingsPage = () => {
 
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-          * {
-            font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
-          }
-          h1, h2, h3, h4, h5, h6 {
-            font-weight: 600;
-          }
+        
+        * {
+          font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+        }
+        
+        h1, h2, h3, h4, h5, h6 {
+          font-weight: 600;
+        }
             
         @keyframes slideIn {
           from {
@@ -728,9 +685,89 @@ const AdminSettingsPage = () => {
           }
         }
 
+        /* Desktop: 2-column grid */
+        @media (min-width: 769px) {
+          .settings-grid {
+            grid-template-columns: 250px 1fr;
+          }
+          
+          .sidebar-nav {
+            flex-direction: column !important;
+          }
+          
+          .sidebar-nav button {
+            justify-content: flex-start !important;
+          }
+          
+          .toast-notification {
+            left: auto !important;
+            margin-left: auto;
+            margin-right: 1rem;
+          }
+        }
+
+        /* Mobile: Single column, horizontal tabs */
         @media (max-width: 768px) {
           .settings-grid {
-            grid-template-columns: 1fr !important;
+            grid-template-columns: 1fr;
+          }
+          
+          .sidebar-nav {
+            flex-direction: row !important;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+          }
+          
+          .sidebar-nav button {
+            flex-shrink: 0;
+            min-width: fit-content;
+          }
+          
+          .tab-label {
+            font-size: 0.8125rem;
+          }
+        }
+
+        /* Extra small mobile devices */
+        @media (max-width: 480px) {
+          .settings-container {
+            padding-left: 0.5rem;
+            padding-right: 0.5rem;
+          }
+          
+          .sidebar-nav {
+            padding: 0.375rem;
+          }
+          
+          .sidebar-nav button {
+            padding: 0.5rem 0.75rem;
+            font-size: 0.75rem;
+          }
+          
+          .sidebar-nav button svg {
+            width: 16px;
+            height: 16px;
+          }
+        }
+
+        /* Landscape mobile orientation */
+        @media (max-height: 600px) and (orientation: landscape) {
+          .settings-container {
+            padding-top: 0.75rem;
+            padding-bottom: 0.75rem;
+          }
+        }
+
+        /* Prevent zoom on input focus for iOS */
+        @media (max-width: 768px) {
+          input[type="text"],
+          input[type="email"],
+          input[type="tel"],
+          input[type="number"],
+          input[type="password"],
+          textarea,
+          select {
+            font-size: 16px !important;
           }
         }
       `}</style>

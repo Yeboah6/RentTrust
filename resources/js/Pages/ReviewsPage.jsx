@@ -48,14 +48,15 @@ const ReviewsSection = ({ reviews, reports, appReviews }) => {
   const { auth } = usePage().props;
 
   const renderStars = (rating) => {
+    const ratingValue = Math.floor(rating || 0);
     return Array.from({ length: 5 }).map((_, i) => (
       <Star
         key={i}
         style={{
-          height: '1rem',
-          width: '1rem',
-          color: i < rating ? 'hsl(38 92% 50%)' : 'hsl(200 15% 45%)',
-          fill: i < rating ? 'hsl(38 92% 50%)' : 'none'
+          height: 'clamp(0.875rem, 2.5vw, 1rem)',
+          width: 'clamp(0.875rem, 2.5vw, 1rem)',
+          color: i < ratingValue ? 'hsl(38 92% 50%)' : 'hsl(200 15% 45%)',
+          fill: i < ratingValue ? 'hsl(38 92% 50%)' : 'none'
         }}
       />
     ));
@@ -81,27 +82,126 @@ const ReviewsSection = ({ reviews, reports, appReviews }) => {
         * {
           font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
         }
+        
+        /* Mobile touch optimization */
+        @media (max-width: 768px) {
+          .tab-button {
+            min-height: 44px;
+            -webkit-tap-highlight-color: transparent;
+            font-size: clamp(0.75rem, 2vw, 0.875rem) !important;
+          }
+          
+          .tab-icon {
+            height: clamp(1rem, 3vw, 1.25rem) !important;
+            width: clamp(1rem, 3vw, 1.25rem) !important;
+          }
+          
+          .review-item {
+            flex-direction: column;
+            gap: 0.75rem !important;
+          }
+          
+          .check-items-grid {
+            grid-template-columns: 1fr !important;
+          }
+          
+          .modal-content {
+            max-width: 95% !important;
+            margin: 0.5rem;
+            max-height: 85vh;
+          }
+          
+          .count-badge {
+            font-size: 0.6875rem !important;
+            padding: 0.125rem 0.375rem !important;
+          }
+        }
+        
+        /* Extra small devices */
+        @media (max-width: 480px) {
+          .tabs-container {
+            flex-direction: column;
+            border-bottom: none !important;
+          }
+          
+          .tab-button {
+            border-bottom: 1px solid hsl(40 20% 88%);
+            justify-content: flex-start !important;
+            padding-left: 1rem !important;
+          }
+          
+          .header-section {
+            flex-direction: column;
+            align-items: flex-start !important;
+            gap: 1rem !important;
+          }
+        }
+        
+        /* Prevent zoom on input focus for iOS */
+        @media (max-width: 768px) {
+          input[type="text"],
+          input[type="email"],
+          textarea {
+            font-size: 16px !important;
+          }
+        }
+        
+        /* Landscape mobile */
+        @media (max-height: 600px) and (orientation: landscape) {
+          .modal-content {
+            max-height: 75vh;
+          }
+        }
+        
+        /* Tablet */
+        @media (min-width: 481px) and (max-width: 768px) {
+          .check-items-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+          }
+        }
+        
+        /* Desktop */
+        @media (min-width: 769px) {
+          .check-items-grid {
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) !important;
+          }
+        }
       `}</style>
+      
       <Header />
-
-      <div style={{ padding: '2rem', backgroundColor: 'hsl(40 33% 98%)', minHeight: '100vh' }}>
-        <div style={{ maxWidth: '56rem', margin: '0 auto' }}>
-          <div style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.75rem', overflow: 'hidden' }}>
+      
+      <div style={{ 
+        padding: 'clamp(1rem, 3vw, 2rem) clamp(0.75rem, 3vw, 1rem)', 
+        backgroundColor: 'hsl(40 33% 98%)', 
+        minHeight: '100vh' 
+      }}>
+        <div style={{ 
+          maxWidth: '56rem', 
+          margin: '0 auto' 
+        }}>
+          <div style={{ 
+            backgroundColor: 'white', 
+            border: '1px solid hsl(40 20% 88%)', 
+            borderRadius: 'clamp(0.5rem, 2vw, 0.75rem)', 
+            overflow: 'hidden' 
+          }}>
             {/* Tabs Navigation */}
-            <div style={{
+            <div className="tabs-container" style={{
               display: 'flex',
               borderBottom: '2px solid hsl(40 20% 88%)',
-              backgroundColor: 'hsl(40 30% 96%)'
+              backgroundColor: 'hsl(40 30% 96%)',
+              flexDirection: 'row'
             }}>
               {tabs.map((tab) => {
                 const Icon = tab.icon;
                 return (
                   <button
                     key={tab.id}
+                    className="tab-button"
                     onClick={() => setActiveTab(tab.id)}
                     style={{
                       flex: 1,
-                      padding: '1rem',
+                      padding: 'clamp(0.75rem, 2vw, 1rem)',
                       border: 'none',
                       backgroundColor: activeTab === tab.id ? 'white' : 'transparent',
                       borderBottom: activeTab === tab.id ? '2px solid hsl(174 62% 32%)' : '2px solid transparent',
@@ -110,10 +210,12 @@ const ReviewsSection = ({ reviews, reports, appReviews }) => {
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      gap: '0.5rem',
+                      gap: 'clamp(0.25rem, 1vw, 0.5rem)',
                       fontWeight: activeTab === tab.id ? '600' : '500',
                       color: activeTab === tab.id ? 'hsl(174 62% 32%)' : 'hsl(200 15% 45%)',
-                      transition: 'all 0.2s'
+                      transition: 'all 0.2s',
+                      whiteSpace: 'nowrap',
+                      touchAction: 'manipulation'
                     }}
                     onMouseEnter={(e) => {
                       if (activeTab !== tab.id) {
@@ -126,14 +228,19 @@ const ReviewsSection = ({ reviews, reports, appReviews }) => {
                       }
                     }}
                   >
-                    <Icon style={{ height: '1.25rem', width: '1.25rem' }} />
-                    <span>{tab.label}</span>
+                    <Icon className="tab-icon" style={{ 
+                      height: 'clamp(1rem, 3vw, 1.25rem)', 
+                      width: 'clamp(1rem, 3vw, 1.25rem)' 
+                    }} />
                     <span style={{
+                      fontSize: 'clamp(0.75rem, 2vw, 0.875rem)'
+                    }}>{tab.label}</span>
+                    <span className="count-badge" style={{
                       backgroundColor: activeTab === tab.id ? 'hsl(174 62% 32%)' : 'hsl(200 15% 45%)',
                       color: 'white',
-                      padding: '0.125rem 0.5rem',
+                      padding: 'clamp(0.125rem, 1vw, 0.125rem) clamp(0.375rem, 2vw, 0.5rem)',
                       borderRadius: '9999px',
-                      fontSize: '0.75rem',
+                      fontSize: 'clamp(0.6875rem, 2vw, 0.75rem)',
                       fontWeight: '600'
                     }}>
                       {tab.count}
@@ -144,27 +251,31 @@ const ReviewsSection = ({ reviews, reports, appReviews }) => {
             </div>
 
             {/* Header */}
-            <div style={{
-              padding: '1.5rem',
+            <div className="header-section" style={{
+              padding: 'clamp(1rem, 3vw, 1.5rem)',
               borderBottom: '1px solid hsl(40 20% 88%)',
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'start',
               flexWrap: 'wrap',
-              gap: '1rem'
+              gap: 'clamp(0.5rem, 2vw, 1rem)'
             }}>
               <div>
                 <h3 style={{
-                  fontSize: '1.25rem',
+                  fontSize: 'clamp(1.125rem, 4vw, 1.25rem)',
                   fontWeight: '600',
                   color: 'hsl(200 25% 15%)',
-                  marginBottom: '0.25rem'
+                  marginBottom: 'clamp(0.125rem, 1vw, 0.25rem)',
+                  lineHeight: '1.2'
                 }}>
                   {activeTab === "rent" && "Tenant & Landlord Reviews"}
                   {activeTab === "reports" && "Property Reports"}
                   {activeTab === "app" && "Platform Reviews"}
                 </h3>
-                <p style={{ fontSize: '0.875rem', color: 'hsl(200 15% 45%)' }}>
+                <p style={{ 
+                  fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                  color: 'hsl(200 15% 45%)' 
+                }}>
                   {activeTab === "rent" && `${reviews.length} reviews from tenants`}
                   {activeTab === "reports" && `${reports.length} reports submitted`}
                   {activeTab === "app" && `${appReviews.length} reviews of our platform`}
@@ -174,14 +285,17 @@ const ReviewsSection = ({ reviews, reports, appReviews }) => {
                 <button
                   onClick={() => setShowReviewForm(true)}
                   style={{
-                    padding: '0.5rem 1rem',
+                    padding: 'clamp(0.5rem, 2vw, 0.5rem) clamp(0.75rem, 3vw, 1rem)',
                     background: 'linear-gradient(135deg, hsl(174 62% 32%) 0%, hsl(174 50% 25%) 100%)',
                     color: 'white',
                     border: 'none',
-                    borderRadius: '0.5rem',
+                    borderRadius: 'clamp(0.375rem, 2vw, 0.5rem)',
                     fontWeight: '500',
                     cursor: 'pointer',
-                    fontSize: '0.875rem'
+                    fontSize: 'clamp(0.75rem, 2vw, 0.875rem)',
+                    whiteSpace: 'nowrap',
+                    touchAction: 'manipulation',
+                    minHeight: '44px'
                   }}
                   onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
                   onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
@@ -189,68 +303,51 @@ const ReviewsSection = ({ reviews, reports, appReviews }) => {
                   Write App Review
                 </button>
               )}
-              {(activeTab === "app") && showReviewForm && (
-                  <div style={{
-                    position: 'fixed',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    zIndex: 50,
-                    padding: '1rem'
-                  }}>
-                    <div style={{
-                      backgroundColor: 'white',
-                      borderRadius: '1rem',
-                      maxHeight: '90vh',
-                      overflow: 'auto',
-                      maxWidth: '60%',
-                      width: '100%',
-                      position: 'relative'
-                    }}>
-                      <AppReview setShowReviewForm={setShowReviewForm} auth={auth} />
-                    </div>
-                  </div>
-                )}
             </div>
 
             {/* Content */}
-            <div style={{ padding: '1.5rem' }}>
+            <div style={{ 
+              padding: 'clamp(1rem, 3vw, 1.5rem)' 
+            }}>
               {/* Rent Reviews Tab */}
               {activeTab === "rent" && (
                 <>
                   {reviews.map((review, reviewIndex) => (
                     <div key={review.id}>
-                      <div style={{ display: 'flex', gap: '1rem', marginBottom: reviewIndex < review.length - 1 ? '1.5rem' : 0 }}>
+                      <div className="review-item" style={{ 
+                        display: 'flex', 
+                        gap: 'clamp(0.75rem, 2vw, 1rem)', 
+                        marginBottom: reviewIndex < reviews.length - 1 ? 'clamp(1rem, 3vw, 1.5rem)' : 0 
+                      }}>
                         <div style={{
-                          width: '2.5rem',
-                          height: '2.5rem',
+                          width: 'clamp(2.5rem, 8vw, 2.5rem)',
+                          height: 'clamp(2.5rem, 8vw, 2.5rem)',
                           borderRadius: '50%',
                           backgroundColor: 'hsl(174 62% 32% / 0.1)',
                           color: 'hsl(174 62% 32%)',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          fontSize: '1rem',
+                          fontSize: 'clamp(0.875rem, 2.5vw, 1rem)',
                           fontWeight: '600',
                           flexShrink: 0
                         }}>
-                          {review.full_name ?  <User /> : 'T'}
+                          {review.full_name ?  <User size={20} /> : 'T'}
                         </div>
 
-                        <div style={{ flex: 1 }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{
                             display: 'flex',
                             alignItems: 'center',
-                            gap: '0.5rem',
-                            marginBottom: '0.25rem',
+                            gap: 'clamp(0.25rem, 1vw, 0.5rem)',
+                            marginBottom: 'clamp(0.125rem, 1vw, 0.25rem)',
                             flexWrap: 'wrap'
                           }}>
-                            <span style={{ fontWeight: '500', color: 'hsl(200 25% 15%)' }}>
+                            <span style={{ 
+                              fontWeight: '500', 
+                              color: 'hsl(200 25% 15%)',
+                              fontSize: 'clamp(0.875rem, 2.5vw, 1rem)'
+                            }}>
                               {review.full_name}
                             </span>
                             <div style={{ display: 'flex' }}>
@@ -259,9 +356,9 @@ const ReviewsSection = ({ reviews, reports, appReviews }) => {
                           </div>
 
                           <p style={{
-                            fontSize: '0.75rem',
+                            fontSize: 'clamp(0.6875rem, 2vw, 0.75rem)',
                             color: 'hsl(200 15% 45%)',
-                            marginBottom: '0.75rem'
+                            marginBottom: 'clamp(0.5rem, 2vw, 0.75rem)'
                           }}>
                             {new Date(review.created_at).toLocaleDateString('en-GB', {
                               year: 'numeric',
@@ -270,12 +367,11 @@ const ReviewsSection = ({ reviews, reports, appReviews }) => {
                             })}
                           </p>
 
-                          <div style={{
+                          <div className="check-items-grid" style={{
                             display: 'grid',
-                            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                            gap: '0.5rem',
-                            marginBottom: '0.75rem',
-                            fontSize: '0.875rem'
+                            gap: 'clamp(0.375rem, 1.5vw, 0.5rem)',
+                            marginBottom: 'clamp(0.5rem, 2vw, 0.75rem)',
+                            fontSize: 'clamp(0.75rem, 2vw, 0.875rem)'
                           }}>
                             {reviewCheckItems.map((item) => {
                               const value = review[item.key];
@@ -286,14 +382,20 @@ const ReviewsSection = ({ reviews, reports, appReviews }) => {
                                   style={{
                                     display: 'flex',
                                     alignItems: 'center',
-                                    gap: '0.375rem',
+                                    gap: 'clamp(0.25rem, 1vw, 0.375rem)',
                                     color: value ? 'hsl(152 60% 40%)' : 'hsl(200 15% 45%)'
                                   }}
                                 >
                                   {value ? (
-                                    <CheckCircle style={{ height: '0.875rem', width: '0.875rem' }} />
+                                    <CheckCircle style={{ 
+                                      height: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                                      width: 'clamp(0.75rem, 2vw, 0.875rem)' 
+                                    }} />
                                   ) : (
-                                    <XCircle style={{ height: '0.875rem', width: '0.875rem' }} />
+                                    <XCircle style={{ 
+                                      height: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                                      width: 'clamp(0.75rem, 2vw, 0.875rem)' 
+                                    }} />
                                   )}
                                   {item.label}
                                 </div>
@@ -302,29 +404,37 @@ const ReviewsSection = ({ reviews, reports, appReviews }) => {
                           </div>
 
                           {review.comments && (
-                            <p style={{ color: 'hsl(200 15% 45%)', lineHeight: '1.6', marginBottom: '0.75rem' }}>
+                            <p style={{ 
+                              color: 'hsl(200 15% 45%)', 
+                              lineHeight: '1.6', 
+                              marginBottom: 'clamp(0.5rem, 2vw, 0.75rem)',
+                              fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)'
+                            }}>
                               "{review.comments}"
                             </p>
                           )}
 
                           {review.response && (
                             <div style={{
-                              marginTop: '1rem',
-                              paddingLeft: '1rem',
+                              marginTop: 'clamp(0.75rem, 2vw, 1rem)',
+                              paddingLeft: 'clamp(0.75rem, 2vw, 1rem)',
                               borderLeft: '2px solid hsl(174 62% 32% / 0.2)',
                               backgroundColor: 'hsl(40 30% 94%)',
-                              padding: '0.75rem',
-                              borderRadius: '0 0.5rem 0.5rem 0'
+                              padding: 'clamp(0.5rem, 2vw, 0.75rem)',
+                              borderRadius: '0 clamp(0.375rem, 2vw, 0.5rem) clamp(0.375rem, 2vw, 0.5rem) 0'
                             }}>
                               <p style={{
-                                fontSize: '0.75rem',
+                                fontSize: 'clamp(0.6875rem, 2vw, 0.75rem)',
                                 fontWeight: '500',
                                 color: 'hsl(174 62% 32%)',
-                                marginBottom: '0.25rem'
+                                marginBottom: 'clamp(0.125rem, 1vw, 0.25rem)'
                               }}>
                                 Agent Response
                               </p>
-                              <p style={{ fontSize: '0.875rem', color: 'hsl(200 15% 45%)' }}>
+                              <p style={{ 
+                                fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                                color: 'hsl(200 15% 45%)' 
+                              }}>
                                 {review.response}
                               </p>
                             </div>
@@ -333,7 +443,11 @@ const ReviewsSection = ({ reviews, reports, appReviews }) => {
                       </div>
 
                       {reviewIndex < reviews.length - 1 && (
-                        <div style={{ height: '1px', backgroundColor: 'hsl(40 20% 88%)', margin: '1.5rem 0' }} />
+                        <div style={{ 
+                          height: '1px', 
+                          backgroundColor: 'hsl(40 20% 88%)', 
+                          margin: 'clamp(1rem, 3vw, 1.5rem) 0' 
+                        }} />
                       )}
                     </div>
                   ))}
@@ -345,25 +459,28 @@ const ReviewsSection = ({ reviews, reports, appReviews }) => {
                 <>
                   {reports.map((report, reportIndex) => (
                     <div key={report.id}>
-                      <div style={{ marginBottom: reportIndex < reports.length - 1 ? '1.5rem' : 0 }}>
+                      <div style={{ 
+                        marginBottom: reportIndex < reports.length - 1 ? 'clamp(1rem, 3vw, 1.5rem)' : 0 
+                      }}>
                         <div style={{
                           display: 'flex',
                           justifyContent: 'space-between',
                           alignItems: 'start',
-                          marginBottom: '0.5rem',
+                          marginBottom: 'clamp(0.375rem, 1.5vw, 0.5rem)',
                           flexWrap: 'wrap',
-                          gap: '0.5rem'
+                          gap: 'clamp(0.25rem, 1vw, 0.5rem)'
                         }}>
                           <div>
                             <h4 style={{
                               fontWeight: '600',
                               color: 'hsl(200 25% 15%)',
-                              marginBottom: '0.25rem'
+                              marginBottom: 'clamp(0.125rem, 1vw, 0.25rem)',
+                              fontSize: 'clamp(0.875rem, 2.5vw, 1rem)'
                             }}>
                               {report.report_type}
                             </h4>
                             <p style={{
-                              fontSize: '0.875rem',
+                              fontSize: 'clamp(0.75rem, 2vw, 0.875rem)',
                               color: 'hsl(174 62% 32%)',
                               fontWeight: '500'
                             }}>
@@ -371,12 +488,13 @@ const ReviewsSection = ({ reviews, reports, appReviews }) => {
                             </p>
                           </div>
                           <span style={{
-                            padding: '0.25rem 0.75rem',
+                            padding: 'clamp(0.1875rem, 1vw, 0.25rem) clamp(0.5rem, 2vw, 0.75rem)',
                             borderRadius: '9999px',
-                            fontSize: '0.75rem',
+                            fontSize: 'clamp(0.6875rem, 2vw, 0.75rem)',
                             fontWeight: '500',
                             backgroundColor: report.status === "Resolved" ? 'hsl(152 60% 95%)' : 'hsl(38 92% 95%)',
-                            color: report.status === "Resolved" ? 'hsl(152 60% 40%)' : 'hsl(38 92% 40%)'
+                            color: report.status === "Resolved" ? 'hsl(152 60% 40%)' : 'hsl(38 92% 40%)',
+                            whiteSpace: 'nowrap'
                           }}>
                             {report.status}
                           </span>
@@ -384,12 +502,13 @@ const ReviewsSection = ({ reviews, reports, appReviews }) => {
                         <p style={{
                           color: 'hsl(200 15% 45%)',
                           lineHeight: '1.6',
-                          marginBottom: '0.5rem'
+                          marginBottom: 'clamp(0.375rem, 1.5vw, 0.5rem)',
+                          fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)'
                         }}>
                           {report.report_description}
                         </p>
                         <p style={{
-                          fontSize: '0.75rem',
+                          fontSize: 'clamp(0.6875rem, 2vw, 0.75rem)',
                           color: 'hsl(200 15% 45%)'
                         }}>
                           Reported on {new Date(report.created_at).toLocaleDateString('en-GB', {
@@ -401,7 +520,11 @@ const ReviewsSection = ({ reviews, reports, appReviews }) => {
                       </div>
 
                       {reportIndex < reports.length - 1 && (
-                        <div style={{ height: '1px', backgroundColor: 'hsl(40 20% 88%)', margin: '1.5rem 0' }} />
+                        <div style={{ 
+                          height: '1px', 
+                          backgroundColor: 'hsl(40 20% 88%)', 
+                          margin: 'clamp(1rem, 3vw, 1.5rem) 0' 
+                        }} />
                       )}
                     </div>
                   ))}
@@ -413,32 +536,40 @@ const ReviewsSection = ({ reviews, reports, appReviews }) => {
                 <>
                   {appReviews.map((review, reviewIndex) => (
                     <div key={review.id}>
-                      <div style={{ display: 'flex', gap: '1rem', marginBottom: reviewIndex < appReviews.length - 1 ? '1.5rem' : 0 }}>
+                      <div className="review-item" style={{ 
+                        display: 'flex', 
+                        gap: 'clamp(0.75rem, 2vw, 1rem)', 
+                        marginBottom: reviewIndex < appReviews.length - 1 ? 'clamp(1rem, 3vw, 1.5rem)' : 0 
+                      }}>
                         <div style={{
-                          width: '2.5rem',
-                          height: '2.5rem',
+                          width: 'clamp(2.5rem, 8vw, 2.5rem)',
+                          height: 'clamp(2.5rem, 8vw, 2.5rem)',
                           borderRadius: '50%',
                           backgroundColor: 'hsl(174 62% 32% / 0.1)',
                           color: 'hsl(174 62% 32%)',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          fontSize: '1rem',
+                          fontSize: 'clamp(0.875rem, 2.5vw, 1rem)',
                           fontWeight: '600',
                           flexShrink: 0
                         }}>
-                          {review.full_name ?  <User /> : "T"}
+                          {review.full_name ?  <User size={20} /> : "T"}
                         </div>
 
-                        <div style={{ flex: 1 }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{
                             display: 'flex',
                             alignItems: 'center',
-                            gap: '0.5rem',
-                            marginBottom: '0.25rem',
+                            gap: 'clamp(0.25rem, 1vw, 0.5rem)',
+                            marginBottom: 'clamp(0.125rem, 1vw, 0.25rem)',
                             flexWrap: 'wrap'
                           }}>
-                            <span style={{ fontWeight: '500', color: 'hsl(200 25% 15%)' }}>
+                            <span style={{ 
+                              fontWeight: '500', 
+                              color: 'hsl(200 25% 15%)',
+                              fontSize: 'clamp(0.875rem, 2.5vw, 1rem)'
+                            }}>
                               {review.full_name}
                             </span>
                             <div style={{ display: 'flex' }}>
@@ -447,9 +578,9 @@ const ReviewsSection = ({ reviews, reports, appReviews }) => {
                           </div>
 
                           <p style={{
-                            fontSize: '0.75rem',
+                            fontSize: 'clamp(0.6875rem, 2vw, 0.75rem)',
                             color: 'hsl(200 15% 45%)',
-                            marginBottom: '0.75rem'
+                            marginBottom: 'clamp(0.5rem, 2vw, 0.75rem)'
                           }}>
                             {new Date(review.created_at).toLocaleDateString('en-GB', {
                               year: 'numeric',
@@ -458,14 +589,22 @@ const ReviewsSection = ({ reviews, reports, appReviews }) => {
                             })}
                           </p>
 
-                          <p style={{ color: 'hsl(200 15% 45%)', lineHeight: '1.6' }}>
+                          <p style={{ 
+                            color: 'hsl(200 15% 45%)', 
+                            lineHeight: '1.6',
+                            fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)'
+                          }}>
                             {review.comments}
                           </p>
                         </div>
                       </div>
 
                       {reviewIndex < appReviews.length - 1 && (
-                        <div style={{ height: '1px', backgroundColor: 'hsl(40 20% 88%)', margin: '1.5rem 0' }} />
+                        <div style={{ 
+                          height: '1px', 
+                          backgroundColor: 'hsl(40 20% 88%)', 
+                          margin: 'clamp(1rem, 3vw, 1.5rem) 0' 
+                        }} />
                       )}
                     </div>
                   ))}
@@ -475,6 +614,36 @@ const ReviewsSection = ({ reviews, reports, appReviews }) => {
           </div>
         </div>
       </div>
+      
+      {/* App Review Modal */}
+      {activeTab === "app" && showReviewForm && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 50,
+          padding: 'clamp(0.5rem, 2vw, 1rem)'
+        }}>
+          <div className="modal-content" style={{
+            backgroundColor: 'white',
+            borderRadius: 'clamp(0.75rem, 2vw, 1rem)',
+            maxHeight: '90vh',
+            overflow: 'auto',
+            maxWidth: 'clamp(90%, 95vw, 60%)',
+            width: '100%',
+            position: 'relative'
+          }}>
+            <AppReview setShowReviewForm={setShowReviewForm} auth={auth} />
+          </div>
+        </div>
+      )}
+      
       <Footer />
     </>
   );

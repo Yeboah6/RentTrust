@@ -124,7 +124,7 @@ const ClaimListingPage = () => {
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'hsl(40 33% 98%)' }}>
         <Header />
 
-        <main style={{ flex: 1, padding: '3rem 1rem' }}>
+        <main style={{ flex: 1, padding: 'clamp(1.5rem, 4vw, 3rem) 1rem' }}>
           <div className="container mx-auto" style={{ maxWidth: '32rem' }}>
             <div
               style={{
@@ -135,7 +135,7 @@ const ClaimListingPage = () => {
               }}
             >
               {/* Header */}
-              <div style={{ padding: '2rem', textAlign: 'center', borderBottom: '1px solid hsl(40 20% 88%)' }}>
+              <div style={{ padding: 'clamp(1.5rem, 4vw, 2rem)', textAlign: 'center', borderBottom: '1px solid hsl(40 20% 88%)' }}>
                 <div
                   style={{
                     width: '3rem',

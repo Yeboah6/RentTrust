@@ -17,11 +17,18 @@ class AgentController extends Controller
     }
 
     public function agent() {
-        $agents = Agent::all();
-        // $listingCounts = Rental::select('agent_id', \DB::raw('count(*) as total'))
-        //     ->groupBy('agent_id')
-        //     ->pluck('total', 'agent_id')
-        //     ->toArray();
+        $agents = DB::table('agents')
+            ->leftJoin('rentals', 'agents.id', '=', 'rentals.agent_id')
+            ->leftJoin('reviews', 'rentals.id', '=', 'reviews.rental_id')
+            ->select(
+                'agents.*',
+                DB::raw('count(distinct rentals.id) as listing_count'),
+                DB::raw('count(distinct reviews.id) as total_reviews'),
+                DB::raw('avg(json_extract(reviews.overall_rating, "$")) as average_rating')
+            )
+            ->groupBy('agents.id')
+            ->get();
+
         return inertia('AgentsPage', ['agent' => $agents]);
     }
 
