@@ -17,25 +17,42 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental }) => {
     bedrooms: '',
     bathrooms: '',
     amenities: [],
-    images: [],
-    existingImages: [], // Add this to track existing images
+    newImages: [], // New images to upload
+    existingImages: [], // Existing images to keep
+    removedImages: [], // Existing images to remove
     description: '',
     agentName: agentData?.fullName || '',
     agentPhone: agentData?.phone || '',
     agentEmail: agentData?.email || ''
   });
 
-  const [images, setImages] = useState([]);
+  const [newImages, setNewImages] = useState([]);
   const [existingImages, setExistingImages] = useState([]);
   const [currentStep, setCurrentStep] = useState(1);
   const [toast, setToast] = useState(null);
-  const allImages = [...existingImages, ...images];
+  // const allImages = [...existingImages, ...images];
+
+  const parseImages = (imagesData) => {
+    if (!imagesData) return [];
+    
+    try {
+      if (Array.isArray(imagesData)) return imagesData;
+      if (typeof imagesData === 'string') {
+        const parsed = JSON.parse(imagesData);
+        return Array.isArray(parsed) ? parsed : [];
+      }
+      return [];
+    } catch (e) {
+      console.error('Error parsing images:', e);
+      return [];
+    }
+  };
 
   useEffect(() => {
     if (rental) {
-      console.log('Rentals data received:', rental); // Debug log
+      console.log('Rental data received:', rental);
       
-      // Parse amenities if they're stored as JSON string
+      // Parse amenities
       let parsedAmenities = [];
       try {
         if (rental.amenities) {
@@ -48,36 +65,55 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental }) => {
         parsedAmenities = [];
       }
 
-      // Handle existing images - assuming rental.images is an array of image URLs or objects
-      const imagesArray = rental.images || [];
-      const existingImagesList = imagesArray.map((img, index) => ({
-        id: `existing-${index}`,
-        name: `image-${index}`,
-        preview: img.url || img, // Adjust based on your data structure
-        isExisting: true
-      }));
+      // Parse and set existing images
+      const imagesArray = parseImages(rental.images);
+      console.log('Parsed images array:', imagesArray);
+      
+      const existingImagesList = imagesArray.map((img, index) => {
+        // Handle different image formats
+        let imagePath = '';
+        if (typeof img === 'string') {
+          imagePath = img;
+        } else if (img && img.path) {
+          imagePath = img.path;
+        } else if (img && img.url) {
+          imagePath = img.url;
+        }
+
+        return {
+          id: `existing-${index}`,
+          name: `image-${index}`,
+          // Construct full path - adjust based on your storage structure
+          preview: imagePath.startsWith('http') 
+            ? imagePath 
+            : `/storage/rental_images/${imagePath}`,
+          path: imagePath, // Store original path
+          isExisting: true
+        };
+      });
 
       setExistingImages(existingImagesList);
       
       setData({
         id: rental.id || '',
         title: rental.title || '',
-        propertyType: rental.property_type || rental.propertyType || '',
+        propertyType: rental.property_type || '',
         area: rental.area || '',
         city: rental.city || '',
         address: rental.address || '',
-        rentMin: rental.rent_min || rental.rentMin || '',
-        rentMax: rental.rent_max || rental.rentMax || '',
-        advanceDuration: rental.advance_duration || rental.advanceDuration || '1',
-        bedrooms: rental.bedrooms || '',
-        bathrooms: rental.bathrooms || '',
+        rentMin: rental.rent_min || '',
+        rentMax: rental.rent_max || '',
+        advanceDuration: rental.advance_duration?.toString() || '1',
+        bedrooms: rental.bedrooms?.toString() || '',
+        bathrooms: rental.bathrooms?.toString() || '',
         amenities: parsedAmenities,
-        images: [],
-        existingImages: imagesArray, // Store existing images
+        newImages: [],
+        existingImages: existingImagesList.map(img => img.path),
+        removedImages: [],
         description: rental.description || '',
-        agentName: rental.agent_name || rental.agentName || agentData?.fullName || '',
-        agentPhone: rental.agent_phone || rental.agentPhone || agentData?.phone || '',
-        agentEmail: rental.agent_email || rental.agentEmail || agentData?.email || ''
+        agentName: rental.agent_name || agentData?.fullName || '',
+        agentPhone: rental.agent_phone || agentData?.phone || '',
+        agentEmail: rental.agent_email || agentData?.email || ''
       });
     }
   }, [rental]);
@@ -85,7 +121,7 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental }) => {
   console.log('EditRentals received rental prop:', rental);
 
 
- const propertyTypes = ['Apartment', 'House', 'Studio', 'Chamber and Hall', 'Self-Contained', 'Condo', 'Townhouse'];
+  const propertyTypes = ['Apartment', 'House', 'Studio', 'Chamber and Hall', 'Self-Contained', 'Condo', 'Townhouse'];
   const cities = ['Accra', 'Kumasi', 'Tema', 'Takoradi', 'Cape Coast', 'Tamale'];
   const amenitiesList = ['Wi-Fi', 'Parking', 'Security', 'Water Supply', 'Backup Generator', 'Air Conditioning', 'Furnished', 'Gym', 'Swimming Pool', 'Garden'];
 
@@ -99,7 +135,6 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental }) => {
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
     
-    // Filter valid files
     const validFiles = files.filter(file => {
       if (file.size > 5 * 1024 * 1024) {
         showToast("File too large", `${file.name} is larger than 5MB`, "error");
@@ -108,7 +143,7 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental }) => {
       return true;
     });
 
-    const newImages = validFiles.map(file => ({
+    const newImageObjects = validFiles.map(file => ({
       id: Math.random().toString(36).substr(2, 9),
       name: file.name,
       file: file,
@@ -116,29 +151,37 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental }) => {
       isExisting: false
     }));
     
-    const totalImages = [...existingImages, ...images, ...newImages];
-    if (totalImages.length > 6) {
+    const totalImages = existingImages.length + newImages.length + newImageObjects.length;
+    if (totalImages > 6) {
       showToast("Too many images", "Maximum 6 images allowed", "error");
       return;
     }
     
-    const updatedImages = [...images, ...newImages];
-    setImages(updatedImages);
-    setData('images', updatedImages.map(img => img.file));
+    const updatedNewImages = [...newImages, ...newImageObjects];
+    setNewImages(updatedNewImages);
+    setData('newImages', updatedNewImages.map(img => img.file));
   };
 
-  const removeImage = (id) => {
-    // Check if it's an existing image or new upload
-    if (id.startsWith('existing-')) {
-      // Remove from existing images
+  const removeImage = (id, isExisting) => {
+    if (isExisting) {
+      // Find the image being removed
+      const imageToRemove = existingImages.find(img => img.id === id);
+      
+      // Remove from existing images display
       const updatedExistingImages = existingImages.filter(img => img.id !== id);
       setExistingImages(updatedExistingImages);
-      setData('existingImages', updatedExistingImages.map(img => img.preview));
+      
+      // Update form data
+      setData(prev => ({
+        ...prev,
+        existingImages: updatedExistingImages.map(img => img.path),
+        removedImages: [...prev.removedImages, imageToRemove.path]
+      }));
     } else {
       // Remove from new images
-      const updatedImages = images.filter(img => img.id !== id);
-      setImages(updatedImages);
-      setData('images', updatedImages.map(img => img.file));
+      const updatedNewImages = newImages.filter(img => img.id !== id);
+      setNewImages(updatedNewImages);
+      setData('newImages', updatedNewImages.map(img => img.file));
     }
   };
 
@@ -182,10 +225,11 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental }) => {
 
     const formData = new FormData();
     
-    // Add ID for update
-    formData.append('id', data.id);
+    // Add method spoofing for PUT request
+    formData.append('_method', 'PUT');
     
-    // Add all form fields
+    // Add all text fields
+    formData.append('id', data.id);
     formData.append('title', data.title);
     formData.append('propertyType', data.propertyType);
     formData.append('area', data.area);
@@ -196,52 +240,50 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental }) => {
     formData.append('advanceDuration', data.advanceDuration);
     formData.append('bedrooms', data.bedrooms);
     formData.append('bathrooms', data.bathrooms || '0');
-
-    // Ensure amenities is always a string
-    const amenitiesString = Array.isArray(data.amenities) 
-      ? JSON.stringify(data.amenities) 
-      : data.amenities || '[]';
-    formData.append('amenities', amenitiesString);
-
     formData.append('description', data.description || '');
     formData.append('agentName', data.agentName);
     formData.append('agentPhone', data.agentPhone);
     formData.append('agentEmail', data.agentEmail);
+
+    // Add amenities as JSON string
+    formData.append('amenities', JSON.stringify(data.amenities));
     
-    // Add existing images to be kept
-    if (data.existingImages && data.existingImages.length > 0) {
-      data.existingImages.forEach((img, index) => {
-        formData.append(`existingImages[${index}]`, img);
-      });
-    }
+    // Add existing images (images to keep)
+    data.existingImages.forEach((imagePath, index) => {
+      formData.append(`existingImages[${index}]`, imagePath);
+    });
     
-    // Add new images
-    if (data.images && data.images.length > 0) {
-      data.images.forEach((file, index) => {
-        if (file) {
-          formData.append(`images[${index}]`, file);
-        }
-      });
-    }
+    // Add removed images
+    data.removedImages.forEach((imagePath, index) => {
+      formData.append(`removedImages[${index}]`, imagePath);
+    });
     
-    // Use PUT for update and include the ID in the URL
-    put(`/rent/${data.id}`, {
+    // Add new image files
+    newImages.forEach((imageObj, index) => {
+      formData.append(`newImages[${index}]`, imageObj.file);
+    });
+
+    console.log('Submitting update with:', {
+      id: data.id,
+      existingImagesCount: data.existingImages.length,
+      removedImagesCount: data.removedImages.length,
+      newImagesCount: newImages.length
+    });
+    
+    // Use POST with _method=PUT for file uploads
+    post(`/rent/${data.id}`, {
       data: formData,
       forceFormData: true,
       preserveScroll: true,
       onSuccess: () => {
-        showToast("Listing Updated", "Your rental listing has been updated.", "success");
-        reset();
-        setImages([]);
-        setExistingImages([]);
-        setCurrentStep(1);
+        showToast("Listing Updated", "Your rental listing has been updated successfully.", "success");
         setTimeout(() => {
           if (setShowEditListingModal) setShowEditListingModal(false);
         }, 1500);
       },
       onError: (errors) => {
         console.error('Update errors:', errors);
-        showToast("Update Failed", "Please correct the errors and try again.", "error");
+        showToast("Update Failed", Object.values(errors)[0] || "Please correct the errors and try again.", "error");
       },
     });
   };
@@ -253,6 +295,8 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental }) => {
     { number: 3, title: 'Contact Information', icon: FileText },
     { number: 4, title: 'Review & Submit', icon: CheckCircle2 }
   ];
+
+  const allImages = [...existingImages, ...newImages];
 
   return (
     <>
@@ -1216,8 +1260,24 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental }) => {
                         display: 'block', 
                         marginBottom: 'clamp(0.5rem, 2vw, 0.75rem)' 
                       }}>
-                        Property Images (Max 6)
+                        Property Images (Max 6) - {allImages.length}/6
                       </label>
+                      
+                      {/* Show info about existing images */}
+                      {existingImages.length > 0 && (
+                        <div style={{
+                          padding: '0.75rem',
+                          marginBottom: '0.75rem',
+                          backgroundColor: 'hsl(217 91% 60% / 0.1)',
+                          borderRadius: '0.5rem',
+                          fontSize: '0.875rem',
+                          color: 'hsl(200 25% 15%)'
+                        }}>
+                          📷 {existingImages.length} existing image{existingImages.length !== 1 ? 's' : ''} • 
+                          {newImages.length > 0 && ` ${newImages.length} new image${newImages.length !== 1 ? 's' : ''} to upload`}
+                        </div>
+                      )}
+                      
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(0.75rem, 2vw, 1rem)' }}>
                         {allImages.length < 6 && (
                           <label className="action-button" style={{
@@ -1233,41 +1293,20 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental }) => {
                             cursor: 'pointer',
                             transition: 'all 0.2s',
                             padding: '1rem'
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = 'hsl(174 62% 32% / 0.1)';
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = 'hsl(174 62% 32% / 0.05)';
-                          }}
-                          >
-                            <div style={{ 
-                              display: 'flex', 
-                              flexDirection: 'column', 
-                              alignItems: 'center', 
-                              justifyContent: 'center' 
+                          }}>
+                            <Upload style={{ 
+                              height: 'clamp(1.5rem, 5vw, 2rem)', 
+                              width: 'clamp(1.5rem, 5vw, 2rem)', 
+                              marginBottom: 'clamp(0.25rem, 1vw, 0.375rem)',
+                              color: 'hsl(174 62% 32%)' 
+                            }} />
+                            <p style={{ 
+                              fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                              fontWeight: '500',
+                              color: 'hsl(174 62% 32%)'
                             }}>
-                              <Upload style={{ 
-                                height: 'clamp(1.5rem, 5vw, 2rem)', 
-                                width: 'clamp(1.5rem, 5vw, 2rem)', 
-                                marginBottom: 'clamp(0.25rem, 1vw, 0.375rem)',
-                                color: 'hsl(174 62% 32%)' 
-                              }} />
-                              <p style={{ 
-                                fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', 
-                                fontWeight: '500',
-                                color: 'hsl(174 62% 32%)',
-                                marginBottom: 'clamp(0.125rem, 1vw, 0.25rem)'
-                              }}>
-                                Click to upload images
-                              </p>
-                              <p style={{ 
-                                fontSize: 'clamp(0.6875rem, 2vw, 0.75rem)', 
-                                color: 'hsl(200 15% 45%)' 
-                              }}>
-                                PNG, JPG up to 5MB
-                              </p>
-                            </div>
+                              Click to upload new images
+                            </p>
                             <input
                               type="file"
                               style={{ display: 'none' }}
@@ -1281,6 +1320,7 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental }) => {
                         {allImages.length > 0 && (
                           <div className="images-grid" style={{
                             display: 'grid',
+                            gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
                             gap: 'clamp(0.5rem, 2vw, 0.75rem)'
                           }}>
                             {allImages.map(image => (
@@ -1289,11 +1329,16 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental }) => {
                                   aspectRatio: '1 / 1',
                                   backgroundColor: 'hsl(40 30% 94%)',
                                   borderRadius: 'clamp(0.375rem, 2vw, 0.5rem)',
-                                  overflow: 'hidden'
+                                  overflow: 'hidden',
+                                  border: image.isExisting ? '2px solid hsl(217 91% 60%)' : 'none'
                                 }}>
                                   <img 
                                     src={image.preview} 
-                                    alt={image.name} 
+                                    alt={image.name}
+                                    onError={(e) => {
+                                      console.error('Image load error:', image.preview);
+                                      e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23ddd" width="100" height="100"/%3E%3Ctext x="50%" y="50%" text-anchor="middle" dy=".3em" fill="%23999"%3ENo Image%3C/text%3E%3C/svg%3E';
+                                    }}
                                     style={{
                                       width: '100%',
                                       height: '100%',
@@ -1308,7 +1353,7 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental }) => {
                                       padding: '0.25rem 0.5rem',
                                       borderRadius: '0.25rem',
                                       fontSize: '0.6875rem',
-                                      fontWeight: '500',
+                                      fontWeight: '600',
                                       backgroundColor: 'hsl(217 91% 60%)',
                                       color: 'white'
                                     }}>
@@ -1318,7 +1363,7 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental }) => {
                                 </div>
                                 <button
                                   type="button"
-                                  onClick={() => removeImage(image.id)}
+                                  onClick={() => removeImage(image.id, image.isExisting)}
                                   className="action-button"
                                   style={{
                                     position: 'absolute',
@@ -1348,6 +1393,7 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental }) => {
                       </div>
                     </div>
                   </div>
+                  // </div>
                 )}
 
                 {/* Step 3: Contact Information */}

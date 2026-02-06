@@ -431,6 +431,12 @@ const ReviewsSection = ({ reviews, reports, appReviews }) => {
                               }}>
                                 Agent Response
                               </p>
+                               <span style={{ 
+                                  color: 'hsl(200 25% 15%)',
+                                  fontSize: 'clamp(0.875rem, 1.5vw, .5rem)'
+                                }}>
+                                  {review.response_person}
+                                </span>
                               <p style={{ 
                                 fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', 
                                 color: 'hsl(200 15% 45%)' 

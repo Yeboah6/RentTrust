@@ -229,9 +229,10 @@ const PropertyCard = ({ listing }) => {
             style={{
               width: '100%',
               height: '100%',
-              // objectFit: 'cover',
+              objectFit: 'cover',
               objectPosition: 'center',
-              transition: 'opacity 0.3s ease-in-out'
+              transition: 'transform 0.3s ease-in-out',
+              transform: isHovered ? 'scale(1.05)' : 'scale(1)'
             }}
           />
         ) : (
@@ -381,7 +382,7 @@ const PropertyCard = ({ listing }) => {
             }}
           >
             <Clock style={{ height: '0.75rem', width: '0.75rem' }} /> 
-            { listing.status }
+            {listing.status}
           </span>
         </div>
 
@@ -458,17 +459,34 @@ const PropertyCard = ({ listing }) => {
   );
 };
 
-const ListingsPage = ({ listings: initialListings = [] }) => {
+const ListingsPage = ({ listings: initialListingsData = {} }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
   const [sortBy, setSortBy] = useState("recent");
   const [listings, setListings] = useState([]);
+  const [lastId, setLastId] = useState(null);
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
+  // Initialize listings on component mount
   useEffect(() => {
-    if (initialListings && initialListings.length > 0) {
-      setListings(initialListings);
+    // Handle different response formats
+    const data = initialListingsData.data || initialListingsData;
+    
+    if (data && Array.isArray(data)) {
+      const formattedInitialListings = formatListings(data);
+      setListings(formattedInitialListings);
+      
+      // Set the last ID from initial load
+      if (formattedInitialListings.length > 0) {
+        const lastItem = formattedInitialListings[formattedInitialListings.length - 1];
+        setLastId(lastItem.id);
+      }
+      
+      // Check if there are more items
+      setHasMore(initialListingsData.has_more !== false);
     }
-  }, [initialListings]);
+  }, [initialListingsData]);
 
   const formatListings = (dbListings) => {
     return dbListings.map(listing => ({
@@ -483,16 +501,72 @@ const ListingsPage = ({ listings: initialListings = [] }) => {
       bathrooms: listing.bathrooms,
       property_type: listing.property_type,
       agentName: listing.agent_name || null,
-      status:listing.status,
+      status: listing.status,
       isVerified: Boolean(listing.status),
       isClaimed: Boolean(listing.is_verified), 
       reviewCount: parseInt(listing.review_count) || 0,
       rating: parseFloat(listing.rating) || 0,
-      // Ensure images are properly included
       images: listing.images || [],
       amenities: listing.amenities || [],
-      description: listing.description || ''
+      description: listing.description || '',
+      created_at: listing.created_at
     }));
+  };
+
+  const loadMoreListings = async () => {
+    // Prevent duplicate requests
+    if (isLoading || !hasMore) return;
+    
+    setIsLoading(true);
+    try {
+      // Use cursor-based pagination with last_id
+      const url = lastId 
+        ? `/api/listings/more?last_id=${lastId}`
+        : `/api/listings/more`;
+        
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      // Debug logging (remove in production)
+      console.log('Loaded listings:', {
+        count: data.listings?.length,
+        has_more: data.has_more,
+        last_id: data.last_id,
+        current_total: listings.length
+      });
+      
+      if (data.listings && Array.isArray(data.listings) && data.listings.length > 0) {
+        const formattedNewListings = formatListings(data.listings);
+        
+        // Check for duplicates (development only)
+        const existingIds = new Set(listings.map(l => l.id));
+        const duplicates = formattedNewListings.filter(l => existingIds.has(l.id));
+        
+        if (duplicates.length > 0) {
+          console.warn('⚠️ Duplicate listings detected:', duplicates.map(d => d.id));
+        }
+        
+        // Add new listings
+        setListings(prev => [...prev, ...formattedNewListings]);
+        
+        // Update cursor to last loaded item
+        setLastId(data.last_id);
+        setHasMore(data.has_more);
+      } else {
+        // No more listings available
+        setHasMore(false);
+      }
+    } catch (error) {
+      console.error('Failed to load more listings:', error);
+      setHasMore(false);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const cityOptions = [
@@ -510,9 +584,7 @@ const ListingsPage = ({ listings: initialListings = [] }) => {
     { value: "rating", label: "Highest Rated" }
   ];
 
-  const formattedListings = formatListings(listings);
-
-  const filteredListings = formattedListings.filter(listing => {
+  const filteredListings = listings.filter(listing => {
     const matchesSearch = listing.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          listing.area.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          listing.city.toLowerCase().includes(searchQuery.toLowerCase());
@@ -668,29 +740,31 @@ const ListingsPage = ({ listings: initialListings = [] }) => {
                 <h3 className="text-lg font-semibold tracking-tight" style={{ color: 'hsl(200 25% 15%)', marginBottom: '0.5rem' }}>
                   No listings found
                 </h3>
-                {/* <p style={{ color: 'hsl(200 15% 45%)' }}>Try adjusting your search criteria</p> */}
+                <p style={{ color: 'hsl(200 15% 45%)' }}>Try adjusting your search criteria</p>
               </div>
             )}
 
             {/* Load More */}
-            {sortedListings.length > 0 && (
+            {hasMore && sortedListings.length > 0 && (
               <div style={{ textAlign: 'center', marginTop: '2rem' }}>
                 <button
                   style={{
                     padding: '0.75rem 2rem',
                     border: '1px solid hsl(40 20% 88%)',
                     borderRadius: '0.75rem',
-                    backgroundColor: 'white',
-                    color: 'hsl(174 62% 32%)',
+                    backgroundColor: isLoading ? 'hsl(40 20% 88%)' : 'white',
+                    color: isLoading ? 'hsl(200 15% 45%)' : 'hsl(174 62% 32%)',
                     fontWeight: '500',
-                    cursor: 'pointer',
-                    transition: 'background-color 0.2s'
+                    cursor: isLoading ? 'not-allowed' : 'pointer',
+                    transition: 'background-color 0.2s',
+                    opacity: isLoading ? 0.6 : 1
                   }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(174 62% 32% / 0.05)'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
-                  onClick={() => alert('Load more listings')}
+                  onMouseEnter={(e) => !isLoading && (e.currentTarget.style.backgroundColor = 'hsl(174 62% 32% / 0.05)')}
+                  onMouseLeave={(e) => !isLoading && (e.currentTarget.style.backgroundColor = 'white')}
+                  onClick={loadMoreListings}
+                  disabled={isLoading}
                 >
-                  Load More Listings
+                  {isLoading ? 'Loading...' : 'Load More Listings'}
                 </button>
               </div>
             )}

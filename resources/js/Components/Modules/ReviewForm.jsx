@@ -49,7 +49,6 @@ const ReviewForm = ({ propertyId, agentId, onSuccess, rental, setShowAddReviewFo
       },
       onError: () => {
         showToast("Submission Failed", "Please check the form and try again.", "error");
-        // console.log(errors)
       }
     });
   };
@@ -269,7 +268,7 @@ const ReviewForm = ({ propertyId, agentId, onSuccess, rental, setShowAddReviewFo
           </div>
           <br />
           <button
-            // onClick={handleSubmit}
+            type="submit"
             disabled={processing}
             style={{
               width: '100%',
@@ -297,7 +296,7 @@ const ReviewForm = ({ propertyId, agentId, onSuccess, rental, setShowAddReviewFo
 
         input:focus, textarea:focus, select:focus {
           outline: none;
-          box-shadow: 0 0 0 2px hsl(174 62% 32%);
+          box-shadow: 0 0 0 2px #1f847a;
         }
           
         @keyframes slideIn {
@@ -324,7 +323,7 @@ export default function App({ setShowAddReviewForm, rental }) {
 
   return (
     <div style={{
-      minHeight: '100vh',
+      minHeight: '50vh',
       backgroundColor: '#f9fafb',
       padding: '2rem',
       fontFamily: 'system-ui, -apple-system, sans-serif'
@@ -345,7 +344,7 @@ export default function App({ setShowAddReviewForm, rental }) {
         <X size={20} />
       </button>
       <div style={{
-        maxWidth: '800px',
+        maxWidth: '500px',
         margin: '0 auto',
         backgroundColor: 'white',
         borderRadius: '0.75rem',

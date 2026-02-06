@@ -12,7 +12,10 @@ use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
 {
-    public function signUp() {
+    public function signUp(Request $request) {
+        $referrer = $request->headers->get('referer') ?? '/';
+        $request->session()->put('signup_referrer', $referrer);
+        
         return inertia('Auth/AuthPage');
     }
 
@@ -30,7 +33,10 @@ class AuthController extends Controller
         
         Auth::guard('tenant')->login($tenant);
         
-        return redirect('/');
+        // Get the referrer URL from session, default to home page
+        $redirectUrl = $request->session()->pull('signup_referrer', '/');
+        
+        return redirect($redirectUrl);
     }
 
     public function login(Request $request) {
@@ -47,7 +53,8 @@ class AuthController extends Controller
         if ($tenant && Hash::check($password, $tenant->password)) {
             Auth::guard('tenant')->login($tenant);
             $request->session()->regenerate();
-            return redirect()->intended('/');
+            $redirectUrl = $request->session()->pull('signup_referrer', '/');
+            return redirect($redirectUrl);
         }
 
         // Check Agent table

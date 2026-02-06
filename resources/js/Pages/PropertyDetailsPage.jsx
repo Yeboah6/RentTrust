@@ -242,7 +242,7 @@ const PropertyDetailsPage = ({ rental, reviews }) => {
                   alt={`Property image ${currentImageIndex + 1}`}
                   style={{
                     height: '100%',
-                    width: '100%',
+                    // width: '50%',
                     objectFit: 'cover',
                     transition: 'opacity 0.3s ease-in-out'
                   }}

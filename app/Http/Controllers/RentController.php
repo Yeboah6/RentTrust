@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Rental;
-use App\Models\Review;
-use App\Models\Report;
 use App\Models\Agent;
+use App\Models\Rental;
+use App\Models\Report;
+use App\Models\Review;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -13,44 +13,41 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
-
 class RentController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-public function index()
-{
-    $recentListings = Rental::latest()->get();
-    
-    // Get areas grouped by city with proper structure
-    $areas = Rental::select('city', 'area', 'rent_min', 'rent_max', 'created_at')
-        ->get()
-        ->groupBy('city')
-        ->map(function ($cityAreas, $cityName) {
-            return $cityAreas->groupBy('area')->map(function ($areaRentals) {
-                // Calculate average rent
-                $avgRent = $areaRentals->avg(function ($rental) {
-                    return ($rental->rent_min + $rental->rent_max) / 2;
-                });
-                
-                // Calculate trend based on recent vs older listings
-                $trend = $this->calculateRealTrend($areaRentals);
-                
-                return [
-                    'name' => $areaRentals->first()->area,
-                    'listingCount' => $areaRentals->count(),
-                    'avgRent' => round($avgRent),
-                    'trend' => $trend
-                ];
-            });
-        });
+    public function index()
+    {
+        $recentListings = Rental::latest()->limit(4)->get();
 
-    return inertia('Home', [
-        'recentListings' => $recentListings,
-        'areas' => $areas
-    ]);
-}
+        // Get areas grouped by city with proper structure
+        $areas = Rental::select('city', 'area', 'rent_min', 'rent_max', 'created_at')
+            ->get()
+            ->groupBy('city')
+            ->map(function ($cityAreas, $cityName) {
+                return $cityAreas->groupBy('area')->map(function ($areaRentals) {
+                    $avgRent = $areaRentals->avg(function ($rental) {
+                        return ($rental->rent_min + $rental->rent_max) / 2;
+                    });
+
+                    $trend = $this->calculateRealTrend($areaRentals);
+
+                    return [
+                        'name' => $areaRentals->first()->area,
+                        'listingCount' => $areaRentals->count(),
+                        'avgRent' => round($avgRent),
+                        'trend' => $trend,
+                    ];
+                });
+            });
+
+        return inertia('Home', [
+            'recentListings' => $recentListings,
+            'areas' => $areas,
+        ]);
+    }
 
     /**
      * Show the form for creating a new resource.
@@ -68,12 +65,12 @@ public function index()
         // Get authenticated agent
         $agent = Auth::guard('agent')->user();
 
-        if (!$agent) {
+        if (! $agent) {
             return redirect()->back()
                 ->with('error', 'Unauthorized. Please login as an agent.');
         }
 
-       $amenities = $request->amenities;
+        $amenities = $request->amenities;
         if (is_array($amenities)) {
             $amenities = json_encode($amenities);
         }
@@ -129,7 +126,7 @@ public function index()
         try {
             // Decode amenities for storage
             $amenitiesArray = [];
-            if (!empty($amenities)) {
+            if (! empty($amenities)) {
                 $decoded = json_decode($amenities, true);
                 if (is_array($decoded)) {
                     $amenitiesArray = $decoded;
@@ -142,7 +139,7 @@ public function index()
             if ($request->hasFile('images')) {
                 foreach ($request->file('images') as $file) {
                     if ($file->isValid()) {
-                        $fileName = 'rental_' . time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+                        $fileName = 'rental_'.time().'_'.uniqid().'.'.$file->getClientOriginalExtension();
                         $path = $file->storeAs('rental_images', $fileName, 'public');
                         $filePaths[] = $fileName;
                     }
@@ -168,14 +165,14 @@ public function index()
                 'agent_phone' => $request->agentPhone,
                 'agent_email' => $request->agentEmail,
                 'is_verified' => 'unverified',
-                'images' => $filePaths ?? []
+                'images' => $filePaths ?? [],
             ]);
 
             return redirect()->back()
                 ->with('success', 'Rental listing created successfully! It will be reviewed and activated soon.');
 
         } catch (\Exception $e) {
-            Log::error('Failed to create rental listing: ' . $e->getMessage());
+            Log::error('Failed to create rental listing: '.$e->getMessage());
 
             return redirect()->back()
                 ->with('error', 'Failed to create rental listing. Please try again.')
@@ -189,7 +186,7 @@ public function index()
         $agentUser = Auth::guard('agent')->user();
         $tenantUser = Auth::guard('tenant')->user();
         $superUser = Auth::guard('super')->user();
-        if ((!$request->has('name') || trim($request->input('name')) === '') && ($agentUser || $tenantUser || $superUser)) {
+        if ((! $request->has('name') || trim($request->input('name')) === '') && ($agentUser || $tenantUser || $superUser)) {
             $name = $agentUser->fullName ?? $tenantUser->fullName ?? $superUser->fullName ?? null;
             if ($name) {
                 $request->merge(['name' => $name]);
@@ -201,7 +198,7 @@ public function index()
             'description' => 'required|max:255',
             'report_type' => 'required|string|max:255',
             'name' => 'string|max:255',
-            'evidence.*' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120'
+            'evidence.*' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
         ]);
 
         $filePaths = [];
@@ -210,23 +207,22 @@ public function index()
         if ($request->hasFile('evidence')) {
             foreach ($request->file('evidence') as $file) {
                 if ($file->isValid()) {
-                    $fileName = 'report_' . time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+                    $fileName = 'report_'.time().'_'.uniqid().'.'.$file->getClientOriginalExtension();
                     $path = $file->storeAs('report_files', $fileName, 'public');
                     $filePaths[] = $fileName;
                 }
             }
         }
 
-        // IMPORTANT: Check if name is in validated data
         $name = $validated['name'] ?? 'Anonymous';
 
         $report = Report::create([
             'rental_id' => $validated['property_id'],
             'report_description' => $validated['description'],
-            'report_type' => $validated['report_type'], 
+            'report_type' => $validated['report_type'],
             'full_name' => $name,
-            'evidence' => !empty($filePaths) ? json_encode($filePaths) : '[]',
-            'status' => "pending"
+            'evidence' => ! empty($filePaths) ? json_encode($filePaths) : '[]',
+            'status' => 'pending',
         ]);
 
         return redirect()->back()->with('success', 'Report submitted successfully. Thank you for your feedback.');
@@ -238,9 +234,9 @@ public function index()
     public function show(Rental $rent)
     {
         $reviews = Review::where('rental_id', $rent->id)
-        ->orderBy('created_at', 'desc')
-        ->get();
-        
+            ->orderBy('created_at', 'desc')
+            ->get();
+
         return inertia('PropertyDetailsPage', ['rental' => $rent, 'reviews' => $reviews]);
     }
 
@@ -268,45 +264,83 @@ public function index()
         //
     }
 
-    public function listings() {
-        $listings = Rental::all()->map(function ($listing) {
-            return [
-                'id' => $listing->id,
-                'title' => $listing->title,
-                'property_type' => $listing->property_type,
-                'city' => $listing->city,
-                'area' => $listing->area,
-                'address' => $listing->address,
-                'rent_min' => $listing->rent_min,
-                'rent_max' => $listing->rent_max,
-                'advance_duration' => $listing->advance_duration,
-                'bedrooms' => $listing->bedrooms,
-                'bathrooms' => $listing->bathrooms,
-                'amenities' => $listing->amenities,
-                'description' => $listing->description,
-                'agent_name' => $listing->agent_name,
-                'agent_phone' => $listing->agent_phone,
-                'agent_email' => $listing->agent_email,
-                'is_claimed' => $listing->is_claimed ?? false,
-                'is_verified' => $listing->is_verified ?? false,
-                'status' => $listing->status,
-                'images' => $listing->images ? 
-                    (is_string($listing->images) ? json_decode($listing->images, true) : $listing->images) 
-                    : [],
-                'amenities' => $listing->amenities ? 
-                    (is_string($listing->amenities) ? json_decode($listing->amenities, true) : $listing->amenities) 
-                    : [],
-                'review_count' => $listing->review_count ?? 0,
-                'rating' => $listing->rating ?? 0,
-                'created_at' => $listing->created_at,
-                'updated_at' => $listing->updated_at,
-            ];
-        });
-        
-        return inertia('ListingsPage', ['listings' => $listings]);
+    public function listings()
+    {
+        // Initial load: show 8 listings
+        $listings = Rental::latest()
+            ->paginate(8);
+
+        return inertia('ListingsPage', [
+            'listings' => $listings
+        ]);
     }
 
-    public function areas() 
+    public function getMoreListings(Request $request)
+    {
+        $page = $request->query('page', 2);
+        $perPage = 8; // MUST match the perPage in listings() method
+        
+        if (!is_numeric($page) || $page < 2) {
+            return response()->json([
+                'error' => 'Invalid page number',
+                'listings' => [],
+                'has_more' => false,
+            ], 400);
+        }
+
+        try {
+            // Same perPage as initial load - Laravel handles offset correctly
+            $listings = Rental::latest()->paginate($perPage, ['*'], 'page', $page);
+
+            return response()->json([
+                'listings' => $listings->items(),
+                'has_more' => $listings->hasMorePages(),
+                'current_page' => $listings->currentPage(),
+                'total' => $listings->total(),
+                'per_page' => $listings->perPage(),
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Failed to fetch more listings', [
+                'error' => $e->getMessage(),
+                'page' => $page,
+            ]);
+
+            return response()->json([
+                'error' => 'Failed to fetch listings',
+                'message' => config('app.debug') ? $e->getMessage() : 'Server error',
+                'listings' => [],
+                'has_more' => false,
+            ], 500);
+        }
+    }
+
+    public function getAllListings(Request $request)
+    {
+        $page = $request->query('page', 1);
+        $perPage = $page == 1 ? 8 : 4; // 8 items on first page, 4 on subsequent pages
+
+        $listings = Rental::latest()
+            ->paginate($perPage);
+
+        // If this is an AJAX request (for "Load More"), return JSON
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'listings' => $listings->items(),
+                'has_more' => $listings->hasMorePages(),
+                'next_page' => $listings->hasMorePages() ? $listings->currentPage() + 1 : null,
+                'current_page' => $listings->currentPage(),
+                'total' => $listings->total(),
+            ]);
+        }
+
+        // Otherwise return Inertia page (for initial page load)
+        return inertia('ListingsPage', [
+            'listings' => $listings
+        ]);
+    }
+
+    public function areas()
     {
         // Get areas grouped by city with proper structure
         $areas = Rental::select('city', 'area', 'rent_min', 'rent_max', 'created_at')
@@ -327,7 +361,7 @@ public function index()
                         'avgRent' => round($avgRent),
                         'minRent' => $minRent,
                         'maxRent' => $maxRent,
-                        'trend' => $this->calculateTrend($areaRentals)
+                        'trend' => $this->calculateTrend($areaRentals),
                     ];
                 });
             });
@@ -335,41 +369,45 @@ public function index()
         return inertia('AreasPage', ['areas' => $areas]);
     }
 
-    public function calculate() {
+    public function calculate()
+    {
         return inertia('CalculatorPage');
     }
 
-    public function claimListings() {
+    public function claimListings()
+    {
         return inertia('ClaimListingPage');
     }
 
-    public function reviews() {
+    public function reviews()
+    {
         $reviews = Review::where('review_type', 'rent')->get();
         $reports = DB::table('reports')
-        ->join('rentals', 'reports.rental_id', '=', 'rentals.id')
-        ->get();
-        
+            ->join('rentals', 'reports.rental_id', '=', 'rentals.id')
+            ->get();
+
         $appReviews = Review::where('review_type', 'app')->get();
 
         return inertia('ReviewsPage',
-        [
-            'reviews' => $reviews,
-            'reports' => $reports,
-            'appReviews' => $appReviews
-        ]);
+            [
+                'reviews' => $reviews,
+                'reports' => $reports,
+                'appReviews' => $appReviews,
+            ]);
     }
 
-    public function addRentals() {
+    public function addRentals()
+    {
         return inertia('AddRentals');
     }
 
-   
-    public function storeReviewForms(Request $request) {
+    public function storeReviewForms(Request $request)
+    {
         // If the reviewer did not provide a full_name, attempt to populate it from the authenticated user
         $agentUser = Auth::guard('agent')->user();
         $tenantUser = Auth::guard('tenant')->user();
         $superUser = Auth::guard('super')->user();
-        if ((!$request->has('full_name') || trim($request->input('full_name')) === '') && ($agentUser || $tenantUser || $superUser)) {
+        if ((! $request->has('full_name') || trim($request->input('full_name')) === '') && ($agentUser || $tenantUser || $superUser)) {
             $name = $agentUser->fullName ?? $tenantUser->fullName ?? $superUser->fullName ?? null;
             if ($name) {
                 $request->merge(['full_name' => $name]);
@@ -384,7 +422,7 @@ public function index()
             'good_communication' => 'nullable|boolean',
             'comments' => 'nullable|string|max:255',
             'full_name' => 'required|string|max:255',
-            'rental_id' => 'required|exists:rentals,id'
+            'rental_id' => 'required|exists:rentals,id',
         ], [
             'overall_rating.required' => 'Please provide an overall rating.',
             'overall_rating.integer' => 'Rating must be a whole number.',
@@ -392,16 +430,16 @@ public function index()
             'overall_rating.max' => 'Rating cannot be more than 5 stars.',
             'full_name.required' => 'Your name is required.',
             'rental_id.required' => 'Rental property is required.',
-            'rental_id.exists' => 'The selected rental property does not exist.'
+            'rental_id.exists' => 'The selected rental property does not exist.',
         ]);
 
         try {
             // Convert checkbox values to boolean (they come as 'on' or null)
             $checkboxFields = [
                 'landlord_responsive',
-                'property_matched_description', 
+                'property_matched_description',
                 'fair_pricing',
-                'good_communication'
+                'good_communication',
             ];
 
             foreach ($checkboxFields as $field) {
@@ -425,7 +463,7 @@ public function index()
                 ->with('success', 'Thank you for your review! Your feedback has been submitted.');
 
         } catch (\Exception $e) {
-            Log::error('Failed to store review: ' . $e->getMessage());
+            Log::error('Failed to store review: '.$e->getMessage());
 
             return redirect()->back()
                 ->with('error', 'Failed to submit review. Please try again.')
@@ -433,16 +471,17 @@ public function index()
         }
     }
 
-    public function response(Request $request) {
+    public function response(Request $request)
+    {
         $validated = $request->validate([
-            "review_id" => "required|exists:reviews,id",
-            "response" => "required|string|max:1000",
-            "response_person" => "required|string|max:255"
+            'review_id' => 'required|exists:reviews,id',
+            'response' => 'required|string|max:1000',
+            'response_person' => 'required|string|max:255',
         ]);
 
         Review::where('id', $validated['review_id'])->update([
             'response' => $validated['response'],
-            'response_person' => $validated['response_person']
+            'response_person' => $validated['response_person'],
         ]);
 
         return redirect()->back()->with('success', 'Response submitted successfully');
@@ -451,52 +490,55 @@ public function index()
     public function updateReportStatus(Request $request, $id)
     {
         $validated = $request->validate([
-            'status' => 'required|in:pending,investigating,resolved,dismissed'
+            'status' => 'required|in:pending,investigating,resolved,dismissed',
         ]);
 
         $report = Report::findOrFail($id);
         $report->update([
             'status' => $validated['status'],
-            'updated_at' => now()
+            'updated_at' => now(),
         ]);
 
         return redirect()->back()->with('success', 'Report status updated successfully');
     }
 
-    public function verifyAgent(Request $request, $id) {
+    public function verifyAgent(Request $request, $id)
+    {
         $validated = $request->validate([
-            'status' => 'required|in:verified,rejected,request_info'
+            'status' => 'required|in:verified,rejected,request_info',
         ]);
 
         $verify = Agent::findOrFail($id);
         $verify->update([
             'status' => $validated['status'],
-            'updated_at' => now()
+            'updated_at' => now(),
         ]);
 
         return redirect()->back()->with('success', 'Agent status updated successfully');
         dd($request);
     }
 
-    public function suspendAgent(Request $request, $id) {
+    public function suspendAgent(Request $request, $id)
+    {
         $validated = $request->validate([
-            'status' => 'required|in:suspended,unverified' // Allow both suspended and verified (for unsuspend)
+            'status' => 'required|in:suspended,unverified', // Allow both suspended and verified (for unsuspend)
         ]);
 
         $agent = Agent::findOrFail($id);
         $agent->update([
             'status' => $validated['status'],
-            'updated_at' => now() // Fixed: was 'updated', should be 'updated_at'
+            'updated_at' => now(), // Fixed: was 'updated', should be 'updated_at'
         ]);
 
         return redirect()->back()->with('success', 'Agent status updated successfully');
     }
 
-    public function storeReviewApp(Request $request) {
+    public function storeReviewApp(Request $request)
+    {
         $agentUser = Auth::guard('agent')->user();
         $tenantUser = Auth::guard('tenant')->user();
         $superUser = Auth::guard('super')->user();
-        if ((!$request->has('name') || trim($request->input('name')) === '') && ($agentUser || $tenantUser || $superUser)) {
+        if ((! $request->has('name') || trim($request->input('name')) === '') && ($agentUser || $tenantUser || $superUser)) {
             $name = $agentUser->fullName ?? $tenantUser->fullName ?? $superUser->fullName ?? null;
             if ($name) {
                 $request->merge(['name' => $name]);
@@ -506,14 +548,14 @@ public function index()
         $validated = $request->validate([
             'overall_rating' => 'required|integer|min:1|max:5',
             'name' => 'required|string|max:255',
-            'comment' => 'nullable|string|max:255'
+            'comment' => 'nullable|string|max:255',
         ]);
 
         Review::create([
-            'review_type' => "app",
+            'review_type' => 'app',
             'overall_rating' => $validated['overall_rating'],
             'full_name' => $validated['name'],
-            'comments' => $validated['comment']
+            'comments' => $validated['comment'],
         ]);
 
         return redirect()->back()->with('success', 'Rview added successfully');
@@ -578,6 +620,7 @@ public function index()
     private function calculateSimpleTrend($areaRentals)
     {
         $trends = ['+12%', '+8%', '+5%', '-3%', '+15%', '+10%', '+2%'];
+
         return $trends[array_rand($trends)];
     }
 
@@ -608,82 +651,82 @@ public function index()
             'avgRent' => round($avgRent),
             'minRent' => $properties->min('rent_min'),
             'maxRent' => $properties->max('rent_max'),
-            'trend' => $this->calculateTrend($properties)
+            'trend' => $this->calculateTrend($properties),
         ];
 
         return inertia('AreaDetailPage', [
             'area' => $areaData,
             'city' => $cityName,
-            'properties' => $properties
+            'properties' => $properties,
         ]);
     }
 
-/**
- * Search areas by name or city
- */
-public function searchAreas(Request $request)
-{
-    $query = $request->input('q', '');
-    
-    $areas = Rental::select('city', 'area', 'rent_min', 'rent_max')
-        ->when($query, function ($q) use ($query) {
-            $q->where('area', 'like', "%{$query}%")
-              ->orWhere('city', 'like', "%{$query}%");
-        })
-        ->get()
-        ->groupBy('city')
-        ->map(function ($cityAreas, $cityName) {
-            return $cityAreas->groupBy('area')->map(function ($areaRentals) {
+    /**
+     * Search areas by name or city
+     */
+    public function searchAreas(Request $request)
+    {
+        $query = $request->input('q', '');
+
+        $areas = Rental::select('city', 'area', 'rent_min', 'rent_max')
+            ->when($query, function ($q) use ($query) {
+                $q->where('area', 'like', "%{$query}%")
+                    ->orWhere('city', 'like', "%{$query}%");
+            })
+            ->get()
+            ->groupBy('city')
+            ->map(function ($cityAreas, $cityName) {
+                return $cityAreas->groupBy('area')->map(function ($areaRentals) {
+                    $avgRent = $areaRentals->avg(function ($rental) {
+                        return ($rental->rent_min + $rental->rent_max) / 2;
+                    });
+
+                    return [
+                        'name' => $areaRentals->first()->area,
+                        'city' => $areaRentals->first()->city,
+                        'listingCount' => $areaRentals->count(),
+                        'avgRent' => round($avgRent),
+                        'trend' => $this->calculateTrend($areaRentals),
+                    ];
+                })->values();
+            });
+
+        return response()->json($areas);
+    }
+
+    /**
+     * Get areas by city
+     */
+    public function getAreasByCity($city)
+    {
+        $cityName = str_replace('-', ' ', $city);
+
+        $areas = Rental::select('area', 'rent_min', 'rent_max', 'created_at')
+            ->where('city', 'like', $cityName)
+            ->get()
+            ->groupBy('area')
+            ->map(function ($areaRentals) {
                 $avgRent = $areaRentals->avg(function ($rental) {
                     return ($rental->rent_min + $rental->rent_max) / 2;
                 });
-                
+
                 return [
                     'name' => $areaRentals->first()->area,
-                    'city' => $areaRentals->first()->city,
                     'listingCount' => $areaRentals->count(),
                     'avgRent' => round($avgRent),
-                    'trend' => $this->calculateTrend($areaRentals)
+                    'minRent' => $areaRentals->min('rent_min'),
+                    'maxRent' => $areaRentals->max('rent_max'),
+                    'trend' => $this->calculateTrend($areaRentals),
                 ];
-            })->values();
-        });
+            })
+            ->values();
 
-    return response()->json($areas);
-}
+        return response()->json($areas);
+    }
 
-/**
- * Get areas by city
- */
-public function getAreasByCity($city)
-{
-    $cityName = str_replace('-', ' ', $city);
-    
-    $areas = Rental::select('area', 'rent_min', 'rent_max', 'created_at')
-        ->where('city', 'like', $cityName)
-        ->get()
-        ->groupBy('area')
-        ->map(function ($areaRentals) {
-            $avgRent = $areaRentals->avg(function ($rental) {
-                return ($rental->rent_min + $rental->rent_max) / 2;
-            });
-            
-            return [
-                'name' => $areaRentals->first()->area,
-                'listingCount' => $areaRentals->count(),
-                'avgRent' => round($avgRent),
-                'minRent' => $areaRentals->min('rent_min'),
-                'maxRent' => $areaRentals->max('rent_max'),
-                'trend' => $this->calculateTrend($areaRentals)
-            ];
-        })
-        ->values();
-
-    return response()->json($areas);
-}
-
-/**
- * Calculate trend for an area based on recent vs older rentals
- */
+    /**
+     * Calculate trend for an area based on recent vs older rentals
+     */
     private function calculateTrend($areaRentals)
     {
         if ($areaRentals->count() < 2) {
@@ -727,5 +770,4 @@ public function getAreasByCity($city)
             return '+0%';
         }
     }
-
 }

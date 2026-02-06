@@ -38,11 +38,9 @@ const ReportListingDialog = ({ setShowAddListingModal, rental }) => {
       return true;
     });
     
-    // FIXED: Create new array correctly
     const newFiles = [...uploadedFiles, ...validFiles].slice(0, 5);
     setUploadedFiles(newFiles);
     
-    // FIXED: Set evidence in form data
     setData('evidence', newFiles);
   };
 
@@ -66,7 +64,6 @@ const ReportListingDialog = ({ setShowAddListingModal, rental }) => {
     formData.append('property_id', data.property_id);
     formData.append('description', data.description);
     formData.append('report_type', data.report_type);
-    // Use provided name or fall back to authenticated user's full name
     const nameToUse = (data.name && data.name.trim() !== "") ? data.name : userFullName;
     formData.append('name', nameToUse);
     

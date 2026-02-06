@@ -12,6 +12,7 @@ Route::resource('rent', RentController::class) -> except('index');
 Route::get('/', [RentController::class, 'index']);
 
 Route::get('/listings', [RentController::class, 'listings']);
+Route::get('/api/listings/more', [RentController::class, 'getMoreListings'])->name('listings.more');
 
 Route::get('/areas', [RentController::class, 'areas']);
 Route::get('/areas/{city}/{area}', [RentController::class, 'showArea'])->name('areas.show');
