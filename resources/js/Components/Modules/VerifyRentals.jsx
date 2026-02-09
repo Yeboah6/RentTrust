@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
+import { useForm, router } from '@inertiajs/react';
 
-// Icons
+// Icons (keep all your existing icon components)
 const ShieldCheck = ({ style }) => (
   <svg style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
@@ -43,38 +44,81 @@ const UserCheck = ({ style }) => (
   </svg>
 );
 
+const AlertCircle = ({ style }) => (
+  <svg style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+  </svg>
+);
+
 const VerificationRequestModal = ({ isOpen, onClose, agentData, selectedRental }) => {
-  const [formData, setFormData] = useState({
+  const [uploadProgress, setUploadProgress] = useState({});
+  const [toast, setToast] = useState(null);
+  const [selectedFiles, setSelectedFiles] = useState({
+    proof_documents: [],
+    property_ownership_docs: [],
+    utility_bills: []
+  });
+
+  const { data, setData, post, processing, errors, reset, clearErrors } = useForm({
     rental_id: selectedRental?.id || "",
     rental_title: selectedRental?.title || "",
     request_type: "initial_verification",
-    proof_documents: [],
-    property_ownership_docs: [],
-    agent_license_docs: [],
-    utility_bills: [],
     additional_notes: "",
-    terms_accepted: false
+    terms_accepted: false,
+    // Store file references as arrays of File objects
+    proof_docs: [],
+    ownership_documents: [],
+    utility_bills: [],
+    agent_id: agentData?.id || "",
+    agent_name: agentData?.fullName || agentData?.name || ""
   });
 
-  const [uploadProgress, setUploadProgress] = useState({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
+  // Initialize form when modal opens or selectedRental changes
   useEffect(() => {
-    if (selectedRental) {
-      setFormData(prev => ({
-        ...prev,
+    if (isOpen && selectedRental) {
+      setData({
         rental_id: selectedRental.id,
-        rental_title: selectedRental.title
-      }));
+        rental_title: selectedRental.title,
+        request_type: "initial_verification",
+        additional_notes: "",
+        terms_accepted: false,
+        proof_docs: [],
+        ownership_documents: [],
+        utility_bills: [],
+        agent_id: agentData?.id || "",
+        agent_name: agentData?.fullName || agentData?.name || ""
+      });
+      setSelectedFiles({
+        proof_documents: [],
+        property_ownership_docs: [],
+        utility_bills: []
+      });
+      setUploadProgress({});
+      clearErrors();
     }
-  }, [selectedRental]);
+  }, [isOpen, selectedRental]);
 
   const handleInputChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setData(field, value);
+    // Clear errors for this field
+    if (errors[field]) {
+      clearErrors(field);
+    }
   };
 
   const handleFileUpload = (field, e) => {
     const files = Array.from(e.target.files);
+    
+    // Validate file sizes
+    const invalidFiles = files.filter(file => file.size > 10 * 1024 * 1024);
+    if (invalidFiles.length > 0) {
+      // Set error through useForm errors
+      setData(field, []);
+      alert(`Some files exceed 10MB limit: ${invalidFiles.map(f => f.name).join(', ')}`);
+      return;
+    }
+
+    // Map file objects for UI display
     const newFiles = files.map(file => ({
       file,
       id: Date.now() + Math.random(),
@@ -83,19 +127,35 @@ const VerificationRequestModal = ({ isOpen, onClose, agentData, selectedRental }
       size: file.size,
       progress: 0
     }));
-    
-    setFormData(prev => ({
+
+    // Update selected files for UI
+    setSelectedFiles(prev => ({
       ...prev,
       [field]: [...prev[field], ...newFiles]
     }));
 
-    // Simulate upload progress
+    // Update form data with actual File objects
+    const currentFiles = data[field === 'proof_documents' ? 'proof_docs' : 
+                              field === 'property_ownership_docs' ? 'ownership_documents' : 'utility_bills'] || [];
+    
+    setData(
+      field === 'proof_documents' ? 'proof_docs' : 
+      field === 'property_ownership_docs' ? 'ownership_documents' : 'utility_bills',
+      [...currentFiles, ...files]
+    );
+
+    // Clear error
+    if (errors[field]) {
+      clearErrors(field);
+    }
+
+    // Simulate upload progress for UI
     newFiles.forEach(fileObj => {
-      simulateUpload(fileObj.id, field);
+      simulateUpload(fileObj.id);
     });
   };
 
-  const simulateUpload = (fileId, field) => {
+  const simulateUpload = (fileId) => {
     let progress = 0;
     const interval = setInterval(() => {
       progress += 10;
@@ -108,116 +168,127 @@ const VerificationRequestModal = ({ isOpen, onClose, agentData, selectedRental }
   };
 
   const removeFile = (field, index) => {
-    setFormData(prev => ({
+    // Update UI files
+    setSelectedFiles(prev => ({
       ...prev,
       [field]: prev[field].filter((_, i) => i !== index)
     }));
+
+    // Update form data
+    const formField = field === 'proof_documents' ? 'proof_docs' : 
+                     field === 'property_ownership_docs' ? 'ownership_documents' : 'utility_bills';
+    
+    const currentFiles = [...data[formField]];
+    currentFiles.splice(index, 1);
+    setData(formField, currentFiles);
   };
 
-  const handleSubmit = async () => {
-    if (!formData.terms_accepted) {
-      alert("Please accept the terms and conditions");
+  const validateForm = () => {
+    // Check if at least one document is uploaded
+    const totalDocs = (data.proof_docs?.length || 0) + 
+                     (data.ownership_documents?.length || 0) +
+                     (data.utility_bills?.length || 0);
+
+    if (totalDocs === 0) {
+      alert('Please upload at least one document');
+      return false;
+    }
+
+    if (!data.terms_accepted) {
+      alert('You must accept the terms and conditions');
+      return false;
+    }
+
+    if (!data.rental_id) {
+      alert('No rental property selected');
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleSubmit = () => {
+    if (!validateForm()) {
       return;
     }
 
-    setIsSubmitting(true);
-    try {
-      // Prepare form data
-      const submissionData = new FormData();
-      
-      // Add text fields
-      submissionData.append('rental_id', formData.rental_id);
-      submissionData.append('request_type', formData.request_type);
-      submissionData.append('additional_notes', formData.additional_notes);
-      submissionData.append('agent_id', agentData?.id);
-      submissionData.append('agent_name', agentData?.fullName);
-      
-      // Add files
-      formData.proof_documents.forEach((fileObj, index) => {
-        submissionData.append(`proof_docs[${index}]`, fileObj.file);
-      });
-      
-      formData.property_ownership_docs.forEach((fileObj, index) => {
-        submissionData.append(`ownership_docs[${index}]`, fileObj.file);
-      });
-      
-      formData.agent_license_docs.forEach((fileObj, index) => {
-        submissionData.append(`license_docs[${index}]`, fileObj.file);
-      });
-      
-      formData.utility_bills.forEach((fileObj, index) => {
-        submissionData.append(`utility_bills[${index}]`, fileObj.file);
-      });
+    // Use Inertia's post method to submit the form
+    post('/verification-requests', {
+      onSuccess: () => {
+        showToast('Verification request submitted successfully!', 'success', 3000);
+        setTimeout(() => {
+          router.reload({ only: ['rentals'] });
+          handleClose();
+        }, 1500);
+      },
+      onError: (errors) => {
+        console.error('Submission errors:', errors);
+        const firstError = Object.values(errors)[0];
+        showToast(typeof firstError === 'string' ? firstError : 'An error occurred while submitting', 'error', 4000);
+      },
+      // Important: Use FormData for file uploads
+      forceFormData: true
+    });
+  };
 
-      // Submit to backend
-      const response = await fetch('/api/verification-requests', {
-        method: 'POST',
-        body: submissionData,
-        headers: {
-          'Accept': 'application/json',
-          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
-        }
-      });
-
-      if (response.ok) {
-        alert("Verification request submitted successfully! You'll be notified when it's reviewed.");
-        handleClose();
-      } else {
-        throw new Error('Submission failed');
-      }
-    } catch (error) {
-      console.error('Submission error:', error);
-      alert("Failed to submit verification request. Please try again.");
-    } finally {
-      setIsSubmitting(false);
-    }
+  const showToast = (message, type = 'success', duration = 3000) => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), duration);
   };
 
   const handleClose = () => {
-    // Reset form state
-    setFormData({
-      rental_id: selectedRental?.id || "",
-      rental_title: selectedRental?.title || "",
-      request_type: "initial_verification",
+    if (processing) return;
+    
+    reset();
+    setSelectedFiles({
       proof_documents: [],
       property_ownership_docs: [],
-      agent_license_docs: [],
-      utility_bills: [],
-      additional_notes: "",
-      terms_accepted: false
+      utility_bills: []
     });
     setUploadProgress({});
+    clearErrors();
+    setToast(null);
     onClose();
   };
 
   const documentSections = [
     {
       key: 'proof_documents',
+      formKey: 'proof_docs',
       title: 'Proof of Property Ownership/Authorization',
       description: 'Property deed, title, lease agreement, or authorization letter from owner',
-      required: true
-    },
-    {
-      key: 'agent_license_docs',
-      title: 'Agent License/Certification',
-      description: 'Real estate license, business registration, or professional certification',
       required: false
     },
     {
       key: 'property_ownership_docs',
+      formKey: 'ownership_documents',
       title: 'Property Photos',
       description: 'Clear photos of property exterior, interior, and address',
       required: true
     },
     {
       key: 'utility_bills',
+      formKey: 'utility_bills',
       title: 'Utility Bills (Optional)',
-      description: 'Recent utility bills showing property address and ownership',
+      description: 'Recent utility bills showing property address',
       required: false
     }
   ];
 
   if (!isOpen) return null;
+
+  const toastStyles = {
+    success: {
+      backgroundColor: 'hsl(152 60% 40%)',
+      borderColor: 'hsl(152 60% 30%)',
+      color: 'white'
+    },
+    error: {
+      backgroundColor: 'hsl(0 72% 51%)',
+      borderColor: 'hsl(0 72% 40%)',
+      color: 'white'
+    }
+  };
 
   return (
     <>
@@ -234,132 +305,48 @@ const VerificationRequestModal = ({ isOpen, onClose, agentData, selectedRental }
           from { opacity: 0; }
           to { opacity: 1; }
         }
-
-        /* Responsive styles */
-        @media (max-width: 768px) {
-          .modal-container {
-            max-height: 85vh !important;
-            margin: 0.5rem !important;
-            max-width: 95% !important;
-            border-radius: 0.75rem !important;
-          }
-
-          .modal-header {
-            padding: 1rem !important;
-            flex-direction: column !important;
-            align-items: flex-start !important;
-            gap: 0.75rem !important;
-          }
-
-          .request-type-container {
-            flex-direction: column !important;
-          }
-
-          .document-section {
-            margin-bottom: 1.25rem !important;
-          }
-
-          .upload-area {
-            padding: 1rem !important;
-          }
-
-          .modal-footer {
-            padding: 1rem !important;
-            flex-direction: column !important;
-          }
-
-          .modal-footer button {
-            width: 100% !important;
-            min-height: 44px;
-            -webkit-tap-highlight-color: transparent;
-          }
-
-          .terms-container {
-            margin-bottom: 1.25rem !important;
-          }
-
-          .close-button {
-            position: absolute !important;
-            top: 0.75rem !important;
-            right: 0.75rem !important;
-          }
+        @keyframes slideInUp {
+          from { opacity: 0; transform: translateY(1rem); }
+          to { opacity: 1; transform: translateY(0); }
         }
-
-        /* Extra small devices */
-        @media (max-width: 480px) {
-          .modal-container {
-            max-height: 90vh !important;
-          }
-
-          .modal-content {
-            padding: 1rem !important;
-          }
-
-          .property-info {
-            padding: 0.75rem !important;
-          }
-
-          .file-item {
-            flex-direction: column !important;
-            align-items: flex-start !important;
-            gap: 0.5rem !important;
-          }
-
-          .file-actions {
-            align-self: flex-end !important;
-          }
-        }
-
-        /* Landscape mobile */
-        @media (max-height: 600px) and (orientation: landscape) {
-          .modal-container {
-            max-height: 80vh !important;
-          }
-        }
-
-        /* Tablet */
-        @media (min-width: 481px) and (max-width: 768px) {
-          .request-type-container {
-            grid-template-columns: repeat(2, 1fr) !important;
-          }
-        }
-
-        /* Desktop */
-        @media (min-width: 769px) {
-          .request-type-container {
-            display: grid !important;
-            grid-template-columns: repeat(2, 1fr) !important;
-            gap: 0.75rem !important;
-          }
-        }
-
-        /* Large desktop */
-        @media (min-width: 1024px) {
-          .modal-container {
-            max-width: 48rem !important;
-          }
-        }
-
-        /* Prevent zoom on input focus for iOS */
-        @media (max-width: 768px) {
-          input[type="text"],
-          input[type="email"],
-          textarea {
-            font-size: 16px !important;
-          }
-        }
-
-        /* Touch optimization */
-        .touch-button {
-          min-height: 44px;
-          -webkit-tap-highlight-color: transparent;
-        }
-
-        /* Action button styling for mobile */
-        .action-button {
-          touch-action: manipulation;
+        @keyframes slideOutDown {
+          from { opacity: 1; transform: translateY(0); }
+          to { opacity: 0; transform: translateY(1rem); }
         }
       `}</style>
+
+      {/* Toast Notification */}
+      {toast && (
+        <div style={{
+          position: 'fixed',
+          bottom: '1.5rem',
+          right: '1.5rem',
+          zIndex: 2000,
+          animation: 'slideInUp 0.3s ease-out'
+        }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.75rem',
+            padding: '1rem 1.25rem',
+            borderRadius: '0.5rem',
+            border: '1px solid',
+            backgroundColor: toastStyles[toast.type].backgroundColor,
+            color: toastStyles[toast.type].color,
+            borderColor: toastStyles[toast.type].borderColor,
+            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.2)',
+            fontSize: '0.875rem',
+            fontWeight: '500'
+          }}>
+            {toast.type === 'success' ? (
+              <CheckCircle style={{ height: '1.25rem', width: '1.25rem', flexShrink: 0 }} />
+            ) : (
+              <AlertCircle style={{ height: '1.25rem', width: '1.25rem', flexShrink: 0 }} />
+            )}
+            <span>{toast.message}</span>
+          </div>
+        </div>
+      )}
 
       {/* Backdrop */}
       <div style={{
@@ -373,364 +360,244 @@ const VerificationRequestModal = ({ isOpen, onClose, agentData, selectedRental }
         alignItems: 'center',
         justifyContent: 'center',
         zIndex: 1000,
-        padding: 'clamp(0.5rem, 2vw, 1rem)',
-        animation: 'backdropFadeIn 0.2s ease-out'
+        padding: '1rem',
+        animation: 'backdropFadeIn 0.2s ease-out',
+        overflowY: 'auto'
       }}
       onClick={(e) => {
-        if (e.target === e.currentTarget && !isSubmitting) {
+        if (e.target === e.currentTarget && !processing) {
           handleClose();
         }
       }}
       >
         {/* Modal Container */}
-        <div className="modal-container" style={{
+        <div style={{
           backgroundColor: 'white',
-          borderRadius: 'clamp(0.75rem, 2vw, 1rem)',
+          borderRadius: '1rem',
           width: '100%',
-          maxWidth: 'clamp(90%, 95vw, 48rem)',
+          maxWidth: '48rem',
           maxHeight: '90vh',
           overflow: 'hidden',
-          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
           animation: 'modalFadeIn 0.3s ease-out',
           display: 'flex',
-          flexDirection: 'column'
+          flexDirection: 'column',
+          margin: 'auto'
         }}>
           {/* Header */}
-          <div className="modal-header" style={{
-            padding: 'clamp(1rem, 3vw, 1.5rem)',
+          <div style={{
+            padding: '1.5rem',
             borderBottom: '1px solid hsl(40 20% 88%)',
-            backgroundColor: 'white',
-            flexShrink: 0,
-            position: 'relative'
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between'
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.5rem, 2vw, 0.75rem)', flex: 1 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
               <div style={{
-                width: 'clamp(2.5rem, 8vw, 2.5rem)',
-                height: 'clamp(2.5rem, 8vw, 2.5rem)',
-                borderRadius: 'clamp(0.375rem, 2vw, 0.5rem)',
+                width: '2.5rem',
+                height: '2.5rem',
+                borderRadius: '0.5rem',
                 background: 'linear-gradient(135deg, hsl(174 62% 32%) 0%, hsl(174 50% 25%) 100%)',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0
+                justifyContent: 'center'
               }}>
-                <ShieldCheck style={{ 
-                  height: 'clamp(1.25rem, 4vw, 1.5rem)', 
-                  width: 'clamp(1.25rem, 4vw, 1.5rem)', 
-                  color: 'white' 
-                }} />
+                <ShieldCheck style={{ height: '1.5rem', width: '1.5rem', color: 'white' }} />
               </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <h2 style={{
-                  fontSize: 'clamp(1.125rem, 4vw, 1.25rem)',
-                  fontWeight: '700',
-                  color: 'hsl(200 25% 15%)',
-                  marginBottom: 'clamp(0.125rem, 1vw, 0.125rem)',
-                  lineHeight: '1.2'
-                }}>
+              <div>
+                <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: 'hsl(200 25% 15%)', marginBottom: '0.125rem' }}>
                   Request Listing Verification
                 </h2>
-                <p style={{ 
-                  fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', 
-                  color: 'hsl(200 15% 45%)',
-                  lineHeight: '1.4'
-                }}>
-                  Submit documents to verify your property listing
+                <p style={{ fontSize: '0.875rem', color: 'hsl(200 15% 45%)' }}>
+                  Submit documents to verify your property
                 </p>
               </div>
             </div>
             <button
-              className="close-button touch-button"
               onClick={handleClose}
-              disabled={isSubmitting}
+              disabled={processing}
               style={{
-                padding: 'clamp(0.375rem, 1.5vw, 0.5rem)',
+                padding: '0.5rem',
                 border: 'none',
                 backgroundColor: 'transparent',
-                cursor: isSubmitting ? 'not-allowed' : 'pointer',
-                borderRadius: 'clamp(0.25rem, 1.5vw, 0.375rem)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                opacity: isSubmitting ? 0.5 : 1,
-                flexShrink: 0
-              }}
-              onMouseEnter={(e) => {
-                if (!isSubmitting) {
-                  e.currentTarget.style.backgroundColor = 'hsl(40 30% 94%)';
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!isSubmitting) {
-                  e.currentTarget.style.backgroundColor = 'transparent';
-                }
+                cursor: processing ? 'not-allowed' : 'pointer',
+                borderRadius: '0.375rem',
+                opacity: processing ? 0.5 : 1
               }}
             >
-              <X style={{ 
-                height: 'clamp(1.25rem, 4vw, 1.5rem)', 
-                width: 'clamp(1.25rem, 4vw, 1.5rem)', 
-                color: 'hsl(200 15% 45%)' 
-              }} />
+              <X style={{ height: '1.5rem', width: '1.5rem', color: 'hsl(200 15% 45%)' }} />
             </button>
           </div>
 
+          {/* Error Display */}
+          {Object.keys(errors).length > 0 && (
+            <div style={{
+              margin: '1rem 1.5rem 0',
+              padding: '1rem',
+              backgroundColor: 'hsl(0 72% 51% / 0.1)',
+              border: '1px solid hsl(0 72% 51% / 0.3)',
+              borderRadius: '0.5rem',
+              display: 'flex',
+              gap: '0.75rem',
+              alignItems: 'start'
+            }}>
+              <AlertCircle style={{ height: '1.25rem', width: '1.25rem', color: 'hsl(0 72% 51%)', flexShrink: 0 }} />
+              <div>
+                <p style={{ fontWeight: '600', color: 'hsl(0 72% 51%)', marginBottom: '0.25rem' }}>Error</p>
+                {Object.entries(errors).map(([key, error]) => (
+                  <p key={key} style={{ fontSize: '0.875rem', color: 'hsl(0 72% 40%)' }}>
+                    {error}
+                  </p>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Scrollable Content */}
-          <div className="modal-content" style={{
-            padding: 'clamp(1rem, 3vw, 1.5rem)',
-            overflowY: 'auto',
-            flex: 1
-          }}>
+          <div style={{ padding: '1.5rem', overflowY: 'auto', flex: 1 }}>
+            
             {/* Property Info */}
-            <div className="property-info" style={{
+            <div style={{
               backgroundColor: 'hsl(174 62% 32% / 0.05)',
               border: '1px solid hsl(174 62% 32% / 0.2)',
-              borderRadius: 'clamp(0.375rem, 2vw, 0.5rem)',
-              padding: 'clamp(0.75rem, 3vw, 1rem)',
-              marginBottom: 'clamp(1rem, 3vw, 1.5rem)'
+              borderRadius: '0.5rem',
+              padding: '1rem',
+              marginBottom: '1.5rem'
             }}>
-              <div style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: 'clamp(0.5rem, 2vw, 0.75rem)', 
-                marginBottom: 'clamp(0.25rem, 1vw, 0.5rem)' 
-              }}>
-                <Building style={{ 
-                  height: 'clamp(1rem, 3vw, 1.25rem)', 
-                  width: 'clamp(1rem, 3vw, 1.25rem)', 
-                  color: 'hsl(174 62% 32%)' 
-                }} />
-                <h3 style={{
-                  fontSize: 'clamp(0.75rem, 2vw, 0.875rem)',
-                  fontWeight: '600',
-                  color: 'hsl(200 25% 15%)'
-                }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+                <Building style={{ height: '1.25rem', width: '1.25rem', color: 'hsl(174 62% 32%)' }} />
+                <h3 style={{ fontSize: '0.875rem', fontWeight: '600', color: 'hsl(200 25% 15%)' }}>
                   Property Being Verified
                 </h3>
               </div>
-              <p style={{ 
-                fontSize: 'clamp(0.875rem, 2.5vw, 0.875rem)', 
-                fontWeight: '600', 
-                color: 'hsl(174 62% 32%)', 
-                marginBottom: 'clamp(0.125rem, 1vw, 0.25rem)',
-                wordBreak: 'break-word'
-              }}>
-                {formData.rental_title || 'No property selected'}
+              <p style={{ fontSize: '0.875rem', fontWeight: '600', color: 'hsl(174 62% 32%)', marginBottom: '0.25rem' }}>
+                {data.rental_title || 'No property selected'}
               </p>
-              {selectedRental?.address && (
-                <p style={{ 
-                  fontSize: 'clamp(0.75rem, 2vw, 0.75rem)', 
-                  color: 'hsl(200 15% 45%)',
-                  lineHeight: '1.4'
-                }}>
-                  {selectedRental.address}
+              {errors.rental_id && (
+                <p style={{ fontSize: '0.75rem', color: 'hsl(0 72% 51%)', marginTop: '0.25rem' }}>
+                  {errors.rental_id}
                 </p>
               )}
             </div>
 
             {/* Request Type */}
-            <div style={{ marginBottom: 'clamp(1rem, 3vw, 1.5rem)' }}>
-              <label style={{
-                display: 'block',
-                fontSize: 'clamp(0.75rem, 2vw, 0.875rem)',
-                fontWeight: '600',
-                color: 'hsl(200 25% 15%)',
-                marginBottom: 'clamp(0.375rem, 1.5vw, 0.5rem)'
-              }}>
-                Verification Request Type
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: 'hsl(200 25% 15%)', marginBottom: '0.5rem' }}>
+                Verification Type
               </label>
-              <div className="request-type-container" style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 'clamp(0.5rem, 2vw, 0.75rem)'
-              }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.75rem' }}>
                 <button
                   type="button"
                   onClick={() => handleInputChange('request_type', 'initial_verification')}
-                  disabled={isSubmitting}
-                  className="touch-button action-button"
+                  disabled={processing}
                   style={{
-                    padding: 'clamp(0.75rem, 3vw, 0.75rem)',
-                    border: formData.request_type === 'initial_verification' 
-                      ? '2px solid hsl(174 62% 32%)' 
-                      : '1px solid hsl(40 20% 88%)',
-                    backgroundColor: formData.request_type === 'initial_verification' 
-                      ? 'hsl(174 62% 32% / 0.1)' 
-                      : 'white',
-                    borderRadius: 'clamp(0.375rem, 2vw, 0.5rem)',
-                    cursor: isSubmitting ? 'not-allowed' : 'pointer',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    gap: 'clamp(0.375rem, 1.5vw, 0.5rem)',
-                    opacity: isSubmitting ? 0.7 : 1,
-                    transition: 'all 0.2s'
+                    padding: '0.75rem',
+                    border: data.request_type === 'initial_verification' ? '2px solid hsl(174 62% 32%)' : '1px solid hsl(40 20% 88%)',
+                    backgroundColor: data.request_type === 'initial_verification' ? 'hsl(174 62% 32% / 0.1)' : 'white',
+                    borderRadius: '0.5rem',
+                    cursor: processing ? 'not-allowed' : 'pointer',
+                    textAlign: 'center'
                   }}
                 >
                   <DocumentText style={{ 
-                    height: 'clamp(1.25rem, 4vw, 1.5rem)', 
-                    width: 'clamp(1.25rem, 4vw, 1.5rem)', 
-                    color: formData.request_type === 'initial_verification' 
-                      ? 'hsl(174 62% 32%)' 
-                      : 'hsl(200 15% 45%)'
+                    height: '1.5rem', 
+                    width: '1.5rem', 
+                    color: data.request_type === 'initial_verification' ? 'hsl(174 62% 32%)' : 'hsl(200 15% 45%)',
+                    margin: '0 auto 0.5rem'
                   }} />
                   <span style={{
-                    fontSize: 'clamp(0.875rem, 2vw, 0.875rem)',
+                    display: 'block',
+                    fontSize: '0.875rem',
                     fontWeight: '500',
-                    color: formData.request_type === 'initial_verification' 
-                      ? 'hsl(174 62% 32%)' 
-                      : 'hsl(200 25% 15%)'
+                    color: data.request_type === 'initial_verification' ? 'hsl(174 62% 32%)' : 'hsl(200 25% 15%)'
                   }}>
                     Initial Verification
-                  </span>
-                  <span style={{
-                    fontSize: 'clamp(0.75rem, 2vw, 0.75rem)',
-                    color: 'hsl(200 15% 45%)',
-                    textAlign: 'center'
-                  }}>
-                    First-time verification request
                   </span>
                 </button>
                 
                 <button
                   type="button"
                   onClick={() => handleInputChange('request_type', 're_verification')}
-                  disabled={isSubmitting}
-                  className="touch-button action-button"
+                  disabled={processing}
                   style={{
-                    padding: 'clamp(0.75rem, 3vw, 0.75rem)',
-                    border: formData.request_type === 're_verification' 
-                      ? '2px solid hsl(174 62% 32%)' 
-                      : '1px solid hsl(40 20% 88%)',
-                    backgroundColor: formData.request_type === 're_verification' 
-                      ? 'hsl(174 62% 32% / 0.1)' 
-                      : 'white',
-                    borderRadius: 'clamp(0.375rem, 2vw, 0.5rem)',
-                    cursor: isSubmitting ? 'not-allowed' : 'pointer',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    gap: 'clamp(0.375rem, 1.5vw, 0.5rem)',
-                    opacity: isSubmitting ? 0.7 : 1,
-                    transition: 'all 0.2s'
+                    padding: '0.75rem',
+                    border: data.request_type === 're_verification' ? '2px solid hsl(174 62% 32%)' : '1px solid hsl(40 20% 88%)',
+                    backgroundColor: data.request_type === 're_verification' ? 'hsl(174 62% 32% / 0.1)' : 'white',
+                    borderRadius: '0.5rem',
+                    cursor: processing ? 'not-allowed' : 'pointer',
+                    textAlign: 'center'
                   }}
                 >
                   <UserCheck style={{ 
-                    height: 'clamp(1.25rem, 4vw, 1.5rem)', 
-                    width: 'clamp(1.25rem, 4vw, 1.5rem)', 
-                    color: formData.request_type === 're_verification' 
-                      ? 'hsl(174 62% 32%)' 
-                      : 'hsl(200 15% 45%)'
+                    height: '1.5rem', 
+                    width: '1.5rem', 
+                    color: data.request_type === 're_verification' ? 'hsl(174 62% 32%)' : 'hsl(200 15% 45%)',
+                    margin: '0 auto 0.5rem'
                   }} />
                   <span style={{
-                    fontSize: 'clamp(0.875rem, 2vw, 0.875rem)',
+                    display: 'block',
+                    fontSize: '0.875rem',
                     fontWeight: '500',
-                    color: formData.request_type === 're_verification' 
-                      ? 'hsl(174 62% 32%)' 
-                      : 'hsl(200 25% 15%)'
+                    color: data.request_type === 're_verification' ? 'hsl(174 62% 32%)' : 'hsl(200 25% 15%)'
                   }}>
                     Re-Verification
                   </span>
-                  <span style={{
-                    fontSize: 'clamp(0.75rem, 2vw, 0.75rem)',
-                    color: 'hsl(200 15% 45%)',
-                    textAlign: 'center'
-                  }}>
-                    Update expired verification
-                  </span>
                 </button>
               </div>
+              {errors.request_type && (
+                <p style={{ fontSize: '0.75rem', color: 'hsl(0 72% 51%)', marginTop: '0.5rem' }}>
+                  {errors.request_type}
+                </p>
+              )}
             </div>
 
             {/* Document Upload Sections */}
             {documentSections.map((section) => (
-              <div key={section.key} className="document-section" style={{ 
-                marginBottom: 'clamp(1rem, 3vw, 1.5rem)'
-              }}>
-                <div style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  flexWrap: 'wrap',
-                  gap: 'clamp(0.25rem, 1vw, 0.5rem)', 
-                  marginBottom: 'clamp(0.25rem, 1vw, 0.5rem)' 
-                }}>
-                  <label style={{
-                    fontSize: 'clamp(0.75rem, 2vw, 0.875rem)',
-                    fontWeight: '600',
-                    color: 'hsl(200 25% 15%)'
-                  }}>
+              <div key={section.key} style={{ marginBottom: '1.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                  <label style={{ fontSize: '0.875rem', fontWeight: '600', color: 'hsl(200 25% 15%)' }}>
                     {section.title}
                   </label>
                   {section.required && (
                     <span style={{
-                      fontSize: 'clamp(0.6875rem, 2vw, 0.75rem)',
+                      fontSize: '0.75rem',
                       color: 'hsl(0 65% 45%)',
                       backgroundColor: 'hsl(0 65% 45% / 0.1)',
-                      padding: 'clamp(0.125rem, 1vw, 0.125rem) clamp(0.25rem, 2vw, 0.375rem)',
-                      borderRadius: 'clamp(0.125rem, 1.5vw, 0.25rem)',
+                      padding: '0.125rem 0.375rem',
+                      borderRadius: '0.25rem',
                       fontWeight: '500'
                     }}>
                       Required
                     </span>
                   )}
                 </div>
-                <p style={{
-                  fontSize: 'clamp(0.75rem, 2vw, 0.75rem)',
-                  color: 'hsl(200 15% 45%)',
-                  marginBottom: 'clamp(0.5rem, 2vw, 0.75rem)',
-                  lineHeight: '1.4'
-                }}>
+                <p style={{ fontSize: '0.75rem', color: 'hsl(200 15% 45%)', marginBottom: '0.75rem' }}>
                   {section.description}
                 </p>
                 
+                {errors[section.formKey] && (
+                  <p style={{ fontSize: '0.75rem', color: 'hsl(0 72% 51%)', marginBottom: '0.5rem' }}>
+                    {errors[section.formKey]}
+                  </p>
+                )}
+
                 {/* Upload Area */}
-                <div className="upload-area" style={{
+                <div style={{
                   border: '2px dashed hsl(40 20% 88%)',
-                  borderRadius: 'clamp(0.375rem, 2vw, 0.5rem)',
-                  padding: 'clamp(1rem, 3vw, 1.5rem)',
+                  borderRadius: '0.5rem',
+                  padding: '1.5rem',
                   textAlign: 'center',
                   backgroundColor: 'hsl(40 30% 98%)',
-                  cursor: isSubmitting ? 'not-allowed' : 'pointer',
-                  marginBottom: 'clamp(0.5rem, 2vw, 0.75rem)',
-                  opacity: isSubmitting ? 0.7 : 1,
-                  transition: 'all 0.2s'
+                  cursor: processing ? 'not-allowed' : 'pointer',
+                  marginBottom: '0.75rem'
                 }}
-                onClick={() => {
-                  if (!isSubmitting) {
-                    document.getElementById(`${section.key}-input`).click();
-                  }
-                }}
-                onMouseEnter={(e) => {
-                  if (!isSubmitting) {
-                    e.currentTarget.style.borderColor = 'hsl(174 62% 32%)';
-                    e.currentTarget.style.backgroundColor = 'hsl(40 30% 94%)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isSubmitting) {
-                    e.currentTarget.style.borderColor = 'hsl(40 20% 88%)';
-                    e.currentTarget.style.backgroundColor = 'hsl(40 30% 98%)';
-                  }
-                }}
+                onClick={() => !processing && document.getElementById(`${section.key}-input`).click()}
                 >
-                  <Upload style={{ 
-                    height: 'clamp(1.25rem, 4vw, 1.5rem)', 
-                    width: 'clamp(1.25rem, 4vw, 1.5rem)', 
-                    color: 'hsl(200 15% 45%)', 
-                    margin: '0 auto clamp(0.375rem, 1.5vw, 0.5rem)' 
-                  }} />
-                  <p style={{ 
-                    fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', 
-                    color: 'hsl(200 25% 15%)', 
-                    fontWeight: '500', 
-                    marginBottom: 'clamp(0.125rem, 1vw, 0.25rem)' 
-                  }}>
-                    {isSubmitting ? 'Upload disabled during submission' : 'Click to upload files'}
+                  <Upload style={{ height: '1.5rem', width: '1.5rem', color: 'hsl(200 15% 45%)', margin: '0 auto 0.5rem' }} />
+                  <p style={{ fontSize: '0.875rem', color: 'hsl(200 25% 15%)', fontWeight: '500', marginBottom: '0.25rem' }}>
+                    Click to upload files
                   </p>
-                  <p style={{ 
-                    fontSize: 'clamp(0.6875rem, 2vw, 0.75rem)', 
-                    color: 'hsl(200 15% 45%)',
-                    lineHeight: '1.4'
-                  }}>
+                  <p style={{ fontSize: '0.75rem', color: 'hsl(200 15% 45%)' }}>
                     PNG, JPG, PDF up to 10MB each
                   </p>
                   <input
@@ -740,96 +607,53 @@ const VerificationRequestModal = ({ isOpen, onClose, agentData, selectedRental }
                     accept="image/*,.pdf,.doc,.docx"
                     onChange={(e) => handleFileUpload(section.key, e)}
                     style={{ display: 'none' }}
-                    disabled={isSubmitting}
+                    disabled={processing}
                   />
                 </div>
 
-                {/* Uploaded Files List */}
-                {formData[section.key].length > 0 && (
-                  <div style={{ marginTop: 'clamp(0.5rem, 2vw, 0.5rem)' }}>
-                    {formData[section.key].map((fileObj, index) => (
-                      <div key={fileObj.id} className="file-item" style={{
+                {/* Uploaded Files */}
+                {selectedFiles[section.key].length > 0 && (
+                  <div>
+                    {selectedFiles[section.key].map((fileObj, index) => (
+                      <div key={fileObj.id} style={{
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
-                        padding: 'clamp(0.5rem, 2vw, 0.75rem)',
+                        padding: '0.75rem',
                         backgroundColor: 'hsl(40 30% 96%)',
-                        borderRadius: 'clamp(0.25rem, 1.5vw, 0.375rem)',
-                        marginBottom: 'clamp(0.375rem, 1.5vw, 0.5rem)',
-                        gap: 'clamp(0.5rem, 2vw, 0.75rem)'
+                        borderRadius: '0.375rem',
+                        marginBottom: '0.5rem'
                       }}>
-                        <div style={{ 
-                          display: 'flex', 
-                          alignItems: 'center', 
-                          gap: 'clamp(0.375rem, 1.5vw, 0.5rem)', 
-                          flex: 1,
-                          minWidth: 0
-                        }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1 }}>
                           {uploadProgress[fileObj.id] >= 100 ? (
-                            <CheckCircle style={{ 
-                              height: 'clamp(1rem, 3vw, 1rem)', 
-                              width: 'clamp(1rem, 3vw, 1rem)', 
-                              color: 'hsl(152 60% 40%)',
-                              flexShrink: 0
-                            }} />
+                            <CheckCircle style={{ height: '1rem', width: '1rem', color: 'hsl(152 60% 40%)' }} />
                           ) : (
                             <div style={{
-                              width: 'clamp(1rem, 3vw, 1rem)',
-                              height: 'clamp(1rem, 3vw, 1rem)',
+                              width: '1rem',
+                              height: '1rem',
                               border: '2px solid hsl(174 62% 32%)',
                               borderTopColor: 'transparent',
                               borderRadius: '50%',
-                              animation: 'spin 1s linear infinite',
-                              flexShrink: 0
+                              animation: 'spin 1s linear infinite'
                             }} />
                           )}
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <span style={{ 
-                              fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', 
-                              color: 'hsl(200 25% 15%)',
-                              display: 'block',
-                              wordBreak: 'break-all'
-                            }}>
-                              {fileObj.name}
-                            </span>
-                            {uploadProgress[fileObj.id] < 100 && (
-                              <div style={{
-                                width: '100%',
-                                height: '4px',
-                                backgroundColor: 'hsl(40 20% 88%)',
-                                borderRadius: '2px',
-                                marginTop: 'clamp(0.125rem, 1vw, 0.25rem)',
-                                overflow: 'hidden'
-                              }}>
-                                <div style={{
-                                  width: `${uploadProgress[fileObj.id]}%`,
-                                  height: '100%',
-                                  backgroundColor: 'hsl(174 62% 32%)',
-                                  transition: 'width 0.3s ease'
-                                }} />
-                              </div>
-                            )}
-                          </div>
+                          <span style={{ fontSize: '0.875rem', color: 'hsl(200 25% 15%)', flex: 1 }}>
+                            {fileObj.name}
+                          </span>
                         </div>
                         <button
                           type="button"
                           onClick={() => removeFile(section.key, index)}
-                          disabled={isSubmitting || uploadProgress[fileObj.id] < 100}
-                          className="touch-button"
+                          disabled={processing || uploadProgress[fileObj.id] < 100}
                           style={{
-                            padding: 'clamp(0.25rem, 1vw, 0.25rem)',
+                            padding: '0.25rem',
                             border: 'none',
                             backgroundColor: 'transparent',
-                            cursor: (isSubmitting || uploadProgress[fileObj.id] < 100) ? 'not-allowed' : 'pointer',
-                            color: 'hsl(0 65% 45%)',
-                            opacity: (isSubmitting || uploadProgress[fileObj.id] < 100) ? 0.5 : 1,
-                            flexShrink: 0
+                            cursor: (processing || uploadProgress[fileObj.id] < 100) ? 'not-allowed' : 'pointer',
+                            color: 'hsl(0 65% 45%)'
                           }}
                         >
-                          <X style={{ 
-                            height: 'clamp(1rem, 3vw, 1rem)', 
-                            width: 'clamp(1rem, 3vw, 1rem)' 
-                          }} />
+                          <X style={{ height: '1rem', width: '1rem' }} />
                         </button>
                       </div>
                     ))}
@@ -839,169 +663,125 @@ const VerificationRequestModal = ({ isOpen, onClose, agentData, selectedRental }
             ))}
 
             {/* Additional Notes */}
-            <div style={{ marginBottom: 'clamp(1rem, 3vw, 1.5rem)' }}>
-              <label style={{
-                display: 'block',
-                fontSize: 'clamp(0.75rem, 2vw, 0.875rem)',
-                fontWeight: '600',
-                color: 'hsl(200 25% 15%)',
-                marginBottom: 'clamp(0.375rem, 1.5vw, 0.5rem)'
-              }}>
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: 'hsl(200 25% 15%)', marginBottom: '0.5rem' }}>
                 Additional Information
               </label>
               <textarea
-                value={formData.additional_notes}
+                value={data.additional_notes}
                 onChange={(e) => handleInputChange('additional_notes', e.target.value)}
-                placeholder="Any additional information that might help with verification..."
+                placeholder="Any additional information..."
                 rows={3}
-                disabled={isSubmitting}
+                disabled={processing}
                 style={{
                   width: '100%',
-                  padding: 'clamp(0.5rem, 2vw, 0.625rem)',
-                  border: '1px solid hsl(40 20% 88%)',
-                  borderRadius: 'clamp(0.375rem, 2vw, 0.5rem)',
-                  fontSize: 'clamp(0.875rem, 2vw, 0.875rem)',
+                  padding: '0.625rem',
+                  border: errors.additional_notes ? '1px solid hsl(0 72% 51%)' : '1px solid hsl(40 20% 88%)',
+                  borderRadius: '0.5rem',
+                  fontSize: '0.875rem',
                   resize: 'vertical',
-                  backgroundColor: isSubmitting ? 'hsl(40 30% 96%)' : 'white',
-                  opacity: isSubmitting ? 0.7 : 1,
-                  fontFamily: 'inherit',
-                  minHeight: '5rem'
+                  fontFamily: 'inherit'
                 }}
               />
+              {errors.additional_notes && (
+                <p style={{ fontSize: '0.75rem', color: 'hsl(0 72% 51%)', marginTop: '0.5rem' }}>
+                  {errors.additional_notes}
+                </p>
+              )}
             </div>
 
-            {/* Terms and Conditions */}
-            <div className="terms-container" style={{ marginBottom: 'clamp(1rem, 3vw, 1.5rem)' }}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 'clamp(0.5rem, 2vw, 0.75rem)' }}>
+            {/* Terms */}
+            <div style={{ marginBottom: '1.5rem' }}>
+              <div style={{ display: 'flex', gap: '0.75rem' }}>
                 <input
                   type="checkbox"
                   id="terms"
-                  checked={formData.terms_accepted}
+                  checked={data.terms_accepted}
                   onChange={(e) => handleInputChange('terms_accepted', e.target.checked)}
-                  disabled={isSubmitting}
-                  style={{
-                    marginTop: 'clamp(0.125rem, 1vw, 0.125rem)',
-                    accentColor: 'hsl(174 62% 32%)',
-                    opacity: isSubmitting ? 0.7 : 1,
-                    width: 'clamp(1rem, 3vw, 1.125rem)',
-                    height: 'clamp(1rem, 3vw, 1.125rem)',
-                    cursor: isSubmitting ? 'not-allowed' : 'pointer'
+                  disabled={processing}
+                  style={{ 
+                    accentColor: 'hsl(174 62% 32%)', 
+                    width: '1.125rem', 
+                    height: '1.125rem', 
+                    cursor: 'pointer' 
                   }}
                 />
-                <div style={{ flex: 1 }}>
-                  <label htmlFor="terms" style={{
-                    fontSize: 'clamp(0.75rem, 2vw, 0.875rem)',
-                    color: isSubmitting ? 'hsl(200 15% 45%)' : 'hsl(200 25% 15%)',
-                    cursor: isSubmitting ? 'not-allowed' : 'pointer',
-                    lineHeight: '1.5',
-                    display: 'block',
-                    marginBottom: 'clamp(0.25rem, 1vw, 0.5rem)'
-                  }}>
-                    I confirm that all submitted documents are authentic and accurate. I understand that:
-                  </label>
-                  <ul style={{
-                    fontSize: 'clamp(0.6875rem, 2vw, 0.75rem)',
-                    color: 'hsl(200 15% 45%)',
-                    paddingLeft: 'clamp(0.75rem, 3vw, 1rem)',
-                    lineHeight: '1.5',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '0.25rem'
-                  }}>
-                    <li>Providing false information may result in account suspension</li>
-                    <li>Verification typically takes 3-5 business days</li>
-                    <li>I may be contacted for additional information</li>
-                    <li>Verification decisions are final and at the discretion of the platform</li>
-                  </ul>
-                </div>
+                <label htmlFor="terms" style={{ fontSize: '0.875rem', color: 'hsl(200 25% 15%)', cursor: 'pointer', flex: 1 }}>
+                  I confirm all submitted documents are authentic. I understand verification takes 3-5 business days and false information may result in account suspension.
+                </label>
               </div>
+              {errors.terms_accepted && (
+                <p style={{ fontSize: '0.75rem', color: 'hsl(0 72% 51%)', marginTop: '0.5rem', marginLeft: '2rem' }}>
+                  {errors.terms_accepted}
+                </p>
+              )}
             </div>
           </div>
 
-          {/* Footer with Action Buttons */}
-          <div className="modal-footer" style={{
-            padding: 'clamp(1rem, 3vw, 1.5rem)',
+          {/* Footer */}
+          <div style={{
+            padding: '1.5rem',
             borderTop: '1px solid hsl(40 20% 88%)',
             backgroundColor: 'hsl(40 30% 98%)',
-            flexShrink: 0
+            display: 'flex',
+            gap: '0.75rem'
           }}>
-            <div style={{
-              display: 'flex',
-              gap: 'clamp(0.5rem, 2vw, 0.75rem)'
-            }}>
-              <button
-                type="button"
-                onClick={handleClose}
-                disabled={isSubmitting}
-                className="touch-button action-button"
-                style={{
-                  flex: 1,
-                  padding: 'clamp(0.625rem, 2vw, 0.75rem)',
-                  border: '1px solid hsl(40 20% 88%)',
-                  backgroundColor: 'white',
-                  borderRadius: 'clamp(0.375rem, 2vw, 0.5rem)',
-                  fontWeight: '600',
-                  cursor: isSubmitting ? 'not-allowed' : 'pointer',
-                  fontSize: 'clamp(0.875rem, 2vw, 0.875rem)',
-                  color: 'hsl(200 15% 45%)',
-                  opacity: isSubmitting ? 0.7 : 1,
-                  transition: 'all 0.2s'
-                }}
-                onMouseEnter={(e) => {
-                  if (!isSubmitting) {
-                    e.currentTarget.style.backgroundColor = 'hsl(40 30% 96%)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isSubmitting) {
-                    e.currentTarget.style.backgroundColor = 'white';
-                  }
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleSubmit}
-                disabled={isSubmitting || !formData.terms_accepted}
-                className="touch-button action-button"
-                style={{
-                  flex: 2,
-                  padding: 'clamp(0.625rem, 2vw, 0.75rem)',
-                  border: 'none',
-                  background: isSubmitting || !formData.terms_accepted 
-                    ? 'hsl(200 15% 45%)' 
-                    : 'linear-gradient(135deg, hsl(174 62% 32%) 0%, hsl(174 50% 25%) 100%)',
-                  color: 'white',
-                  borderRadius: 'clamp(0.375rem, 2vw, 0.5rem)',
-                  fontWeight: '600',
-                  cursor: isSubmitting || !formData.terms_accepted ? 'not-allowed' : 'pointer',
-                  fontSize: 'clamp(0.875rem, 2vw, 0.875rem)',
-                  opacity: isSubmitting || !formData.terms_accepted ? 0.7 : 1,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 'clamp(0.25rem, 1vw, 0.5rem)',
-                  transition: 'all 0.2s'
-                }}
-              >
-                {isSubmitting ? (
-                  <>
-                    <div style={{
-                      width: 'clamp(1rem, 3vw, 1rem)',
-                      height: 'clamp(1rem, 3vw, 1rem)',
-                      border: '2px solid white',
-                      borderTopColor: 'transparent',
-                      borderRadius: '50%',
-                      animation: 'spin 1s linear infinite'
-                    }} />
-                    Submitting...
-                  </>
-                ) : (
-                  'Submit Verification Request'
-                )}
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={handleClose}
+              disabled={processing}
+              style={{
+                flex: 1,
+                padding: '0.75rem',
+                border: '1px solid hsl(40 20% 88%)',
+                backgroundColor: 'white',
+                borderRadius: '0.5rem',
+                fontWeight: '600',
+                cursor: processing ? 'not-allowed' : 'pointer',
+                fontSize: '0.875rem',
+                color: 'hsl(200 15% 45%)'
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={processing || !data.terms_accepted}
+              style={{
+                flex: 2,
+                padding: '0.75rem',
+                border: 'none',
+                background: processing || !data.terms_accepted 
+                  ? 'hsl(200 15% 45%)' 
+                  : 'linear-gradient(135deg, hsl(174 62% 32%) 0%, hsl(174 50% 25%) 100%)',
+                color: 'white',
+                borderRadius: '0.5rem',
+                fontWeight: '600',
+                cursor: processing || !data.terms_accepted ? 'not-allowed' : 'pointer',
+                fontSize: '0.875rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.5rem'
+              }}
+            >
+              {processing ? (
+                <>
+                  <div style={{
+                    width: '1rem',
+                    height: '1rem',
+                    border: '2px solid white',
+                    borderTopColor: 'transparent',
+                    borderRadius: '50%',
+                    animation: 'spin 1s linear infinite'
+                  }} />
+                  Submitting...
+                </>
+              ) : (
+                'Submit Verification Request'
+              )}
+            </button>
           </div>
         </div>
       </div>

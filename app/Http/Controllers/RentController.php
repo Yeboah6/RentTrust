@@ -52,10 +52,10 @@ class RentController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
-    {
-        //
-    }
+    // public function create()
+    // {
+    //     //
+    // }
 
     /**
      * Store a newly created resource in storage.
@@ -243,17 +243,226 @@ class RentController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Rental $rent)
-    {
-        //
-    }
+    // public function edit(Rental $rent)
+    // {
+    //     //
+    // }
 
     /**
      * Update the specified resource in storage.
      */
     public function update(Request $request, Rental $rent)
     {
-        dd($request);
+        // Log the incoming request for debugging
+        Log::info('Rental update request', [
+            'rental_id' => $rent->id,
+            'has_new_images' => $request->hasFile('newImages'),
+            'existing_images_count' => count($request->input('existingImages', [])),
+            'removed_images_count' => count($request->input('removedImages', []))
+        ]);
+
+        $amenities = $request->amenities;
+        if (is_array($amenities)) {
+            $amenities = json_encode($amenities);
+        }
+
+        $request->merge(['amenities' => $amenities]);
+
+        // Validation rules
+        $validator = Validator::make($request->all(), [
+            'title' => 'required|string|max:255',
+            'propertyType' => 'required|string',
+            'area' => 'required|string|max:255',
+            'city' => 'required|string|max:255',
+            'address' => 'nullable|string',
+            'rentMin' => 'required|numeric|min:0',
+            'rentMax' => 'required|numeric|min:0|gte:rentMin',
+            'advanceDuration' => 'required|integer|min:1|max:5',
+            'bedrooms' => 'required|integer|min:0',
+            'bathrooms' => 'nullable|integer|min:0',
+            'description' => 'nullable|string',
+            'agentName' => 'required|string|max:255',
+            'agentPhone' => 'required|string|max:20',
+            'agentEmail' => 'required|email|max:255',
+            'newImages.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120', // 5MB max
+            'existingImages' => 'nullable|array',
+            'existingImages.*' => 'string',
+            'removedImages' => 'nullable|array',
+            'removedImages.*' => 'string',
+        ], [
+            'rentMax.gte' => 'Maximum rent must be greater than or equal to minimum rent',
+            'newImages.*.max' => 'Each image must not exceed 5MB',
+            'newImages.*.mimes' => 'Images must be jpeg, png, jpg, or gif format',
+        ]);
+
+        if ($validator->fails()) {
+            return back()
+                ->withErrors($validator)
+                ->withInput()
+                ->with('error', 'Please correct the errors below.');
+        }
+
+        try {
+            // Parse existing rental images
+            $currentImages = $this->parseImages($rent->images);
+            
+            // Get images to keep (existing images)
+            $existingImages = $request->input('existingImages', []);
+            
+            // Get images to remove
+            $removedImages = $request->input('removedImages', []);
+            
+            // Delete removed images from storage
+            foreach ($removedImages as $imagePath) {
+                if (in_array($imagePath, $currentImages)) {
+                    $this->deleteImage($imagePath);
+                }
+            }
+
+            $amenitiesArray = [];
+            if (! empty($amenities)) {
+                $decoded = json_decode($amenities, true);
+                if (is_array($decoded)) {
+                    $amenitiesArray = $decoded;
+                }
+            }
+            
+            // Handle new image uploads
+            $newImagePaths = [];
+            if ($request->hasFile('newImages')) {
+                foreach ($request->file('newImages') as $image) {
+                    try {
+                        // Generate unique filename
+                        $filename = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
+                        
+                        // Store in public/storage/rental_images
+                        $path = $image->storeAs('rental_images', $filename, 'public');
+                        
+                        if ($path) {
+                            $newImagePaths[] = $filename; // Store just the filename
+                        }
+                    } catch (\Exception $e) {
+                        Log::error('Image upload failed', [
+                            'error' => $e->getMessage(),
+                            'rental_id' => $rent->id
+                        ]);
+                    }
+                }
+            }
+            
+            // Combine existing and new images
+            $finalImages = array_merge($existingImages, $newImagePaths);
+            
+            // Ensure we don't exceed 6 images
+            $finalImages = array_slice($finalImages, 0, 6);
+            
+            Log::info('Image processing complete', [
+                'rental_id' => $rent->id,
+                'kept_existing' => count($existingImages),
+                'uploaded_new' => count($newImagePaths),
+                'deleted' => count($removedImages),
+                'final_total' => count($finalImages)
+            ]);
+            
+            // Update rental data
+            $rent->update([
+                'title' => $request->title,
+                'property_type' => $request->propertyType,
+                'area' => $request->area,
+                'city' => $request->city,
+                'address' => $request->address,
+                'rent_min' => $request->rentMin,
+                'rent_max' => $request->rentMax,
+                'advance_duration' => $request->advanceDuration,
+                'bedrooms' => $request->bedrooms,
+                'bathrooms' => $request->bathrooms ?? 0,
+                'amenities' => $amenitiesArray,
+                'description' => $request->description,
+                'agent_name' => $request->agentName,
+                'agent_phone' => $request->agentPhone,
+                'agent_email' => $request->agentEmail,
+                'images' => json_encode($finalImages),
+                'updated_at' => now(),
+            ]);
+            
+            Log::info('Rental updated successfully', [
+                'rental_id' => $rent->id,
+                'title' => $rent->title
+            ]);
+            
+            return redirect()
+                ->back()
+                ->with('success', 'Rental listing updated successfully!');
+                
+        } catch (\Exception $e) {
+            Log::error('Rental update failed', [
+                'rental_id' => $rent->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return back()
+                ->withInput()
+                ->with('error', 'Failed to update listing. Please try again.');
+        }
+    }
+
+    /**
+     * Parse images from database (handles both string and array formats)
+     */
+    private function parseImages($imagesData)
+    {
+        if (!$imagesData) {
+            return [];
+        }
+        
+        try {
+            // If it's already an array, return it
+            if (is_array($imagesData)) {
+                return $imagesData;
+            }
+            
+            // If it's a string, parse it as JSON
+            if (is_string($imagesData)) {
+                $parsed = json_decode($imagesData, true);
+                return is_array($parsed) ? $parsed : [];
+            }
+            
+            return [];
+        } catch (\Exception $e) {
+            Log::error('Error parsing images', [
+                'error' => $e->getMessage(),
+                'data' => $imagesData
+            ]);
+            return [];
+        }
+    }
+
+    /**
+     * Delete an image from storage
+     */
+    private function deleteImage($imagePath)
+    {
+        try {
+            // Handle different path formats
+            $fullPath = 'rental_images/' . basename($imagePath);
+            
+            if (Storage::disk('public')->exists($fullPath)) {
+                Storage::disk('public')->delete($fullPath);
+                Log::info('Image deleted', ['path' => $fullPath]);
+                return true;
+            }
+            
+            Log::warning('Image not found for deletion', ['path' => $fullPath]);
+            return false;
+            
+        } catch (\Exception $e) {
+            Log::error('Failed to delete image', [
+                'path' => $imagePath,
+                'error' => $e->getMessage()
+            ]);
+            return false;
+        }
     }
 
     /**
@@ -500,37 +709,6 @@ class RentController extends Controller
         ]);
 
         return redirect()->back()->with('success', 'Report status updated successfully');
-    }
-
-    public function verifyAgent(Request $request, $id)
-    {
-        $validated = $request->validate([
-            'status' => 'required|in:verified,rejected,request_info',
-        ]);
-
-        $verify = Agent::findOrFail($id);
-        $verify->update([
-            'status' => $validated['status'],
-            'updated_at' => now(),
-        ]);
-
-        return redirect()->back()->with('success', 'Agent status updated successfully');
-        dd($request);
-    }
-
-    public function suspendAgent(Request $request, $id)
-    {
-        $validated = $request->validate([
-            'status' => 'required|in:suspended,unverified', // Allow both suspended and verified (for unsuspend)
-        ]);
-
-        $agent = Agent::findOrFail($id);
-        $agent->update([
-            'status' => $validated['status'],
-            'updated_at' => now(), // Fixed: was 'updated', should be 'updated_at'
-        ]);
-
-        return redirect()->back()->with('success', 'Agent status updated successfully');
     }
 
     public function storeReviewApp(Request $request)

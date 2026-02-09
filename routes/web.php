@@ -6,6 +6,7 @@ use App\Http\Controllers\AgentController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PasswordResetController;
+use App\Http\Controllers\VerificationsController;
 
 Route::resource('rent', RentController::class) -> except('index');
 
@@ -40,16 +41,29 @@ Route::middleware('agent')->group(function () {
     Route::get('/agent-dashboard', [DashboardController::class, 'agentDashboard']);
     Route::post('/rent', [RentController::class, 'store']);
     Route::put('/response', [RentController::class, 'response']);
+    Route::post('/verification-requests', [VerificationsController::class, 'store'])
+        ->name('verification.store');
+    Route::delete('/api/verification-requests/{id}', [VerificationsController::class, 'destroy'])
+        ->name('verification.destroy');
 });
 
 Route::middleware('super')->group(function () {
     Route::get('/super-admin', [DashboardController::class, 'superAdmin']);
     Route::put('/admin/reports/{id}/status', [RentController::class, 'updateReportStatus'])
     ->name('admin.reports.status');
-    Route::put('/admin/agents/{id}/verify', [RentController::class, 'verifyAgent'])
+    Route::put('/admin/agents/{id}/verify', [VerificationsController::class, 'verifyAgent'])
     ->name('admin.verify.agent');
-    Route::put('/admin/agents/{id}/suspend', [RentController::class, 'suspendAgent'])
-    ->name('admin.verify.agent');
+    Route::put('/admin/agents/{id}/suspend', [VerificationsController::class, 'suspendAgent'])
+    ->name('admin.suspend.agent');
+    // Update verification status (admin only)
+    // Route::patch('/verification-requests/{id}/status', [VerificationsController::class, 'updateStatus'])
+    //     ->name('verification.update-status');
+    Route::get('/api/verification-requests', [VerificationsController::class, 'index'])
+        ->name('verification.index');
+    Route::patch('/api/verification-requests/{id}/status', [VerificationsController::class, 'updateStatus'])
+        ->name('verification.update-status');
+    Route::get('/api/verification-requests/{id}', [VerificationsController::class, 'show'])
+        ->name('verification.show');
 });
 
 Route::get('settings', [AuthController::class, 'settings'])->name('settings.page');

@@ -30,7 +30,8 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental }) => {
   const [existingImages, setExistingImages] = useState([]);
   const [currentStep, setCurrentStep] = useState(1);
   const [toast, setToast] = useState(null);
-  // const allImages = [...existingImages, ...images];
+
+  // const allImages = [...existingImages, ...newImages];
 
   const parseImages = (imagesData) => {
     if (!imagesData) return [];
@@ -271,7 +272,7 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental }) => {
     });
     
     // Use POST with _method=PUT for file uploads
-    post(`/rent/${data.id}`, {
+    put(`/rent/${data.id}`, {
       data: formData,
       forceFormData: true,
       preserveScroll: true,
@@ -1912,7 +1913,7 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental }) => {
                         </div>
                       </div>
 
-                      {images.length > 0 && (
+                      {allImages.length > 0 && (
                         <div style={{ 
                           padding: 'clamp(1rem, 3vw, 1.25rem)',
                           borderRadius: 'clamp(0.5rem, 2vw, 0.75rem)',
@@ -1924,13 +1925,13 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental }) => {
                             fontWeight: '600',
                             marginBottom: 'clamp(0.5rem, 2vw, 0.75rem)'
                           }}>
-                            Images ({images.length})
+                            Images ({allImages.length})
                           </h3>
                           <div className="images-grid" style={{
                             display: 'grid',
                             gap: 'clamp(0.5rem, 2vw, 0.75rem)'
                           }}>
-                            {images.map(image => (
+                            {allImages.map(image => (
                               <div key={image.id} style={{ 
                                 aspectRatio: '1 / 1',
                                 backgroundColor: 'hsl(40 30% 94%)',
