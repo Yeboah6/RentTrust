@@ -331,24 +331,36 @@ class RentController extends Controller
             $newImagePaths = [];
             if ($request->hasFile('newImages')) {
                 foreach ($request->file('newImages') as $image) {
-                    try {
+                    // try {
                         // Generate unique filename
-                        $filename = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
+                        // $filename = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
+                        $fileName = 'rental_'.time().'_'.uniqid().'.'.$image->getClientOriginalExtension();
                         
                         // Store in public/storage/rental_images
-                        $path = $image->storeAs('rental_images', $filename, 'public');
+                        $path = $image->storeAs('rental_images', $fileName, 'public');
                         
                         if ($path) {
-                            $newImagePaths[] = $filename; // Store just the filename
+                            $newImagePaths[] = $fileName; // Store just the filename
                         }
-                    } catch (\Exception $e) {
-                        Log::error('Image upload failed', [
-                            'error' => $e->getMessage(),
-                            'rental_id' => $rent->id
-                        ]);
-                    }
+                    // } 
+                    // catch (\Exception $e) {
+                    //     Log::error('Image upload failed', [
+                    //         'error' => $e->getMessage(),
+                    //         'rental_id' => $rent->id
+                    //     ]);
+                    // }
                 }
             }
+
+            // if ($request->hasFile('images')) {
+            //     foreach ($request->file('images') as $file) {
+            //         if ($file->isValid()) {
+            //             $fileName = 'rental_'.time().'_'.uniqid().'.'.$file->getClientOriginalExtension();
+            //             $path = $file->storeAs('rental_images', $fileName, 'public');
+            //             $filePaths[] = $fileName;
+            //         }
+            //     }
+            // }
             
             // Combine existing and new images
             $finalImages = array_merge($existingImages, $newImagePaths);
@@ -381,7 +393,7 @@ class RentController extends Controller
                 'agent_name' => $request->agentName,
                 'agent_phone' => $request->agentPhone,
                 'agent_email' => $request->agentEmail,
-                'images' => json_encode($finalImages),
+                'images' => $finalImages ?? [],
                 'updated_at' => now(),
             ]);
             

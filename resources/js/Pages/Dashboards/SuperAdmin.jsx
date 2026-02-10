@@ -4,6 +4,7 @@ import Footer from "@/Components/Layouts/Footer";
 import { Link, useForm, router } from "@inertiajs/react";
 import VerifyAgentDialog from '@/Components/Modules/VerifyAgent';
 import ViewRentals from "@/Components/Modules/ViewRental";
+import ViewAgentVerifications from '@/Components/Modules/ViewAgentVerifications';
 import { MapPin} from 'lucide-react';
 
 // Icon components
@@ -55,6 +56,12 @@ const AlertCircle = ({ style }) => (
   </svg>
 );
 
+const ShieldCheck = ({ style }) => (
+  <svg style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+  </svg>
+);
+
 const Menu = ({ style }) => (
   <svg style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -67,7 +74,7 @@ const X = ({ style }) => (
   </svg>
 );
 
-const SuperAdminDashboard = ({ adminData, rentals, agentData, reviews, reports }) => {
+const SuperAdminDashboard = ({ adminData, rentals, agentData, reviews, reports, verifications }) => {
   const [activeTab, setActiveTab] = useState("agents");
   const [respondingTo, setRespondingTo] = useState(null);
   const [responseText, setResponseText] = useState("");
@@ -105,7 +112,6 @@ const SuperAdminDashboard = ({ adminData, rentals, agentData, reviews, reports }
     const selectViewData = rentals.find(r => r.id === rental.id);
     setSelectedRental(selectViewData);
     setShowViewModal(true);
-    // console.log("View Data:", selectViewData);
   };
 
 const handleSuspendAgent = (agentId) => {
@@ -361,7 +367,7 @@ const handleSuspendAgent = (agentId) => {
                 borderRadius: '0.5rem',
                 marginBottom: '2rem'
               }}>
-                {['agents', 'listings', 'reports', 'reviews'].map((tab) => (
+                {['agents', 'listings', 'verifications', 'reports', 'reviews'].map((tab) => (
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
@@ -384,8 +390,10 @@ const handleSuspendAgent = (agentId) => {
                   >
                     {tab === 'agents' && <Shield style={{ height: '1rem', width: '1rem' }} />}
                     {tab === 'listings' && <Home style={{ height: '1rem', width: '1rem' }} />}
+                    {tab === 'verifications' && <ShieldCheck style={{ height: '1rem', width: '1rem' }} />}
                     {tab === 'reports' && <AlertCircle style={{ height: '1rem', width: '1rem' }} />}
                     {tab === 'reviews' && <MessageSquare style={{ height: '1rem', width: '1rem' }} />}
+                    {/* {tab === 'reviews' && <MessageSquare style={{ height: '1rem', width: '1rem' }} />} */}
                     {tab}
                   </button>
                 ))}
@@ -967,6 +975,28 @@ const handleSuspendAgent = (agentId) => {
                       </p>
                     </div>
                   )}
+                </div>
+              )}
+
+              {/* Verifications Tab */}
+              {activeTab === 'verifications' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                    <h2 className="text-lg font-semibold" style={{ color: 'hsl(200 25% 15%)' }}>
+                      Agent Verification Requests
+                    </h2>
+                    <div style={{
+                      padding: '0.5rem 1rem',
+                      backgroundColor: 'hsl(174 62% 32% / 0.1)',
+                      color: 'hsl(174 62% 32%)',
+                      borderRadius: '0.375rem',
+                      fontSize: '0.875rem',
+                      fontWeight: '600'
+                    }}>
+                      Total: {verifications?.length || 0}
+                    </div>
+                  </div>
+                  <ViewAgentVerifications verifications={verifications || []} />
                 </div>
               )}
 

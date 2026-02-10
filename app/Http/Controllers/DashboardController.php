@@ -7,6 +7,7 @@ use App\Models\Agent;
 use App\Models\Rental;
 use App\Models\Review;
 use App\Models\Report;
+use App\Models\VerificationRequest;
 use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
@@ -17,8 +18,7 @@ class DashboardController extends Controller
         $rentals = Rental::where('agent_id', $agentData->id)->get();
         $rentalIds = $rentals->pluck('id');
 
-        $reviews = Review::whereIn('rental_id', $rentalIds)->get();
-        // dd($reviews);
+        $reviews = Review::whereIn('rental_id', $rentalIds)->latest()->get();
 
         return inertia('Dashboards/AgentDashboard', ['agentData' => $agentData, 'rentals' => $rentals, 'reviews' => $reviews]);
     }
@@ -30,18 +30,16 @@ class DashboardController extends Controller
         $agentData = Agent::all();
         $reports = Report::with('rental', 'rental.agent')->get();
         $reviews = Review::with('rental')->get();
+        $verifications = VerificationRequest::with(['rental', 'agent'])->orderBy('created_at', 'desc')->get();
+        
         return inertia('Dashboards/SuperAdmin', [
             'adminData' => $adminData,
             'rentals' => $rentals,
             'agentData' => $agentData,
             'reports' => $reports,
-            'reviews' => $reviews
+            'reviews' => $reviews,
+            'verifications' => $verifications
             ]
         );
-
-        // foreach($reports as $rep) {
-        //     dd($rep);
-        // }
-        
     }
 }

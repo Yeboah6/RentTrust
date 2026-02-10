@@ -312,7 +312,7 @@ class VerificationsController extends Controller
     public function updateStatus(Request $request, $id)
     {
         // Check if user is admin
-        if (!(Auth::user()->is_admin ?? false)) {
+        if (!(Auth::guard('super')->check())) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized. Admin access required.'
@@ -380,11 +380,11 @@ class VerificationsController extends Controller
 
             // TODO: Send notification email to agent
 
-            return response()->json([
-                'success' => true,
-                'message' => "Verification request {$request->status} successfully",
-                'data' => $verificationRequest
-            ]);
+            // return response()->json([
+            //     'success' => true,
+            //     'message' => "Verification request {$request->status} successfully",
+            //     'data' => $verificationRequest
+            // ]);
 
         } catch (\Exception $e) {
             DB::rollBack();
