@@ -329,11 +329,20 @@ class RentController extends Controller
             
             // Handle new image uploads
             $newImagePaths = [];
+            $uploadErrors = [];
+            
             if ($request->hasFile('newImages')) {
+                $imageIndex = 0;
                 foreach ($request->file('newImages') as $image) {
-                    // try {
+                    try {
+                        // Validate file before upload
+                        if (!$image->isValid()) {
+                            $uploadErrors[] = "Image " . ($imageIndex + 1) . " is invalid or corrupted.";
+                            $imageIndex++;
+                            continue;
+                        }
+                        
                         // Generate unique filename
-                        // $filename = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
                         $fileName = 'rental_'.time().'_'.uniqid().'.'.$image->getClientOriginalExtension();
                         
                         // Store in public/storage/rental_images
@@ -341,14 +350,27 @@ class RentController extends Controller
                         
                         if ($path) {
                             $newImagePaths[] = $fileName; // Store just the filename
+                        } else {
+                            $uploadErrors[] = "Image " . ($imageIndex + 1) . " could not be saved to storage.";
                         }
-                    // } 
-                    // catch (\Exception $e) {
-                    //     Log::error('Image upload failed', [
-                    //         'error' => $e->getMessage(),
-                    //         'rental_id' => $rent->id
-                    //     ]);
-                    // }
+                    } 
+                    catch (\Exception $e) {
+                        $uploadErrors[] = "Image " . ($imageIndex + 1) . " failed: " . $e->getMessage();
+                        Log::error('Image upload failed', [
+                            'error' => $e->getMessage(),
+                            'rental_id' => $rent->id,
+                            'image_index' => $imageIndex
+                        ]);
+                    }
+                    $imageIndex++;
+                }
+                
+                // If there were upload errors, return early with error message
+                if (!empty($uploadErrors)) {
+                    return back()
+                        ->withErrors(['newImages' => implode(' ', $uploadErrors)])
+                        ->withInput()
+                        ->with('error', 'Some images failed to upload. ' . implode(' ', $uploadErrors));
                 }
             }
 
@@ -959,5 +981,17 @@ class RentController extends Controller
         } else {
             return '+0%';
         }
+    }
+
+    public function pricing() {
+        return inertia('PricingPage');
+    }
+
+    public function agentBillingDashboard() { 
+        return inertia('BillingDashboard'); 
+    }
+
+    public function checkout() {
+        return inertia('CheckoutPage');
     }
 }

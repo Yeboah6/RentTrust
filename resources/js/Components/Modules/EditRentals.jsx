@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useForm } from '@inertiajs/react';
+import axios from 'axios';
 import { Home, MapPin, DollarSign, Calendar, Image, FileText, CheckCircle2, AlertCircle, Upload, X } from 'lucide-react';
 
 const EditRentals = ({ agentData, setShowEditListingModal, rental }) => {
-  // Use put instead of post for updates
-  const { data, setData, put, processing, errors, reset } = useForm({
+  // Use form for data management
+  const { data, setData, processing, errors, reset } = useForm({
     id: rental?.id,
     title: rental?.title,
     propertyType: '',
@@ -271,21 +272,40 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental }) => {
       newImagesCount: newImages.length
     });
     
-    // Use POST with _method=PUT for file uploads
-    put(`/rent/${data.id}`, {
-      data: formData,
-      forceFormData: true,
-      preserveScroll: true,
-      onSuccess: () => {
-        showToast("Listing Updated", "Your rental listing has been updated successfully.", "success");
-        setTimeout(() => {
-          if (setShowEditListingModal) setShowEditListingModal(false);
-        }, 1500);
+    // Submit using FormData with axios (includes _method for PUT spoofing)
+    axios.post(`/rent/${data.id}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
       },
-      onError: (errors) => {
-        console.error('Update errors:', errors);
-        showToast("Update Failed", Object.values(errors)[0] || "Please correct the errors and try again.", "error");
-      },
+    })
+    .then((response) => {
+      showToast("Listing Updated", "Your rental listing has been updated successfully.", "success");
+      setTimeout(() => {
+        if (setShowEditListingModal) setShowEditListingModal(false);
+        // window.location.reload(); // Reload to see updates
+      }, 1500);
+    })
+    .catch((error) => {
+      console.error('Update error response:', error.response?.data);
+      const errorData = error.response?.data;
+      
+      // Handle validation errors
+      if (errorData?.errors) {
+        const errorMessages = Object.entries(errorData.errors)
+          .map(([field, messages]) => {
+            return Array.isArray(messages) ? messages[0] : messages;
+          })
+          .filter(Boolean);
+        
+        const errorMessage = errorMessages.join(' ');
+        showToast("Validation Error", errorMessage || "Please check your input and try again.", "error");
+      } else if (errorData?.error) {
+        showToast("Update Failed", errorData.error, "error");
+      } else if (errorData?.message) {
+        showToast("Update Failed", errorData.message, "error");
+      } else {
+        showToast("Update Failed", "An error occurred while updating your listing. Please try again.", "error");
+      }
     });
   };
 

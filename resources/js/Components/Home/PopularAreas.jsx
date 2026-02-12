@@ -28,7 +28,7 @@ const AreaCard = ({ area }) => {
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      onClick={() => alert(`View properties in ${area.name}, ${area.city}`)}
+      onClick={() => window.location.href = `/areas/${area.city.toLowerCase()}/${area.name.toLowerCase().replace(/\s+/g, '-')}`}
     >
       <div 
         className="h-24 flex items-center justify-center"
