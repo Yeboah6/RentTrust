@@ -6,6 +6,7 @@ use App\Http\Controllers\AgentController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PasswordResetController;
+use App\Http\Controllers\PaymentsController;
 use App\Http\Controllers\VerificationsController;
 
 Route::resource('rent', RentController::class) -> except('index');
@@ -34,7 +35,7 @@ Route::post('/reviews/app', [RentController::class, 'storeReviewApp'])->name('re
 
 Route::get('pricing', [RentController::class, 'pricing'])->name('pricing.page');
 Route::get('checkout', [RentController::class, 'checkout'])->name('checkout.page');
-Route::get('/agent/dashboard/billing', [RentController::class, 'agentBillingDashboard'])->name('agent.billing.dashboard');
+// Route::get('/agent/dashboard/billing', [RentController::class, 'agentBillingDashboard'])->name('agent.billing.dashboard');
 
 Route::get('/agents', [AgentController::class, 'agent']) -> name('agents.page');
 Route::get('/become-agent', [AgentController::class, 'becomeAgent']);
@@ -59,15 +60,13 @@ Route::middleware('super')->group(function () {
     ->name('admin.verify.agent');
     Route::put('/admin/agents/{id}/suspend', [VerificationsController::class, 'suspendAgent'])
     ->name('admin.suspend.agent');
-    // Update verification status (admin only)
-    // Route::patch('/verification-requests/{id}/status', [VerificationsController::class, 'updateStatus'])
-    //     ->name('verification.update-status');
     Route::get('/api/verification-requests', [VerificationsController::class, 'index'])
         ->name('verification.index');
     Route::patch('/api/verification-requests/{id}/status', [VerificationsController::class, 'updateStatus'])
         ->name('verification.update-status');
     Route::get('/api/verification-requests/{id}', [VerificationsController::class, 'show'])
         ->name('verification.show');
+    Route::get('/admin/payments/dashboard', [PaymentsController::class, 'paymentDashboard']);
 });
 
 Route::get('settings', [AuthController::class, 'settings'])->name('settings.page');

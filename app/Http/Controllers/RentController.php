@@ -544,7 +544,7 @@ class RentController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            \Log::error('Failed to fetch more listings', [
+            Log::error('Failed to fetch more listings', [
                 'error' => $e->getMessage(),
                 'page' => $page,
             ]);
@@ -987,9 +987,9 @@ class RentController extends Controller
         return inertia('PricingPage');
     }
 
-    public function agentBillingDashboard() { 
-        return inertia('BillingDashboard'); 
-    }
+    // public function agentBillingDashboard() { 
+    //     return inertia('BillingDashboard'); 
+    // }
 
     public function checkout() {
         return inertia('CheckoutPage');

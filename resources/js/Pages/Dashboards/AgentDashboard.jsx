@@ -6,6 +6,8 @@ import AddRentalPage from "@/Components/Modules/AddRentals";
 import EditRentals from "@/Components/Modules/EditRentals";
 import VerificationRequestModal from "@/Components/Modules/VerifyRentals";
 import ViewRentals from "@/Components/Modules/ViewRental";
+import BillingModule from "@/Components/Modules/BillingDashboard";
+import PricingModal from '@/Components/Modules/PricingModal';
 
 // Icon components
 const Shield = ({ style }) => (
@@ -57,19 +59,6 @@ const Settings = ({ style }) => (
   </svg>
 );
 
-const mockClaims = [
-  {
-    id: "1",
-    status: "pending",
-    created_at: "2024-01-20",
-    properties: {
-      id: "3",
-      title: "Studio Apartment",
-      address: "12 Cantonments Road, Accra"
-    }
-  }
-];
-
 const AgentDashboardPage = ({ agentData, rentals, reviews }) => {
   const [activeTab, setActiveTab] = useState("listings");
   const [respondingTo, setRespondingTo] = useState(null);
@@ -80,6 +69,7 @@ const AgentDashboardPage = ({ agentData, rentals, reviews }) => {
   const [showVerificationModal, setShowVerificationModal] = useState(false);
   const [selectedRentalForVerification, setSelectedRentalForVerification] = useState(null);
   const [showViewModal, setShowViewModal] = useState(false);
+  const [showPricingModal, setShowPricingModal] = useState(false);
   const [showToast, setShowToast] = useState(null);
 
   const { data, setData, put, processing, reset } = useForm({
@@ -167,7 +157,7 @@ const AgentDashboardPage = ({ agentData, rentals, reviews }) => {
     }))
     : [];
 
-  const claims = mockClaims;
+  // const claims = mockClaims;
 
   const renderStars = (rating) => {
     const ratingValue = Math.floor(rating || 0);
@@ -524,7 +514,7 @@ const AgentDashboardPage = ({ agentData, rentals, reviews }) => {
                 borderRadius: 'clamp(0.375rem, 2vw, 0.5rem)',
                 marginBottom: 'clamp(1.5rem, 4vw, 2rem)'
               }}>
-                {['listings', 'reviews', 'claims'].map((tab) => (
+                {['listings', 'reviews', 'billing'].map((tab) => (
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
@@ -556,10 +546,11 @@ const AgentDashboardPage = ({ agentData, rentals, reviews }) => {
                       height: 'clamp(0.875rem, 2.5vw, 1rem)', 
                       width: 'clamp(0.875rem, 2.5vw, 1rem)' 
                     }} />}
-                    {tab === 'claims' && <Shield style={{ 
-                      height: 'clamp(0.875rem, 2.5vw, 1rem)', 
-                      width: 'clamp(0.875rem, 2.5vw, 1rem)' 
-                    }} />}
+                    {tab === 'billing' && (
+                      <svg style={{ height: 'clamp(0.875rem, 2.5vw, 1rem)', width: 'clamp(0.875rem, 2.5vw, 1rem)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                      </svg>
+                    )}
                     {tab}
                   </button>
                 ))}
@@ -1062,7 +1053,7 @@ const AgentDashboardPage = ({ agentData, rentals, reviews }) => {
               )}
 
               {/* Claims Tab */}
-              {activeTab === 'claims' && (
+              {/* {activeTab === 'claims' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(1rem, 3vw, 1.5rem)' }}>
                   <div style={{ 
                     display: 'flex', 
@@ -1145,6 +1136,14 @@ const AgentDashboardPage = ({ agentData, rentals, reviews }) => {
                     ))}
                   </div>
                 </div>
+              )} */}
+
+              {/* Billing Tab */}
+              {activeTab === 'billing' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(1rem, 3vw, 1.5rem)' }}>
+                  <h2 style={{ color: 'hsl(200 25% 15%)', fontSize: 'clamp(1rem, 3vw, 1.125rem)', fontWeight: '600' }}>Billing & Subscription</h2>
+                  <BillingModule onUpgrade={() => setShowPricingModal(true)} />
+                </div>
               )}
             </div>
           </div>
@@ -1171,6 +1170,11 @@ const AgentDashboardPage = ({ agentData, rentals, reviews }) => {
               </p>
             </div>
           </div>
+        )}
+
+        {/* Pricing Modal */}
+        {showPricingModal && (
+          <PricingModal isOpen={showPricingModal} onClose={() => setShowPricingModal(false)} />
         )}
 
         {/* Add Listing Modal */}

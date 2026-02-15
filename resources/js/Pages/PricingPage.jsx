@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, usePage } from "@inertiajs/react";
+import { Link, usePage, router } from "@inertiajs/react";
 import Header from "../Components/Layouts/Header";
 import Footer from "../Components/Layouts/Footer";
 
@@ -275,7 +275,14 @@ const FAQItem = ({ question, answer }) => {
 };
 
 const Pricing = () => {
-  const { auth } = usePage().props;
+  // const { auth } = usePage().props;
+  const { props } = usePage();
+  const auth = props?.auth;
+  const [errorMessage, setErrorMessage] = useState(null);
+  const user = auth?.agent || auth?.tenant || auth?.super;
+
+  console.log('Auth object:', user);
+  console.log('Role candidate:', user ? (user.role || user.type || user.role_name || user.roles) : 'No user');
 
   const pricingPlans = [
     {
@@ -299,7 +306,7 @@ const Pricing = () => {
         </div>
       ),
       features: [
-        "Submit listings to the platform",
+        "Submit limited listings to the platform",
         "Limited visibility in search results",
         "Basic listing management",
         "Access to tenant inquiries",
@@ -333,7 +340,7 @@ const Pricing = () => {
         "Verified landlord badge",
         "Higher ranking in search results",
         "Ability to respond to reviews",
-        "Basic listing insights & analytics",
+        // "Basic listing insights & analytics",
         "Priority customer support"
       ],
       ctaText: "Start Verification",
@@ -363,10 +370,10 @@ const Pricing = () => {
         "Everything in Verified, plus:",
         "Unlimited property listings",
         "Lead unlock credits (50/month)",
-        "Advanced analytics dashboard",
+        // "Advanced analytics dashboard",
         "Featured listing placement",
         "Dedicated account manager",
-        "API access for integrations"
+        // "API access for integrations"
       ],
       ctaText: "Go Pro",
       isPopular: false
@@ -396,11 +403,39 @@ const Pricing = () => {
     }
   ];
 
-  const handleSelectPlan = (plan) => {
-    // Handle plan selection - navigate to signup or checkout
-    console.log('Selected plan:', plan);
-    // You can add navigation logic here
-    // router.visit('/signup', { data: { plan: plan.name } })
+  const handleSelect = (plan) => {
+    const planSlug = String(plan.name || '').toLowerCase();
+
+    // Not logged in -> redirect to login, then back to checkout with plan
+    if (!auth || !auth.user) {
+      const returnUrl = `/checkout?plan=${encodeURIComponent(planSlug)}`;
+      const loginUrl = `/sign-up?redirect=${encodeURIComponent(returnUrl)}`;
+      router.visit(loginUrl);
+      return;
+    }
+
+    // Check role for logged in users
+    const user = auth?.agent || auth?.tenant || auth?.super;
+    const roleCandidate = user.role || user.type || user.role_name || user.roles;
+    let isAgent = false;
+
+    
+
+    if (Array.isArray(roleCandidate)) {
+      isAgent = roleCandidate.map(r => String(r).toLowerCase()).includes('Agent') || roleCandidate.map(r => String(r).toLowerCase()).includes('landlord');
+    } else if (typeof roleCandidate === 'string') {
+      const rl = roleCandidate.toLowerCase();
+      isAgent = rl === 'Agent' || rl === 'landlord' || rl.includes('Agent') || rl.includes('landlord');
+    }
+
+    if (!isAgent) {
+      setErrorMessage('Only agents can subscribe.');
+      return;
+    }
+
+    // Proceed to checkout for agents
+    const checkoutUrl = `/checkout?plan=${encodeURIComponent(planSlug)}`;
+    router.visit(checkoutUrl);
   };
 
   return (
@@ -554,6 +589,12 @@ const Pricing = () => {
             </div>
           </div>
 
+           {errorMessage && (
+            <div style={{ marginBottom: '1rem', padding: '0.75rem 1rem', borderRadius: 8, background: 'hsl(0 72% 51% / 0.12)', border: '1px solid hsl(0 72% 51% / 0.18)', color: 'hsl(0 72% 51%)' }}>
+              {errorMessage}
+            </div>
+          )}
+
           {/* Pricing Cards Section */}
           <div className="container mx-auto" style={{ 
             paddingLeft: 'clamp(0.75rem, 3vw, 1rem)', 
@@ -572,7 +613,7 @@ const Pricing = () => {
                   <PricingCard 
                     plan={plan} 
                     isPopular={plan.isPopular}
-                    onSelect={handleSelectPlan}
+                    onSelect={handleSelect}
                   />
                 </div>
               ))}

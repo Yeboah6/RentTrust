@@ -1,7 +1,5 @@
-import { useState } from "react";
+import React, { useState } from 'react';
 import { Link, usePage, router } from "@inertiajs/react";
-import Header from "../Components/Layouts/Header";
-import Footer from "../Components/Layouts/Footer";
 
 // Icon components
 const CreditCard = ({ className, style }) => (
@@ -857,7 +855,7 @@ const BillingHistoryTable = ({ transactions, onDownloadInvoice }) => {
   );
 };
 
-const AgentBillingDashboard = () => {
+const BillingModule = ({ currentPlan: cpProp, paymentMethods: pmProp, transactions: txProp, onUpgrade }) => {
   const { auth } = usePage().props;
 
   // Mock data - replace with actual data from backend
@@ -930,6 +928,7 @@ const AgentBillingDashboard = () => {
   ];
 
   const handleUpgrade = () => {
+    if (typeof onUpgrade === 'function') return onUpgrade();
     router.visit('/pricing');
   };
 
@@ -1016,68 +1015,13 @@ const AgentBillingDashboard = () => {
       `}</style>
 
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'hsl(40 33% 98%)' }}>
-        <Header />
 
         <main style={{ flex: 1 }}>
-          {/* Page Header */}
-          <div 
-            className="page-header-wrapper" 
-            style={{ 
-              backgroundColor: 'hsl(0 0% 100%)', 
-              borderBottom: '1px solid hsl(40 20% 88%)', 
-              padding: 'clamp(1.5rem, 4vw, 2rem) 0' 
-            }}
-          >
-            <div className="container mx-auto" style={{ 
-              paddingLeft: 'clamp(0.75rem, 3vw, 1rem)', 
-              paddingRight: 'clamp(0.75rem, 3vw, 1rem)',
-              maxWidth: '1200px'
-            }}>
-              <div style={{ marginBottom: '0.5rem' }}>
-                <Link
-                  href="/dashboard"
-                  style={{
-                    color: 'hsl(174 62% 32%)',
-                    fontSize: 'clamp(0.875rem, 2vw, 0.9375rem)',
-                    fontWeight: '500',
-                    textDecoration: 'none',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '0.25rem',
-                    transition: 'opacity 0.2s ease'
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.opacity = '0.7'}
-                  onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
-                >
-                  ← Back to Dashboard
-                </Link>
-              </div>
-              <h1 
-                className="tracking-tight" 
-                style={{ 
-                  color: 'hsl(200 25% 15%)',
-                  fontSize: 'clamp(1.5rem, 5vw, 2rem)',
-                  fontWeight: '700',
-                  marginBottom: 'clamp(0.5rem, 2vw, 0.75rem)',
-                  lineHeight: '1.2'
-                }}
-              >
-                Billing & Subscription
-              </h1>
-              <p style={{ 
-                color: 'hsl(200 15% 45%)', 
-                fontSize: 'clamp(0.875rem, 2.5vw, 1rem)'
-              }}>
-                Manage your subscription, payment methods, and view billing history
-              </p>
-            </div>
-          </div>
-
           {/* Content */}
           <div className="container mx-auto" style={{ 
             paddingLeft: 'clamp(0.75rem, 3vw, 1rem)', 
             paddingRight: 'clamp(0.75rem, 3vw, 1rem)',
-            paddingTop: 'clamp(2rem, 5vw, 3rem)',
+            paddingTop: 'clamp(1rem, 1vw, 1rem)',
             paddingBottom: 'clamp(2rem, 5vw, 3rem)',
             maxWidth: '1200px'
           }}>
@@ -1104,11 +1048,9 @@ const AgentBillingDashboard = () => {
             </div>
           </div>
         </main>
-
-        <Footer />
       </div>
     </>
   );
 };
 
-export default AgentBillingDashboard;
+export default BillingModule;

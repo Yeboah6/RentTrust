@@ -88,6 +88,7 @@ const AddRentalPage = ({ agentData, setShowAddListingModal }) => {
     e.preventDefault();
     if (validateStep(currentStep)) {
       setCurrentStep(prev => Math.min(prev + 1, 4));
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
       showToast("Missing Information", "Please fill all required fields before proceeding.", "error");
     }
@@ -96,9 +97,10 @@ const AddRentalPage = ({ agentData, setShowAddListingModal }) => {
   const handlePrevious = (e) => {
     e.preventDefault();
     setCurrentStep(prev => Math.max(prev - 1, 1));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };  
 
-    const handleSubmit = (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     
     if (!validateStep(currentStep)) {
@@ -131,7 +133,7 @@ const AddRentalPage = ({ agentData, setShowAddListingModal }) => {
     formData.append('agentPhone', data.agentPhone);
     formData.append('agentEmail', data.agentEmail);
     
-    // Add images - using the same format as reports
+    // Add images
     if (data.images && data.images.length > 0) {
       data.images.forEach((file, index) => {
         if (file) {
@@ -180,25 +182,177 @@ const AddRentalPage = ({ agentData, setShowAddListingModal }) => {
           ring: 2px;
           ring-color: hsl(174 62% 32%);
         }
+
+        /* Mobile responsive styles */
+        @media (max-width: 768px) {
+          .modal-content { 
+            max-height: 85vh !important; 
+            margin: 0.5rem !important; 
+            max-width: 95% !important;
+          }
+          
+          .steps-container { 
+            padding: clamp(0.75rem, 3vw, 1rem) clamp(0.5rem, 2vw, 1rem) !important;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+          }
+          
+          .step-icon { 
+            width: clamp(2.25rem, 10vw, 3rem) !important; 
+            height: clamp(2.25rem, 10vw, 3rem) !important;
+          }
+          
+          .step-title { 
+            font-size: clamp(0.625rem, 2vw, 0.75rem) !important;
+            max-width: 4rem;
+            text-align: center;
+          }
+          
+          .step-connector { 
+            flex: 1 !important; 
+            min-width: clamp(1rem, 5vw, 2rem);
+            margin: 0 clamp(0.25rem, 1vw, 0.5rem) !important;
+          }
+          
+          .form-grid { 
+            grid-template-columns: 1fr !important;
+            gap: clamp(0.75rem, 3vw, 1rem) !important;
+          }
+          
+          .amenities-grid { 
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: clamp(0.5rem, 2vw, 0.75rem) !important;
+          }
+          
+          .images-grid { 
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: clamp(0.5rem, 2vw, 0.75rem) !important;
+          }
+          
+          .action-button { 
+            min-height: 44px; 
+            -webkit-tap-highlight-color: transparent;
+            padding: clamp(0.625rem, 2vw, 0.75rem) clamp(1rem, 3vw, 1.5rem) !important;
+            font-size: clamp(0.8125rem, 2.5vw, 0.875rem) !important;
+            touch-action: manipulation;
+          }
+          
+          .form-padding { 
+            padding: clamp(0.75rem, 3vw, 1rem) !important;
+          }
+
+          .button-container {
+            flex-direction: row;
+            gap: clamp(0.5rem, 2vw, 1rem);
+          }
+
+          .button-container > button,
+          .button-container > div {
+            flex: 1;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .amenities-grid { 
+            grid-template-columns: 1fr !important;
+          }
+          
+          .images-grid { 
+            grid-template-columns: 1fr !important;
+          }
+          
+          .review-grid { 
+            grid-template-columns: 1fr !important;
+          }
+
+          .step-title {
+            display: none !important;
+          }
+
+          .steps-wrapper {
+            justify-content: space-between;
+          }
+        }
+
+        @media (max-height: 600px) and (orientation: landscape) {
+          .modal-content { 
+            max-height: 75vh !important;
+          }
+          
+          .steps-container { 
+            padding: clamp(0.5rem, 2vw, 0.75rem) !important;
+          }
+        }
+
+        /* Prevent zoom on iOS */
+        @media (max-width: 768px) {
+          input[type="text"],
+          input[type="email"],
+          input[type="number"],
+          input[type="tel"],
+          textarea,
+          select { 
+            font-size: 16px !important;
+          }
+        }
+
+        /* Tablet and medium screens */
+        @media (min-width: 481px) and (max-width: 768px) {
+          .form-grid { 
+            grid-template-columns: repeat(2, 1fr) !important;
+          }
+          
+          .amenities-grid { 
+            grid-template-columns: repeat(3, 1fr) !important;
+          }
+          
+          .images-grid { 
+            grid-template-columns: repeat(3, 1fr) !important;
+          }
+        }
+
+        /* Desktop */
+        @media (min-width: 769px) {
+          .amenities-grid { 
+            grid-template-columns: repeat(3, 1fr) !important;
+          }
+          
+          .images-grid { 
+            grid-template-columns: repeat(3, 1fr) !important;
+          }
+        }
+
+        @media (min-width: 1024px) {
+          .modal-content { 
+            max-width: 56rem !important;
+          }
+        }
+
+        @keyframes slideIn {
+          from { transform: translateX(100%); opacity: 0; }
+          to { transform: translateX(0); opacity: 1; }
+        }
       `}</style>
 
-      {/* Toast Notification - Same as reports */}
+      {/* Toast Notification */}
       {toast && (
         <div style={{
           position: 'fixed',
-          top: '1rem',
-          right: '1rem',
+          top: 'clamp(0.5rem, 2vw, 1rem)',
+          right: 'clamp(0.5rem, 2vw, 1rem)',
+          left: 'clamp(0.5rem, 2vw, auto)',
           backgroundColor: toast.variant === 'error' ? '#ef4444' : '#10b981',
           color: 'white',
-          padding: '1rem',
+          padding: 'clamp(0.75rem, 2vw, 1rem)',
           borderRadius: '0.5rem',
           boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
           zIndex: 9999,
           maxWidth: '400px',
-          animation: 'slideIn 0.3s ease-out'
+          animation: 'slideIn 0.3s ease-out',
+          fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)'
         }}>
           <div style={{ fontWeight: '600', marginBottom: '0.25rem' }}>{toast.title}</div>
-          <div style={{ fontSize: '0.875rem' }}>{toast.description}</div>
+          <div style={{ fontSize: 'clamp(0.75rem, 2vw, 0.875rem)' }}>{toast.description}</div>
         </div>
       )}
 
@@ -206,35 +360,52 @@ const AddRentalPage = ({ agentData, setShowAddListingModal }) => {
 
         {/* Progress Steps */}
         <div className="bg-white shadow-sm">
-          <div className="container mx-auto px-4 py-4 sm:py-6">
-            <div className="flex items-center justify-between max-w-3xl mx-auto overflow-x-auto">
+          <div className="container mx-auto steps-container" style={{ 
+            padding: 'clamp(0.75rem, 3vw, 1.5rem) clamp(0.75rem, 3vw, 1rem)'
+          }}>
+            <div className="steps-wrapper flex items-center max-w-3xl mx-auto">
               {steps.map((step, index) => (
                 <React.Fragment key={step.number}>
-                  <div className="flex flex-col items-center gap-1 sm:gap-2 flex-shrink-0">
+                  <div className="flex flex-col items-center flex-shrink-0" style={{ gap: 'clamp(0.25rem, 1vw, 0.5rem)' }}>
                     <div 
-                      className="w-10 sm:w-12 h-10 sm:h-12 rounded-full flex items-center justify-center font-semibold transition-all duration-300 text-xs sm:text-base"
+                      className="step-icon rounded-full flex items-center justify-center font-semibold transition-all duration-300"
                       style={{
+                        width: 'clamp(2.25rem, 10vw, 3rem)',
+                        height: 'clamp(2.25rem, 10vw, 3rem)',
                         backgroundColor: currentStep >= step.number ? 'hsl(174 62% 32%)' : 'hsl(40 30% 94%)',
-                        color: currentStep >= step.number ? 'white' : 'hsl(200 15% 45%)'
+                        color: currentStep >= step.number ? 'white' : 'hsl(200 15% 45%)',
+                        fontSize: 'clamp(0.75rem, 2.5vw, 1rem)'
                       }}
                     >
                       {currentStep > step.number ? (
-                        <CheckCircle2 className="h-5 w-5 sm:h-6 sm:w-6" />
+                        <CheckCircle2 style={{ 
+                          height: 'clamp(1.125rem, 4vw, 1.5rem)', 
+                          width: 'clamp(1.125rem, 4vw, 1.5rem)' 
+                        }} />
                       ) : (
-                        <step.icon className="h-5 w-5 sm:h-6 sm:w-6" />
+                        <step.icon style={{ 
+                          height: 'clamp(1.125rem, 4vw, 1.5rem)', 
+                          width: 'clamp(1.125rem, 4vw, 1.5rem)' 
+                        }} />
                       )}
                     </div>
                     <span 
-                      className="text-xs font-medium hidden sm:block text-center leading-tight"
-                      style={{ color: currentStep >= step.number ? 'hsl(174 62% 32%)' : 'hsl(200 15% 45%)' }}
+                      className="step-title font-medium text-center leading-tight"
+                      style={{ 
+                        color: currentStep >= step.number ? 'hsl(174 62% 32%)' : 'hsl(200 15% 45%)',
+                        fontSize: 'clamp(0.625rem, 2vw, 0.75rem)'
+                      }}
                     >
                       {step.title}
                     </span>
                   </div>
                   {index < steps.length - 1 && (
                     <div 
-                      className="flex-1 h-1 mx-1 sm:mx-2 rounded transition-all duration-300"
+                      className="step-connector h-1 rounded transition-all duration-300"
                       style={{ 
+                        flex: 1,
+                        minWidth: 'clamp(1rem, 5vw, 2rem)',
+                        margin: '0 clamp(0.25rem, 1vw, 0.5rem)',
                         backgroundColor: currentStep > step.number ? 'hsl(174 62% 32%)' : 'hsl(40 20% 88%)'
                       }}
                     />
@@ -246,24 +417,38 @@ const AddRentalPage = ({ agentData, setShowAddListingModal }) => {
         </div>
 
         {/* Form Content */}
-        <div className="container mx-auto px-4 py-4 sm:py-8">
-          <div className="max-w-3xl mx-auto">
-            <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 md:p-8" style={{ borderColor: 'hsl(40 20% 88%)' }}>
+        <div className="container mx-auto form-padding" style={{ 
+          padding: 'clamp(1rem, 3vw, 2rem) clamp(0.75rem, 3vw, 1rem)'
+        }}>
+          <div className="max-w-3xl mx-auto modal-content">
+            <div className="bg-white rounded-xl shadow-lg" style={{ 
+              borderColor: 'hsl(40 20% 88%)',
+              padding: 'clamp(1rem, 4vw, 2rem)'
+            }}>
               <form onSubmit={handleSubmit}>
               {/* Step 1: Property Details */}
               {currentStep === 1 && (
-                <div className="space-y-6">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(1rem, 3vw, 1.5rem)' }}>
                   <div>
-                    <h2 className="text-lg sm:text-xl font-bold mb-1 tracking-tight" style={{ color: 'hsl(200 25% 15%)' }}>
+                    <h2 className="font-bold mb-1 tracking-tight" style={{ 
+                      color: 'hsl(200 25% 15%)',
+                      fontSize: 'clamp(1.125rem, 4vw, 1.5rem)'
+                    }}>
                       Property Details
                     </h2>
-                    <p className="text-xs sm:text-sm" style={{ color: 'hsl(200 15% 45%)' }}>
+                    <p style={{ 
+                      color: 'hsl(200 15% 45%)',
+                      fontSize: 'clamp(0.8125rem, 2.5vw, 0.875rem)'
+                    }}>
                       Tell us about the property you're listing
                     </p>
                   </div>
 
                   <div>
-                    <label className="block text-xs sm:text-sm font-medium mb-2" style={{ color: 'hsl(200 25% 15%)' }}>
+                    <label className="block font-medium mb-2" style={{ 
+                      color: 'hsl(200 25% 15%)',
+                      fontSize: 'clamp(0.8125rem, 2.5vw, 0.875rem)'
+                    }}>
                       Property Title *
                     </label>
                     <input
@@ -271,26 +456,43 @@ const AddRentalPage = ({ agentData, setShowAddListingModal }) => {
                       value={data.title}
                       onChange={(e) => setData('title', e.target.value)}
                       placeholder="e.g., 2 Bedroom Self-Contained Apartment"
-                      className="w-full px-3 sm:px-4 py-2 sm:py-3 border rounded-lg focus:ring-2 transition-all text-sm"
-                      style={{ borderColor: errors.title ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)' }}
+                      className="w-full border rounded-lg focus:ring-2 transition-all"
+                      style={{ 
+                        borderColor: errors.title ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)',
+                        padding: 'clamp(0.625rem, 2vw, 0.75rem) clamp(0.75rem, 3vw, 1rem)',
+                        fontSize: 'clamp(0.875rem, 2.5vw, 1rem)'
+                      }}
                     />
                     {errors.title && (
-                      <p className="text-xs sm:text-sm mt-1 flex items-center gap-1" style={{ color: 'hsl(0 72% 51%)' }}>
-                        <AlertCircle className="h-4 w-4" /> {errors.title}
+                      <p className="mt-1 flex items-center gap-1" style={{ 
+                        color: 'hsl(0 72% 51%)',
+                        fontSize: 'clamp(0.75rem, 2vw, 0.875rem)'
+                      }}>
+                        <AlertCircle style={{ height: '1rem', width: '1rem' }} /> {errors.title}
                       </p>
                     )}
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid form-grid" style={{ 
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                    gap: 'clamp(0.75rem, 3vw, 1rem)'
+                  }}>
                     <div>
-                      <label className="block text-sm font-medium mb-2" style={{ color: 'hsl(200 25% 15%)' }}>
+                      <label className="block font-medium mb-2" style={{ 
+                        color: 'hsl(200 25% 15%)',
+                        fontSize: 'clamp(0.8125rem, 2.5vw, 0.875rem)'
+                      }}>
                         Property Type *
                       </label>
                       <select
                         value={data.propertyType}
                         onChange={(e) => setData('propertyType', e.target.value)}
-                        className="w-full px-4 py-3 border rounded-lg focus:ring-2 transition-all appearance-none"
-                        style={{ borderColor: errors.propertyType ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)' }}
+                        className="w-full border rounded-lg focus:ring-2 transition-all appearance-none"
+                        style={{ 
+                          borderColor: errors.propertyType ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)',
+                          padding: 'clamp(0.625rem, 2vw, 0.75rem) clamp(0.75rem, 3vw, 1rem)',
+                          fontSize: 'clamp(0.875rem, 2.5vw, 1rem)'
+                        }}
                       >
                         <option value="">Select type</option>
                         {propertyTypes.map(type => (
@@ -298,21 +500,31 @@ const AddRentalPage = ({ agentData, setShowAddListingModal }) => {
                         ))}
                       </select>
                       {errors.propertyType && (
-                        <p className="text-sm mt-1 flex items-center gap-1" style={{ color: 'hsl(0 72% 51%)' }}>
-                          <AlertCircle className="h-4 w-4" /> {errors.propertyType}
+                        <p className="mt-1 flex items-center gap-1" style={{ 
+                          color: 'hsl(0 72% 51%)',
+                          fontSize: 'clamp(0.75rem, 2vw, 0.875rem)'
+                        }}>
+                          <AlertCircle style={{ height: '1rem', width: '1rem' }} /> {errors.propertyType}
                         </p>
                       )}
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium mb-2" style={{ color: 'hsl(200 25% 15%)' }}>
+                      <label className="block font-medium mb-2" style={{ 
+                        color: 'hsl(200 25% 15%)',
+                        fontSize: 'clamp(0.8125rem, 2.5vw, 0.875rem)'
+                      }}>
                         City *
                       </label>
                       <select
                         value={data.city}
                         onChange={(e) => setData('city', e.target.value)}
-                        className="w-full px-4 py-3 border rounded-lg focus:ring-2 transition-all appearance-none"
-                        style={{ borderColor: errors.city ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)' }}
+                        className="w-full border rounded-lg focus:ring-2 transition-all appearance-none"
+                        style={{ 
+                          borderColor: errors.city ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)',
+                          padding: 'clamp(0.625rem, 2vw, 0.75rem) clamp(0.75rem, 3vw, 1rem)',
+                          fontSize: 'clamp(0.875rem, 2.5vw, 1rem)'
+                        }}
                       >
                         <option value="">Select city</option>
                         {cities.map(city => (
@@ -320,37 +532,61 @@ const AddRentalPage = ({ agentData, setShowAddListingModal }) => {
                         ))}
                       </select>
                       {errors.city && (
-                        <p className="text-sm mt-1 flex items-center gap-1" style={{ color: 'hsl(0 72% 51%)' }}>
-                          <AlertCircle className="h-4 w-4" /> {errors.city}
+                        <p className="mt-1 flex items-center gap-1" style={{ 
+                          color: 'hsl(0 72% 51%)',
+                          fontSize: 'clamp(0.75rem, 2vw, 0.875rem)'
+                        }}>
+                          <AlertCircle style={{ height: '1rem', width: '1rem' }} /> {errors.city}
                         </p>
                       )}
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2" style={{ color: 'hsl(200 25% 15%)' }}>
+                    <label className="block font-medium mb-2" style={{ 
+                      color: 'hsl(200 25% 15%)',
+                      fontSize: 'clamp(0.8125rem, 2.5vw, 0.875rem)'
+                    }}>
                       Area/Neighborhood *
                     </label>
                     <div className="relative">
-                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5" style={{ color: 'hsl(200 15% 45%)' }} />
+                      <MapPin className="absolute top-1/2 -translate-y-1/2" style={{ 
+                        left: 'clamp(0.625rem, 2vw, 0.75rem)',
+                        height: 'clamp(1.125rem, 3vw, 1.25rem)',
+                        width: 'clamp(1.125rem, 3vw, 1.25rem)',
+                        color: 'hsl(200 15% 45%)'
+                      }} />
                       <input
                         type="text"
                         value={data.area}
                         onChange={(e) => setData('area', e.target.value)}
                         placeholder="e.g., East Legon, Spintex"
-                        className="w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 transition-all"
-                        style={{ borderColor: errors.area ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)' }}
+                        className="w-full border rounded-lg focus:ring-2 transition-all"
+                        style={{ 
+                          borderColor: errors.area ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)',
+                          paddingLeft: 'clamp(2.25rem, 8vw, 2.5rem)',
+                          paddingRight: 'clamp(0.75rem, 3vw, 1rem)',
+                          paddingTop: 'clamp(0.625rem, 2vw, 0.75rem)',
+                          paddingBottom: 'clamp(0.625rem, 2vw, 0.75rem)',
+                          fontSize: 'clamp(0.875rem, 2.5vw, 1rem)'
+                        }}
                       />
                     </div>
                     {errors.area && (
-                      <p className="text-sm mt-1 flex items-center gap-1" style={{ color: 'hsl(0 72% 51%)' }}>
-                        <AlertCircle className="h-4 w-4" /> {errors.area}
+                      <p className="mt-1 flex items-center gap-1" style={{ 
+                        color: 'hsl(0 72% 51%)',
+                        fontSize: 'clamp(0.75rem, 2vw, 0.875rem)'
+                      }}>
+                        <AlertCircle style={{ height: '1rem', width: '1rem' }} /> {errors.area}
                       </p>
                     )}
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2" style={{ color: 'hsl(200 25% 15%)' }}>
+                    <label className="block font-medium mb-2" style={{ 
+                      color: 'hsl(200 25% 15%)',
+                      fontSize: 'clamp(0.8125rem, 2.5vw, 0.875rem)'
+                    }}>
                       Full Address
                     </label>
                     <textarea
@@ -358,8 +594,12 @@ const AddRentalPage = ({ agentData, setShowAddListingModal }) => {
                       onChange={(e) => setData('address', e.target.value)}
                       placeholder="Enter the complete address (optional)"
                       rows={3}
-                      className="w-full px-4 py-3 border rounded-lg focus:ring-2 transition-all resize-none"
-                      style={{ borderColor: 'hsl(40 20% 88%)' }}
+                      className="w-full border rounded-lg focus:ring-2 transition-all resize-none"
+                      style={{ 
+                        borderColor: 'hsl(40 20% 88%)',
+                        padding: 'clamp(0.625rem, 2vw, 0.75rem) clamp(0.75rem, 3vw, 1rem)',
+                        fontSize: 'clamp(0.875rem, 2.5vw, 1rem)'
+                      }}
                     />
                   </div>
                 </div>
@@ -367,73 +607,133 @@ const AddRentalPage = ({ agentData, setShowAddListingModal }) => {
 
               {/* Step 2: Pricing & Features */}
               {currentStep === 2 && (
-                <div className="space-y-6">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(1rem, 3vw, 1.5rem)' }}>
                   <div>
-                    <h2 className="text-xl font-bold mb-1 tracking-tight" style={{ color: 'hsl(200 25% 15%)' }}>
+                    <h2 className="font-bold mb-1 tracking-tight" style={{ 
+                      color: 'hsl(200 25% 15%)',
+                      fontSize: 'clamp(1.125rem, 4vw, 1.5rem)'
+                    }}>
                       Pricing & Features
                     </h2>
-                    <p className="text-sm" style={{ color: 'hsl(200 15% 45%)' }}>
+                    <p style={{ 
+                      color: 'hsl(200 15% 45%)',
+                      fontSize: 'clamp(0.8125rem, 2.5vw, 0.875rem)'
+                    }}>
                       Help tenants understand the cost and features
                     </p>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid form-grid" style={{ 
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                    gap: 'clamp(0.75rem, 3vw, 1rem)'
+                  }}>
                     <div>
-                      <label className="block text-sm font-medium mb-2" style={{ color: 'hsl(200 25% 15%)' }}>
+                      <label className="block font-medium mb-2" style={{ 
+                        color: 'hsl(200 25% 15%)',
+                        fontSize: 'clamp(0.8125rem, 2.5vw, 0.875rem)'
+                      }}>
                         Rent Minimum (GH₵) *
                       </label>
                       <div className="relative">
-                        <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5" style={{ color: 'hsl(200 15% 45%)' }} />
+                        <DollarSign className="absolute top-1/2 -translate-y-1/2" style={{ 
+                          left: 'clamp(0.625rem, 2vw, 0.75rem)',
+                          height: 'clamp(1.125rem, 3vw, 1.25rem)',
+                          width: 'clamp(1.125rem, 3vw, 1.25rem)',
+                          color: 'hsl(200 15% 45%)'
+                        }} />
                         <input
                           type="number"
                           value={data.rentMin}
                           onChange={(e) => setData('rentMin', e.target.value)}
                           placeholder="1500"
-                          className="w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 transition-all"
-                          style={{ borderColor: errors.rentMin ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)' }}
+                          className="w-full border rounded-lg focus:ring-2 transition-all"
+                          style={{ 
+                            borderColor: errors.rentMin ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)',
+                            paddingLeft: 'clamp(2.25rem, 8vw, 2.5rem)',
+                            paddingRight: 'clamp(0.75rem, 3vw, 1rem)',
+                            paddingTop: 'clamp(0.625rem, 2vw, 0.75rem)',
+                            paddingBottom: 'clamp(0.625rem, 2vw, 0.75rem)',
+                            fontSize: 'clamp(0.875rem, 2.5vw, 1rem)'
+                          }}
                         />
                       </div>
                       {errors.rentMin && (
-                        <p className="text-sm mt-1 flex items-center gap-1" style={{ color: 'hsl(0 72% 51%)' }}>
-                          <AlertCircle className="h-4 w-4" /> {errors.rentMin}
+                        <p className="mt-1 flex items-center gap-1" style={{ 
+                          color: 'hsl(0 72% 51%)',
+                          fontSize: 'clamp(0.75rem, 2vw, 0.875rem)'
+                        }}>
+                          <AlertCircle style={{ height: '1rem', width: '1rem' }} /> {errors.rentMin}
                         </p>
                       )}
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium mb-2" style={{ color: 'hsl(200 25% 15%)' }}>
+                      <label className="block font-medium mb-2" style={{ 
+                        color: 'hsl(200 25% 15%)',
+                        fontSize: 'clamp(0.8125rem, 2.5vw, 0.875rem)'
+                      }}>
                         Rent Maximum (GH₵) *
                       </label>
                       <div className="relative">
-                        <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5" style={{ color: 'hsl(200 15% 45%)' }} />
+                        <DollarSign className="absolute top-1/2 -translate-y-1/2" style={{ 
+                          left: 'clamp(0.625rem, 2vw, 0.75rem)',
+                          height: 'clamp(1.125rem, 3vw, 1.25rem)',
+                          width: 'clamp(1.125rem, 3vw, 1.25rem)',
+                          color: 'hsl(200 15% 45%)'
+                        }} />
                         <input
                           type="number"
                           value={data.rentMax}
                           onChange={(e) => setData('rentMax', e.target.value)}
                           placeholder="2500"
-                          className="w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 transition-all"
-                          style={{ borderColor: errors.rentMax ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)' }}
+                          className="w-full border rounded-lg focus:ring-2 transition-all"
+                          style={{ 
+                            borderColor: errors.rentMax ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)',
+                            paddingLeft: 'clamp(2.25rem, 8vw, 2.5rem)',
+                            paddingRight: 'clamp(0.75rem, 3vw, 1rem)',
+                            paddingTop: 'clamp(0.625rem, 2vw, 0.75rem)',
+                            paddingBottom: 'clamp(0.625rem, 2vw, 0.75rem)',
+                            fontSize: 'clamp(0.875rem, 2.5vw, 1rem)'
+                          }}
                         />
                       </div>
                       {errors.rentMax && (
-                        <p className="text-sm mt-1 flex items-center gap-1" style={{ color: 'hsl(0 72% 51%)' }}>
-                          <AlertCircle className="h-4 w-4" /> {errors.rentMax}
+                        <p className="mt-1 flex items-center gap-1" style={{ 
+                          color: 'hsl(0 72% 51%)',
+                          fontSize: 'clamp(0.75rem, 2vw, 0.875rem)'
+                        }}>
+                          <AlertCircle style={{ height: '1rem', width: '1rem' }} /> {errors.rentMax}
                         </p>
                       )}
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2" style={{ color: 'hsl(200 25% 15%)' }}>
+                    <label className="block font-medium mb-2" style={{ 
+                      color: 'hsl(200 25% 15%)',
+                      fontSize: 'clamp(0.8125rem, 2.5vw, 0.875rem)'
+                    }}>
                       Advance Duration *
                     </label>
                     <div className="relative">
-                      <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5" style={{ color: 'hsl(200 15% 45%)' }} />
+                      <Calendar className="absolute top-1/2 -translate-y-1/2" style={{ 
+                        left: 'clamp(0.625rem, 2vw, 0.75rem)',
+                        height: 'clamp(1.125rem, 3vw, 1.25rem)',
+                        width: 'clamp(1.125rem, 3vw, 1.25rem)',
+                        color: 'hsl(200 15% 45%)'
+                      }} />
                       <select
                         value={data.advanceDuration}
                         onChange={(e) => setData('advanceDuration', e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 transition-all appearance-none"
-                        style={{ borderColor: 'hsl(40 20% 88%)' }}
+                        className="w-full border rounded-lg focus:ring-2 transition-all appearance-none"
+                        style={{ 
+                          borderColor: 'hsl(40 20% 88%)',
+                          paddingLeft: 'clamp(2.25rem, 8vw, 2.5rem)',
+                          paddingRight: 'clamp(0.75rem, 3vw, 1rem)',
+                          paddingTop: 'clamp(0.625rem, 2vw, 0.75rem)',
+                          paddingBottom: 'clamp(0.625rem, 2vw, 0.75rem)',
+                          fontSize: 'clamp(0.875rem, 2.5vw, 1rem)'
+                        }}
                       >
                         <option value="1">1 Year</option>
                         <option value="2">2 Years</option>
@@ -444,9 +744,15 @@ const AddRentalPage = ({ agentData, setShowAddListingModal }) => {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid form-grid" style={{ 
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+                    gap: 'clamp(0.75rem, 3vw, 1rem)'
+                  }}>
                     <div>
-                      <label className="block text-sm font-medium mb-2" style={{ color: 'hsl(200 25% 15%)' }}>
+                      <label className="block font-medium mb-2" style={{ 
+                        color: 'hsl(200 25% 15%)',
+                        fontSize: 'clamp(0.8125rem, 2.5vw, 0.875rem)'
+                      }}>
                         Bedrooms *
                       </label>
                       <input
@@ -455,18 +761,28 @@ const AddRentalPage = ({ agentData, setShowAddListingModal }) => {
                         onChange={(e) => setData('bedrooms', e.target.value)}
                         placeholder="2"
                         min="0"
-                        className="w-full px-4 py-3 border rounded-lg focus:ring-2 transition-all"
-                        style={{ borderColor: errors.bedrooms ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)' }}
+                        className="w-full border rounded-lg focus:ring-2 transition-all"
+                        style={{ 
+                          borderColor: errors.bedrooms ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)',
+                          padding: 'clamp(0.625rem, 2vw, 0.75rem) clamp(0.75rem, 3vw, 1rem)',
+                          fontSize: 'clamp(0.875rem, 2.5vw, 1rem)'
+                        }}
                       />
                       {errors.bedrooms && (
-                        <p className="text-sm mt-1 flex items-center gap-1" style={{ color: 'hsl(0 72% 51%)' }}>
-                          <AlertCircle className="h-4 w-4" /> {errors.bedrooms}
+                        <p className="mt-1 flex items-center gap-1" style={{ 
+                          color: 'hsl(0 72% 51%)',
+                          fontSize: 'clamp(0.75rem, 2vw, 0.875rem)'
+                        }}>
+                          <AlertCircle style={{ height: '1rem', width: '1rem' }} /> {errors.bedrooms}
                         </p>
                       )}
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium mb-2" style={{ color: 'hsl(200 25% 15%)' }}>
+                      <label className="block font-medium mb-2" style={{ 
+                        color: 'hsl(200 25% 15%)',
+                        fontSize: 'clamp(0.8125rem, 2.5vw, 0.875rem)'
+                      }}>
                         Bathrooms
                       </label>
                       <input
@@ -475,30 +791,43 @@ const AddRentalPage = ({ agentData, setShowAddListingModal }) => {
                         onChange={(e) => setData('bathrooms', e.target.value)}
                         placeholder="1"
                         min="0"
-                        className="w-full px-4 py-3 border rounded-lg focus:ring-2 transition-all"
-                        style={{ borderColor: 'hsl(40 20% 88%)' }}
+                        className="w-full border rounded-lg focus:ring-2 transition-all"
+                        style={{ 
+                          borderColor: 'hsl(40 20% 88%)',
+                          padding: 'clamp(0.625rem, 2vw, 0.75rem) clamp(0.75rem, 3vw, 1rem)',
+                          fontSize: 'clamp(0.875rem, 2.5vw, 1rem)'
+                        }}
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-3" style={{ color: 'hsl(200 25% 15%)' }}>
+                    <label className="block font-medium mb-3" style={{ 
+                      color: 'hsl(200 25% 15%)',
+                      fontSize: 'clamp(0.8125rem, 2.5vw, 0.875rem)'
+                    }}>
                       Amenities
                     </label>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    <div className="grid amenities-grid" style={{
+                      gap: 'clamp(0.5rem, 2vw, 0.75rem)'
+                    }}>
                       {amenitiesList.map(amenity => (
                         <button
                           key={amenity}
                           type="button"
                           onClick={() => handleAmenityToggle(amenity)}
-                          className="px-4 py-2 rounded-lg border text-sm font-medium transition-all"
+                          className="rounded-lg border font-medium transition-all"
                           style={{
                             borderColor: data.amenities.includes(amenity) ? 'hsl(174 62% 32%)' : 'hsl(40 20% 88%)',
                             backgroundColor: data.amenities.includes(amenity) ? 'hsl(174 62% 32% / 0.1)' : 'white',
-                            color: data.amenities.includes(amenity) ? 'hsl(174 62% 32%)' : 'hsl(200 25% 15%)'
+                            color: data.amenities.includes(amenity) ? 'hsl(174 62% 32%)' : 'hsl(200 25% 15%)',
+                            padding: 'clamp(0.5rem, 2vw, 0.625rem) clamp(0.75rem, 3vw, 1rem)',
+                            fontSize: 'clamp(0.75rem, 2vw, 0.875rem)',
+                            minHeight: '44px',
+                            touchAction: 'manipulation'
                           }}
                         >
-                          {data.amenities.includes(amenity) && <CheckCircle2 className="inline h-4 w-4 mr-1" />}
+                          {data.amenities.includes(amenity) && <CheckCircle2 className="inline mr-1" style={{ height: '1rem', width: '1rem' }} />}
                           {amenity}
                         </button>
                       ))}
@@ -506,7 +835,10 @@ const AddRentalPage = ({ agentData, setShowAddListingModal }) => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2" style={{ color: 'hsl(200 25% 15%)' }}>
+                    <label className="block font-medium mb-2" style={{ 
+                      color: 'hsl(200 25% 15%)',
+                      fontSize: 'clamp(0.8125rem, 2.5vw, 0.875rem)'
+                    }}>
                       Property Description
                     </label>
                     <textarea
@@ -514,26 +846,49 @@ const AddRentalPage = ({ agentData, setShowAddListingModal }) => {
                       onChange={(e) => setData('description', e.target.value)}
                       placeholder="Describe the property, its condition, nearby facilities, and any other relevant details..."
                       rows={5}
-                      className="w-full px-4 py-3 border rounded-lg focus:ring-2 transition-all resize-none"
-                      style={{ borderColor: 'hsl(40 20% 88%)' }}
+                      className="w-full border rounded-lg focus:ring-2 transition-all resize-none"
+                      style={{ 
+                        borderColor: 'hsl(40 20% 88%)',
+                        padding: 'clamp(0.625rem, 2vw, 0.75rem) clamp(0.75rem, 3vw, 1rem)',
+                        fontSize: 'clamp(0.875rem, 2.5vw, 1rem)'
+                      }}
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-3" style={{ color: 'hsl(200 25% 15%)' }}>
+                    <label className="block font-medium mb-3" style={{ 
+                      color: 'hsl(200 25% 15%)',
+                      fontSize: 'clamp(0.8125rem, 2.5vw, 0.875rem)'
+                    }}>
                       Property Images (Max 6)
                     </label>
-                    <div className="space-y-3">
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(0.75rem, 2vw, 1rem)' }}>
                       {images.length < 6 && (
-                        <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer transition-colors hover:border-opacity-60"
-                          style={{ borderColor: 'hsl(174 62% 32%)', backgroundColor: 'hsl(174 62% 32% / 0.05)' }}
+                        <label className="flex flex-col items-center justify-center w-full border-2 border-dashed rounded-lg cursor-pointer transition-colors hover:border-opacity-60"
+                          style={{ 
+                            borderColor: 'hsl(174 62% 32%)', 
+                            backgroundColor: 'hsl(174 62% 32% / 0.05)',
+                            height: 'clamp(7rem, 20vw, 8rem)',
+                            touchAction: 'manipulation'
+                          }}
                         >
-                          <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                            <Upload className="h-8 w-8 mb-2" style={{ color: 'hsl(174 62% 32%)' }} />
-                            <p className="text-sm font-medium" style={{ color: 'hsl(174 62% 32%)' }}>
+                          <div className="flex flex-col items-center justify-center">
+                            <Upload style={{ 
+                              height: 'clamp(1.5rem, 5vw, 2rem)', 
+                              width: 'clamp(1.5rem, 5vw, 2rem)',
+                              marginBottom: '0.5rem',
+                              color: 'hsl(174 62% 32%)'
+                            }} />
+                            <p className="font-medium" style={{ 
+                              color: 'hsl(174 62% 32%)',
+                              fontSize: 'clamp(0.8125rem, 2.5vw, 0.875rem)'
+                            }}>
                               Click to upload images
                             </p>
-                            <p className="text-xs" style={{ color: 'hsl(200 15% 45%)' }}>
+                            <p style={{ 
+                              color: 'hsl(200 15% 45%)',
+                              fontSize: 'clamp(0.6875rem, 2vw, 0.75rem)'
+                            }}>
                               PNG, JPG up to 5MB
                             </p>
                           </div>
@@ -548,7 +903,7 @@ const AddRentalPage = ({ agentData, setShowAddListingModal }) => {
                       )}
 
                       {images.length > 0 && (
-                        <div className="grid grid-cols-3 gap-3">
+                        <div className="grid images-grid">
                           {images.map(image => (
                             <div key={image.id} className="relative group">
                               <div className="aspect-square bg-gray-200 rounded-lg overflow-hidden">
@@ -557,10 +912,22 @@ const AddRentalPage = ({ agentData, setShowAddListingModal }) => {
                               <button
                                 type="button"
                                 onClick={() => removeImage(image.id)}
-                                className="absolute top-2 right-2 p-1 rounded-full transition-opacity opacity-0 group-hover:opacity-100"
-                                style={{ backgroundColor: 'hsl(0 72% 51%)' }}
+                                className="absolute rounded-full transition-opacity"
+                                style={{ 
+                                  backgroundColor: 'hsl(0 72% 51%)',
+                                  top: 'clamp(0.375rem, 2vw, 0.5rem)',
+                                  right: 'clamp(0.375rem, 2vw, 0.5rem)',
+                                  padding: 'clamp(0.25rem, 1vw, 0.375rem)',
+                                  opacity: 0.9,
+                                  minHeight: '32px',
+                                  minWidth: '32px',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  touchAction: 'manipulation'
+                                }}
                               >
-                                <X className="h-4 w-4 text-white" />
+                                <X style={{ height: '1rem', width: '1rem', color: 'white' }} />
                               </button>
                             </div>
                           ))}
@@ -573,76 +940,119 @@ const AddRentalPage = ({ agentData, setShowAddListingModal }) => {
 
               {/* Step 3: Contact Information */}
               {currentStep === 3 && (
-                <div className="space-y-6">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(1rem, 3vw, 1.5rem)' }}>
                   <div>
-                    <h2 className="text-xl font-bold mb-1 tracking-tight" style={{ color: 'hsl(200 25% 15%)' }}>
+                    <h2 className="font-bold mb-1 tracking-tight" style={{ 
+                      color: 'hsl(200 25% 15%)',
+                      fontSize: 'clamp(1.125rem, 4vw, 1.5rem)'
+                    }}>
                       Contact Information
                     </h2>
-                    <p className="text-sm" style={{ color: 'hsl(200 15% 45%)' }}>
+                    <p style={{ 
+                      color: 'hsl(200 15% 45%)',
+                      fontSize: 'clamp(0.8125rem, 2.5vw, 0.875rem)'
+                    }}>
                       How should tenants reach you?
                     </p>
                   </div>
 
                   <div 
-                    className="p-4 rounded-lg"
-                    style={{ backgroundColor: 'hsl(38 92% 50% / 0.1)', border: '1px solid hsl(38 92% 50% / 0.2)' }}
+                    className="rounded-lg"
+                    style={{ 
+                      backgroundColor: 'hsl(38 92% 50% / 0.1)', 
+                      border: '1px solid hsl(38 92% 50% / 0.2)',
+                      padding: 'clamp(0.75rem, 3vw, 1rem)'
+                    }}
                   >
-                    <p className="text-sm" style={{ color: 'hsl(200 25% 10%)' }}>
+                    <p style={{ 
+                      color: 'hsl(200 25% 10%)',
+                      fontSize: 'clamp(0.8125rem, 2.5vw, 0.875rem)'
+                    }}>
                       <strong>⚠️ Important:</strong> Your contact information will be visible to interested tenants. 
                       Make sure it's accurate and up-to-date.
                     </p>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2" style={{ color: 'hsl(200 25% 15%)' }}>
+                    <label className="block font-medium mb-2" style={{ 
+                      color: 'hsl(200 25% 15%)',
+                      fontSize: 'clamp(0.8125rem, 2.5vw, 0.875rem)'
+                    }}>
                       Your Name *
                     </label>
                     <input
                       type="text"
                       value={data.agentName || agentData.fullName}
                       onChange={(e) => setData('agentName', e.target.value)}
-                      className="w-full px-4 py-3 border rounded-lg focus:ring-2 transition-all"
-                      style={{ borderColor: errors.agentName ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)' }}
+                      className="w-full border rounded-lg focus:ring-2 transition-all"
+                      style={{ 
+                        borderColor: errors.agentName ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)',
+                        padding: 'clamp(0.625rem, 2vw, 0.75rem) clamp(0.75rem, 3vw, 1rem)',
+                        fontSize: 'clamp(0.875rem, 2.5vw, 1rem)'
+                      }}
                     />
                     {errors.agentName && (
-                      <p className="text-sm mt-1 flex items-center gap-1" style={{ color: 'hsl(0 72% 51%)' }}>
-                        <AlertCircle className="h-4 w-4" /> {errors.agentName}
+                      <p className="mt-1 flex items-center gap-1" style={{ 
+                        color: 'hsl(0 72% 51%)',
+                        fontSize: 'clamp(0.75rem, 2vw, 0.875rem)'
+                      }}>
+                        <AlertCircle style={{ height: '1rem', width: '1rem' }} /> {errors.agentName}
                       </p>
                     )}
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2" style={{ color: 'hsl(200 25% 15%)' }}>
+                    <label className="block font-medium mb-2" style={{ 
+                      color: 'hsl(200 25% 15%)',
+                      fontSize: 'clamp(0.8125rem, 2.5vw, 0.875rem)'
+                    }}>
                       Phone Number *
                     </label>
                     <input
                       type="tel"
                       value={data.agentPhone || agentData.phone}
                       onChange={(e) => setData('agentPhone', e.target.value)}
-                      className="w-full px-4 py-3 border rounded-lg focus:ring-2 transition-all"
-                      style={{ borderColor: errors.agentPhone ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)' }}
+                      className="w-full border rounded-lg focus:ring-2 transition-all"
+                      style={{ 
+                        borderColor: errors.agentPhone ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)',
+                        padding: 'clamp(0.625rem, 2vw, 0.75rem) clamp(0.75rem, 3vw, 1rem)',
+                        fontSize: 'clamp(0.875rem, 2.5vw, 1rem)'
+                      }}
                     />
                     {errors.agentPhone && (
-                      <p className="text-sm mt-1 flex items-center gap-1" style={{ color: 'hsl(0 72% 51%)' }}>
-                        <AlertCircle className="h-4 w-4" /> {errors.agentPhone}
+                      <p className="mt-1 flex items-center gap-1" style={{ 
+                        color: 'hsl(0 72% 51%)',
+                        fontSize: 'clamp(0.75rem, 2vw, 0.875rem)'
+                      }}>
+                        <AlertCircle style={{ height: '1rem', width: '1rem' }} /> {errors.agentPhone}
                       </p>
                     )}
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2" style={{ color: 'hsl(200 25% 15%)' }}>
+                    <label className="block font-medium mb-2" style={{ 
+                      color: 'hsl(200 25% 15%)',
+                      fontSize: 'clamp(0.8125rem, 2.5vw, 0.875rem)'
+                    }}>
                       Email Address *
                     </label>
                     <input
                       type="email"
                       value={data.agentEmail || agentData.email}
                       onChange={(e) => setData('agentEmail', e.target.value)}
-                      className="w-full px-4 py-3 border rounded-lg focus:ring-2 transition-all"
-                      style={{ borderColor: errors.agentEmail ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)' }}
+                      className="w-full border rounded-lg focus:ring-2 transition-all"
+                      style={{ 
+                        borderColor: errors.agentEmail ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)',
+                        padding: 'clamp(0.625rem, 2vw, 0.75rem) clamp(0.75rem, 3vw, 1rem)',
+                        fontSize: 'clamp(0.875rem, 2.5vw, 1rem)'
+                      }}
                     />
                     {errors.agentEmail && (
-                      <p className="text-sm mt-1 flex items-center gap-1" style={{ color: 'hsl(0 72% 51%)' }}>
-                        <AlertCircle className="h-4 w-4" /> {errors.agentEmail}
+                      <p className="mt-1 flex items-center gap-1" style={{ 
+                        color: 'hsl(0 72% 51%)',
+                        fontSize: 'clamp(0.75rem, 2vw, 0.875rem)'
+                      }}>
+                        <AlertCircle style={{ height: '1rem', width: '1rem' }} /> {errors.agentEmail}
                       </p>
                     )}
                   </div>
@@ -651,56 +1061,84 @@ const AddRentalPage = ({ agentData, setShowAddListingModal }) => {
 
               {/* Step 4: Review */}
               {currentStep === 4 && (
-                <div className="space-y-6">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(1rem, 3vw, 1.5rem)' }}>
                   <div>
-                    <h2 className="text-xl font-bold mb-1 tracking-tight" style={{ color: 'hsl(200 25% 15%)' }}>
+                    <h2 className="font-bold mb-1 tracking-tight" style={{ 
+                      color: 'hsl(200 25% 15%)',
+                      fontSize: 'clamp(1.125rem, 4vw, 1.5rem)'
+                    }}>
                       Review Your Listing
                     </h2>
-                    <p className="text-sm" style={{ color: 'hsl(200 15% 45%)' }}>
+                    <p style={{ 
+                      color: 'hsl(200 15% 45%)',
+                      fontSize: 'clamp(0.8125rem, 2.5vw, 0.875rem)'
+                    }}>
                       Please review all details before submitting
                     </p>
                   </div>
 
-                  <div className="space-y-4">
-                    <div className="p-4 rounded-lg" style={{ backgroundColor: 'hsl(40 30% 94%)' }}>
-                      <h3 className="font-semibold mb-3" style={{ color: 'hsl(200 25% 15%)' }}>Property Details</h3>
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(0.75rem, 2vw, 1rem)' }}>
+                    <div className="rounded-lg" style={{ 
+                      backgroundColor: 'hsl(40 30% 94%)',
+                      padding: 'clamp(0.75rem, 3vw, 1rem)'
+                    }}>
+                      <h3 className="font-semibold mb-3" style={{ 
+                        color: 'hsl(200 25% 15%)',
+                        fontSize: 'clamp(0.9375rem, 2.5vw, 1rem)'
+                      }}>Property Details</h3>
+                      <div style={{ 
+                        display: 'flex', 
+                        flexDirection: 'column', 
+                        gap: 'clamp(0.5rem, 2vw, 0.75rem)',
+                        fontSize: 'clamp(0.8125rem, 2.5vw, 0.875rem)'
+                      }}>
+                        <div className="flex justify-between gap-2">
                           <span style={{ color: 'hsl(200 15% 45%)' }}>Title:</span>
-                          <span style={{ color: 'hsl(200 25% 15%)' }}>{data.title}</span>
+                          <span style={{ color: 'hsl(200 25% 15%)', textAlign: 'right' }}>{data.title}</span>
                         </div>
-                        <div className="flex justify-between">
+                        <div className="flex justify-between gap-2">
                           <span style={{ color: 'hsl(200 15% 45%)' }}>Type:</span>
-                          <span style={{ color: 'hsl(200 25% 15%)' }}>{data.propertyType}</span>
+                          <span style={{ color: 'hsl(200 25% 15%)', textAlign: 'right' }}>{data.propertyType}</span>
                         </div>
-                        <div className="flex justify-between">
+                        <div className="flex justify-between gap-2">
                           <span style={{ color: 'hsl(200 15% 45%)' }}>Location:</span>
-                          <span style={{ color: 'hsl(200 25% 15%)' }}>{data.area}, {data.city}</span>
+                          <span style={{ color: 'hsl(200 25% 15%)', textAlign: 'right' }}>{data.area}, {data.city}</span>
                         </div>
                       </div>
                     </div>
 
-                    <div className="p-4 rounded-lg" style={{ backgroundColor: 'hsl(40 30% 94%)' }}>
-                      <h3 className="font-semibold mb-3" style={{ color: 'hsl(200 25% 15%)' }}>Pricing & Features</h3>
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
+                    <div className="rounded-lg" style={{ 
+                      backgroundColor: 'hsl(40 30% 94%)',
+                      padding: 'clamp(0.75rem, 3vw, 1rem)'
+                    }}>
+                      <h3 className="font-semibold mb-3" style={{ 
+                        color: 'hsl(200 25% 15%)',
+                        fontSize: 'clamp(0.9375rem, 2.5vw, 1rem)'
+                      }}>Pricing & Features</h3>
+                      <div style={{ 
+                        display: 'flex', 
+                        flexDirection: 'column', 
+                        gap: 'clamp(0.5rem, 2vw, 0.75rem)',
+                        fontSize: 'clamp(0.8125rem, 2.5vw, 0.875rem)'
+                      }}>
+                        <div className="flex justify-between gap-2">
                           <span style={{ color: 'hsl(200 15% 45%)' }}>Monthly Rent:</span>
-                          <span className="font-semibold" style={{ color: 'hsl(174 62% 32%)' }}>
+                          <span className="font-semibold" style={{ color: 'hsl(174 62% 32%)', textAlign: 'right' }}>
                             GH₵{data.rentMin ? Number(data.rentMin).toLocaleString() : '0'} - 
                              GH₵{data.rentMax ? Number(data.rentMax).toLocaleString() : '0'}
                           </span>
                         </div>
-                        <div className="flex justify-between">
+                        <div className="flex justify-between gap-2">
                           <span style={{ color: 'hsl(200 15% 45%)' }}>Advance Duration:</span>
-                          <span style={{ color: 'hsl(200 25% 15%)' }}>{data.advanceDuration} {data.advanceDuration === '1' ? 'Year' : 'Years'}</span>
+                          <span style={{ color: 'hsl(200 25% 15%)', textAlign: 'right' }}>{data.advanceDuration} {data.advanceDuration === '1' ? 'Year' : 'Years'}</span>
                         </div>
-                        <div className="flex justify-between">
+                        <div className="flex justify-between gap-2">
                           <span style={{ color: 'hsl(200 15% 45%)' }}>Bedrooms:</span>
-                          <span style={{ color: 'hsl(200 25% 15%)' }}>{data.bedrooms || '0'}</span>
+                          <span style={{ color: 'hsl(200 25% 15%)', textAlign: 'right' }}>{data.bedrooms || '0'}</span>
                         </div>
-                        <div className="flex justify-between">
+                        <div className="flex justify-between gap-2">
                           <span style={{ color: 'hsl(200 15% 45%)' }}>Bathrooms:</span>
-                          <span style={{ color: 'hsl(200 25% 15%)' }}>{data.bathrooms || '0'}</span>
+                          <span style={{ color: 'hsl(200 25% 15%)', textAlign: 'right' }}>{data.bathrooms || '0'}</span>
                         </div>
                         {data.amenities.length > 0 && (
                           <div className="pt-2 mt-2 border-t" style={{ borderColor: 'hsl(40 20% 88%)' }}>
@@ -709,10 +1147,13 @@ const AddRentalPage = ({ agentData, setShowAddListingModal }) => {
                               {data.amenities.map(amenity => (
                                 <span 
                                   key={amenity}
-                                  className="px-2 py-1 rounded text-xs font-medium"
+                                  className="rounded"
                                   style={{ 
                                     backgroundColor: 'hsl(174 62% 32% / 0.1)',
-                                    color: 'hsl(174 62% 32%)'
+                                    color: 'hsl(174 62% 32%)',
+                                    padding: 'clamp(0.25rem, 1vw, 0.375rem) clamp(0.5rem, 2vw, 0.625rem)',
+                                    fontSize: 'clamp(0.6875rem, 2vw, 0.75rem)',
+                                    fontWeight: '500'
                                   }}
                                 >
                                   {amenity}
@@ -724,30 +1165,47 @@ const AddRentalPage = ({ agentData, setShowAddListingModal }) => {
                       </div>
                     </div>
 
-                    <div className="p-4 rounded-lg" style={{ backgroundColor: 'hsl(40 30% 94%)' }}>
-                      <h3 className="font-semibold mb-3" style={{ color: 'hsl(200 25% 15%)' }}>Contact Information</h3>
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
+                    <div className="rounded-lg" style={{ 
+                      backgroundColor: 'hsl(40 30% 94%)',
+                      padding: 'clamp(0.75rem, 3vw, 1rem)'
+                    }}>
+                      <h3 className="font-semibold mb-3" style={{ 
+                        color: 'hsl(200 25% 15%)',
+                        fontSize: 'clamp(0.9375rem, 2.5vw, 1rem)'
+                      }}>Contact Information</h3>
+                      <div style={{ 
+                        display: 'flex', 
+                        flexDirection: 'column', 
+                        gap: 'clamp(0.5rem, 2vw, 0.75rem)',
+                        fontSize: 'clamp(0.8125rem, 2.5vw, 0.875rem)'
+                      }}>
+                        <div className="flex justify-between gap-2">
                           <span style={{ color: 'hsl(200 15% 45%)' }}>Name:</span>
-                          <span style={{ color: 'hsl(200 25% 15%)' }}>{data.agentName}</span>
+                          <span style={{ color: 'hsl(200 25% 15%)', textAlign: 'right' }}>{data.agentName}</span>
                         </div>
-                        <div className="flex justify-between">
+                        <div className="flex justify-between gap-2">
                           <span style={{ color: 'hsl(200 15% 45%)' }}>Phone:</span>
-                          <span style={{ color: 'hsl(200 25% 15%)' }}>{data.agentPhone}</span>
+                          <span style={{ color: 'hsl(200 25% 15%)', textAlign: 'right' }}>{data.agentPhone}</span>
                         </div>
-                        <div className="flex justify-between">
+                        <div className="flex justify-between gap-2">
                           <span style={{ color: 'hsl(200 15% 45%)' }}>Email:</span>
-                          <span style={{ color: 'hsl(200 25% 15%)' }}>{data.agentEmail}</span>
+                          <span style={{ color: 'hsl(200 25% 15%)', textAlign: 'right', wordBreak: 'break-word' }}>{data.agentEmail}</span>
                         </div>
                       </div>
                     </div>
 
                     {images.length > 0 && (
-                      <div className="p-4 rounded-lg" style={{ backgroundColor: 'hsl(40 30% 94%)' }}>
-                        <h3 className="font-semibold mb-3" style={{ color: 'hsl(200 25% 15%)' }}>
+                      <div className="rounded-lg" style={{ 
+                        backgroundColor: 'hsl(40 30% 94%)',
+                        padding: 'clamp(0.75rem, 3vw, 1rem)'
+                      }}>
+                        <h3 className="font-semibold mb-3" style={{ 
+                          color: 'hsl(200 25% 15%)',
+                          fontSize: 'clamp(0.9375rem, 2.5vw, 1rem)'
+                        }}>
                           Images ({images.length})
                         </h3>
-                        <div className="grid grid-cols-3 gap-2">
+                        <div className="grid images-grid review-grid" style={{ gap: 'clamp(0.5rem, 2vw, 0.75rem)' }}>
                           {images.map(image => (
                             <div key={image.id} className="aspect-square bg-gray-200 rounded-lg overflow-hidden">
                               <img src={image.preview} alt={image.name} className="w-full h-full object-cover" />
@@ -759,16 +1217,33 @@ const AddRentalPage = ({ agentData, setShowAddListingModal }) => {
                   </div>
 
                   <div 
-                    className="p-4 rounded-lg"
-                    style={{ backgroundColor: 'hsl(152 60% 40% / 0.1)', border: '1px solid hsl(152 60% 40% / 0.2)' }}
+                    className="rounded-lg"
+                    style={{ 
+                      backgroundColor: 'hsl(152 60% 40% / 0.1)', 
+                      border: '1px solid hsl(152 60% 40% / 0.2)',
+                      padding: 'clamp(0.75rem, 3vw, 1rem)'
+                    }}
                   >
-                    <div className="flex gap-3">
-                      <CheckCircle2 className="h-5 w-5 flex-shrink-0" style={{ color: 'hsl(152 60% 40%)' }} />
+                    <div style={{ display: 'flex', gap: 'clamp(0.5rem, 2vw, 0.75rem)' }}>
+                      <CheckCircle2 className="flex-shrink-0" style={{ 
+                        height: 'clamp(1.125rem, 3vw, 1.25rem)',
+                        width: 'clamp(1.125rem, 3vw, 1.25rem)',
+                        color: 'hsl(152 60% 40%)'
+                      }} />
                       <div>
-                        <p className="text-sm font-medium mb-1" style={{ color: 'hsl(200 25% 15%)' }}>
+                        <p className="font-medium mb-1" style={{ 
+                          color: 'hsl(200 25% 15%)',
+                          fontSize: 'clamp(0.8125rem, 2.5vw, 0.875rem)'
+                        }}>
                           What happens next?
                         </p>
-                        <ul className="text-sm space-y-1" style={{ color: 'hsl(200 15% 45%)' }}>
+                        <ul style={{ 
+                          color: 'hsl(200 15% 45%)',
+                          fontSize: 'clamp(0.75rem, 2vw, 0.875rem)',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '0.25rem'
+                        }}>
                           <li>• Our team will review your listing within 24 hours</li>
                           <li>• You'll receive a confirmation email once approved</li>
                           <li>• Your listing will be visible to thousands of tenants</li>
@@ -781,16 +1256,23 @@ const AddRentalPage = ({ agentData, setShowAddListingModal }) => {
               )}
 
               {/* Navigation Buttons */}
-              <div className="flex justify-between pt-6 border-t mt-8" style={{ borderColor: 'hsl(40 20% 88%)' }}>
+              <div className="flex justify-between button-container" style={{ 
+                paddingTop: 'clamp(1rem, 3vw, 1.5rem)',
+                marginTop: 'clamp(1.5rem, 4vw, 2rem)',
+                borderTop: '1px solid hsl(40 20% 88%)'
+              }}>
                 {currentStep > 1 ? (
                   <button
                     type="button"
                     onClick={handlePrevious}
                     disabled={processing}
-                    className="px-6 py-3 rounded-lg font-semibold transition-colors border"
+                    className="action-button rounded-lg font-semibold transition-colors border"
                     style={{ 
                       borderColor: 'hsl(40 20% 88%)',
-                      color: 'hsl(200 25% 15%)'
+                      color: 'hsl(200 25% 15%)',
+                      padding: 'clamp(0.625rem, 2vw, 0.75rem) clamp(1rem, 3vw, 1.5rem)',
+                      fontSize: 'clamp(0.8125rem, 2.5vw, 0.875rem)',
+                      touchAction: 'manipulation'
                     }}
                   >
                     Previous
@@ -804,8 +1286,13 @@ const AddRentalPage = ({ agentData, setShowAddListingModal }) => {
                     type="button"
                     onClick={handleNext}
                     disabled={processing}
-                    className="px-6 py-3 rounded-lg font-semibold text-white transition-all duration-200 active:scale-95"
-                    style={{ backgroundColor: 'hsl(174 62% 32%)' }}
+                    className="action-button rounded-lg font-semibold text-white transition-all duration-200 active:scale-95"
+                    style={{ 
+                      backgroundColor: 'hsl(174 62% 32%)',
+                      padding: 'clamp(0.625rem, 2vw, 0.75rem) clamp(1rem, 3vw, 1.5rem)',
+                      fontSize: 'clamp(0.8125rem, 2.5vw, 0.875rem)',
+                      touchAction: 'manipulation'
+                    }}
                   >
                     Next Step
                   </button>
@@ -813,10 +1300,13 @@ const AddRentalPage = ({ agentData, setShowAddListingModal }) => {
                   <button
                     type="submit"
                     disabled={processing}
-                    className="px-6 py-3 rounded-lg font-semibold transition-all duration-200 active:scale-95 disabled:opacity-50"
+                    className="action-button rounded-lg font-semibold transition-all duration-200 active:scale-95 disabled:opacity-50"
                     style={{ 
                       background: 'linear-gradient(135deg, hsl(38 92% 50%) 0%, hsl(30 90% 45%) 100%)',
-                      color: 'hsl(200 25% 10%)'
+                      color: 'hsl(200 25% 10%)',
+                      padding: 'clamp(0.625rem, 2vw, 0.75rem) clamp(1rem, 3vw, 1.5rem)',
+                      fontSize: 'clamp(0.8125rem, 2.5vw, 0.875rem)',
+                      touchAction: 'manipulation'
                     }}
                   >
                     {processing ? 'Submitting...' : 'Submit Listing'}
