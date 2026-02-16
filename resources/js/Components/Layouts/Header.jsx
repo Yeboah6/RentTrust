@@ -9,6 +9,7 @@ const Header = () => {
   const { post } = useForm();
 
   // Convert to proper booleans
+  const LoggedIn = !!auth?.user;
   const isAgentLoggedIn = !!auth?.agent;
   const isTenantLoggedIn = !!auth?.tenant;
   const isSuperAdminLoggedIn = !!auth?.super;
@@ -20,7 +21,7 @@ const Header = () => {
   const superAdminData = auth?.super;
 
   console.log('Auth state:', {
-    isAgentLoggedIn,
+    LoggedIn,
     isTenantLoggedIn,
     isSuperAdminLoggedIn,
     isAnyUserLoggedIn,
@@ -379,7 +380,7 @@ const Header = () => {
                   fontWeight: '500',
                   color: 'hsl(200 25% 15%)'
                 }}>
-                  {tenantData?.fullName || 'Tenant'}
+                  {tenantData?.name || 'Tenant'}
                 </p>
                 <button
                   type="button"
@@ -455,8 +456,6 @@ const Header = () => {
             flexDirection: 'column',
             gap: '0.25rem'
           }}>
-            {/* {!isAnyUserLoggedIn && ( */}
-              {/* <> */}
                 <Link
                   href="/listings"
                   onClick={handleMobileLinkClick}
@@ -535,8 +534,6 @@ const Header = () => {
                 >
                   Pricing
                 </Link>
-              {/* </> */}
-            {/* // )} */}
 
             <div style={{ 
               paddingTop: 'clamp(0.75rem, 2vw, 1rem)', 
@@ -705,7 +702,7 @@ const Header = () => {
                     fontWeight: '500',
                     color: 'hsl(200 25% 15%)'
                   }}>
-                    {tenantData?.fullName || 'Tenant'}
+                    {tenantData?.name || 'Tenant'}
                   </div>
                   <button
                     type="button"

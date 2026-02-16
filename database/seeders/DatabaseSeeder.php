@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\SuperAdmin;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -17,9 +16,11 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        SuperAdmin::create([
-            'fullName' => 'Rent Trust',
+        User::create([
+            'name' => 'Rent Trust',
             'email' => 'rent@trust.com',
+            'role' => 'admin',
+            'status' => 'verified',
             'password' => Hash::make('RentTrust123'),
         ]);
     }

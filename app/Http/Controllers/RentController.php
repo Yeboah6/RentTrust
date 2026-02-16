@@ -987,10 +987,6 @@ class RentController extends Controller
         return inertia('PricingPage');
     }
 
-    // public function agentBillingDashboard() { 
-    //     return inertia('BillingDashboard'); 
-    // }
-
     public function checkout() {
         return inertia('CheckoutPage');
     }

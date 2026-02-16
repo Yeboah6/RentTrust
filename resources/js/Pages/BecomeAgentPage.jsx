@@ -40,7 +40,7 @@ const BecomeAgentPage = () => {
   const agentTypes = ['Landlord', 'Agent'];
 
   const { data, setData, post, processing, errors, reset } = useForm({
-    fullName: "",
+    name: "",
     phone: "",
     email: "",
     company: "",
@@ -129,23 +129,23 @@ const BecomeAgentPage = () => {
                     <input
                       type="text"
                       placeholder="Kofi Mensah"
-                      value={data.fullName}
-                      onChange={(e) => setData('fullName', e.target.value)}
+                      value={data.name}
+                      onChange={(e) => setData('name', e.target.value)}
                       style={{
                         width: '100%',
                         padding: '0.75rem',
-                        border: `1px solid ${errors.fullName ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)'}`,
+                        border: `1px solid ${errors.name ? '#dc2828' : '#e7e2da'}`,
                         borderRadius: '0.75rem',
                         fontSize: '1rem',
                         outline: 'none',
                         color: 'hsl(200 25% 15%)'
                       }}
-                      onFocus={(e) => e.currentTarget.style.borderColor = errors.fullName ? 'hsl(0 72% 51%)' : 'hsl(174 62% 32%)'}
-                      onBlur={(e) => e.currentTarget.style.borderColor = errors.fullName ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)'}
+                      onFocus={(e) => e.currentTarget.style.borderColor = errors.name ? 'hsl(0 72% 51%)' : 'hsl(174 62% 32%)'}
+                      onBlur={(e) => e.currentTarget.style.borderColor = errors.name ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)'}
                     />
-                    {errors.fullName && (
+                    {errors.name && (
                       <p style={{ fontSize: '0.875rem', color: 'hsl(0 72% 51%)', marginTop: '0.375rem' }}>
-                        {errors.fullName}
+                        {errors.name}
                       </p>
                     )}
                   </div>

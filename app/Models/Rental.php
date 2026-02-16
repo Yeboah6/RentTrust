@@ -43,9 +43,9 @@ class Rental extends Model
 
     protected $with = ['agent'];
 
-    public function agent()
+    public function user()
     {
-        return $this->belongsTo(Agent::class);
+        return $this->belongsTo(User::class);
     }
 
     public function review() {

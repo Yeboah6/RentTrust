@@ -42,8 +42,8 @@ Route::get('/become-agent', [AgentController::class, 'becomeAgent']);
 Route::post('/become-agent', [AgentController::class, 'storeBecomeAgent']);
 
 // Protected Agent Routes
-Route::middleware('agent')->group(function () {
-    Route::get('/agent-dashboard', [DashboardController::class, 'agentDashboard']);
+Route::middleware(['auth', 'role:agent'])->group(function () {
+    Route::get('/agent-dashboard', [DashboardController::class, 'agentDashboard'])->name('agent.dashboard');
     Route::post('/rent', [RentController::class, 'store']);
     Route::put('/response', [RentController::class, 'response']);
     Route::post('/verification-requests', [VerificationsController::class, 'store'])
@@ -52,8 +52,8 @@ Route::middleware('agent')->group(function () {
         ->name('verification.destroy');
 });
 
-Route::middleware('super')->group(function () {
-    Route::get('/super-admin', [DashboardController::class, 'superAdmin']);
+Route::middleware(['auth', 'role:admin'])->group(function () {
+    Route::get('/super-admin', [DashboardController::class, 'superAdmin'])->name('admin.dashboard');
     Route::put('/admin/reports/{id}/status', [RentController::class, 'updateReportStatus'])
     ->name('admin.reports.status');
     Route::put('/admin/agents/{id}/verify', [VerificationsController::class, 'verifyAgent'])

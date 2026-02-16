@@ -39,56 +39,23 @@ const EyeOff = ({ className, style }) => (
   </svg>
 );
 
-const validateEmail = (email) => {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
-};
-
 const AuthPage = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
 
   const { data, setData, post, processing, errors, reset } = useForm({
-    fullName: '',
+    name: '',
     email: '',
     password: '',
   });
 
   const handleSignUp = (e) => {
     e.preventDefault();
-    
-    // Client-side validation
-    if (!data.fullName.trim()) {
-      alert('Please enter your full name');
-      return;
-    }
-    
-    if (!validateEmail(data.email)) {
-      alert('Please enter a valid email address');
-      return;
-    }
-    
-    if (data.password.length < 8) {
-      alert('Password must be at least 8 characters long');
-      return;
-    }
-    
     post('/sign-up');
   }
 
   const handleLogin = (e) => {
     e.preventDefault();
-    
-    if (!validateEmail(data.email)) {
-      alert('Please enter a valid email address');
-      return;
-    }
-    
-    if (!data.password) {
-      alert('Please enter your password');
-      return;
-    }
-    
     post('/login');
   }
 
@@ -115,6 +82,23 @@ const AuthPage = () => {
 
         h1, h2, h3, h4, h5, h6 {
           font-weight: 600;
+        }
+
+        /* Mobile touch optimization */
+        @media (max-width: 768px) {
+          button {
+            -webkit-tap-highlight-color: transparent;
+            min-height: 44px;
+          }
+        }
+
+        /* Prevent zoom on input focus for iOS */
+        @media (max-width: 768px) {
+          input[type="text"],
+          input[type="email"],
+          input[type="password"] {
+            font-size: 16px !important;
+          }
         }
       `}</style>
 
@@ -146,7 +130,7 @@ const AuthPage = () => {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '0.5rem',
-                fontSize: '0.75rem sm:0.875rem',
+                fontSize: 'clamp(0.75rem, 2vw, 0.875rem)',
                 fontWeight: '500',
                 transition: 'color 0.2s'
               }}
@@ -159,10 +143,23 @@ const AuthPage = () => {
 
             {/* Header */}
             <div style={{ padding: '3rem 2rem 1.5rem', textAlign: 'center' }}>
-              <h1 className="text-2xl font-bold tracking-tight mb-2" style={{ color: 'hsl(200 25% 15%)' }}>
+              <h1 
+                className="tracking-tight" 
+                style={{ 
+                  color: 'hsl(200 25% 15%)',
+                  fontSize: 'clamp(1.5rem, 5vw, 2rem)',
+                  fontWeight: '700',
+                  marginBottom: '0.5rem',
+                  lineHeight: '1.2'
+                }}
+              >
                 {isLogin ? "Welcome Back" : "Create Account"}
               </h1>
-              <p style={{ color: 'hsl(200 15% 45%)', fontSize: '0.875rem' }}>
+              <p style={{ 
+                color: 'hsl(200 15% 45%)', 
+                fontSize: 'clamp(0.875rem, 2vw, 0.9375rem)',
+                lineHeight: '1.5'
+              }}>
                 {isLogin
                   ? "Sign in to your RentTrust account"
                   : "Join RentTrust to find your perfect home"}
@@ -176,36 +173,55 @@ const AuthPage = () => {
                 {/* Full Name - Show only for signup */}
                 {!isLogin && (
                   <div>
-                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', fontSize: '0.875rem', color: 'hsl(200 25% 15%)' }}>
+                    <label style={{ 
+                      display: 'block', 
+                      marginBottom: '0.5rem', 
+                      fontWeight: '500', 
+                      fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)', 
+                      color: 'hsl(200 25% 15%)' 
+                    }}>
                       Full Name
                     </label>
                     <input
                       type="text"
                       placeholder="Kofi Mensah"
-                      value={data.fullName}
-                      onChange={(e) => setData('fullName', e.target.value)}
+                      value={data.name}
+                      onChange={(e) => setData('name', e.target.value)}
                       style={{
                         width: '100%',
-                        padding: '0.75rem',
-                        border: `1px solid ${errors.fullName ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)'}`,
+                        padding: 'clamp(0.625rem, 2vw, 0.75rem)',
+                        border: `1px solid ${errors.name ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)'}`,
                         borderRadius: '0.75rem',
-                        fontSize: '1rem',
+                        fontSize: 'clamp(0.9375rem, 2vw, 1rem)',
                         outline: 'none',
-                        color: 'hsl(200 25% 15%)'
+                        color: 'hsl(200 25% 15%)',
+                        backgroundColor: 'white'
                       }}
-                      onFocus={(e) => e.currentTarget.style.borderColor = errors.fullName ? 'hsl(0 72% 51%)' : 'hsl(174 62% 32%)'}
-                      onBlur={(e) => e.currentTarget.style.borderColor = errors.fullName ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)'}
+                      onFocus={(e) => e.currentTarget.style.borderColor = errors.name ? 'hsl(0 72% 51%)' : 'hsl(174 62% 32%)'}
+                      onBlur={(e) => e.currentTarget.style.borderColor = errors.name ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)'}
                     />
-                    {errors.fullName && (
-                      <p style={{ fontSize: '0.875rem', color: 'hsl(0 72% 51%)', marginTop: '0.375rem' }}>
-                        {errors.fullName}
+                    {errors.name && (
+                      <p style={{ 
+                        fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)', 
+                        color: 'hsl(0 72% 51%)', 
+                        marginTop: '0.375rem',
+                        lineHeight: '1.4'
+                      }}>
+                        {errors.name}
                       </p>
                     )}
                   </div>
                 )}
 
+                {/* Email */}
                 <div>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', fontSize: '0.875rem', color: 'hsl(200 25% 15%)' }}>
+                  <label style={{ 
+                    display: 'block', 
+                    marginBottom: '0.5rem', 
+                    fontWeight: '500', 
+                    fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)', 
+                    color: 'hsl(200 25% 15%)' 
+                  }}>
                     Email
                   </label>
                   <input
@@ -215,25 +231,38 @@ const AuthPage = () => {
                     onChange={(e) => setData('email', e.target.value)}
                     style={{
                       width: '100%',
-                      padding: '0.75rem',
+                      padding: 'clamp(0.625rem, 2vw, 0.75rem)',
                       border: `1px solid ${errors.email ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)'}`,
                       borderRadius: '0.75rem',
-                      fontSize: '1rem',
+                      fontSize: 'clamp(0.9375rem, 2vw, 1rem)',
                       outline: 'none',
-                      color: 'hsl(200 25% 15%)'
+                      color: 'hsl(200 25% 15%)',
+                      backgroundColor: 'white'
                     }}
                     onFocus={(e) => e.currentTarget.style.borderColor = errors.email ? 'hsl(0 72% 51%)' : 'hsl(174 62% 32%)'}
                     onBlur={(e) => e.currentTarget.style.borderColor = errors.email ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)'}
                   />
                   {errors.email && (
-                    <p style={{ fontSize: '0.875rem', color: 'hsl(0 72% 51%)', marginTop: '0.375rem' }}>
+                    <p style={{ 
+                      fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)', 
+                      color: 'hsl(0 72% 51%)', 
+                      marginTop: '0.375rem',
+                      lineHeight: '1.4'
+                    }}>
                       {errors.email}
                     </p>
                   )}
                 </div>
 
+                {/* Password */}
                 <div>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', fontSize: '0.875rem', color: 'hsl(200 25% 15%)' }}>
+                  <label style={{ 
+                    display: 'block', 
+                    marginBottom: '0.5rem', 
+                    fontWeight: '500', 
+                    fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)', 
+                    color: 'hsl(200 25% 15%)' 
+                  }}>
                     Password
                   </label>
                   <div style={{ position: 'relative' }}>
@@ -244,13 +273,14 @@ const AuthPage = () => {
                       onChange={(e) => setData('password', e.target.value)}
                       style={{
                         width: '100%',
-                        padding: '0.75rem',
+                        padding: 'clamp(0.625rem, 2vw, 0.75rem)',
                         paddingRight: '3rem',
                         border: `1px solid ${errors.password ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)'}`,
                         borderRadius: '0.75rem',
-                        fontSize: '1rem',
+                        fontSize: 'clamp(0.9375rem, 2vw, 1rem)',
                         outline: 'none',
-                        color: 'hsl(200 25% 15%)'
+                        color: 'hsl(200 25% 15%)',
+                        backgroundColor: 'white'
                       }}
                       onFocus={(e) => e.currentTarget.style.borderColor = errors.password ? 'hsl(0 72% 51%)' : 'hsl(174 62% 32%)'}
                       onBlur={(e) => e.currentTarget.style.borderColor = errors.password ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)'}
@@ -267,74 +297,117 @@ const AuthPage = () => {
                         background: 'transparent',
                         color: 'hsl(200 15% 45%)',
                         cursor: 'pointer',
-                        padding: '0.25rem'
+                        padding: '0.25rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
                       }}
+                      onMouseEnter={(e) => e.currentTarget.style.color = 'hsl(174 62% 32%)'}
+                      onMouseLeave={(e) => e.currentTarget.style.color = 'hsl(200 15% 45%)'}
                     >
-                      {showPassword ? <EyeOff style={{ height: '1.25rem', width: '1.25rem' }} /> : <Eye style={{ height: '1.25rem', width: '1.25rem' }} />}
+                      {showPassword ? (
+                        <EyeOff style={{ height: '1.25rem', width: '1.25rem' }} />
+                      ) : (
+                        <Eye style={{ height: '1.25rem', width: '1.25rem' }} />
+                      )}
                     </button>
                   </div>
                   {errors.password && (
-                    <p style={{ fontSize: '0.875rem', color: 'hsl(0 72% 51%)', marginTop: '0.375rem' }}>
+                    <p style={{ 
+                      fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)', 
+                      color: 'hsl(0 72% 51%)', 
+                      marginTop: '0.375rem',
+                      lineHeight: '1.4'
+                    }}>
                       {errors.password}
+                    </p>
+                  )}
+                  {!isLogin && !errors.password && (
+                    <p style={{ 
+                      fontSize: 'clamp(0.75rem, 1.8vw, 0.8125rem)', 
+                      color: 'hsl(200 15% 45%)', 
+                      marginTop: '0.375rem',
+                      lineHeight: '1.4'
+                    }}>
+                      Must be at least 8 characters
                     </p>
                   )}
                 </div>
 
+                {/* Submit Button */}
                 <button
                   type="submit"
                   disabled={processing}
+                  className="font-semibold rounded-lg transition-all duration-200 active:scale-95"
                   style={{
                     width: '100%',
-                    padding: '0.75rem',
+                    padding: 'clamp(0.75rem, 2.5vw, 1rem)',
                     border: 'none',
                     borderRadius: '0.75rem',
-                    background: processing ? 'hsl(174 62% 32% / 0.5)' : 'linear-gradient(135deg, hsl(174 62% 32%) 0%, hsl(174 50% 25%) 100%)',
+                    background: processing ? 'hsl(174 62% 32% / 0.5)' : 'hsl(174 62% 32%)',
                     color: 'white',
-                    fontWeight: '500',
+                    fontSize: 'clamp(0.9375rem, 2vw, 1rem)',
                     cursor: processing ? 'not-allowed' : 'pointer',
-                    transition: 'opacity 0.2s',
-                    marginTop: '0.5rem'
+                    marginTop: '0.5rem',
+                    touchAction: 'manipulation'
                   }}
-                  onMouseEnter={(e) => !processing && (e.currentTarget.style.opacity = '0.9')}
-                  onMouseLeave={(e) => !processing && (e.currentTarget.style.opacity = '1')}
+                  onMouseEnter={(e) => !processing && (e.currentTarget.style.backgroundColor = 'hsl(174 55% 28%)')}
+                  onMouseLeave={(e) => !processing && (e.currentTarget.style.backgroundColor = 'hsl(174 62% 32%)')}
                 >
                   {processing ? "Please wait..." : isLogin ? "Sign In" : "Create Account"}
                 </button>
 
+                {/* Forgot Password Link */}
                 {isLogin && (
-                  <Link 
-                    href="/forgot-password"
-                    style={{
-                      border: 'none',
-                      background: 'transparent',
-                      color: 'hsl(174 62% 32%)',
-                      cursor: 'pointer',
-                      fontSize: '0.875rem',
-                      fontWeight: '500',
-                      textDecoration: 'underline',
-                      textAlign: 'center'
-                    }}
-                  >
-                    Forgot password?
-                  </Link>
+                  <div style={{ textAlign: 'center' }}>
+                    <Link 
+                      href="/forgot-password"
+                      style={{
+                        color: 'hsl(174 62% 32%)',
+                        fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)',
+                        fontWeight: '500',
+                        textDecoration: 'none',
+                        transition: 'opacity 0.2s'
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.opacity = '0.7'}
+                      onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+                    >
+                      Forgot password?
+                    </Link>
+                  </div>
                 )}
               </form>
 
               {/* Toggle Login/Signup */}
-              <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
+              <div style={{ 
+                marginTop: '1.5rem', 
+                paddingTop: '1.5rem',
+                borderTop: '1px solid hsl(40 20% 88%)',
+                textAlign: 'center' 
+              }}>
+                <p style={{ 
+                  color: 'hsl(200 15% 45%)', 
+                  fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)',
+                  marginBottom: '0.5rem'
+                }}>
+                  {isLogin ? "Don't have an account?" : "Already have an account?"}
+                </p>
                 <button
                   onClick={toggleAuthMode}
+                  className="font-semibold"
                   style={{
                     border: 'none',
                     background: 'transparent',
                     color: 'hsl(174 62% 32%)',
                     cursor: 'pointer',
-                    fontSize: '0.875rem',
-                    fontWeight: '500',
-                    textDecoration: 'underline'
+                    fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)',
+                    padding: '0.5rem 1rem',
+                    transition: 'opacity 0.2s'
                   }}
+                  onMouseEnter={(e) => e.currentTarget.style.opacity = '0.7'}
+                  onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
                 >
-                  {isLogin ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
+                  {isLogin ? "Create an account" : "Sign in instead"}
                 </button>
               </div>
             </div>

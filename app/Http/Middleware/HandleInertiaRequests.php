@@ -38,10 +38,20 @@ class HandleInertiaRequests extends Middleware
     {
         return [
             ...parent::share($request),
-           'auth' => [
-                'agent' => Auth::guard('agent')->user(),
-                'tenant' => Auth::guard('tenant')->user(),
-                'super' => Auth::guard('super')->user(),
+            'auth' => [
+                'tenant' => $request->user() && $request->user()->role === 'tenant' 
+                    ? $request->user() 
+                    : null,
+                'agent' => $request->user() && $request->user()->role === 'agent' 
+                    ? $request->user() 
+                    : null,
+                'super' => $request->user() && $request->user()->role === 'admin' 
+                    ? $request->user() 
+                    : null,
+            ],
+            'flash' => [
+                'success' => fn () => $request->session()->get('success'),
+                'error' => fn () => $request->session()->get('error'),
             ],
         ];
     }

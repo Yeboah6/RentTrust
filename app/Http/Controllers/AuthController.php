@@ -5,9 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Tenant;
-use App\Models\Agent;
-use App\Models\SuperAdmin;
+use App\Models\User;
 use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
@@ -22,16 +20,14 @@ class AuthController extends Controller
     public function store(Request $request) {
 
         $signUpData = $request->validate([
-            'fullName' => 'required|string|max:255',
+            'name' => 'required|string|max:255',
             'email' => 'required|email|unique:tenants,email',
             'password' => 'required|string|min:8|max:255'
         ]);
 
         $signUpData['password'] = Hash::make($signUpData['password']);
 
-        $tenant = Tenant::create($signUpData);
-        
-        Auth::guard('tenant')->login($tenant);
+        $tenant = User::create($signUpData);
         
         // Get the referrer URL from session, default to home page
         $redirectUrl = $request->session()->pull('signup_referrer', '/');
@@ -39,7 +35,8 @@ class AuthController extends Controller
         return redirect($redirectUrl);
     }
 
-    public function login(Request $request) {
+    public function login(Request $request) 
+    {
         $validated = $request->validate([
             'email' => 'required|email',
             'password' => 'required|string|min:8'
@@ -48,35 +45,36 @@ class AuthController extends Controller
         $email = $validated['email'];
         $password = $validated['password'];
 
-        // Check Tenant table first
-        $tenant = Tenant::where('email', $email)->first();
-        if ($tenant && Hash::check($password, $tenant->password)) {
-            Auth::guard('tenant')->login($tenant);
-            $request->session()->regenerate();
+        // Find user by email
+        $user = User::where('email', $email)->first();
+
+        // If user doesn't exist or password doesn't match
+        if (!$user || !Hash::check($password, $user->password)) {
+            return back()->withErrors([
+                'email' => 'The provided credentials do not match our records.',
+            ])->onlyInput('email');
+        }
+
+        // Regenerate session to prevent session fixation
+        $request->session()->regenerate();
+
+        // Log the user in
+        Auth::login($user);
+
+        // Redirect based on role
+        if ($user->role === 'tenant') {
             $redirectUrl = $request->session()->pull('signup_referrer', '/');
             return redirect($redirectUrl);
-        }
-
-        // Check Agent table
-        $agent = Agent::where('email', $email)->first();
-        if ($agent && Hash::check($password, $agent->password)) {
-            Auth::guard('agent')->login($agent);
-            $request->session()->regenerate();
+        } 
+        elseif ($user->role === 'agent') {
             return redirect()->intended('/agent-dashboard');
+        } 
+        elseif ($user->role === 'admin') {
+            return redirect('/super-admin');
         }
 
-        // Check Admin table
-        $admin = SuperAdmin::where('email', $email)->first();
-        if ($admin && Hash::check($password, $admin->password)) {
-            Auth::guard('super')->login($admin);
-            $request->session()->regenerate();
-            return redirect()->intended('/super-admin');
-        }
-
-        // No user found with matching credentials
-        return back()->withErrors([
-            'email' => 'The provided credentials do not match our records.',
-        ])->onlyInput('email');
+        // Fallback redirect (shouldn't normally reach here)
+        return redirect('/');
     }
 
     public function logout(Request $request) {
@@ -104,7 +102,7 @@ class AuthController extends Controller
         $agent = Auth::guard('agent')->user();
         
         $agent->update([
-            'fullName' => $validated['name'] ?? $agent->fullName,
+            'name' => $validated['name'] ?? $agent->name,
             'email' => $validated['email'] ?? $agent->email,
             'phone' => $validated['phone'] ?? $agent->phone,
             'bio' => $validated['bio'] ?? $agent->bio,
@@ -125,7 +123,7 @@ class AuthController extends Controller
         $admin = Auth::guard('super')->user();
         
         $admin->update([
-            'fullName' => $validated['name'] ?? $admin->fullName,
+            'name' => $validated['name'] ?? $admin->name,
             'email' => $validated['email'] ?? $admin->email,
         ]);
 
