@@ -120,7 +120,7 @@ const AgentDashboardPage = ({ agentData, rentals, reviews }) => {
   };
 
   const agent = {
-    name: agentData?.fullName || "Unknown Agent",
+    name: agentData?.name || "Unknown Agent",
     company: agentData?.company || null,
     status: agentData?.status || "unverified",
     avatar_url: null,

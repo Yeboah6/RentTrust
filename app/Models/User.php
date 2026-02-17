@@ -6,6 +6,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use App\Models\Rental;
 
 class User extends Authenticatable
 {
@@ -29,6 +30,23 @@ class User extends Authenticatable
         'status',
         'fee'
     ];
+
+    public function rentals()
+    {
+        return $this->hasMany(Rental::class, 'user_id');
+    }
+
+    public function reviews()
+    {
+        return $this->hasManyThrough(
+            \App\Models\Review::class,
+            \App\Models\Rental::class,
+            'user_id',      // Foreign key on rentals table
+            'rental_id',    // Foreign key on reviews table
+            'id',           // Local key on users table
+            'id'            // Local key on rentals table
+        );
+    }
 
     /**
      * The attributes that should be hidden for serialization.

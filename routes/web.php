@@ -52,6 +52,8 @@ Route::middleware(['auth', 'role:agent'])->group(function () {
         ->name('verification.destroy');
 });
 
+Route::get('/agent/dashboard', [DashboardController::class, 'freeTier']);
+
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/super-admin', [DashboardController::class, 'superAdmin'])->name('admin.dashboard');
     Route::put('/admin/reports/{id}/status', [RentController::class, 'updateReportStatus'])

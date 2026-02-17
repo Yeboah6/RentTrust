@@ -21,7 +21,7 @@ class AuthController extends Controller
 
         $signUpData = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:tenants,email',
+            'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:8|max:255'
         ]);
 

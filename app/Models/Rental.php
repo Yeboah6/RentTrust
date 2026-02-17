@@ -3,11 +3,13 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Casts\Attribute;
+use App\Models\Review;
 
 class Rental extends Model
 {
     protected $fillable = [
-        'agent_id',
+        'user_id',
         'title',
         'property_type',
         'city',
@@ -41,15 +43,16 @@ class Rental extends Model
         'is_claimed' => 'boolean',
     ];
 
-    protected $with = ['agent'];
+    // protected $with = ['agent'];
 
     public function user()
     {
         return $this->belongsTo(User::class);
     }
-
-    public function review() {
-        return $this->belongsTo(Review::class);
+ 
+    public function reviews()
+    {
+        return $this->hasMany(Review::class);
     }
 
     protected function amenities(): Attribute

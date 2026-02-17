@@ -95,7 +95,7 @@ const SuperAdminDashboard = ({ adminData, rentals, agentData, reviews, reports, 
   });
 
   const mockAdmin = {
-    name: adminData?.fullName || "Super Admin",
+    name: adminData?.name || "Super Admin",
     role: "Platform Administrator",
     verification_status: "verified",
     avatar_url: null,

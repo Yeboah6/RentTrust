@@ -16,23 +16,21 @@ class AgentController extends Controller
         return inertia('BecomeAgentPage');
     }
 
-    public function agent() {
-        $users = DB::table('users')
-            ->leftJoin('rentals', 'users.id', '=', 'rentals.agent_id')
-            ->leftJoin('reviews', 'rentals.id', '=', 'reviews.rental_id')
-            ->select(
-                'users.*',
-                DB::raw('count(distinct rentals.id) as listing_count'),
-                DB::raw('count(distinct reviews.id) as total_reviews'),
-                DB::raw('avg(json_extract(reviews.overall_rating, "$")) as average_rating')
-            )
-            ->groupBy('users.id')
-            ->get();
+    public function agent()
+{
+    $agents = User::where('role', 'agent')
+        ->withCount('rentals')
+        ->withCount('reviews')
+        ->withAvg('reviews', 'overall_rating')
+        ->get();
 
-        return inertia('AgentsPage', ['agent' => $users]);
-    }
+    return inertia('AgentsPage', [
+        'agents' => $agents
+    ]);
+}
 
-    public function storeBecomeAgent(Request $request) {
+    public function storeBecomeAgent(Request $request)
+    {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'phone' => 'required|string|max:20',
@@ -42,27 +40,18 @@ class AgentController extends Controller
             'fee' => 'nullable|numeric|min:0',
             'bio' => 'nullable|string|max:1000',
             'password' => 'required|string|min:8|max:12',
-            'status' => "nullable"
         ]);
 
-        // Create the agent user
-        $agent = User::create([
-            'name' => $validated['name'],
-            'phone' => $validated['phone'],
-            'email' => $validated['email'],
-            'company' => $validated['company'],
-            'type' => $validated['type'],
-            'fee' => $validated['fee'],
-            'bio' => $validated['bio'],
-            'password' => Hash::make($validated['password']),
-            'role' => 'agent',
-            'status' => 'unverified',
-        ]);
+        $validated['password'] = Hash::make($validated['password']);
+        $validated['role'] = 'agent'; // SET ROLE HERE
+        $validated['status'] = 'unverified';
 
-        // Log the agent in automatically
-        Auth::login($agent);
+        $agent = User::create($validated);
 
-        return redirect('/agent-dashboard')->with('success', 'Agent account created successfully!');
+        Auth::login($agent); // login properly
+
+        return redirect('/agent-dashboard')
+            ->with('success', 'Agent account created successfully!');
     }
 
 }

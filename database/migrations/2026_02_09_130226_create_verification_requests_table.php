@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('verification_requests', function (Blueprint $table) {
             $table->id();
             $table->foreignId('rental_id')->constrained('rentals')->onDelete('cascade');
-            $table->unsignedBigInteger('agent_id');
+            $table->unsignedBigInteger('user_id');
             $table->string('agent_name');
             $table->enum('request_type', ['initial_verification', 're_verification'])->default('initial_verification');
             $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
@@ -39,7 +39,7 @@ return new class extends Migration
             
             // Indexes
             $table->index('rental_id');
-            $table->index('agent_id');
+            $table->index('user_id');
             $table->index('status');
             $table->index('created_at');
         });

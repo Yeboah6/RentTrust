@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Agent;
+use App\Models\User;
 use App\Models\Rental;
 use App\Models\Review;
 use App\Models\Report;
@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Auth;
 class DashboardController extends Controller
 {
     public function agentDashboard() {
-        $agentData = Auth::guard('agent')->user();
+        $agentData = Auth::user();
 
         $rentals = Rental::where('agent_id', $agentData->id)->get();
         $rentalIds = $rentals->pluck('id');
@@ -24,10 +24,10 @@ class DashboardController extends Controller
     }
 
     public function superAdmin() {
-        $adminData = Auth::guard('super')->user();
+        $adminData = Auth::user();
         
         $rentals = Rental::all();
-        $agentData = Agent::all();
+        $agentData = User::where('role', 'agent')->get();
         $reports = Report::with('rental', 'rental.agent')->get();
         $reviews = Review::with('rental')->get();
         $verifications = VerificationRequest::with(['rental', 'agent'])->orderBy('created_at', 'desc')->get();
@@ -41,5 +41,9 @@ class DashboardController extends Controller
             'verifications' => $verifications
             ]
         );
+    }
+
+    public function freeTier() {
+        return inertia('Dashboards/FreeTierDashboard');
     }
 }

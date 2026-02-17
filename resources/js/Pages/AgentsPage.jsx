@@ -166,22 +166,21 @@ const AgentCard = ({ agent, onViewProfile }) => {
   );
 };
 
-const AgentsPage = ({ agent, listingsCount }) => {
+const AgentsPage = ({ agents }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [showAgentProfile, setShowAgentProfile] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState(null);
   const { auth } = usePage().props;
 
-  const agentsData = agent.map((agentItem) => ({
+  const agentsData = agents.map((agentItem) => ({
     id: agentItem.id,
-    name: agentItem.fullName,
+    name: agentItem.name,
     isVerified: agentItem.status === 'verified',
-    rating: agentItem.average_rating || 0,
-    reviewCount: agentItem.total_reviews || 0,
-    listingsCount: agentItem.listing_count || 0,
-    areas: agentItem.service_areas ? agentItem.service_areas.split(',').map(a => a.trim()) : [],
+    rating: agentItem.rentals_reviews_avg_overall_rating || 0,
+    reviewCount: agentItem.total_reviews_count || 0,
+    listingsCount: agentItem.rentals_count || 0,
     feePercent: agentItem.fee || 0,
-    responseRate: agentItem.total_reviews || 0,
+    responseRate: 95,
     company: agentItem.company,
     _original: agentItem
   }));
