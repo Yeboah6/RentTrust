@@ -34,8 +34,12 @@ Route::post('/review-forms', [RentController::class, 'storeReviewForms']);
 Route::post('/reviews/app', [RentController::class, 'storeReviewApp'])->name('reviews.app');
 
 Route::get('pricing', [RentController::class, 'pricing'])->name('pricing.page');
-Route::get('checkout', [RentController::class, 'checkout'])->name('checkout.page');
-// Route::get('/agent/dashboard/billing', [RentController::class, 'agentBillingDashboard'])->name('agent.billing.dashboard');
+Route::get('checkout', [RentController::class, 'checkout'])->name('chheckout.page');
+Route::get('/select-plan', function () {
+    return inertia('SelectPlan');
+})->name('agent.plan.select')->middleware('auth');
+Route::post('/agent/select-plan', [AgentController::class, 'selectPlan'])
+    ->middleware('auth');
 
 Route::get('/agents', [AgentController::class, 'agent']) -> name('agents.page');
 Route::get('/become-agent', [AgentController::class, 'becomeAgent']);

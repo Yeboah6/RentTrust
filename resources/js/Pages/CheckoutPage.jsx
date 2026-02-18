@@ -6,7 +6,13 @@ import Footer from "../Components/Layouts/Footer";
 // Icon components
 const CreditCard = ({ className, style }) => (
   <svg className={className} style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+  </svg>
+);
+
+const Phone = ({ className, style }) => (
+  <svg className={className} style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
   </svg>
 );
 
@@ -337,7 +343,15 @@ const OrderSummary = ({ orderData }) => {
   );
 };
 
-const PaymentMethodSelector = ({ selectedMethod, onMethodChange, savedCards }) => {
+const PaymentMethodSelector = ({ selectedMethod, onMethodChange, phoneNumber, setPhoneNumber }) => {
+  const [selectedProvider, setSelectedProvider] = useState('');
+
+  const mobileMoneyProviders = [
+    { id: 'mtn', name: 'MTN Mobile Money', color: 'hsl(48 100% 50%)', icon: '📱' },
+    { id: 'vodafone', name: 'Vodafone Cash', color: 'hsl(0 72% 51%)', icon: '📱' },
+    { id: 'airteltigo', name: 'AirtelTigo Money', color: 'hsl(0 0% 20%)', icon: '📱' },
+  ];
+
   return (
     <div
       className="overflow-hidden border rounded-xl bg-white"
@@ -359,183 +373,160 @@ const PaymentMethodSelector = ({ selectedMethod, onMethodChange, savedCards }) =
           Payment Method
         </h2>
 
-        <div style={{ display: 'grid', gap: '0.75rem' }}>
-          {/* Saved Cards */}
-          {savedCards && savedCards.length > 0 && (
-            <>
-              {savedCards.map((card) => (
-                <label
-                  key={card.id}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    padding: 'clamp(1rem, 3vw, 1.25rem)',
-                    border: selectedMethod === `card_${card.id}` ? '2px solid hsl(174 62% 32%)' : '1px solid hsl(40 20% 88%)',
-                    borderRadius: '0.75rem',
-                    backgroundColor: selectedMethod === `card_${card.id}` ? 'hsl(174 62% 32% / 0.03)' : 'white',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    gap: '1rem'
-                  }}
-                  onMouseEnter={(e) => {
-                    if (selectedMethod !== `card_${card.id}`) {
-                      e.currentTarget.style.borderColor = 'hsl(174 62% 32% / 0.4)';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (selectedMethod !== `card_${card.id}`) {
-                      e.currentTarget.style.borderColor = 'hsl(40 20% 88%)';
-                    }
-                  }}
-                >
-                  <input
-                    type="radio"
-                    name="payment_method"
-                    value={`card_${card.id}`}
-                    checked={selectedMethod === `card_${card.id}`}
-                    onChange={(e) => onMethodChange(e.target.value)}
-                    style={{
-                      width: '1.25rem',
-                      height: '1.25rem',
-                      accentColor: 'hsl(174 62% 32%)',
-                      cursor: 'pointer',
-                      flexShrink: 0
-                    }}
-                  />
-                  
-                  <div
-                    style={{
-                      width: '2.5rem',
-                      height: '2.5rem',
-                      borderRadius: '0.5rem',
-                      background: 'hsl(174 62% 32% / 0.1)',
-                      color: 'hsl(174 62% 32%)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      flexShrink: 0
-                    }}
-                  >
-                    <CreditCard style={{ height: '1.25rem', width: '1.25rem' }} />
-                  </div>
-                  
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <p 
-                      className="font-semibold"
-                      style={{ 
-                        color: 'hsl(200 25% 15%)',
-                        fontSize: 'clamp(0.9375rem, 2.5vw, 1rem)',
-                        marginBottom: '0.125rem'
-                      }}
-                    >
-                      {card.brand} •••• {card.last4}
-                    </p>
-                    <p style={{ 
-                      color: 'hsl(200 15% 45%)',
-                      fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)',
-                      margin: 0
-                    }}>
-                      Expires {card.expiryDate}
-                    </p>
-                  </div>
-                  
-                  {card.isDefault && (
-                    <span
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        padding: '0.25rem 0.625rem',
-                        fontSize: 'clamp(0.6875rem, 1.8vw, 0.75rem)',
-                        fontWeight: '500',
-                        backgroundColor: 'hsl(174 62% 32% / 0.1)',
-                        color: 'hsl(174 62% 32%)',
-                        borderRadius: '9999px'
-                      }}
-                    >
-                      Default
-                    </span>
-                  )}
-                </label>
-              ))}
-            </>
-          )}
-
-          {/* New Card Option */}
-          <label
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              padding: 'clamp(1rem, 3vw, 1.25rem)',
-              border: selectedMethod === 'new_card' ? '2px solid hsl(174 62% 32%)' : '1px solid hsl(40 20% 88%)',
-              borderRadius: '0.75rem',
-              backgroundColor: selectedMethod === 'new_card' ? 'hsl(174 62% 32% / 0.03)' : 'white',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
-              gap: '1rem'
-            }}
-            onMouseEnter={(e) => {
-              if (selectedMethod !== 'new_card') {
-                e.currentTarget.style.borderColor = 'hsl(174 62% 32% / 0.4)';
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (selectedMethod !== 'new_card') {
-                e.currentTarget.style.borderColor = 'hsl(40 20% 88%)';
-              }
-            }}
-          >
-            <input
-              type="radio"
-              name="payment_method"
-              value="new_card"
-              checked={selectedMethod === 'new_card'}
-              onChange={(e) => onMethodChange(e.target.value)}
+        <div style={{ display: 'grid', gap: '0.75rem', marginBottom: '1.5rem' }}>
+          {/* Mobile Money Providers */}
+          {mobileMoneyProviders.map((provider) => (
+            <label
+              key={provider.id}
               style={{
-                width: '1.25rem',
-                height: '1.25rem',
-                accentColor: 'hsl(174 62% 32%)',
-                cursor: 'pointer',
-                flexShrink: 0
-              }}
-            />
-            
-            <div
-              style={{
-                width: '2.5rem',
-                height: '2.5rem',
-                borderRadius: '0.5rem',
-                background: 'hsl(174 62% 32% / 0.1)',
-                color: 'hsl(174 62% 32%)',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0
+                padding: 'clamp(1rem, 3vw, 1.25rem)',
+                border: selectedMethod === provider.id ? '2px solid hsl(174 62% 32%)' : '1px solid hsl(40 20% 88%)',
+                borderRadius: '0.75rem',
+                backgroundColor: selectedMethod === provider.id ? 'hsl(174 62% 32% / 0.03)' : 'white',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                gap: '1rem'
+              }}
+              onMouseEnter={(e) => {
+                if (selectedMethod !== provider.id) {
+                  e.currentTarget.style.borderColor = 'hsl(174 62% 32% / 0.4)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (selectedMethod !== provider.id) {
+                  e.currentTarget.style.borderColor = 'hsl(40 20% 88%)';
+                }
               }}
             >
-              <CreditCard style={{ height: '1.25rem', width: '1.25rem' }} />
-            </div>
-            
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <p 
-                className="font-semibold"
-                style={{ 
-                  color: 'hsl(200 25% 15%)',
-                  fontSize: 'clamp(0.9375rem, 2.5vw, 1rem)',
-                  marginBottom: '0.125rem'
+              <input
+                type="radio"
+                name="payment_method"
+                value={provider.id}
+                checked={selectedMethod === provider.id}
+                onChange={(e) => {
+                  onMethodChange(e.target.value);
+                  setSelectedProvider(provider.id);
+                }}
+                style={{
+                  width: '1.25rem',
+                  height: '1.25rem',
+                  accentColor: 'hsl(174 62% 32%)',
+                  cursor: 'pointer',
+                  flexShrink: 0
+                }}
+              />
+              
+              <div
+                style={{
+                  width: '2.5rem',
+                  height: '2.5rem',
+                  borderRadius: '0.5rem',
+                  background: `${provider.color} / 0.1`,
+                  color: provider.color,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                  fontSize: '1.5rem'
                 }}
               >
-                Use a new card
-              </p>
-              <p style={{ 
-                color: 'hsl(200 15% 45%)',
-                fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)',
-                margin: 0
-              }}>
-                Credit or debit card
-              </p>
-            </div>
-          </label>
+                {provider.icon}
+              </div>
+              
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p 
+                  className="font-semibold"
+                  style={{ 
+                    color: 'hsl(200 25% 15%)',
+                    fontSize: 'clamp(0.9375rem, 2.5vw, 1rem)',
+                    marginBottom: '0.125rem'
+                  }}
+                >
+                  {provider.name}
+                </p>
+                <p style={{ 
+                  color: 'hsl(200 15% 45%)',
+                  fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)',
+                  margin: 0
+                }}>
+                  Pay with {provider.name}
+                </p>
+              </div>
+            </label>
+          ))}
         </div>
+
+        {/* Phone Number Input */}
+        {selectedMethod && (
+          <div style={{ marginBottom: '1.5rem' }}>
+            <label style={{ 
+              display: 'block', 
+              marginBottom: '0.5rem', 
+              fontWeight: '500', 
+              fontSize: '0.875rem', 
+              color: 'hsl(200 25% 15%)' 
+            }}>
+              Mobile Money Number *
+            </label>
+            <div style={{ position: 'relative' }}>
+              <div style={{
+                position: 'absolute',
+                left: '0.75rem',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                pointerEvents: 'none'
+              }}>
+                <Phone style={{ 
+                  height: '1.125rem', 
+                  width: '1.125rem', 
+                  color: 'hsl(200 15% 45%)' 
+                }} />
+                <span style={{ 
+                  color: 'hsl(200 15% 45%)',
+                  fontSize: '0.9375rem',
+                  fontWeight: '500'
+                }}>
+                  +233
+                </span>
+              </div>
+              <input
+                type="tel"
+                placeholder="XX XXX XXXX"
+                value={phoneNumber}
+                onChange={(e) => {
+                  // Remove non-numeric characters and limit to 9 digits
+                  const cleaned = e.target.value.replace(/\D/g, '').slice(0, 9);
+                  setPhoneNumber(cleaned);
+                }}
+                maxLength={9}
+                style={{
+                  width: '100%',
+                  padding: '0.75rem 0.75rem 0.75rem 5.5rem',
+                  border: '1px solid hsl(40 20% 88%)',
+                  borderRadius: '0.75rem',
+                  fontSize: '1rem',
+                  outline: 'none',
+                  color: 'hsl(200 25% 15%)',
+                  transition: 'border-color 0.2s ease'
+                }}
+                onFocus={(e) => e.currentTarget.style.borderColor = 'hsl(174 62% 32%)'}
+                onBlur={(e) => e.currentTarget.style.borderColor = 'hsl(40 20% 88%)'}
+              />
+            </div>
+            <p style={{ 
+              color: 'hsl(200 15% 45%)',
+              fontSize: 'clamp(0.75rem, 1.8vw, 0.8125rem)',
+              marginTop: '0.375rem'
+            }}>
+              Enter the number registered with your {selectedMethod === 'mtn' ? 'MTN MoMo' : selectedMethod === 'vodafone' ? 'Vodafone Cash' : 'AirtelTigo Money'} account
+            </p>
+          </div>
+        )}
 
         {/* Security Badge */}
         <div style={{ 
@@ -559,7 +550,7 @@ const PaymentMethodSelector = ({ selectedMethod, onMethodChange, savedCards }) =
             lineHeight: '1.5',
             margin: 0
           }}>
-            Your payment information is encrypted and secure. We never store your full card details.
+            Your payment is secured and encrypted. You will receive a prompt on your phone to authorize the transaction.
           </p>
         </div>
       </div>
@@ -595,7 +586,7 @@ const LoadingState = () => {
           marginBottom: '0.75rem'
         }}
       >
-        Processing Payment
+        Waiting for Payment Approval
       </h3>
       <p style={{ 
         color: 'hsl(200 15% 45%)',
@@ -604,7 +595,7 @@ const LoadingState = () => {
         maxWidth: '400px',
         margin: '0 auto'
       }}>
-        Please wait while we securely process your payment. This may take a few moments.
+        Please check your phone and approve the mobile money payment prompt to complete your transaction.
       </p>
       <p style={{ 
         color: 'hsl(38 92% 50%)',
@@ -794,7 +785,7 @@ const FailureState = ({ error, onRetry, onCancel }) => {
         maxWidth: '500px',
         margin: '0 auto 1rem'
       }}>
-        We couldn't process your payment. Please check your payment details and try again.
+        We couldn't complete your mobile money payment. Please check that you approved the payment prompt and have sufficient balance.
       </p>
 
       {/* Error Message */}
@@ -901,13 +892,13 @@ const FailureState = ({ error, onRetry, onCancel }) => {
 const Checkout = ({ orderType, productId }) => {
   const { auth } = usePage().props;
   const [paymentState, setPaymentState] = useState('form'); // 'form', 'loading', 'success', 'failure'
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('new_card');
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [error, setError] = useState(null);
   const [transactionId, setTransactionId] = useState(null);
 
   // Mock data - replace with actual data from backend based on orderType and productId
   const [orderData, setOrderData] = useState(null);
-  const [savedCards, setSavedCards] = useState([]);
 
   useEffect(() => {
     // Fetch order details based on orderType and productId
@@ -962,34 +953,21 @@ const Checkout = ({ orderType, productId }) => {
       }
     };
 
-    const mockSavedCards = [
-      {
-        id: 1,
-        brand: 'Visa',
-        last4: '4242',
-        expiryDate: '12/25',
-        isDefault: true
-      },
-      {
-        id: 2,
-        brand: 'Mastercard',
-        last4: '8888',
-        expiryDate: '03/26',
-        isDefault: false
-      }
-    ];
-
     setOrderData(mockOrderData[orderType] || mockOrderData.subscription);
-    setSavedCards(mockSavedCards);
-    
-    // Set default payment method if cards exist
-    if (mockSavedCards.length > 0) {
-      const defaultCard = mockSavedCards.find(card => card.isDefault);
-      setSelectedPaymentMethod(defaultCard ? `card_${defaultCard.id}` : `card_${mockSavedCards[0].id}`);
-    }
   }, [orderType, productId]);
 
   const handlePayment = async () => {
+    // Validate phone number
+    if (!phoneNumber || phoneNumber.length !== 9) {
+      setError('Please enter a valid mobile money number (9 digits)');
+      return;
+    }
+
+    if (!selectedPaymentMethod) {
+      setError('Please select a mobile money provider');
+      return;
+    }
+
     setPaymentState('loading');
     setError(null);
 
@@ -1001,18 +979,19 @@ const Checkout = ({ orderType, productId }) => {
       const isSuccess = Math.random() > 0.2; // 80% success rate
 
       if (isSuccess) {
-        setTransactionId(`TXN-${Date.now()}`);
+        setTransactionId(`MOMO-${Date.now()}`);
         setPaymentState('success');
         
         // You would make an actual API call here
-        // const response = await router.post('/api/process-payment', {
+        // const response = await router.post('/api/process-momo-payment', {
         //   orderType,
         //   productId,
-        //   paymentMethod: selectedPaymentMethod,
+        //   provider: selectedPaymentMethod,
+        //   phoneNumber: `233${phoneNumber}`,
         //   amount: orderData.total
         // });
       } else {
-        throw new Error('Payment was declined by your bank. Please check your card details or try a different payment method.');
+        throw new Error('Mobile money transaction failed. Please ensure you have sufficient balance and approved the payment prompt on your phone.');
       }
     } catch (err) {
       setError(err.message || 'An unexpected error occurred. Please try again.');
@@ -1167,7 +1146,8 @@ const Checkout = ({ orderType, productId }) => {
                 <PaymentMethodSelector
                   selectedMethod={selectedPaymentMethod}
                   onMethodChange={setSelectedPaymentMethod}
-                  savedCards={savedCards}
+                  phoneNumber={phoneNumber}
+                  setPhoneNumber={setPhoneNumber}
                 />
 
                 {/* Confirm Payment Button */}
@@ -1181,6 +1161,7 @@ const Checkout = ({ orderType, productId }) => {
                   <div style={{ padding: 'clamp(1.5rem, 4vw, 2rem)' }}>
                     <button
                       onClick={handlePayment}
+                      disabled={!selectedPaymentMethod || !phoneNumber || phoneNumber.length !== 9}
                       className="font-bold rounded-lg transition-all duration-200 active:scale-95"
                       style={{
                         width: '100%',
@@ -1190,17 +1171,28 @@ const Checkout = ({ orderType, productId }) => {
                         gap: '0.75rem',
                         padding: 'clamp(1rem, 3vw, 1.25rem)',
                         fontSize: 'clamp(1rem, 2.5vw, 1.125rem)',
-                        backgroundColor: 'hsl(174 62% 32%)',
+                        backgroundColor: (!selectedPaymentMethod || !phoneNumber || phoneNumber.length !== 9) 
+                          ? 'hsl(174 62% 32% / 0.5)' 
+                          : 'hsl(174 62% 32%)',
                         color: 'white',
                         border: 'none',
                         touchAction: 'manipulation',
-                        cursor: 'pointer'
+                        cursor: (!selectedPaymentMethod || !phoneNumber || phoneNumber.length !== 9) ? 'not-allowed' : 'pointer',
+                        opacity: (!selectedPaymentMethod || !phoneNumber || phoneNumber.length !== 9) ? 0.6 : 1
                       }}
-                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(174 55% 28%)'}
-                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'hsl(174 62% 32%)'}
+                      onMouseEnter={(e) => {
+                        if (selectedPaymentMethod && phoneNumber && phoneNumber.length === 9) {
+                          e.currentTarget.style.backgroundColor = 'hsl(174 55% 28%)';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (selectedPaymentMethod && phoneNumber && phoneNumber.length === 9) {
+                          e.currentTarget.style.backgroundColor = 'hsl(174 62% 32%)';
+                        }
+                      }}
                     >
-                      <Lock style={{ height: '1.25rem', width: '1.25rem' }} />
-                      Confirm Payment - GHS {orderData.total.toFixed(2)}
+                      <Phone style={{ height: '1.25rem', width: '1.25rem' }} />
+                      Pay with Mobile Money - GHS {orderData.total.toFixed(2)}
                     </button>
 
                     <p style={{ 

@@ -59,8 +59,33 @@ const Settings = ({ style }) => (
   </svg>
 );
 
+const BarChart = ({ style }) => (
+  <svg style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+  </svg>
+);
+
+const Eye = ({ style }) => (
+  <svg style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+  </svg>
+);
+
+const TrendingUp = ({ style }) => (
+  <svg style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+  </svg>
+);
+
+const Users = ({ style }) => (
+  <svg style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+  </svg>
+);
+
 const AgentDashboardPage = ({ agentData, rentals, reviews }) => {
-  const [activeTab, setActiveTab] = useState("listings");
+  const [activeTab, setActiveTab] = useState("overview");
   const [respondingTo, setRespondingTo] = useState(null);
   const [responseText, setResponseText] = useState("");
   const [showAddListingModal, setShowAddListingModal] = useState(false);
@@ -153,11 +178,11 @@ const AgentDashboardPage = ({ agentData, rentals, reviews }) => {
       rent_min: rental.rent_min || 0,
       rent_max: rental.rent_max || 0,
       listing_status: rental.status || "unverified",
-      total_reviews: 0
+      total_reviews: 0,
+      views: Math.floor(Math.random() * 100), // Mock data
+      inquiries: Math.floor(Math.random() * 10),
     }))
     : [];
-
-  // const claims = mockClaims;
 
   const renderStars = (rating) => {
     const ratingValue = Math.floor(rating || 0);
@@ -185,6 +210,11 @@ const AgentDashboardPage = ({ agentData, rentals, reviews }) => {
     average_rating: calculateAverageRating(),
     total_reviews: formattedReviews.length
   };
+
+  // Calculate totals for overview
+  const totalViews = properties.reduce((sum, p) => sum + (p.views || 0), 0);
+  const totalInquiries = properties.reduce((sum, p) => sum + (p.inquiries || 0), 0);
+  const conversionRate = totalViews > 0 ? ((totalInquiries / totalViews) * 100).toFixed(1) : 0;
 
   const getStatusBadge = (status) => {
     if (status === "verified") {
@@ -294,6 +324,10 @@ const AgentDashboardPage = ({ agentData, rentals, reviews }) => {
           .review-grid {
             grid-template-columns: 1fr !important;
           }
+
+          .stats-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+          }
           
           .modal-content {
             max-width: 95% !important;
@@ -312,7 +346,7 @@ const AgentDashboardPage = ({ agentData, rentals, reviews }) => {
           }
           
           .tabs-grid {
-            grid-template-columns: repeat(3, 1fr) !important;
+            grid-template-columns: repeat(4, 1fr) !important;
           }
           
           .listing-grid {
@@ -321,6 +355,10 @@ const AgentDashboardPage = ({ agentData, rentals, reviews }) => {
           
           .review-grid {
             grid-template-columns: repeat(3, 1fr) !important;
+          }
+
+          .stats-grid {
+            grid-template-columns: repeat(4, 1fr) !important;
           }
         }
 
@@ -514,7 +552,7 @@ const AgentDashboardPage = ({ agentData, rentals, reviews }) => {
                 borderRadius: 'clamp(0.375rem, 2vw, 0.5rem)',
                 marginBottom: 'clamp(1.5rem, 4vw, 2rem)'
               }}>
-                {['listings', 'reviews', 'billing'].map((tab) => (
+                {['overview', 'listings', 'reviews', 'billing'].map((tab) => (
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
@@ -538,6 +576,10 @@ const AgentDashboardPage = ({ agentData, rentals, reviews }) => {
                       whiteSpace: 'nowrap'
                     }}
                   >
+                    {tab === 'overview' && <BarChart style={{ 
+                      height: 'clamp(0.875rem, 2.5vw, 1rem)', 
+                      width: 'clamp(0.875rem, 2.5vw, 1rem)' 
+                    }} />}
                     {tab === 'listings' && <Home style={{ 
                       height: 'clamp(0.875rem, 2.5vw, 1rem)', 
                       width: 'clamp(0.875rem, 2.5vw, 1rem)' 
@@ -555,6 +597,193 @@ const AgentDashboardPage = ({ agentData, rentals, reviews }) => {
                   </button>
                 ))}
               </div>
+
+              {/* Overview Tab */}
+              {activeTab === 'overview' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(1.5rem, 4vw, 2rem)' }}>
+                  
+                  {/* Stats Grid */}
+                  <div className="stats-grid" style={{
+                    display: 'grid',
+                    gap: 'clamp(0.75rem, 2vw, 1.25rem)'
+                  }}>
+                    <div style={{
+                      backgroundColor: 'white',
+                      border: '1px solid hsl(40 20% 88%)',
+                      borderRadius: '0.75rem',
+                      padding: 'clamp(1rem, 3vw, 1.25rem)',
+                      boxShadow: '0 2px 8px -2px hsl(200 25% 15% / 0.08)',
+                    }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
+                        <div style={{
+                          width: '2.25rem',
+                          height: '2.25rem',
+                          borderRadius: '0.5rem',
+                          background: 'hsl(174 62% 32% / 0.1)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}>
+                          <Home style={{ width: '1.125rem', height: '1.125rem', color: 'hsl(174 62% 32%)' }} />
+                        </div>
+                      </div>
+                      <p style={{ fontSize: 'clamp(1.5rem, 4vw, 1.875rem)', fontWeight: '700', color: 'hsl(200 25% 15%)', margin: 0, lineHeight: 1 }}>
+                        {properties.length}
+                      </p>
+                      <p style={{ fontSize: '0.8125rem', color: 'hsl(200 15% 45%)', margin: '0.25rem 0 0' }}>Active Listings</p>
+                    </div>
+
+                    <div style={{
+                      backgroundColor: 'white',
+                      border: '1px solid hsl(40 20% 88%)',
+                      borderRadius: '0.75rem',
+                      padding: 'clamp(1rem, 3vw, 1.25rem)',
+                      boxShadow: '0 2px 8px -2px hsl(200 25% 15% / 0.08)',
+                    }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
+                        <div style={{
+                          width: '2.25rem',
+                          height: '2.25rem',
+                          borderRadius: '0.5rem',
+                          background: 'hsl(174 62% 32% / 0.1)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}>
+                          <Eye style={{ width: '1.125rem', height: '1.125rem', color: 'hsl(174 62% 32%)' }} />
+                        </div>
+                      </div>
+                      <p style={{ fontSize: 'clamp(1.5rem, 4vw, 1.875rem)', fontWeight: '700', color: 'hsl(200 25% 15%)', margin: 0, lineHeight: 1 }}>
+                        {totalViews}
+                      </p>
+                      <p style={{ fontSize: '0.8125rem', color: 'hsl(200 15% 45%)', margin: '0.25rem 0 0' }}>Total Views</p>
+                      <p style={{ fontSize: '0.75rem', color: 'hsl(152 60% 40%)', marginTop: '0.25rem', fontWeight: 600 }}>
+                        +12% this month
+                      </p>
+                    </div>
+
+                    <div style={{
+                      backgroundColor: 'white',
+                      border: '1px solid hsl(40 20% 88%)',
+                      borderRadius: '0.75rem',
+                      padding: 'clamp(1rem, 3vw, 1.25rem)',
+                      boxShadow: '0 2px 8px -2px hsl(200 25% 15% / 0.08)',
+                    }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
+                        <div style={{
+                          width: '2.25rem',
+                          height: '2.25rem',
+                          borderRadius: '0.5rem',
+                          background: 'hsl(174 62% 32% / 0.1)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}>
+                          <Users style={{ width: '1.125rem', height: '1.125rem', color: 'hsl(174 62% 32%)' }} />
+                        </div>
+                      </div>
+                      <p style={{ fontSize: 'clamp(1.5rem, 4vw, 1.875rem)', fontWeight: '700', color: 'hsl(200 25% 15%)', margin: 0, lineHeight: 1 }}>
+                        {totalInquiries}
+                      </p>
+                      <p style={{ fontSize: '0.8125rem', color: 'hsl(200 15% 45%)', margin: '0.25rem 0 0' }}>Total Inquiries</p>
+                      <p style={{ fontSize: '0.75rem', color: 'hsl(152 60% 40%)', marginTop: '0.25rem', fontWeight: 600 }}>
+                        +8% this month
+                      </p>
+                    </div>
+
+                    <div style={{
+                      backgroundColor: 'white',
+                      border: '1px solid hsl(40 20% 88%)',
+                      borderRadius: '0.75rem',
+                      padding: 'clamp(1rem, 3vw, 1.25rem)',
+                      boxShadow: '0 2px 8px -2px hsl(200 25% 15% / 0.08)',
+                    }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
+                        <div style={{
+                          width: '2.25rem',
+                          height: '2.25rem',
+                          borderRadius: '0.5rem',
+                          background: 'hsl(174 62% 32% / 0.1)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}>
+                          <TrendingUp style={{ width: '1.125rem', height: '1.125rem', color: 'hsl(174 62% 32%)' }} />
+                        </div>
+                      </div>
+                      <p style={{ fontSize: 'clamp(1.5rem, 4vw, 1.875rem)', fontWeight: '700', color: 'hsl(200 25% 15%)', margin: 0, lineHeight: 1 }}>
+                        {conversionRate}%
+                      </p>
+                      <p style={{ fontSize: '0.8125rem', color: 'hsl(200 15% 45%)', margin: '0.25rem 0 0' }}>Conversion Rate</p>
+                      <p style={{ fontSize: '0.75rem', color: 'hsl(152 60% 40%)', marginTop: '0.25rem', fontWeight: 600 }}>
+                        +2% this month
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Recent Listings Preview */}
+                  <div style={{
+                    backgroundColor: 'white',
+                    border: '1px solid hsl(40 20% 88%)',
+                    borderRadius: '0.75rem',
+                    padding: 'clamp(1rem, 3vw, 1.5rem)',
+                    boxShadow: '0 2px 8px -2px hsl(200 25% 15% / 0.08)',
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+                      <h2 style={{ fontSize: 'clamp(1rem, 3vw, 1.125rem)', fontWeight: '600', color: 'hsl(200 25% 15%)', margin: 0 }}>
+                        Recent Listings
+                      </h2>
+                      <button
+                        onClick={() => setActiveTab('listings')}
+                        style={{
+                          background: 'transparent',
+                          border: 'none',
+                          color: 'hsl(174 62% 32%)',
+                          fontSize: '0.875rem',
+                          fontWeight: '500',
+                          cursor: 'pointer',
+                          padding: '0.25rem 0.5rem',
+                        }}
+                      >
+                        View all →
+                      </button>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '1rem' }}>
+                      {properties.slice(0, 3).map((property) => (
+                        <div key={property.id} style={{
+                          padding: '0.875rem',
+                          backgroundColor: 'hsl(40 33% 98%)',
+                          borderRadius: '0.625rem',
+                          border: '1px solid hsl(40 20% 88%)',
+                        }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '0.5rem' }}>
+                            <h3 style={{ margin: 0, fontSize: '0.875rem', fontWeight: '600', color: 'hsl(200 25% 15%)' }}>
+                              {property.title}
+                            </h3>
+                            {getStatusBadge(property.listing_status)}
+                          </div>
+                          <p style={{ margin: '0 0 0.5rem', fontSize: '0.75rem', color: 'hsl(200 15% 45%)' }}>
+                            {property.address}, {property.city}
+                          </p>
+                          <div style={{ display: 'flex', gap: '1rem', fontSize: '0.75rem', color: 'hsl(200 15% 45%)' }}>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                              <Eye style={{ width: '0.75rem', height: '0.75rem' }} /> {property.views}
+                            </span>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                              <Users style={{ width: '0.75rem', height: '0.75rem' }} /> {property.inquiries}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    {properties.length === 0 && (
+                      <p style={{ textAlign: 'center', color: 'hsl(200 15% 45%)', padding: '2rem', fontSize: '0.875rem' }}>
+                        No listings yet. Add your first property to get started!
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Listings Tab */}
               {activeTab === 'listings' && (
@@ -1051,92 +1280,6 @@ const AgentDashboardPage = ({ agentData, rentals, reviews }) => {
                   )}
                 </div>
               )}
-
-              {/* Claims Tab */}
-              {/* {activeTab === 'claims' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(1rem, 3vw, 1.5rem)' }}>
-                  <div style={{ 
-                    display: 'flex', 
-                    justifyContent: 'space-between', 
-                    alignItems: 'center',
-                    flexWrap: 'wrap',
-                    gap: 'clamp(0.75rem, 2vw, 1rem)'
-                  }}>
-                    <h2 style={{ 
-                      color: 'hsl(200 25% 15%)',
-                      fontSize: 'clamp(1rem, 3vw, 1.125rem)',
-                      fontWeight: '600'
-                    }}>
-                      Listing Claims
-                    </h2>
-                    <button className="action-button" style={{
-                      padding: 'clamp(0.5rem, 2vw, 0.5rem) clamp(0.75rem, 3vw, 1rem)',
-                      background: 'linear-gradient(135deg, hsl(174 62% 32%) 0%, hsl(174 50% 25%) 100%)',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: 'clamp(0.375rem, 2vw, 0.5rem)',
-                      fontWeight: '500',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 'clamp(0.25rem, 1vw, 0.5rem)',
-                      fontSize: 'clamp(0.875rem, 2vw, 0.875rem)',
-                      whiteSpace: 'nowrap'
-                    }}>
-                      <Shield style={{ 
-                        height: 'clamp(0.875rem, 2.5vw, 1rem)', 
-                        width: 'clamp(0.875rem, 2.5vw, 1rem)' 
-                      }} />
-                      New Claim
-                    </button>
-                  </div>
-
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(0.75rem, 2vw, 1rem)' }}>
-                    {claims.map((claim) => (
-                      <div key={claim.id} style={{
-                        backgroundColor: 'white',
-                        border: '1px solid hsl(40 20% 88%)',
-                        borderRadius: 'clamp(0.5rem, 2vw, 0.75rem)',
-                        padding: 'clamp(0.75rem, 2vw, 1rem)'
-                      }}>
-                        <div style={{ 
-                          display: 'flex', 
-                          justifyContent: 'space-between', 
-                          alignItems: 'start',
-                          flexDirection: 'column',
-                          gap: 'clamp(0.5rem, 2vw, 0.75rem)'
-                        }}>
-                          <div style={{ width: '100%' }}>
-                            <p style={{ 
-                              color: 'hsl(200 25% 15%)', 
-                              marginBottom: 'clamp(0.125rem, 1vw, 0.25rem)',
-                              fontSize: 'clamp(0.875rem, 2.5vw, 1rem)',
-                              fontWeight: '500'
-                            }}>
-                              {claim.properties?.title}
-                            </p>
-                            <p style={{ 
-                              fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', 
-                              color: 'hsl(200 15% 45%)', 
-                              marginBottom: 'clamp(0.25rem, 1vw, 0.5rem)',
-                              wordBreak: 'break-word'
-                            }}>
-                              {claim.properties?.address}
-                            </p>
-                            <p style={{ 
-                              fontSize: 'clamp(0.6875rem, 2vw, 0.75rem)', 
-                              color: 'hsl(200 15% 45%)' 
-                            }}>
-                              Submitted {new Date(claim.created_at).toLocaleDateString()}
-                            </p>
-                          </div>
-                          {getStatusBadge(claim.status)}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )} */}
 
               {/* Billing Tab */}
               {activeTab === 'billing' && (

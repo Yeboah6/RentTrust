@@ -28,7 +28,8 @@ class User extends Authenticatable
         'company',
         'bio',
         'status',
-        'fee'
+        'fee',
+        'package'
     ];
 
     public function rentals()

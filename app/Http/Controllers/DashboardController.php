@@ -15,7 +15,7 @@ class DashboardController extends Controller
     public function agentDashboard() {
         $agentData = Auth::user();
 
-        $rentals = Rental::where('agent_id', $agentData->id)->get();
+        $rentals = Rental::where('user_id', $agentData->id)->latest()->get();
         $rentalIds = $rentals->pluck('id');
 
         $reviews = Review::whereIn('rental_id', $rentalIds)->latest()->get();
@@ -44,6 +44,9 @@ class DashboardController extends Controller
     }
 
     public function freeTier() {
-        return inertia('Dashboards/FreeTierDashboard');
+        $agentData = Auth::user();
+        $rentals = Rental::where('user_id', $agentData->id)->latest()->get();
+
+        return inertia('Dashboards/FreeTierDashboard', ['agentData' => $agentData, 'rentals' => $rentals]);
     }
 }

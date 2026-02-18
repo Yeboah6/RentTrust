@@ -40,28 +40,6 @@ const PricingCard = ({ plan, isPopular, onSelect }) => {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* {isPopular && (
-        <div
-          style={{
-            position: 'absolute',
-            top: '-5px',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            backgroundColor: 'hsl(174 62% 32%)',
-            color: 'white',
-            padding: '0.375rem 1rem',
-            borderRadius: '9999px',
-            fontSize: '0.75rem',
-            fontWeight: '600',
-            textTransform: 'uppercase',
-            letterSpacing: '0.05em',
-            whiteSpace: 'nowrap',
-            zIndex: 10
-          }}
-        >
-          Most Popular
-        </div>
-      )} */}
 
       <div className="pricing-card-content" style={{ padding: '1.5rem' }}>
         {/* Header */}
@@ -283,9 +261,20 @@ const PricingModal = ({ isOpen, onClose }) => {
   ];
 
   const handleSelect = (plan) => {
-    router.visit('/pricing');
+    if (plan.name === "Free") {
+        router.post('/agent/select-plan', { package: 'free' });
+    }
+
+    if (plan.name === "Verified") {
+        router.post('/agent/select-plan', { package: 'verified' });
+    }
+
+    if (plan.name === "Pro") {
+        router.post('/agent/select-plan', { package: 'pro' });
+    }
+
     if (onClose) onClose();
-  };
+};
 
   if (!isOpen) return null;
 

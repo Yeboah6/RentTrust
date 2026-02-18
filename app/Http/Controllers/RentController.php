@@ -50,22 +50,14 @@ class RentController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
-     */
-    // public function create()
-    // {
-    //     //
-    // }
-
-    /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
     {
         // Get authenticated agent
-        $agent = Auth::guard('agent')->user();
+        $agent = Auth::user();
 
-        if (! $agent) {
+        if (!$agent) {
             return redirect()->back()
                 ->with('error', 'Unauthorized. Please login as an agent.');
         }
@@ -148,7 +140,7 @@ class RentController extends Controller
 
             // Create rental listing
             $rentalListing = Rental::create([
-                'agent_id' => $agent->id,
+                'user_id' => $agent->id,
                 'title' => $request->title,
                 'property_type' => $request->propertyType,
                 'city' => $request->city,
@@ -239,14 +231,6 @@ class RentController extends Controller
 
         return inertia('PropertyDetailsPage', ['rental' => $rent, 'reviews' => $reviews]);
     }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    // public function edit(Rental $rent)
-    // {
-    //     //
-    // }
 
     /**
      * Update the specified resource in storage.
@@ -373,16 +357,6 @@ class RentController extends Controller
                         ->with('error', 'Some images failed to upload. ' . implode(' ', $uploadErrors));
                 }
             }
-
-            // if ($request->hasFile('images')) {
-            //     foreach ($request->file('images') as $file) {
-            //         if ($file->isValid()) {
-            //             $fileName = 'rental_'.time().'_'.uniqid().'.'.$file->getClientOriginalExtension();
-            //             $path = $file->storeAs('rental_images', $fileName, 'public');
-            //             $filePaths[] = $fileName;
-            //         }
-            //     }
-            // }
             
             // Combine existing and new images
             $finalImages = array_merge($existingImages, $newImagePaths);

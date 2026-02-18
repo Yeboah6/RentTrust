@@ -48,6 +48,7 @@ const BecomeAgentPage = () => {
     fee: "",
     bio: "",
     password: "",
+    // package: "free",
   });
 
   const handleSubmit = (e) => {
@@ -120,6 +121,7 @@ const BecomeAgentPage = () => {
               {/* Content */}
               <div style={{ padding: 'clamp(1.5rem, 4vw, 2rem)' }}>
                 <form onSubmit={handleSubmit}>
+                  {/* <input type="text" name="package" value={"free"} onChange={(e) => setData('package', e.target.value)} style={{ display: 'none' }} /> */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                   {/* Full Name */}
                   <div>

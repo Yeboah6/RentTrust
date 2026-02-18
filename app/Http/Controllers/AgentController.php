@@ -17,17 +17,17 @@ class AgentController extends Controller
     }
 
     public function agent()
-{
-    $agents = User::where('role', 'agent')
-        ->withCount('rentals')
-        ->withCount('reviews')
-        ->withAvg('reviews', 'overall_rating')
-        ->get();
+    {
+        $agents = User::where('role', 'agent')
+            ->withCount('rentals')
+            ->withCount('reviews')
+            ->withAvg('reviews', 'overall_rating')
+            ->get();
 
-    return inertia('AgentsPage', [
-        'agents' => $agents
-    ]);
-}
+        return inertia('AgentsPage', [
+            'agents' => $agents
+        ]);
+    }
 
     public function storeBecomeAgent(Request $request)
     {
@@ -48,10 +48,27 @@ class AgentController extends Controller
 
         $agent = User::create($validated);
 
-        Auth::login($agent); // login properly
+        Auth::login($agent);
 
-        return redirect('/agent-dashboard')
+        return redirect()->route('agent.plan.select')
             ->with('success', 'Agent account created successfully!');
+    }
+
+    public function selectPlan(Request $request)
+    {
+        $request->validate([
+            'package' => 'required|string|in:free,verified,pro'
+        ]);
+
+        $user = Auth::user();
+        $user->package = $request->package;
+        $user->save();
+
+        if ($request->package === 'free') {
+            return redirect('/agent/dashboard');
+        }
+
+        return redirect('/checkout?plan=' . $request->package);
     }
 
 }

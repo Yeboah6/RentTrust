@@ -22,6 +22,7 @@ return new class extends Migration
             $table->string('bio')->nullable();
             $table->string('status')->nullable();
             $table->string('fee')->nullable();
+            $table->string('package')->nullable()->default('free');
             $table->string('password');
             $table->timestamps();
         });

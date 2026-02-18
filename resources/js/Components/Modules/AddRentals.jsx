@@ -18,7 +18,7 @@ const AddRentalPage = ({ agentData, setShowAddListingModal }) => {
     amenities: [],
     images: [],
     description: '',
-    agentName: agentData?.fullName || '',
+    agentName: agentData?.name || '',
     agentPhone: agentData?.phone || '',
     agentEmail: agentData?.email || ''
   });

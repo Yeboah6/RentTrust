@@ -9,7 +9,6 @@ const Header = () => {
   const { post } = useForm();
 
   // Convert to proper booleans
-  const LoggedIn = !!auth?.user;
   const isAgentLoggedIn = !!auth?.agent;
   const isTenantLoggedIn = !!auth?.tenant;
   const isSuperAdminLoggedIn = !!auth?.super;
@@ -21,11 +20,12 @@ const Header = () => {
   const superAdminData = auth?.super;
 
   console.log('Auth state:', {
-    LoggedIn,
+    isAgentLoggedIn,
     isTenantLoggedIn,
     isSuperAdminLoggedIn,
     isAnyUserLoggedIn,
-    tenantData
+    tenantData,
+    agentData
   });
 
   const handleLogout = (e) => {
@@ -277,8 +277,8 @@ const Header = () => {
             {/* Agent Logged In */}
             {isAgentLoggedIn && (
               <>
-                <Link
-                  href="/agent-dashboard"
+                <Link href={agentData?.package === 'free' ? '/agent/dashboard' : '/agent-dashboard'}
+                  // href="/agent-dashboard"
                   onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(40 30% 94%)'}
                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
                   className="inline-flex items-center rounded-lg border transition-colors"

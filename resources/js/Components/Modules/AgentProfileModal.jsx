@@ -124,12 +124,12 @@ const AgentProfileModal = ({ agent, isOpen, onClose, auth }) => {
                 boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
               }}
             >
-              {agent.fullName?.[0] || 'A'}
+              {agent.name?.[0] || 'A'}
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
               <h2 className="text-xl font-bold" style={{ color: 'hsl(200 25% 15%)', margin: 0 }}>
-                {agent.fullName}
+                {agent.name}
               </h2>
               {agent.status === 'verified' && (
                 <Shield style={{ height: '1.25rem', width: '1.25rem', color: 'hsl(152 60% 40%)' }} />
@@ -256,28 +256,6 @@ const AgentProfileModal = ({ agent, isOpen, onClose, auth }) => {
 
           {/* Action Buttons */}
           <div style={{ display: 'flex', gap: '1rem' }}>
-            {/* <button
-              style={{
-                flex: 1,
-                padding: '0.75rem',
-                backgroundColor: 'hsl(174 62% 32%)',
-                color: 'white',
-                border: 'none',
-                borderRadius: '0.5rem',
-                fontWeight: '600',
-                cursor: 'pointer',
-                fontSize: '0.875rem',
-                transition: 'all 0.2s'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = 'hsl(174 62% 28%)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'hsl(174 62% 32%)';
-              }}
-            >
-              Contact Agent
-            </button> */}
             <a
                 href={`tel:${auth.phone || agent.phone}`}
                 className="flex-1 px-6 py-3 rounded-lg font-semibold text-white transition-all duration-200 active:scale-95 text-center"
