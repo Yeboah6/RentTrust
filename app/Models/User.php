@@ -49,6 +49,11 @@ class User extends Authenticatable
         );
     }
 
+    public function subscription()
+    {
+        return $this->hasOne(Subscription::class);
+    }
+
     /**
      * The attributes that should be hidden for serialization.
      *

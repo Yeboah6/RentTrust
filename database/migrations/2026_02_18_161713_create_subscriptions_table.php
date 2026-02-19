@@ -6,30 +6,33 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
-    public function up(): void
+    public function up()
     {
-        Schema::create('subscriptions', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('subscription_plan_id')->constrained()->cascadeOnDelete();
-            $table->enum('status', ['active', 'canceled', 'expired', 'past_due']);
-            $table->timestamp('started_at');
-            $table->timestamp('ends_at')->nullable();
-            // $table->boolean('auto_renew')->default(true);
-            $table->string('payment_provider'); // stripe / paystack
-            $table->string('gateway_reference')->nullable();
-            $table->timestamps();
+        Schema::table('subscriptions', function (Blueprint $table) {
+            $table->string('provider_subscription_id')->nullable()->unique();
+            $table->string('provider')->nullable(); // paystack, flutterwave
+            $table->string('authorization_code')->nullable();
+            $table->string('card_type')->nullable();
+            $table->string('last_four')->nullable();
+            $table->timestamp('next_billing_date')->nullable();
+            $table->integer('failed_attempts')->default(0);
+            $table->timestamp('last_payment_attempt')->nullable();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
+    public function down()
     {
-        Schema::dropIfExists('subscriptions');
+        Schema::table('subscriptions', function (Blueprint $table) {
+            $table->dropColumn([
+                'provider_subscription_id',
+                'provider',
+                'authorization_code',
+                'card_type',
+                'last_four',
+                'next_billing_date',
+                'failed_attempts',
+                'last_payment_attempt'
+            ]);
+        });
     }
 };
