@@ -7,6 +7,9 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\PaymentsController;
+use App\Http\Controllers\Payment\PaymentController;
+use App\Http\Controllers\Payment\FlutterwaveController;
+use App\Http\Controllers\Payment\PaystackController;
 use App\Http\Controllers\VerificationsController;
 
 Route::resource('rent', RentController::class) -> except('index');
@@ -57,6 +60,34 @@ Route::middleware(['auth', 'role:agent'])->group(function () {
 });
 
 Route::get('/agent/dashboard', [DashboardController::class, 'freeTier']);
+
+// Payment Routes
+Route::middleware(['auth'])->prefix('payment')->name('payment.')->group(function () {
+    Route::get('/checkout', [PaymentController::class, 'checkout'])->name('checkout');
+    Route::post('/initialize', [PaymentController::class, 'initialize'])->name('initialize');
+    Route::get('/verify/{reference}', [PaymentController::class, 'verify'])->name('verify');
+    Route::get('/status/{reference}', [PaymentController::class, 'status'])->name('status');
+    Route::post('/validate-phone', [PaymentController::class, 'validatePhone'])->name('validate-phone');
+    
+    // Success/Failure pages
+    Route::get('/success/{reference}', function ($reference) {
+        return inertia('Payment/Success', ['reference' => $reference]);
+    })->name('success');
+    
+    Route::get('/failed/{reference}', function ($reference) {
+        return inertia('Payment/Failed', ['reference' => $reference]);
+    })->name('failed');
+});
+
+// Webhook Routes (no auth)
+Route::prefix('webhooks')->group(function () {
+    Route::post('/paystack', [PaystackController::class, 'webhook'])->name('webhook.paystack');
+    Route::post('/flutterwave', [FlutterwaveController::class, 'webhook'])->name('webhook.flutterwave');
+});
+
+// Callback Routes
+Route::get('/payment/paystack/callback', [PaystackController::class, 'callback'])->name('payment.paystack.callback');
+Route::get('/payment/flutterwave/callback', [FlutterwaveController::class, 'callback'])->name('payment.flutterwave.callback');
 
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/super-admin', [DashboardController::class, 'superAdmin'])->name('admin.dashboard');
