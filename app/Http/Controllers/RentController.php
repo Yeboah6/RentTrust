@@ -961,7 +961,58 @@ class RentController extends Controller
         return inertia('PricingPage');
     }
 
-    public function checkout() {
-        return inertia('CheckoutPage');
+    public function checkout($plan)
+    {
+        $plans = [
+            'verified' => [
+                'productName' => 'Verified Plan',
+                'description' => 'Build trust and stand out',
+                'type' => 'subscription',
+                'subtotal' => 149.00,
+                'discount' => 0,
+                'tax' => 0,
+                'total' => 149.00,
+                'isRecurring' => true,
+                'billingCycle' => 'monthly',
+                'features' => [
+                    'Verified landlord badge',
+                    'Higher ranking in search results',
+                    'Ability to respond to reviews',
+                    'Priority customer support'
+                ]
+            ],
+            'pro' => [
+                'productName' => 'Pro Plan',
+                'description' => 'Advanced tools for professionals',
+                'type' => 'subscription',
+                'subtotal' => 349.00,
+                'discount' => 0,
+                'tax' => 0,
+                'total' => 349.00,
+                'isRecurring' => true,
+                'billingCycle' => 'monthly',
+                'features' => [
+                    'Unlimited property listings',
+                    'Lead unlock credits (50/month)',
+                    'Featured listing placement',
+                    'Dedicated account manager'
+                ]
+            ]
+        ];
+    
+        if (!isset($plans[$plan])) {
+            return redirect('/agent/dashboard');
+        }
+    
+        return inertia('CheckoutPage', [
+            'plan' => $plan,
+            'orderType' => 'subscription',
+            'productId' => $plan,
+            'product' => $plans[$plan],
+            'providers' => [
+                'primary' => 'paystack',
+                'available' => ['mtn', 'vodafone', 'airteltigo']
+            ]
+        ]);
     }
 }

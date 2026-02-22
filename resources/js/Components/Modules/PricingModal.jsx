@@ -261,18 +261,16 @@ const PricingModal = ({ isOpen, onClose }) => {
   ];
 
   const handleSelect = (plan) => {
-    if (plan.name === "Free") {
-        router.post('/agent/select-plan', { package: 'free' });
+    const pkg = plan.name.toLowerCase();
+
+    if (pkg === 'free') {
+      router.post('/agent/select-plan', { package: 'free' });
+      if (onClose) onClose();
+      return;
     }
 
-    if (plan.name === "Verified") {
-        router.post('/agent/select-plan', { package: 'verified' });
-    }
-
-    if (plan.name === "Pro") {
-        router.post('/agent/select-plan', { package: 'pro' });
-    }
-
+    // For paid plans, redirect to the public checkout to proceed with payment
+    router.visit('/checkout/plan=' + encodeURIComponent(pkg));
     if (onClose) onClose();
 };
 

@@ -4,6 +4,7 @@ import Header from "@/Components/Layouts/Header";
 import Footer from "@/Components/Layouts/Footer";
 import AddRentalPage from "@/Components/Modules/AddRentals";
 import ViewRentals from "@/Components/Modules/ViewRental";
+import PricingModal from "@/Components/Modules/PricingModal";
 
 // Icon components
 const Home = ({ style }) => (
@@ -85,6 +86,7 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [] }) => {
   const [showAddListingModal, setShowAddListingModal] = useState(false);
   const [selectedRental, setSelectedRental] = useState(null);
     const [showViewModal, setShowViewModal] = useState(false);
+  const [showPricingModal, setShowPricingModal] = useState(false);
   const { auth } = usePage().props;
 
   // Free tier limits
@@ -342,7 +344,7 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [] }) => {
                   </div>
                 </div>
                 
-                <Link href="/pricing" style={{
+                <button type="button" onClick={() => setShowPricingModal(true)} style={{
                   padding: 'clamp(0.5rem, 2vw, 0.75rem) clamp(1rem, 3vw, 1.25rem)',
                   background: 'linear-gradient(135deg, hsl(174 62% 32%) 0%, hsl(174 50% 25%) 100%)',
                   color: 'white',
@@ -354,11 +356,13 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [] }) => {
                   alignItems: 'center',
                   gap: '0.5rem',
                   whiteSpace: 'nowrap',
-                  height: 'fit-content'
+                  height: 'fit-content',
+                  border: 'none',
+                  cursor: 'pointer'
                 }}>
                   <Zap style={{ height: '1rem', width: '1rem' }} />
                   Upgrade to Pro
-                </Link>
+                </button>
               </div>
 
               {/* Limit Warning Banners */}
@@ -382,7 +386,7 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [] }) => {
                       Upgrade to continue posting properties and attract more tenants.
                     </p>
                   </div>
-                  <Link href="/pricing" style={{
+                  <button type="button" onClick={() => setShowPricingModal(true)} style={{
                     display: 'inline-flex',
                     alignItems: 'center',
                     gap: '0.375rem',
@@ -394,10 +398,12 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [] }) => {
                     fontSize: '0.8rem',
                     textDecoration: 'none',
                     flexShrink: 0,
+                    border: 'none',
+                    cursor: 'pointer'
                   }}>
                     <Zap style={{ width: '0.75rem', height: '0.75rem' }} />
                     Upgrade Now
-                  </Link>
+                  </button>
                 </div>
               )}
 
@@ -421,7 +427,7 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [] }) => {
                       You've received {INQUIRY_LIMIT} inquiries this month. Upgrade for unlimited access to leads.
                     </p>
                   </div>
-                  <Link href="/pricing" style={{
+                  <button type="button" onClick={() => setShowPricingModal(true)} style={{
                     display: 'inline-flex',
                     alignItems: 'center',
                     gap: '0.375rem',
@@ -433,9 +439,11 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [] }) => {
                     fontSize: '0.8rem',
                     textDecoration: 'none',
                     flexShrink: 0,
+                    border: 'none',
+                    cursor: 'pointer'
                   }}>
                     Unlock Leads
-                  </Link>
+                  </button>
                 </div>
               )}
             </div>
@@ -657,7 +665,7 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [] }) => {
                           ))}
                         </div>
                       </div>
-                      <Link href="/pricing" style={{
+                      <button type="button" onClick={() => setShowPricingModal(true)} style={{
                         display: 'inline-flex',
                         alignItems: 'center',
                         gap: '0.5rem',
@@ -670,10 +678,12 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [] }) => {
                         textDecoration: 'none',
                         flexShrink: 0,
                         whiteSpace: 'nowrap',
+                        border: 'none',
+                        cursor: 'pointer'
                       }}>
                         <Zap style={{ width: '1rem', height: '1rem' }} />
                         Upgrade – GHS 149/mo
-                      </Link>
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -696,29 +706,31 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [] }) => {
                     }}>
                       Your Listings
                     </h2>
-                    <button
-                      onClick={() => setShowAddListingModal(true)}
-                      className="action-button"
-                      style={{
-                        padding: 'clamp(0.5rem, 2vw, 0.5rem) clamp(0.75rem, 3vw, 1rem)',
-                        background: 'linear-gradient(135deg, hsl(174 62% 32%) 0%, hsl(174 50% 25%) 100%)',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: 'clamp(0.375rem, 2vw, 0.5rem)',
-                        fontWeight: '500',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 'clamp(0.25rem, 1vw, 0.5rem)',
-                        fontSize: 'clamp(0.875rem, 2vw, 0.875rem)',
-                        whiteSpace: 'nowrap'
-                      }}>
-                      <Home style={{ 
-                        height: 'clamp(0.875rem, 2.5vw, 1rem)', 
-                        width: 'clamp(0.875rem, 2.5vw, 1rem)' 
-                      }} />
-                      Add Listing
-                    </button>
+                    {!listingsFull && (
+                      <button
+                        onClick={() => setShowAddListingModal(true)}
+                        className="action-button"
+                        style={{
+                          padding: 'clamp(0.5rem, 2vw, 0.5rem) clamp(0.75rem, 3vw, 1rem)',
+                          background: 'linear-gradient(135deg, hsl(174 62% 32%) 0%, hsl(174 50% 25%) 100%)',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: 'clamp(0.375rem, 2vw, 0.5rem)',
+                          fontWeight: '500',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 'clamp(0.25rem, 1vw, 0.5rem)',
+                          fontSize: 'clamp(0.875rem, 2vw, 0.875rem)',
+                          whiteSpace: 'nowrap'
+                        }}>
+                        <Home style={{ 
+                          height: 'clamp(0.875rem, 2.5vw, 1rem)', 
+                          width: 'clamp(0.875rem, 2.5vw, 1rem)' 
+                        }} />
+                        Add Listing
+                      </button>
+                    )}
                   </div>
 
                   <div className="listing-grid" style={{
@@ -873,6 +885,7 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [] }) => {
         </main>
 
         <Footer />
+        <PricingModal isOpen={showPricingModal} onClose={() => setShowPricingModal(false)} />
 
         {showAddListingModal && (
           <div style={{

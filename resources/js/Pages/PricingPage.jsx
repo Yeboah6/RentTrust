@@ -409,7 +409,7 @@ const Pricing = () => {
     // Not logged in -> redirect to login, then back to checkout with plan
     if (!auth || !auth.user) {
       const returnUrl = `/checkout?plan=${encodeURIComponent(planSlug)}`;
-      const loginUrl = `/sign-up?redirect=${encodeURIComponent(returnUrl)}`;
+      const loginUrl = `/become-agent?redirect=${encodeURIComponent(returnUrl)}`;
       router.visit(loginUrl);
       return;
     }

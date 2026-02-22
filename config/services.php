@@ -36,9 +36,18 @@ return [
     ],
 
     'paystack' => [
-        'secret' => env('PAYSTACK_SECRET_KEY'),
-        'public' => env('PAYSTACK_PUBLIC_KEY'),
-        'base_url' => env('PAYSTACK_BASE_URL'),
+        'public_key' => env('PAYSTACK_PUBLIC_KEY'),
+        'secret_key' => env('PAYSTACK_SECRET_KEY'),
+        'merchant_code' => env('PAYSTACK_MERCHANT_CODE'),
+        'base_url' => 'https://api.paystack.co',
+    ],
+    
+    'flutterwave' => [
+        'public_key' => env('FLUTTERWAVE_PUBLIC_KEY'),
+        'secret_key' => env('FLUTTERWAVE_SECRET_KEY'),
+        'secret_hash' => env('FLUTTERWAVE_SECRET_HASH'),
+        'encryption_key' => env('FLUTTERWAVE_ENCRYPTION_KEY'),
+        'base_url' => 'https://api.flutterwave.com/v3',
     ],
 
 ];

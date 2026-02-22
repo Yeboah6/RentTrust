@@ -59,16 +59,16 @@ class AgentController extends Controller
         $request->validate([
             'package' => 'required|string|in:free,verified,pro'
         ]);
-
+    
         $user = Auth::user();
         $user->package = $request->package;
         $user->save();
-
+    
         if ($request->package === 'free') {
             return redirect('/agent/dashboard');
         }
-
-        return redirect('/checkout?plan=' . $request->package);
+    
+        return redirect()->route('checkout.page', ['plan' => $request->package]);
     }
 
 }
