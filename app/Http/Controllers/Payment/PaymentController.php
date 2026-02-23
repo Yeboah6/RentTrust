@@ -239,13 +239,13 @@ class PaymentController extends Controller
     /**
      * Get product details for checkout
      */
-    protected function getProductDetails(string $type, $id)
-    {
-        return match($type) {
-            'subscription' => Plan::find($id),
-            'listing_boost' => ListingBoost::find($id),
-            'lead_credit' => LeadCreditPackage::find($id),
-            default => null
-        };
-    }
+    // protected function getProductDetails(string $type, $id)
+    // {
+    //     return match($type) {
+    //         'subscription' => Plan::find($id),
+    //         'listing_boost' => ListingBoost::find($id),
+    //         'lead_credit' => LeadCreditPackage::find($id),
+    //         default => null
+    //     };
+    // }
 }
