@@ -22,54 +22,67 @@ class PaystackGateway implements PaymentGatewayInterface
      * Initialize a mobile money payment
      */
     public function initialize(array $data): array
-    {
-        try {
-            $response = Http::withHeaders([
+{
+    try {
+        $http = Http::withoutVerifying() // For local dev only
+            ->withHeaders([
                 'Authorization' => 'Bearer ' . $this->secretKey,
                 'Content-Type' => 'application/json',
-            ])->post($this->baseUrl . '/charge', [
-                'email' => $data['email'],
-                'amount' => $data['amount'] * 100, // Convert to pesewas
-                'currency' => 'GHS',
-                'mobile_money' => [
-                    'phone' => $data['phone'],
-                    'provider' => $this->mapProvider($data['provider'])
-                ],
-                'metadata' => [
-                    'user_id' => $data['user_id'],
-                    'payable_type' => $data['payable_type'],
-                    'payable_id' => $data['payable_id'],
-                    'reference' => $data['reference']
-                ]
             ]);
+        
+        $response = $http->post($this->baseUrl . '/charge', [
+            'email' => $data['email'],
+            'amount' => $data['amount'] * 100,
+            'currency' => 'GHS',
+            'mobile_money' => [
+                'phone' => $data['phone'],
+                'provider' => $this->mapProvider($data['payment_method'] ?? $data['provider'])
+            ],
+            'metadata' => [
+                'user_id' => $data['user_id'],
+                'payable_type' => $data['payable_type'],
+                'payable_id' => $data['payable_id'],
+                'reference' => $data['reference'] ?? $this->generateReference()
+            ]
+        ]);
 
-            $result = $response->json();
+        $result = $response->json();
+        
+        // Log the full response for debugging
+        Log::info('Paystack charge response:', $result);
 
-            if (!$result['status']) {
-                throw new \Exception($result['message'] ?? 'Paystack initialization failed');
-            }
-
+        // Paystack returns status true AND message "Charge attempted" on success [citation:1][citation:7]
+        if (isset($result['status']) && $result['status'] === true) {
             return [
                 'success' => true,
-                'reference' => $result['data']['reference'],
-                'provider_reference' => $result['data']['reference'],
-                'message' => 'Payment initialized successfully',
-                'data' => $result['data']
-            ];
-
-        } catch (\Exception $e) {
-            Log::error('Paystack initialization failed', [
-                'error' => $e->getMessage(),
-                'data' => $data
-            ]);
-
-            return [
-                'success' => false,
-                'message' => $e->getMessage(),
-                'data' => null
+                'reference' => $result['data']['reference'] ?? $data['reference'],
+                'provider_reference' => $result['data']['reference'] ?? null,
+                'message' => $result['message'] ?? 'Payment initialized successfully',
+                'data' => $result['data'] ?? null
             ];
         }
+
+        // Handle actual error
+        return [
+            'success' => false,
+            'message' => $result['message'] ?? 'Unknown error occurred',
+            'data' => $result
+        ];
+
+    } catch (\Exception $e) {
+        Log::error('Paystack initialization failed', [
+            'error' => $e->getMessage(),
+            'data' => $data
+        ]);
+
+        return [
+            'success' => false,
+            'message' => $e->getMessage(),
+            'data' => null
+        ];
     }
+}
+    
 
     /**
      * Verify a payment
@@ -77,9 +90,11 @@ class PaystackGateway implements PaymentGatewayInterface
     public function verify(string $reference): array
     {
         try {
-            $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $this->secretKey,
-            ])->get($this->baseUrl . '/charge/' . $reference);
+            // ADD withoutVerifying() here too
+            $response = Http::withoutVerifying() // ← ADD THIS
+                ->withHeaders([
+                    'Authorization' => 'Bearer ' . $this->secretKey,
+                ])->get($this->baseUrl . '/charge/' . $reference);
 
             $result = $response->json();
 

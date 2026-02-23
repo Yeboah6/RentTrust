@@ -37,25 +37,5 @@ return new class extends Migration
     public function down()
     {
         Schema::dropIfExists('subscriptions');
-        // if (Schema::hasTable('subscriptions')) {
-        //     Schema::table('subscriptions', function (Blueprint $table) {
-        //         $columns = [
-        //             'provider_subscription_id',
-        //             'provider',
-        //             'authorization_code',
-        //             'card_type',
-        //             'last_four',
-        //             'next_billing_date',
-        //             'failed_attempts',
-        //             'last_payment_attempt'
-        //         ];
-                
-        //         foreach ($columns as $column) {
-        //             if (Schema::hasColumn('subscriptions', $column)) {
-        //                 $table->dropColumn($column);
-        //             }
-        //         }
-        //     });
-        // }
     }
 };

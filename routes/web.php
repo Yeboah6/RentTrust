@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
 use App\Http\Controllers\RentController;
 use App\Http\Controllers\AgentController;
 use App\Http\Controllers\AuthController;
@@ -57,6 +58,15 @@ Route::middleware(['auth', 'role:agent'])->group(function () {
         ->name('verification.store');
     Route::delete('/api/verification-requests/{id}', [VerificationsController::class, 'destroy'])
         ->name('verification.destroy');
+});
+
+// Add this temporarily to routes/api.php for testing
+Route::post('/test-payment-data', function(Request $request) {
+    return response()->json([
+        'received' => $request->all(),
+        'headers' => $request->header(),
+        'method' => $request->method()
+    ]);
 });
 
 Route::get('/agent/dashboard', [DashboardController::class, 'freeTier']);

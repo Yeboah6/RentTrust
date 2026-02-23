@@ -539,7 +539,7 @@ const PaymentMethodSelector = ({ selectedMethod, onMethodChange, phoneNumber, se
 };
 
 // Loading State with Timer
-const LoadingState = ({ timeoutDuration = 120, onTimeout }) => {
+const LoadingState = ({ timeoutDuration = 120, onTimeout, orderData = null, paymentReference = '' }) => {
   const [secondsLeft, setSecondsLeft] = useState(timeoutDuration);
   const [showTimeoutWarning, setShowTimeoutWarning] = useState(false);
 
@@ -548,7 +548,6 @@ const LoadingState = ({ timeoutDuration = 120, onTimeout }) => {
       setSecondsLeft(prev => {
         if (prev <= 1) {
           clearInterval(timer);
-          onTimeout();
           return 0;
         }
         
@@ -1083,55 +1082,117 @@ const Checkout = ({ orderType, productId, product, providers }) => {
   };
 
   const handlePayment = async () => {
-    // Validate phone number
-    if (!phoneNumber || phoneNumber.length !== 9) {
-      setValidationError('Please enter a valid 9-digit mobile money number');
-      return;
-    }
-
+    // Validate frontend first
     if (!selectedPaymentMethod) {
-      setValidationError('Please select a mobile money provider');
-      return;
+        setError('Please select a mobile money provider');
+        return;
     }
 
-    // Final validation with backend
-    const isValid = await validatePhoneNumber(phoneNumber, selectedPaymentMethod);
-    if (!isValid) {
-      return;
+    if (!phoneNumber || phoneNumber.length !== 9) {
+        setError('Please enter a valid 9-digit mobile money number');
+        return;
     }
 
     setPaymentState('loading');
     setError(null);
 
     try {
-      // Initialize payment with backend
-      const response = await axios.post('/payment/initialize', {
-        payable_type: orderType,
-        payable_id: productId,
-        provider: providers.primary, // Can add provider selection logic
-        payment_method: selectedPaymentMethod,
-        phone_number: `0${phoneNumber}`, // Send with leading 0
-        amount: orderData.total,
-        plan_id: productId,
-        description: orderData.productName
-      });
+        // Prepare data exactly as backend expects
+        const requestData = {
+            payable_type: 'subscription',
+            payable_id: 1, // You can use 1 as default
+            amount: orderData.total,
+            payment_method: selectedPaymentMethod,
+            phone_number: '0' + phoneNumber, // Add leading 0
+            provider: 'paystack' // or let backend use default
+        };
 
-      if (!response.data.success) {
-        throw new Error(response.data.message);
-      }
+        console.log('Sending payment request:', requestData);
 
-      const { payment } = response.data;
-      setPaymentReference(payment.reference);
-      setPaymentId(payment.id);
+        const response = await axios.post('/payment/initialize', requestData);
 
-      // Start polling for payment status
-      startPolling(payment.reference);
-
-    } catch (err) {
-      setError(err.response?.data?.message || err.message || 'An unexpected error occurred');
-      setPaymentState('failure');
+        if (response.data.status === true || response.data.success === true) {
+            // This is SUCCESS - proceed with polling
+            const { payment } = response.data;
+            setPaymentReference(payment.reference);
+            setPaymentId(payment.id);
+            startPolling(payment.reference);
+        } else {
+            // This is actual failure
+            throw new Error(response.data.message || 'Payment initialization failed');
+        }
+        
+    } catch (error) {
+        console.error('Payment initialization error:', error);
+        
+        // Check if this is actually a success response being misrouted
+        if (error.response?.data?.message === 'Charge attempted' || 
+            error.response?.data?.status === true) {
+            // This is actually success! Handle it properly
+            console.log('Payment initialized successfully (caught in error handler)');
+            const { payment } = error.response.data;
+            setPaymentReference(payment.reference);
+            setPaymentId(payment.id);
+            startPolling(payment.reference);
+            return;
+        }
+        
+        // Real error handling
+        setError(error.response?.data?.message || 'Failed to initialize payment');
+        setPaymentState('failure');
     }
-  };
+};
+
+  // const handlePayment = async () => {
+  //   // Validate phone number
+  //   if (!phoneNumber || phoneNumber.length !== 9) {
+  //     setValidationError('Please enter a valid 9-digit mobile money number');
+  //     return;
+  //   }
+
+  //   if (!selectedPaymentMethod) {
+  //     setValidationError('Please select a mobile money provider');
+  //     return;
+  //   }
+
+  //   // Final validation with backend
+  //   const isValid = await validatePhoneNumber(phoneNumber, selectedPaymentMethod);
+  //   if (!isValid) {
+  //     return;
+  //   }
+
+  //   setPaymentState('loading');
+  //   setError(null);
+
+  //   try {
+  //     // Initialize payment with backend
+  //     const response = await axios.post('/payment/initialize', {
+  //       payable_type: orderType,
+  //       payable_id: productId,
+  //       provider: providers.primary, // Can add provider selection logic
+  //       payment_method: selectedPaymentMethod,
+  //       phone_number: `0${phoneNumber}`, // Send with leading 0
+  //       amount: orderData.total,
+  //       plan_id: productId,
+  //       description: orderData.productName
+  //     });
+
+  //     if (!response.data.success) {
+  //       throw new Error(response.data.message);
+  //     }
+
+  //     const { payment } = response.data;
+  //     setPaymentReference(payment.reference);
+  //     setPaymentId(payment.id);
+
+  //     // Start polling for payment status
+  //     startPolling(payment.reference);
+
+  //   } catch (err) {
+  //     setError(err.response?.data?.message || err.message || 'An unexpected error occurred');
+  //     setPaymentState('failure');
+  //   }
+  // };
 
   const startPolling = (reference) => {
     // Poll every 3 seconds
@@ -1211,7 +1272,7 @@ const Checkout = ({ orderType, productId, product, providers }) => {
   };
 
   const handleCancel = () => {
-    router.visit('/dashboard');
+    router.visit('/agent/dashboard');
   };
 
   if (!orderData) {

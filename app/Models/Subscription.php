@@ -1,90 +1,64 @@
 <?php
+// app/Models/Subscription.php
 
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Subscription extends Model
 {
+    use HasFactory;
 
     protected $fillable = [
         'user_id',
-        'plan_id',
-        'status',
+        'plan_type',
+        'price',
         'billing_cycle',
-        'provider_subscription_id',
+        'status',
         'provider',
+        'provider_subscription_id',
         'authorization_code',
         'card_type',
         'last_four',
         'next_billing_date',
         'failed_attempts',
-        'last_payment_attempt'
+        'last_payment_attempt',
+        'starts_at',
+        'ends_at',
+        'trial_ends_at'
     ];
 
-    public function attachProviderSubscription($provider, $providerSubscriptionId, $authorizationData)
+    protected $casts = [
+        'price' => 'decimal:2',
+        'next_billing_date' => 'datetime',
+        'last_payment_attempt' => 'datetime',
+        'starts_at' => 'datetime',
+        'ends_at' => 'datetime',
+        'trial_ends_at' => 'datetime'
+    ];
+
+    public function user()
     {
-        $this->update([
-            'provider' => $provider,
-            'provider_subscription_id' => $providerSubscriptionId,
-            'authorization_code' => $authorizationData['authorization_code'] ?? null,
-            'card_type' => $authorizationData['card_type'] ?? null,
-            'last_four' => $authorizationData['last_four'] ?? null,
-            'next_billing_date' => $this->calculateNextBillingDate(),
-            'last_payment_attempt' => now(),
-            'failed_attempts' => 0
-        ]);
+        return $this->belongsTo(User::class);
     }
 
-    public function recordSuccessfulRenewal()
+    public function payments()
     {
-        $this->update([
-            'next_billing_date' => $this->calculateNextBillingDate(),
-            'last_payment_attempt' => now(),
-            'failed_attempts' => 0,
-            'status' => 'active'
-        ]);
+        return $this->morphMany(Payment::class, 'payable');
     }
 
-    public function recordFailedRenewal($error = null)
+    public function isActive()
     {
-        $this->increment('failed_attempts');
-        $this->update([
-            'last_payment_attempt' => now()
-        ]);
-
-        // If failed 3 times, mark as past_due
-        if ($this->failed_attempts >= 3) {
-            $this->update(['status' => 'past_due']);
-        }
-    }
-
-    public function calculateNextBillingDate()
-    {
-        return match($this->billing_cycle) {
-            'monthly' => now()->addMonth(),
-            'quarterly' => now()->addMonths(3),
-            'yearly' => now()->addYear(),
-            default => now()->addMonth()
-        };
+        return $this->status === 'active' && 
+               (!$this->ends_at || $this->ends_at->isFuture());
     }
 
     public function needsRenewal()
     {
-        return $this->next_billing_date && 
-               $this->next_billing_date->isPast() && 
-               $this->status === 'active';
-    }
-
-    public function scopeNeedsRenewal($query)
-    {
-        return $query->where('status', 'active')
-                     ->where('next_billing_date', '<=', now())
-                     ->where('failed_attempts', '<', 3);
-    }
-
-    public function scopePastDue($query)
-    {
-        return $query->where('status', 'past_due');
+        return $this->status === 'active' && 
+               $this->next_billing_date && 
+               $this->next_billing_date->isPast() &&
+               $this->failed_attempts < 3;
     }
 }

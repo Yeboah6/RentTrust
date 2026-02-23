@@ -66,6 +66,9 @@ class AuthController extends Controller
             $redirectUrl = $request->session()->pull('signup_referrer', '/');
             return redirect($redirectUrl);
         } 
+        elseif ($user->role === 'agent' && $user->package === 'free') {
+            return redirect()->intended('/agent/dashboard');
+        } 
         elseif ($user->role === 'agent') {
             return redirect()->intended('/agent-dashboard');
         } 
