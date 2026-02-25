@@ -6,33 +6,27 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    public function up()
+    public function up(): void
     {
         Schema::create('payments', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')->constrained();
+            $table->foreignId('subscription_id')->nullable()->constrained()->nullOnDelete();
             $table->string('reference')->unique();
-            $table->string('transaction_id')->nullable()->unique();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->morphs('payable'); // For subscriptions, boosts, lead unlocks
-            $table->string('provider'); // paystack, flutterwave
-            $table->string('payment_method'); // mtn, vodafone, airteltigo
-            $table->string('phone_number');
+            $table->string('provider'); // paystack | flutterwave
             $table->decimal('amount', 10, 2);
             $table->string('currency')->default('GHS');
-            $table->string('status'); // pending, success, failed, expired
-            $table->json('metadata')->nullable();
-            $table->json('provider_response')->nullable();
-            $table->json('verification_response')->nullable();
-            $table->timestamp('paid_at')->nullable();
-            $table->timestamp('expires_at')->nullable();
+            $table->string('status')->default('pending'); // pending | success | failed | refunded
+            $table->string('failure_reason')->nullable();
+            $table->json('raw_payload')->nullable();
             $table->timestamps();
-            
-            $table->index(['user_id', 'status', 'created_at']);
-            $table->index(['reference', 'provider']);
+
+            $table->index(['user_id', 'status']);
+            $table->index('reference');
         });
     }
 
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('payments');
     }

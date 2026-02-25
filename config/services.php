@@ -36,18 +36,29 @@ return [
     ],
 
     'paystack' => [
-        'public_key' => env('PAYSTACK_PUBLIC_KEY'),
-        'secret_key' => env('PAYSTACK_SECRET_KEY'),
-        'merchant_code' => env('PAYSTACK_MERCHANT_CODE'),
-        'base_url' => 'https://api.paystack.co',
+        'public' => env('PAYSTACK_PUBLIC_KEY'),
+        'secret' => env('PAYSTACK_SECRET_KEY'),
     ],
-    
+
     'flutterwave' => [
-        'public_key' => env('FLUTTERWAVE_PUBLIC_KEY'),
-        'secret_key' => env('FLUTTERWAVE_SECRET_KEY'),
-        'secret_hash' => env('FLUTTERWAVE_SECRET_HASH'),
-        'encryption_key' => env('FLUTTERWAVE_ENCRYPTION_KEY'),
-        'base_url' => 'https://api.flutterwave.com/v3',
+        'public' => env('FLUTTERWAVE_PUBLIC_KEY'),
+        'secret' => env('FLUTTERWAVE_SECRET_KEY'),
+        'hash'   => env('FLUTTERWAVE_SECRET_HASH'), // For webhook verification
     ],
+
+    // 'paystack' => [
+    //     'public_key' => env('PAYSTACK_PUBLIC_KEY'),
+    //     'secret_key' => env('PAYSTACK_SECRET_KEY'),
+    //     'merchant_code' => env('PAYSTACK_MERCHANT_CODE'),
+    //     'base_url' => 'https://api.paystack.co',
+    // ],
+    
+    // 'flutterwave' => [
+    //     'public_key' => env('FLUTTERWAVE_PUBLIC_KEY'),
+    //     'secret_key' => env('FLUTTERWAVE_SECRET_KEY'),
+    //     'secret_hash' => env('FLUTTERWAVE_SECRET_HASH'),
+    //     'encryption_key' => env('FLUTTERWAVE_ENCRYPTION_KEY'),
+    //     'base_url' => 'https://api.flutterwave.com/v3',
+    // ],
 
 ];

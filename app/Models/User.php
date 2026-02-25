@@ -6,6 +6,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Models\Rental;
 
 class User extends Authenticatable
@@ -49,11 +51,6 @@ class User extends Authenticatable
         );
     }
 
-    public function subscription()
-    {
-        return $this->hasOne(Subscription::class);
-    }
-
     /**
      * The attributes that should be hidden for serialization.
      *
@@ -75,5 +72,26 @@ class User extends Authenticatable
             // 'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function subscription(): HasOne
+    {
+        return $this->hasOne(Subscription::class)->latestOfMany();
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class);
+    }
+
+    public function isSubscribedTo(string $planSlug): bool
+    {
+        return $this->subscription?->isActive()
+            && $this->subscription->plan->slug === $planSlug;
+    }
+
+    public function hasActiveSubscription(): bool
+    {
+        return $this->subscription?->isActive() ?? false;
     }
 }

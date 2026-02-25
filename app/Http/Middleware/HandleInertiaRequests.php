@@ -4,55 +4,65 @@ namespace App\Http\Middleware;
 
 use Illuminate\Http\Request;
 use Inertia\Middleware;
-use Illuminate\Support\Facades\Auth;
 
 class HandleInertiaRequests extends Middleware
 {
-    /**
-     * The root template that's loaded on the first page visit.
-     *
-     * @see https://inertiajs.com/server-side-setup#root-template
-     *
-     * @var string
-     */
     protected $rootView = 'app';
 
-    /**
-     * Determines the current asset version.
-     *
-     * @see https://inertiajs.com/asset-versioning
-     */
     public function version(Request $request): ?string
     {
         return parent::version($request);
     }
 
-    /**
-     * Define the props that are shared by default.
-     *
-     * @see https://inertiajs.com/shared-data
-     *
-     * @return array<string, mixed>
-     */
     public function share(Request $request): array
     {
+        $user = $request->user();
+
         return [
             ...parent::share($request),
+
             'auth' => [
-                'tenant' => $request->user() && $request->user()->role === 'tenant' 
-                    ? $request->user() 
-                    : null,
-                'agent' => $request->user() && $request->user()->role === 'agent' 
-                    ? $request->user() 
-                    : null,
-                'super' => $request->user() && $request->user()->role === 'admin' 
-                    ? $request->user() 
-                    : null,
+                'tenant' => $user?->role === 'tenant' ? $user : null,
+                'agent'  => $user?->role === 'agent'  ? $user : null,
+                'super'  => $user?->role === 'admin'  ? $user : null,
             ],
+
+            // Lazily resolved — only runs when Inertia actually serialises it,
+            // and only if there is a logged-in user.
+            'subscription' => fn () => $this->resolveSubscription($user),
+
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
-                'error' => fn () => $request->session()->get('error'),
+                'error'   => fn () => $request->session()->get('error'),
             ],
+        ];
+    }
+
+    /**
+     * Safely resolve subscription data.
+     * Uses eager-loaded plan to avoid N+1.
+     * Returns null if user has no active subscription.
+     */
+    private function resolveSubscription($user): ?array
+    {
+        if (! $user) {
+            return null;
+        }
+
+        // Load subscription + plan in ONE query, not two
+        $sub = $user->subscription()->with('plan')->first();
+
+        if (! $sub || ! $sub->isActive()) {
+            return null;
+        }
+
+        return [
+            'plan'      => $sub->plan?->slug,
+            'plan_name' => $sub->plan?->name,
+            'status'    => $sub->status,
+            'ends_at'   => $sub->ends_at?->toDateString(),
+            'days_left' => $sub->ends_at ? max(0, (int) now()->diffInDays($sub->ends_at, false)) : null,
+            'grace'     => $sub->inGracePeriod(),
         ];
     }
 }
