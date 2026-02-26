@@ -175,11 +175,9 @@ class RentController extends Controller
     public function reportListing(Request $request)
     {
         // If the reporter did not provide a name, try to use the authenticated user's full name
-        $agentUser = Auth::guard('agent')->user();
-        $tenantUser = Auth::guard('tenant')->user();
-        $superUser = Auth::guard('super')->user();
-        if ((! $request->has('name') || trim($request->input('name')) === '') && ($agentUser || $tenantUser || $superUser)) {
-            $name = $agentUser->fullName ?? $tenantUser->fullName ?? $superUser->fullName ?? null;
+        $user = Auth::user();
+        if ((! $request->has('name') || trim($request->input('name')) === '') && ($user)) {
+            $name = $user->fullName ?? null;
             if ($name) {
                 $request->merge(['name' => $name]);
             }
@@ -225,11 +223,16 @@ class RentController extends Controller
      */
     public function show(Rental $rent)
     {
+        $rent->load('user');
+
         $reviews = Review::where('rental_id', $rent->id)
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return inertia('PropertyDetailsPage', ['rental' => $rent, 'reviews' => $reviews]);
+        return inertia('PropertyDetailsPage', [
+            'rental' => $rent,
+            'reviews' => $reviews
+        ]);
     }
 
     /**
@@ -478,7 +481,53 @@ class RentController extends Controller
      */
     public function destroy(Rental $rent)
     {
-        //
+        try {
+            // Delete associated images from storage
+            if (!empty($rent->images)) {
+                $images = is_array($rent->images) ? $rent->images : json_decode($rent->images, true);
+                if (is_array($images)) {
+                    foreach ($images as $imagePath) {
+                        $this->deleteImage($imagePath);
+                    }
+                }
+            }
+
+            $rentalTitle = $rent->title;
+            $rent->delete();
+
+            return redirect()->back()->with('success', "Listing '{$rentalTitle}' has been deleted successfully.");
+        } catch (\Exception $e) {
+            Log::error('Failed to delete rental listing', [
+                'rental_id' => $rent->id,
+                'error' => $e->getMessage()
+            ]);
+
+            return redirect()->back()->with('error', 'Failed to delete listing. Please try again.');
+        }
+    }
+
+    /**
+     * Toggle the approval status of a listing (verified <-> unverified)
+     */
+    public function toggleApprovalStatus(Rental $rent)
+    {
+        try {
+            $newStatus = $rent->status === 'pending' ? 'approved' : 'pending';
+            $rent->update(['status' => $newStatus]);
+
+            $message = $newStatus === 'approved'
+                ? "Listing '{$rent->title}' has been approved."
+                : "Listing '{$rent->title}' has been reverted to pending.";
+
+            return redirect()->back()->with('success', $message);
+        } catch (\Exception $e) {
+            Log::error('Failed to toggle listing approval status', [
+                'rental_id' => $rent->id,
+                'error' => $e->getMessage()
+            ]);
+
+            return redirect()->back()->with('error', 'Failed to update listing status. Please try again.');
+        }
     }
 
     public function listings()
@@ -621,11 +670,9 @@ class RentController extends Controller
     public function storeReviewForms(Request $request)
     {
         // If the reviewer did not provide a full_name, attempt to populate it from the authenticated user
-        $agentUser = Auth::guard('agent')->user();
-        $tenantUser = Auth::guard('tenant')->user();
-        $superUser = Auth::guard('super')->user();
-        if ((! $request->has('full_name') || trim($request->input('full_name')) === '') && ($agentUser || $tenantUser || $superUser)) {
-            $name = $agentUser->fullName ?? $tenantUser->fullName ?? $superUser->fullName ?? null;
+        $user = Auth::user();
+        if ((! $request->has('full_name') || trim($request->input('full_name')) === '') && ($user)) {
+            $name = $user->fullName ?? null;
             if ($name) {
                 $request->merge(['full_name' => $name]);
             }
@@ -721,11 +768,9 @@ class RentController extends Controller
 
     public function storeReviewApp(Request $request)
     {
-        $agentUser = Auth::guard('agent')->user();
-        $tenantUser = Auth::guard('tenant')->user();
-        $superUser = Auth::guard('super')->user();
-        if ((! $request->has('name') || trim($request->input('name')) === '') && ($agentUser || $tenantUser || $superUser)) {
-            $name = $agentUser->fullName ?? $tenantUser->fullName ?? $superUser->fullName ?? null;
+        $user = Auth::user();
+        if ((! $request->has('name') || trim($request->input('name')) === '') && ($user)) {
+            $name = $user->fullName ?? null;
             if ($name) {
                 $request->merge(['name' => $name]);
             }
@@ -961,58 +1006,58 @@ class RentController extends Controller
         return inertia('PricingPage');
     }
 
-    public function checkout($plan)
-    {
-        $plans = [
-            'verified' => [
-                'productName' => 'Verified Plan',
-                'description' => 'Build trust and stand out',
-                'type' => 'subscription',
-                'subtotal' => 149.00,
-                'discount' => 0,
-                'tax' => 0,
-                'total' => 149.00,
-                'isRecurring' => true,
-                'billingCycle' => 'monthly',
-                'features' => [
-                    'Verified landlord badge',
-                    'Higher ranking in search results',
-                    'Ability to respond to reviews',
-                    'Priority customer support'
-                ]
-            ],
-            'pro' => [
-                'productName' => 'Pro Plan',
-                'description' => 'Advanced tools for professionals',
-                'type' => 'subscription',
-                'subtotal' => 349.00,
-                'discount' => 0,
-                'tax' => 0,
-                'total' => 349.00,
-                'isRecurring' => true,
-                'billingCycle' => 'monthly',
-                'features' => [
-                    'Unlimited property listings',
-                    'Lead unlock credits (50/month)',
-                    'Featured listing placement',
-                    'Dedicated account manager'
-                ]
-            ]
-        ];
+    // public function checkout($plan)
+    // {
+    //     $plans = [
+    //         'verified' => [
+    //             'productName' => 'Verified Plan',
+    //             'description' => 'Build trust and stand out',
+    //             'type' => 'subscription',
+    //             'subtotal' => 149.00,
+    //             'discount' => 0,
+    //             'tax' => 0,
+    //             'total' => 149.00,
+    //             'isRecurring' => true,
+    //             'billingCycle' => 'monthly',
+    //             'features' => [
+    //                 'Verified landlord badge',
+    //                 'Higher ranking in search results',
+    //                 'Ability to respond to reviews',
+    //                 'Priority customer support'
+    //             ]
+    //         ],
+    //         'pro' => [
+    //             'productName' => 'Pro Plan',
+    //             'description' => 'Advanced tools for professionals',
+    //             'type' => 'subscription',
+    //             'subtotal' => 349.00,
+    //             'discount' => 0,
+    //             'tax' => 0,
+    //             'total' => 349.00,
+    //             'isRecurring' => true,
+    //             'billingCycle' => 'monthly',
+    //             'features' => [
+    //                 'Unlimited property listings',
+    //                 'Lead unlock credits (50/month)',
+    //                 'Featured listing placement',
+    //                 'Dedicated account manager'
+    //             ]
+    //         ]
+    //     ];
     
-        if (!isset($plans[$plan])) {
-            return redirect('/agent/dashboard');
-        }
+    //     if (!isset($plans[$plan])) {
+    //         return redirect('/agent/dashboard');
+    //     }
     
-        return inertia('CheckoutPage', [
-            'plan' => $plan,
-            'orderType' => 'subscription',
-            'productId' => $plan,
-            'product' => $plans[$plan],
-            'providers' => [
-                'primary' => 'paystack',
-                'available' => ['mtn', 'vodafone', 'airteltigo']
-            ]
-        ]);
-    }
+    //     return inertia('CheckoutPage', [
+    //         'plan' => $plan,
+    //         'orderType' => 'subscription',
+    //         'productId' => $plan,
+    //         'product' => $plans[$plan],
+    //         'providers' => [
+    //             'primary' => 'paystack',
+    //             'available' => ['mtn', 'vodafone', 'airteltigo']
+    //         ]
+    //     ]);
+    // }
 }

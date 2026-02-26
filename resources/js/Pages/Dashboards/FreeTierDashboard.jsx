@@ -3,6 +3,7 @@ import { Link, useForm, usePage, router } from "@inertiajs/react";
 import Header from "@/Components/Layouts/Header";
 import Footer from "@/Components/Layouts/Footer";
 import AddRentalPage from "@/Components/Modules/AddRentals";
+import EditRentals from "@/Components/Modules/EditRentals";
 import ViewRentals from "@/Components/Modules/ViewRental";
 import PricingModal from "@/Components/Modules/PricingModal";
 
@@ -83,16 +84,18 @@ const BarChart = ({ style }) => (
 
 const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [] }) => {
   const [activeTab, setActiveTab] = useState("overview");
+  // const [respondingTo, setRespondingTo] = useState(null);
   const [showAddListingModal, setShowAddListingModal] = useState(false);
   const [selectedRental, setSelectedRental] = useState(null);
   const [showViewModal, setShowViewModal] = useState(false);
   const { plans, open_plan_modal } = usePage().props;
   const [showPricingModal, setShowPricingModal] = useState(open_plan_modal ?? false);
+  const [showEditListingModal, setShowEditListingModal] = useState(false);
 
   // Free tier limits
   const LISTING_LIMIT = 3;
   const INQUIRY_LIMIT = 10;
-  const PHOTO_LIMIT = 5;
+  // const PHOTO_LIMIT = 5;
 
   const agent = {
     name: agentData?.name || "Unknown Agent",
@@ -216,6 +219,12 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [] }) => {
     ));
   };
 
+  const handleEditClick = (rental) => {
+    const selectedRentalData = rentals.find(r => r.id === rental.id);
+    setSelectedRental(selectedRentalData);
+    setShowEditListingModal(true);
+  };
+
   const handleViewClick = (rental) => {
     const selectViewData = rentals.find(r => r.id === rental.id);
     setSelectedRental(selectViewData);
@@ -252,21 +261,23 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [] }) => {
           .listing-grid {
             grid-template-columns: repeat(3, 1fr) !important;
           }
+          .review-grid { grid-template-columns: 1fr !important; }
         }
 
         @media (min-width: 1024px) {
           .listing-grid {
-            grid-template-columns: repeat(4, 1fr) !important;
+            grid-template-columns: repeat(3, 1fr) !important;
           }
         }
 
         @media (min-width: 769px) {
           .tabs-grid {
-            grid-template-columns: repeat(4, 1fr) !important;
+            grid-template-columns: repeat(3, 1fr) !important;
           }
           .stats-grid {
             grid-template-columns: repeat(4, 1fr) !important;
           }
+          .review-grid { grid-template-columns: repeat(3, 1fr) !important; }
         }
 
         .action-button {
@@ -458,7 +469,7 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [] }) => {
                 borderRadius: 'clamp(0.375rem, 2vw, 0.5rem)',
                 marginBottom: 'clamp(1.5rem, 4vw, 2rem)'
               }}>
-                {['overview', 'listings', 'reviews', 'billing'].map((tab) => (
+                {['overview', 'listings', 'reviews'].map((tab) => (
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
@@ -485,7 +496,6 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [] }) => {
                     {tab === 'overview' && <BarChart style={{ height: 'clamp(0.875rem, 2.5vw, 1rem)', width: 'clamp(0.875rem, 2.5vw, 1rem)' }} />}
                     {tab === 'listings' && <Home style={{ height: 'clamp(0.875rem, 2.5vw, 1rem)', width: 'clamp(0.875rem, 2.5vw, 1rem)' }} />}
                     {tab === 'reviews' && <MessageSquare style={{ height: 'clamp(0.875rem, 2.5vw, 1rem)', width: 'clamp(0.875rem, 2.5vw, 1rem)' }} />}
-                    {tab === 'billing' && <CreditCard style={{ height: 'clamp(0.875rem, 2.5vw, 1rem)', width: 'clamp(0.875rem, 2.5vw, 1rem)' }} />}
                     {tab}
                   </button>
                 ))}
@@ -821,26 +831,6 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [] }) => {
                               Edit
                             </button>
                           </div>
-                          <button
-                            onClick={() => {
-                              setSelectedRentalForVerification(property);
-                              setShowVerificationModal(true);
-                            }}
-                            className="action-button"
-                            style={{
-                              width: '100%',
-                              padding: 'clamp(0.375rem, 2vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem)',
-                              border: '1px solid hsl(40 20% 88%)',
-                              borderRadius: 'clamp(0.25rem, 1.5vw, 0.375rem)',
-                              backgroundColor: 'white',
-                              color: 'hsl(174 62% 32%)',
-                              fontSize: 'clamp(0.75rem, 2vw, 0.875rem)',
-                              fontWeight: '500',
-                              cursor: 'pointer'
-                            }}
-                          >
-                            Request Verification
-                          </button>
                         </div>
                       ))
                     ) : (
@@ -866,18 +856,46 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [] }) => {
               )}
 
               {activeTab === 'reviews' && (
-                <div>
-                  <p style={{ textAlign: 'center', color: 'hsl(200 15% 45%)', padding: '2rem' }}>
-                    Reviews view - Connect your existing reviews component here
-                  </p>
-                </div>
-              )}
-
-              {activeTab === 'billing' && (
-                <div>
-                  <p style={{ textAlign: 'center', color: 'hsl(200 15% 45%)', padding: '2rem' }}>
-                    Billing view - Connect your existing billing component here
-                  </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(1rem, 3vw, 1.5rem)' }}>
+                  <h2 style={{ color: 'hsl(200 25% 15%)', fontSize: 'clamp(1rem, 3vw, 1.125rem)', fontWeight: '600' }}>Tenant Reviews ({formattedReviews.length})</h2>
+                  {formattedReviews.length > 0 ? (
+                    <div className="review-grid" style={{ display: 'grid', gap: 'clamp(0.75rem, 2vw, 1rem)' }}>
+                      {formattedReviews.map((review) => (
+                        <div key={review.id} style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.5rem, 2vw, 0.75rem)', padding: 'clamp(0.75rem, 2vw, 1rem)' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 'clamp(0.75rem, 2vw, 1rem)', flexDirection: 'column', gap: 'clamp(0.5rem, 2vw, 0.75rem)' }}>
+                            <div>
+                              <p style={{ fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', color: 'hsl(200 15% 45%)', marginBottom: 'clamp(0.5rem, 2vw, 0.5rem)' }}>Review for Property #{review.rental_id}</p>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.5rem, 2vw, 0.5rem)', marginBottom: 'clamp(0.5rem, 2vw, 0.5rem)' }}>
+                                <div style={{ width: 'clamp(2rem, 8vw, 2rem)', height: 'clamp(2rem, 8vw, 2rem)', borderRadius: '50%', backgroundColor: 'hsl(174 62% 32% / 0.1)', color: 'hsl(174 62% 32%)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 'clamp(0.875rem, 2.5vw, 0.875rem)', fontWeight: '600', flexShrink: 0 }}>
+                                  {review.full_name?.[0] || 'T'}
+                                </div>
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  <span style={{ color: 'hsl(200 25% 15%)', display: 'block', fontSize: 'clamp(0.875rem, 2.5vw, 0.875rem)', fontWeight: '500', marginBottom: 'clamp(0.125rem, 1vw, 0.25rem)', wordBreak: 'break-word' }}>{review.full_name || 'Anonymous Tenant'}</span>
+                                  <div style={{ display: 'flex' }}>{renderStars(review.overall_rating)}</div>
+                                </div>
+                              </div>
+                            </div>
+                            <span style={{ fontSize: 'clamp(0.75rem, 2vw, 0.75rem)', color: 'hsl(200 15% 45%)', alignSelf: 'flex-start' }}>
+                              {new Date(review.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                            </span>
+                          </div>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'clamp(0.375rem, 1.5vw, 0.5rem)', marginBottom: 'clamp(0.5rem, 2vw, 0.75rem)' }}>
+                            {review.landlord_responsive === 1 && <span style={{ padding: 'clamp(0.1875rem, 1vw, 0.25rem) clamp(0.5rem, 2vw, 0.625rem)', fontSize: 'clamp(0.6875rem, 2vw, 0.75rem)', backgroundColor: 'hsl(152 60% 95%)', color: 'hsl(152 60% 35%)', borderRadius: '9999px', border: '1px solid hsl(152 60% 85%)', whiteSpace: 'nowrap' }}>✓ Responsive</span>}
+                            {review.property_matched_description === 1 && <span style={{ padding: 'clamp(0.1875rem, 1vw, 0.25rem) clamp(0.5rem, 2vw, 0.625rem)', fontSize: 'clamp(0.6875rem, 2vw, 0.75rem)', backgroundColor: 'hsl(152 60% 95%)', color: 'hsl(152 60% 35%)', borderRadius: '9999px', border: '1px solid hsl(152 60% 85%)', whiteSpace: 'nowrap' }}>✓ Accurate</span>}
+                            {review.fair_pricing === 1 && <span style={{ padding: 'clamp(0.1875rem, 1vw, 0.25rem) clamp(0.5rem, 2vw, 0.625rem)', fontSize: 'clamp(0.6875rem, 2vw, 0.75rem)', backgroundColor: 'hsl(152 60% 95%)', color: 'hsl(152 60% 35%)', borderRadius: '9999px', border: '1px solid hsl(152 60% 85%)', whiteSpace: 'nowrap' }}>✓ Fair Price</span>}
+                            {review.good_communication === 1 && <span style={{ padding: 'clamp(0.1875rem, 1vw, 0.25rem) clamp(0.5rem, 2vw, 0.625rem)', fontSize: 'clamp(0.6875rem, 2vw, 0.75rem)', backgroundColor: 'hsl(152 60% 95%)', color: 'hsl(152 60% 35%)', borderRadius: '9999px', border: '1px solid hsl(152 60% 85%)', whiteSpace: 'nowrap' }}>✓ Good Comm</span>}
+                          </div>
+                          {review.comments && <p style={{ color: 'hsl(200 15% 45%)', marginBottom: 'clamp(0.75rem, 2vw, 1rem)', fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)', lineHeight: '1.5' }}>"{review.comments}"</p>}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.5rem, 2vw, 0.75rem)', padding: 'clamp(1.5rem, 4vw, 2rem)', textAlign: 'center' }}>
+                      <MessageSquare style={{ height: 'clamp(2.5rem, 10vw, 3rem)', width: 'clamp(2.5rem, 10vw, 3rem)', color: 'hsl(200 15% 45%)', margin: '0 auto clamp(0.75rem, 2vw, 1rem) auto' }} />
+                      <h3 style={{ fontSize: 'clamp(1rem, 3vw, 1.125rem)', fontWeight: '600', color: 'hsl(200 25% 15%)', marginBottom: 'clamp(0.375rem, 1.5vw, 0.5rem)' }}>No Reviews Yet</h3>
+                      <p style={{ color: 'hsl(200 15% 45%)', fontSize: 'clamp(0.875rem, 2vw, 0.875rem)' }}>You haven't received any reviews from tenants yet.</p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -930,6 +948,16 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [] }) => {
                 ✕
               </button>
               <AddRentalPage agentData={agentData} setShowAddListingModal={setShowAddListingModal} />
+            </div>
+          </div>
+        )}
+
+        {/* Edit Listing Modal */}
+        {showEditListingModal && selectedRental && (
+          <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: 'clamp(0.5rem, 2vw, 1rem)' }}>
+            <div className="modal-content" style={{ backgroundColor: 'white', borderRadius: 'clamp(0.75rem, 2vw, 1rem)', maxHeight: '90vh', overflow: 'auto', maxWidth: 'clamp(90%, 95vw, 60%)', width: '100%', position: 'relative' }}>
+              <button onClick={() => { setShowEditListingModal(false); setSelectedRental(null); }} className="action-button" style={{ position: 'sticky', top: 0, right: 0, padding: 'clamp(0.75rem, 2vw, 1rem)', border: 'none', background: 'transparent', fontSize: 'clamp(1.25rem, 4vw, 1.5rem)', cursor: 'pointer', color: 'hsl(200 15% 45%)', float: 'right', zIndex: 10 }}>✕</button>
+              <EditRentals agentData={agentData} setShowEditListingModal={setShowEditListingModal} rental={selectedRental} />
             </div>
           </div>
         )}

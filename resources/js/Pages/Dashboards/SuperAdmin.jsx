@@ -1,10 +1,12 @@
 import { useState } from "react";
 import Header from "@/Components/Layouts/Header";
 import Footer from "@/Components/Layouts/Footer";
-import { Link, useForm, router } from "@inertiajs/react";
+import { Link, useForm, router, usePage } from "@inertiajs/react";
 import VerifyAgentDialog from '@/Components/Modules/VerifyAgent';
 import ViewRentals from "@/Components/Modules/ViewRental";
+import EditRentals from "@/Components/Modules/EditRentals";
 import ViewAgentVerifications from '@/Components/Modules/ViewAgentVerifications';
+import AgentProfileModal from '@/Components/Modules/AgentProfileModal';
 import { MapPin} from 'lucide-react';
 
 // Icon components
@@ -82,6 +84,7 @@ const Settings = ({ style }) => (
 );
 
 const SuperAdminDashboard = ({ adminData, rentals, agentData, reviews, reports, verifications }) => {
+  const { auth } = usePage().props;
   const [activeTab, setActiveTab] = useState("agents");
   const [respondingTo, setRespondingTo] = useState(null);
   const [responseText, setResponseText] = useState("");
@@ -89,6 +92,14 @@ const SuperAdminDashboard = ({ adminData, rentals, agentData, reviews, reports, 
   const [showDialog, setShowDialog] = useState(false);
   const [selectedRental, setSelectedRental] = useState(null);
   const [showViewModal, setShowViewModal] = useState(false);
+  const [showAgentProfile, setShowAgentProfile] = useState(false);
+  const [showEditListingModal, setShowEditListingModal] = useState(false);
+  const [toast, setToast] = useState(null);
+
+  const showToast = (title, description, variant = "success") => {
+    setToast({ title, description, variant });
+    setTimeout(() => setToast(null), 3000);
+  };
 
   const { put, data, setData, processing } = useForm({
     status: ''
@@ -121,44 +132,90 @@ const SuperAdminDashboard = ({ adminData, rentals, agentData, reviews, reports, 
     setShowViewModal(true);
   };
 
-const handleSuspendAgent = (agentId) => {
-  const agent = agents.find(a => a.id === agentId);
+  const handleViewProfile = (agentData) => {
+    const payload = agentData && agentData._original ? agentData._original : agentData;
+    setSelectedAgent(payload);
+    setShowAgentProfile(true);
+  };
 
-  if (!agent) {
-    showToast("Error", "Agent not found.", "error");
-    return;
-  }
+  const handleEditClick = (rental) => {
+    const selectedRentalData = rentals.find(r => r.id === rental.id);
+    setSelectedRental(selectedRentalData);
+    setShowEditListingModal(true);
+  };
 
-  const isSuspended = agent.status === 'suspended';
-  const newStatus = isSuspended ? 'unverified' : 'suspended';
-  const actionText = isSuspended ? 'unsuspend' : 'suspend';
+  const handleSuspendAgent = (agentId) => {
+    const agent = agents.find(a => a.id === agentId);
 
-  if (confirm(`Are you sure you want to ${actionText} ${agent.fullName}?`)) {
-    router.put(`/admin/agents/${agentId}/suspend`, {
-      status: newStatus
-    }, {
-      onSuccess: () => {
-        showToast(
-          isSuspended ? "Agent Unsuspended" : "Agent Suspended",
-          `${agent.fullName} has been ${actionText}ed successfully.`,
-          "success"
-        );
-      },
-      onError: (errors) => {
-        console.error('Suspension error:', errors);
-        showToast("Suspension Failed", `Unable to ${actionText} agent. Please try again.`, "error");
-      }
-    });
-  }
-};
+    if (!agent) {
+      showToast("Error", "Agent not found.", "error");
+      return;
+    }
+
+    const isSuspended = agent.status === 'suspended';
+    const newStatus = isSuspended ? 'unverified' : 'suspended';
+    const actionText = isSuspended ? 'unsuspend' : 'suspend';
+
+    if (confirm(`Are you sure you want to ${actionText} ${agent.fullName}?`)) {
+      router.put(`/admin/agents/${agentId}/suspend`, {
+        status: newStatus
+      }, {
+        onSuccess: () => {
+          showToast(
+            isSuspended ? "Agent Unsuspended" : "Agent Suspended",
+            `${agent.fullName} has been ${actionText}ed successfully.`,
+            "success"
+          );
+        },
+        onError: (errors) => {
+          console.error('Suspension error:', errors);
+          showToast("Suspension Failed", `Unable to ${actionText} agent. Please try again.`, "error");
+        }
+      });
+    }
+  };
+
+  const handleApproveToggle = (property) => {
+    const isApproved = property.status === 'approved';
+    const actionText = isApproved ? 'revert to pending' : 'approve';
+    const confirmMessage = `Are you sure you want to ${actionText} "${property.title}"?`;
+
+    if (confirm(confirmMessage)) {
+      router.put(`/admin/listings/${property.id}/toggle-approval`, {}, {
+        onSuccess: () => {
+          showToast(
+            isApproved ? "Reverted to Pending" : "Listing Approved",
+            `${property.title} has been ${actionText}d successfully.`,
+            "success"
+          );
+        },
+        onError: (errors) => {
+          console.error('Approval toggle error:', errors);
+          showToast("Action Failed", `Unable to ${actionText}. Please try again.`, "error");
+        }
+      });
+    }
+  };
 
   const handleReportAction = (reportId, action) => {
     alert(`Report ${reportId} marked as ${action}`);
   };
 
-  const handleDeleteListing = (listingId) => {
-    if (confirm("Are you sure you want to delete this listing?")) {
-      alert(`Listing ${listingId} has been deleted`);
+  const handleDeleteListing = (property) => {
+    if (confirm(`Are you sure you want to delete "${property.title}"? This action cannot be undone.`)) {
+      router.delete(`/rent/${property.id}`, {}, {
+        onSuccess: () => {
+          showToast(
+            "Listing Deleted",
+            `"${property.title}" has been deleted successfully.`,
+            "success"
+          );
+        },
+        onError: (errors) => {
+          console.error('Delete error:', errors);
+          showToast("Delete Failed", `Unable to delete listing. Please try again.`, "error");
+        }
+      });
     }
   };
 
@@ -294,6 +351,16 @@ const handleSuspendAgent = (agentId) => {
         }
         .font-medium {
           font-weight: 500;
+        }
+        @keyframes slideIn {
+          from {
+            transform: translateX(400px);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
         }
       `}</style>
 
@@ -490,7 +557,7 @@ const handleSuspendAgent = (agentId) => {
                         </div>
                         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                           <button
-                            onClick={() => alert(`Viewing agent ${agentItem.id}`)}
+                            onClick={() => handleViewProfile(agentItem)}
                             style={{
                               padding: '0.375rem 0.75rem',
                               border: '1px solid hsl(40 20% 88%)',
@@ -608,7 +675,9 @@ const handleSuspendAgent = (agentId) => {
                           }}>
                             View
                           </button>
-                          <button style={{
+                          <button 
+                          onClick={() => handleEditClick(property)}
+                          style={{
                             padding: '0.375rem 0.75rem',
                             border: '1px solid hsl(40 20% 88%)',
                             borderRadius: '0.375rem',
@@ -620,25 +689,25 @@ const handleSuspendAgent = (agentId) => {
                           }}>
                             Edit
                           </button>
-                          {property.status === 'pending' && (
-                            <button
-                              onClick={() => alert(`Listing ${property.id} approved`)}
-                              style={{
-                                padding: '0.375rem 0.75rem',
-                                background: 'linear-gradient(135deg, hsl(152 60% 40%) 0%, hsl(152 50% 35%) 100%)',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '0.375rem',
-                                fontSize: '0.875rem',
-                                fontWeight: '500',
-                                cursor: 'pointer'
-                              }}
-                            >
-                              Approve
-                            </button>
-                          )}
                           <button
-                            onClick={() => handleDeleteListing(property.id)}
+                            onClick={() => handleApproveToggle(property)}
+                            style={{
+                              padding: '0.375rem 0.75rem',
+                              background: property.status === 'approved'
+                                ? 'linear-gradient(135deg, hsl(300 70% 50%) 0%, hsl(300 60% 40%) 100%)'
+                                : 'linear-gradient(135deg, hsl(152 60% 40%) 0%, hsl(152 50% 35%) 100%)',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '0.375rem',
+                              fontSize: '0.875rem',
+                              fontWeight: '500',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            {property.status === 'approved' ? 'Revert' : 'Approve'}
+                          </button>
+                          <button
+                            onClick={() => handleDeleteListing(property)}
                             style={{
                               padding: '0.375rem 0.75rem',
                               border: '1px solid hsl(0 70% 50%)',
@@ -1291,6 +1360,24 @@ const handleSuspendAgent = (agentId) => {
 
         <Footer />
 
+        {/* Agent Profile Modal */}
+        <AgentProfileModal
+          agent={selectedAgent}
+          isOpen={showAgentProfile} 
+          onClose={() => setShowAgentProfile(false)}
+          auth={auth}
+        />
+
+        {/* Edit Listing Modal */}
+        {showEditListingModal && selectedRental && (
+          <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: 'clamp(0.5rem, 2vw, 1rem)' }}>
+            <div className="modal-content" style={{ backgroundColor: 'white', borderRadius: 'clamp(0.75rem, 2vw, 1rem)', maxHeight: '90vh', overflow: 'auto', maxWidth: 'clamp(90%, 95vw, 60%)', width: '100%', position: 'relative' }}>
+              <button onClick={() => { setShowEditListingModal(false); setSelectedRental(null); }} className="action-button" style={{ position: 'sticky', top: 0, right: 0, padding: 'clamp(0.75rem, 2vw, 1rem)', border: 'none', background: 'transparent', fontSize: 'clamp(1.25rem, 4vw, 1.5rem)', cursor: 'pointer', color: 'hsl(200 15% 45%)', float: 'right', zIndex: 10 }}>✕</button>
+              <EditRentals agentData={agentData} setShowEditListingModal={setShowEditListingModal} rental={selectedRental} />
+            </div>
+          </div>
+        )}
+
         {selectedAgent && (
           <VerifyAgentDialog
             agentItem={selectedAgent}
@@ -1326,6 +1413,26 @@ const handleSuspendAgent = (agentId) => {
                 setShowViewModal={setShowViewModal}
               />
             </div>
+          </div>
+        )}
+
+        {/* Toast Notification */}
+        {toast && (
+          <div style={{
+            position: 'fixed',
+            top: '1rem',
+            right: '1rem',
+            backgroundColor: toast.variant === 'error' ? 'hsl(0 70% 50%)' : 'hsl(152 60% 40%)',
+            color: 'white',
+            padding: '1rem 1.5rem',
+            borderRadius: '0.5rem',
+            boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
+            zIndex: 9999,
+            maxWidth: '400px',
+            animation: 'slideIn 0.3s ease-out'
+          }}>
+            <div style={{ fontWeight: '600', marginBottom: '0.25rem' }}>{toast.title}</div>
+            <div style={{ fontSize: '0.875rem' }}>{toast.description}</div>
           </div>
         )}
       </div>

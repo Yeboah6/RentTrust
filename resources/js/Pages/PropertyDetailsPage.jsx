@@ -242,7 +242,6 @@ const PropertyDetailsPage = ({ rental, reviews }) => {
                   alt={`Property image ${currentImageIndex + 1}`}
                   style={{
                     height: '100%',
-                    // width: '50%',
                     objectFit: 'cover',
                     transition: 'opacity 0.3s ease-in-out'
                   }}
@@ -677,7 +676,7 @@ const PropertyDetailsPage = ({ rental, reviews }) => {
                 </div>
 
                 {/* Agent Card */}
-                {rental.agent && (
+                {rental.user && (
                   <div style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.75rem' }}>
                     <div style={{ padding: 'clamp(1rem, 3vw, 1.5rem)', borderBottom: '1px solid hsl(40 20% 88%)' }}>
                       <h3 style={{ 
@@ -706,7 +705,7 @@ const PropertyDetailsPage = ({ rental, reviews }) => {
                           fontSize: 'clamp(1rem, 3vw, 1.25rem)',
                           fontWeight: '600'
                         }}>
-                          {rental.agent.fullName?.[0] || 'A'}
+                          {rental.user.name?.[0] || 'A'}
                         </div>
                         <div style={{ minWidth: 0 }}>
                           <p className="font-medium" style={{ 
@@ -716,26 +715,26 @@ const PropertyDetailsPage = ({ rental, reviews }) => {
                             fontSize: 'clamp(0.875rem, 2.5vw, 1rem)',
                             wordBreak: 'break-word'
                           }}>
-                            {rental.agent.fullName}
-                            {rental.agent.verification_status === 'verified' && (
+                            {rental.user.name}
+                            {rental.user.verification_status === 'verified' && (
                               <Shield style={{ height: 'clamp(0.875rem, 2.5vw, 1rem)', width: 'clamp(0.875rem, 2.5vw, 1rem)', color: 'hsl(152 60% 40%)', flexShrink: 0 }} />
                             )}
                           </p>
                           <p style={{ fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', color: 'hsl(200 15% 45%)' }}>
-                            {rental.agent.company || 'Independent Agent'}
+                            {rental.user.company || 'Independent Agent'}
                           </p>
                         </div>
                       </div>
-                      {rental.agent.average_rating && (
+                      {rental.user.average_rating && (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                          <div style={{ display: 'flex' }}>{renderStars(rental.agent.average_rating)}</div>
+                          <div style={{ display: 'flex' }}>{renderStars(rental.user.average_rating)}</div>
                           <span style={{ fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', color: 'hsl(200 15% 45%)' }}>
-                            ({rental.agent.total_reviews || 0} reviews)
+                            ({rental.user.total_reviews || 0} reviews)
                           </span>
                         </div>
                       )}
                       <p style={{ fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)' }}>
-                        Agent Fee: <span className="font-medium">{rental.agent.fee || 0}%</span>
+                        Agent Fee: <span className="font-medium">{rental.user.fee || 0}%</span>
                       </p>
                       <button 
                         className="action-button"
@@ -824,7 +823,7 @@ const PropertyDetailsPage = ({ rental, reviews }) => {
 
         {/* Agent Profile Modal */}
         <AgentProfileModal 
-          agent={rental.agent} 
+          agent={rental.user} 
           isOpen={showAgentProfile} 
           onClose={() => setShowAgentProfile(false)}
           auth={auth}

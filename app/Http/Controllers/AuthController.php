@@ -28,6 +28,8 @@ class AuthController extends Controller
         $signUpData['password'] = Hash::make($signUpData['password']);
 
         $tenant = User::create($signUpData);
+
+        Auth::login($tenant);
         
         // Get the referrer URL from session, default to home page
         $redirectUrl = $request->session()->pull('signup_referrer', '/');
@@ -72,7 +74,7 @@ class AuthController extends Controller
         elseif ($user->role === 'agent') {
             return redirect()->intended('/agent-dashboard');
         } 
-        elseif ($user->role === 'admin') {
+        elseif ($user->role === 'admin' && $user->package === 'free') {
             return redirect('/super-admin');
         }
 
@@ -94,7 +96,7 @@ class AuthController extends Controller
     public function updateAgentProfile(Request $request) {
         $validated = $request->validate([
             'name'=>'nullable|string|max:255',
-            'email' => 'nullable|email' . Auth::guard('agent')->user()->id,
+            'email' => 'nullable|email',
             'phone'=>'nullable|string|max:15',
             'bio'=>'nullable|string|max:500',
             'company'=>'nullable|string|max:255',
@@ -102,7 +104,7 @@ class AuthController extends Controller
             'role'=>'nullable|string|max:255',
         ]);
 
-        $agent = Auth::guard('agent')->user();
+        $agent = Auth::user();
         
         $agent->update([
             'name' => $validated['name'] ?? $agent->name,
@@ -123,7 +125,7 @@ class AuthController extends Controller
             'email' => 'nullable|email',
         ]);
     
-        $admin = Auth::guard('super')->user();
+        $admin = Auth::user();
         
         $admin->update([
             'name' => $validated['name'] ?? $admin->name,
@@ -131,5 +133,34 @@ class AuthController extends Controller
         ]);
 
         return redirect()->back()->with('success', 'Profile updated successfully');
+    }
+
+    /**
+     * Change current user's password.
+     */
+    public function updatePassword(Request $request)
+    {
+        $validated = $request->validate([
+            'currentPassword' => 'required|string',
+            'newPassword' => 'required|string|min:8|confirmed',
+        ], [
+            'newPassword.confirmed' => 'The new password confirmation does not match.',
+        ]);
+
+        // Resolve the authenticated user across all guards
+        $user = Auth::user();
+
+        if (!$user) {
+            return back()->withErrors(['currentPassword' => 'Unauthenticated.']);
+        }
+
+        if (!Hash::check($validated['currentPassword'], $user->password)) {
+            return back()->withErrors(['currentPassword' => 'Current password is incorrect.']);
+        }
+
+        $user->password = Hash::make($validated['newPassword']);
+        $user->save();
+
+        return back()->with('success', 'Password updated successfully.');
     }
 }

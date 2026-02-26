@@ -9,25 +9,23 @@ const AppReview = ({ onSuccess, setShowReviewForm }) => {
   const [toast, setToast] = useState(null);
   const { auth } = usePage().props;
 
-  const userFullName = auth?.agent?.fullName || auth?.tenant?.fullName || auth?.super?.fullName || "";
+  const userFullName = auth?.agent?.name || auth?.tenant?.name || auth?.super?.name || "";
 
-  const { data, setData, post, processing, reset, errors } = useForm({
+  const { data, setData, post, transform, processing, reset, errors } = useForm({
     'overall_rating': 0,
     'name': "",
     'comment': ""
-  })
+  });
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
-    // Ensure name is populated from authenticated user when empty
-    const finalData = {
-      ...data,
-      name: (data.name && data.name.trim() !== "") ? data.name : userFullName
-    };
-
+    
+    transform((formData) => ({
+      ...formData,
+      name: (formData.name && formData.name.trim() !== "") ? formData.name : userFullName,
+    }));
+  
     post("/reviews/app", {
-      data: finalData,
       onSuccess: () => {
         showToast("Review Submitted", "Thank you!!", "success");
         reset();
@@ -40,10 +38,10 @@ const AppReview = ({ onSuccess, setShowReviewForm }) => {
         showToast("Submission Failed", "Please correct the errors and try again.", "error");
       },
     });
-  }
+  };
 
-  const showToast = (name, comment = "success") => {
-    setToast({ name, comment, variant: comment });
+  const showToast = (title, description, variant = "success") => {
+    setToast({ title, description, variant });
     setTimeout(() => setToast(null), 3000);
   };
 
@@ -64,8 +62,8 @@ const AppReview = ({ onSuccess, setShowReviewForm }) => {
           maxWidth: '400px',
           animation: 'slideIn 0.3s ease-out'
         }}>
-          <div style={{ fontWeight: '600', marginBottom: '0.25rem' }}>{toast.name}</div>
-          <div style={{ fontSize: '0.875rem' }}>{toast.comment}</div>
+         <div style={{ fontWeight: '600', marginBottom: '0.25rem' }}>{toast.title}</div>
+         <div style={{ fontSize: '0.875rem' }}>{toast.description}</div>
         </div>
       )}
 
@@ -89,7 +87,7 @@ const AppReview = ({ onSuccess, setShowReviewForm }) => {
                 type="button"
                 onMouseEnter={() => setHoveredRating(value)}
                 onMouseLeave={() => setHoveredRating(0)}
-                onClick={() => setData({ ...data, overall_rating: value })}
+                onClick={() => setData('overall_rating', value)}
                 style={{
                   padding: '0.25rem',
                   border: 'none',
@@ -136,7 +134,7 @@ const AppReview = ({ onSuccess, setShowReviewForm }) => {
           </label>
           <textarea
             value={data.comment}
-            onChange={(e) => setData({ ...data, comment: e.target.value })}
+            onChange={(e) => setData('comment', e.target.value)}
             placeholder="Share more details about your experience..."
             rows={4}
             style={{
@@ -169,12 +167,12 @@ const AppReview = ({ onSuccess, setShowReviewForm }) => {
           </label>
           <input
             value={data.name || userFullName }
-            onChange={(e) => setData({ ...data, name: e.target.value })}
+            onChange={(e) => setData('name', e.target.value)}
             placeholder="Solomon Yeboah"
             style={{
               width: '100%',
               padding: '0.5rem 0.75rem',
-              border: `1px solid ${errors.comment ? '#ef4444' : '#d1d5db'}`,
+              border: `1px solid ${errors.name ? '#ef4444' : '#d1d5db'}`,
               borderRadius: '0.375rem',
               fontSize: '0.875rem',
               outline: 'none',
@@ -182,9 +180,9 @@ const AppReview = ({ onSuccess, setShowReviewForm }) => {
               fontFamily: 'inherit'
             }}
           />
-          {errors.comment && (
+          {errors.name && (
             <p style={{ fontSize: '0.75rem', color: '#ef4444', marginTop: '0.25rem' }}>
-              {errors.comment}
+              {errors.name}
             </p>
           )}
         </div>

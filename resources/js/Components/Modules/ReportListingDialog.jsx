@@ -2,10 +2,10 @@ import { useState } from "react";
 import { Upload, X } from "lucide-react";
 import { useForm, usePage } from "@inertiajs/react";
 
-const ReportListingDialog = ({ setShowAddListingModal, rental }) => {
+const ReportListingDialog = ({ setShowAddListingModal, rental, auth }) => {
   const [uploadedFiles, setUploadedFiles] = useState([]);
   
-  const {data, setData, post, processing, errors, reset} = useForm({
+  const { data, setData, post, transform, processing, errors, reset } = useForm({
     report_type: "",
     description: "",
     evidence: [],
@@ -16,8 +16,8 @@ const ReportListingDialog = ({ setShowAddListingModal, rental }) => {
   const [toast, setToast] = useState(null);
 
   // Get auth from page props (agent/tenant/super)
-  const { auth } = usePage().props;
-  const userFullName = auth?.agent?.fullName || auth?.tenant?.fullName || auth?.super?.fullName || "";
+  // const { auth } = usePage().props;
+  const userFullName = auth?.agent?.name || auth?.tenant?.name || auth?.super?.name || "";
 
   const subjectOptions = [
     "Misleading listing information",
@@ -58,25 +58,12 @@ const ReportListingDialog = ({ setShowAddListingModal, rental }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     
-    const formData = new FormData();
-    
-    // Add text fields
-    formData.append('property_id', data.property_id);
-    formData.append('description', data.description);
-    formData.append('report_type', data.report_type);
-    const nameToUse = (data.name && data.name.trim() !== "") ? data.name : userFullName;
-    formData.append('name', nameToUse);
-    
-    // Add files
-    if (data.evidence && data.evidence.length > 0) {
-      data.evidence.forEach((file, index) => {
-        formData.append(`evidence[${index}]`, file);
-      });
-    }
-    
-    // FIXED: Use the correct endpoint and pass FormData
+    transform((formData) => ({
+      ...formData,
+      name: (formData.name && formData.name.trim() !== "") ? formData.name : userFullName,
+    }));
+  
     post('/report-listing', {
-      data: formData,
       forceFormData: true,
       onSuccess: () => {
         showToast("Report Submitted", "Thank you for helping us maintain trust.", "success");
@@ -179,8 +166,15 @@ const ReportListingDialog = ({ setShowAddListingModal, rental }) => {
               <p style={{ color: '#6b7280', marginBottom: '1rem' }}>
                 {rental?.address}, {rental?.city} • GH₵ {rental?.rent_min} - GH₵ {rental?.rent_max}/month
               </p>
-              <p style={{ color: '#374151', lineHeight: '1.5' }}>
+              <p style={{ color: '#374151', lineHeight: '1.5', marginBottom: '0.5rem' }}>
                 {rental?.description}
+              </p>
+              <p style={{ fontSize: '0.875rem', fontWeight: '500', color: '#374151', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                Agent:
+                <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '24px', height: '24px', borderRadius: '50%', backgroundColor: '#e5e7eb', fontSize: '0.75rem', fontWeight: '600' }}>
+                  {rental.agent_name?.[0]?.toUpperCase() || 'A'}
+                </span>
+                 <span style={{ fontWeight: '600' }}>{rental.agent_name}</span>
               </p>
             </div>
             <h2 style={{
@@ -373,7 +367,7 @@ const ReportListingDialog = ({ setShowAddListingModal, rental }) => {
                 <input
                   type="text"
                   value={data.name || userFullName}
-                  onChange={(e) => setData('name', e.target.value)}
+                  onChange={(e) => setData("name", e.target.value)}
                   placeholder="Solomon Yeboah"
                   style={{
                     width: '100%',

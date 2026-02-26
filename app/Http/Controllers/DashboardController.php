@@ -75,7 +75,7 @@ class DashboardController extends Controller
         
         $rentals = Rental::all();
         $agentData = User::where('role', 'agent')->get();
-        $reports = Report::with('rental', 'rental.agent')->get();
+        $reports = Report::with('rental', 'rental.user')->get();
         $reviews = Review::with('rental')->get();
         $verifications = VerificationRequest::with(['rental', 'agent'])->orderBy('created_at', 'desc')->get();
         
@@ -93,12 +93,15 @@ class DashboardController extends Controller
     public function freeTier() {
         $agentData = Auth::user();
         $rentals = Rental::where('user_id', $agentData->id)->latest()->get();
+        $rentalIds = $rentals->pluck('id');
+        $reviews = Review::whereIn('rental_id', $rentalIds)->latest()->get();
         $plans = app(\App\Http\Controllers\CheckoutController::class)->plansForModal();
 
         return inertia('Dashboards/FreeTierDashboard', 
         [
             'agentData' => $agentData, 
             'rentals' => $rentals, 
+            'reviews' => $reviews,
             'plans' => $plans,
             'open_plan_modal' => is_null($agentData->package)
             || session()->pull('show_plan_modal', false),

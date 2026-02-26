@@ -2,8 +2,8 @@ import { useState } from "react";
 import { Star, X } from "lucide-react";
 import { useForm, usePage } from '@inertiajs/react';
 
-const ReviewForm = ({ propertyId, agentId, onSuccess, rental, setShowAddReviewForm }) => {
-  const { auth } = usePage().props;
+const ReviewForm = ({ propertyId, agentId, onSuccess, rental, setShowAddReviewForm, auth }) => {
+  // const { auth } = usePage().props;
   const [hoveredRating, setHoveredRating] = useState(0);
   const [toast, setToast] = useState(null);
 
@@ -314,9 +314,9 @@ const ReviewForm = ({ propertyId, agentId, onSuccess, rental, setShowAddReviewFo
   );
 };
 
-export default function App({ setShowAddReviewForm, rental }) {
-  const { auth } = usePage().props;
-  console.log("Rental agent name:", rental?.agent?.name);
+export default function App({ setShowAddReviewForm, rental, auth }) {
+  // const { auth } = usePage().props;
+  console.log(auth);
 
   const handleSuccess = () => {
     console.log("Review submitted successfully!");
@@ -376,10 +376,17 @@ export default function App({ setShowAddReviewForm, rental }) {
           <h3 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '0.25rem', color: '#111827' }}>
             {rental.title} {rental.property_type}
           </h3>
-          <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>
-            {rental.area}, {rental.city} • Agent: {rental.agent.name}
+          <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.5rem' }}>
+            {rental.area}, {rental.city}
           </p>
-        </div>
+            <p style={{ fontSize: '0.875rem', fontWeight: '500', color: '#374151', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              Agent:
+              <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '24px', height: '24px', borderRadius: '50%', backgroundColor: '#e5e7eb', fontSize: '0.75rem', fontWeight: '600' }}>
+                {rental.agent_name?.[0]?.toUpperCase() || 'A'}
+              </span>
+               <span style={{ fontWeight: '600' }}>{rental.agent_name}</span>
+            </p>
+          </div>
 
         <ReviewForm
           propertyId={rental?.id}

@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             'email' => 'rent@trust.com',
             'role' => 'admin',
             'status' => 'verified',
+            'package' => 'admin',
             'password' => Hash::make('RentTrust123'),
         ]);
     }

@@ -95,6 +95,8 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     ->name('admin.verify.agent');
     Route::put('/admin/agents/{id}/suspend', [VerificationsController::class, 'suspendAgent'])
     ->name('admin.suspend.agent');
+    Route::put('/admin/listings/{rent}/toggle-approval', [RentController::class, 'toggleApprovalStatus'])
+    ->name('admin.listings.toggle-approval');
     Route::get('/api/verification-requests', [VerificationsController::class, 'index'])
         ->name('verification.index');
     Route::patch('/api/verification-requests/{id}/status', [VerificationsController::class, 'updateStatus'])
@@ -107,6 +109,8 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 Route::get('settings', [AuthController::class, 'settings'])->name('settings.page');
 Route::put('settings/profile/agent', [AuthController::class, 'updateAgentProfile'])->name('settings.agent.page');
 Route::put('settings/profile/admin', [AuthController::class, 'updateAdminProfile'])->name('settings.admin.page');
+// password update route (current user)
+Route::put('settings/password', [AuthController::class, 'updatePassword'])->name('settings.password');
 
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 

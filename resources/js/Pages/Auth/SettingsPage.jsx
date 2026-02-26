@@ -2,12 +2,13 @@ import { useState } from "react";
 import { Shield, Bell, Lock, User, Mail, Globe, Save, Eye, EyeOff, Check } from "lucide-react";
 import Header from "../../Components/Layouts/Header";
 import Footer from "../../Components/Layouts/Footer";
-import { usePage, useForm } from "@inertiajs/react";
+import { usePage, useForm, router } from "@inertiajs/react";
 
 const AdminSettingsPage = () => {
   const [activeTab, setActiveTab] = useState("profile");
   const [showPassword, setShowPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
+  const [securityErrors, setSecurityErrors] = useState({});
   const [toast, setToast] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -18,7 +19,7 @@ const AdminSettingsPage = () => {
 
   // console.log("Auth Data:", userAgent, userAdmin);
 
-  const userFullName = auth?.agent?.fullName || auth?.super?.fullName || "";
+  const userFullName = auth?.agent?.name || auth?.super?.name || "";
   const userEmail = auth?.agent?.email || auth?.super?.email || "";
   const userphone = auth?.agent?.phone || auth?.super?.phone || "";
   const userbio = auth?.agent?.bio || auth?.super?.bio || "";
@@ -91,13 +92,26 @@ const AdminSettingsPage = () => {
       showToast("Password mismatch", "New passwords do not match", "error");
       return;
     }
+
     setIsSaving(true);
-    setTimeout(() => {
-      console.log("Security settings saved:", securityData);
-      showToast("Security updated", "Your security settings have been saved successfully");
-      setSecurityData({ ...securityData, currentPassword: "", newPassword: "", confirmPassword: "" });
-      setIsSaving(false);
-    }, 1000);
+    setSecurityErrors({});
+
+    router.put('/settings/password', {
+      currentPassword: securityData.currentPassword,
+      newPassword: securityData.newPassword,
+      newPassword_confirmation: securityData.confirmPassword,
+    }, {
+      onSuccess: () => {
+        showToast("Security updated", "Password changed successfully");
+        setSecurityData({ currentPassword: "", newPassword: "", confirmPassword: "", sessionTimeout: securityData.sessionTimeout });
+        setIsSaving(false);
+      },
+      onError: (errors) => {
+        setSecurityErrors(errors);
+        showToast("Error", errors.currentPassword || "Failed to update password.", "error");
+        setIsSaving(false);
+      }
+    });
   };
 
   const tabs = [
@@ -554,6 +568,11 @@ const AdminSettingsPage = () => {
                           {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                         </button>
                       </div>
+                      {securityErrors.currentPassword && (
+                        <p style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '0.25rem' }}>
+                          {securityErrors.currentPassword}
+                        </p>
+                      )}
                     </div>
 
                     {/* New Password */}
@@ -603,6 +622,11 @@ const AdminSettingsPage = () => {
                           {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                         </button>
                       </div>
+                      {securityErrors.newPassword && (
+                        <p style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '0.25rem' }}>
+                          {securityErrors.newPassword}
+                        </p>
+                      )}
                     </div>
 
                     {/* Confirm Password */}
