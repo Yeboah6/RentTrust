@@ -85,9 +85,9 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [] }) => {
   const [activeTab, setActiveTab] = useState("overview");
   const [showAddListingModal, setShowAddListingModal] = useState(false);
   const [selectedRental, setSelectedRental] = useState(null);
-    const [showViewModal, setShowViewModal] = useState(false);
-  const [showPricingModal, setShowPricingModal] = useState(false);
-  const { auth } = usePage().props;
+  const [showViewModal, setShowViewModal] = useState(false);
+  const { plans, open_plan_modal } = usePage().props;
+  const [showPricingModal, setShowPricingModal] = useState(open_plan_modal ?? false);
 
   // Free tier limits
   const LISTING_LIMIT = 3;
@@ -885,7 +885,7 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [] }) => {
         </main>
 
         <Footer />
-        <PricingModal isOpen={showPricingModal} onClose={() => setShowPricingModal(false)} />
+        <PricingModal isOpen={showPricingModal} onClose={() => setShowPricingModal(false)} plans={plans} />
 
         {showAddListingModal && (
           <div style={{

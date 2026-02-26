@@ -37,9 +37,13 @@ Route::post('/review-forms', [RentController::class, 'storeReviewForms']);
 Route::post('/reviews/app', [RentController::class, 'storeReviewApp'])->name('reviews.app');
 
 Route::get('pricing', [RentController::class, 'pricing'])->name('pricing.page');
+<<<<<<< HEAD
 
 Route::get('/checkout/plan={plan}', [RentController::class, 'checkout'])->name('checkout.page');
 
+=======
+// Route::get('/checkout/plan={plan}', [RentController::class, 'checkout'])->name('checkout.page');
+>>>>>>> 74b2bd50ddfcf2c00686c95e089a5899a4535f2c
 Route::get('/select-plan', function () {
     return inertia('SelectPlan');
 })->name('agent.plan.select')->middleware('auth');
@@ -63,6 +67,7 @@ Route::middleware(['auth', 'role:agent'])->group(function () {
         ->name('verification.destroy');
 });
 
+<<<<<<< HEAD
 Route::get('/agent/dashboard', [DashboardController::class, 'freeTier'])->name('agent.dashboard');
 
 // Route::prefix('webhooks')->group(function () {
@@ -90,6 +95,33 @@ Route::get('/agent/dashboard', [DashboardController::class, 'freeTier'])->name('
 // });
 
 
+=======
+Route::get('/agent/dashboard', [DashboardController::class, 'freeTier'])->name('free.agent.dashboard');
+
+Route::middleware(['auth'])->group(function () {
+
+    // Single route handles: /checkout/2, /checkout/verified, /checkout/plan=verified
+    // The show() method resolves all three formats internally.
+    Route::get('/checkout/{plan}', [CheckoutController::class, 'show'])
+        ->name('checkout.show')
+        ->where('plan', '.*');  // allow = sign and URL-encoded chars in segment
+
+    Route::post('/checkout/start', [CheckoutController::class, 'start'])
+        ->name('checkout.start');
+
+    Route::post('/checkout/cancel', [CheckoutController::class, 'cancel'])
+        ->name('checkout.cancel');
+
+    Route::get('/payment/callback', [CheckoutController::class, 'callback'])
+        ->name('payment.callback');
+});
+
+Route::prefix('webhooks')->group(function () {
+    Route::post('/paystack',     [WebhookController::class, 'paystack'])->name('webhook.paystack');
+    Route::post('/flutterwave',  [WebhookController::class, 'flutterwave'])->name('webhook.flutterwave');
+});
+
+>>>>>>> 74b2bd50ddfcf2c00686c95e089a5899a4535f2c
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/super-admin', [DashboardController::class, 'superAdmin'])->name('admin.dashboard');
     Route::put('/admin/reports/{id}/status', [RentController::class, 'updateReportStatus'])

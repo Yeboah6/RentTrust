@@ -274,7 +274,14 @@ const FailureState = ({ error, onRetry, onCancel }) => (
  *   router.visit('/checkout/' + plan.id)                        ← any other caller
  */
 const CheckoutPage = ({ plan }) => {
+<<<<<<< HEAD
   const { flash } = usePage().props;
+=======
+  const { flash, auth, subscription } = usePage().props;
+
+  // Redirect to login if not authenticated (belt-and-suspenders — middleware should catch this)
+  const currentUser = auth?.agent ?? auth?.super ?? auth?.tenant;
+>>>>>>> 74b2bd50ddfcf2c00686c95e089a5899a4535f2c
 
   const [paymentState, setPaymentState] = useState("form");
   const [selectedProvider, setSelectedProvider] = useState("paystack");
