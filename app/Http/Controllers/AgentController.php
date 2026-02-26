@@ -72,7 +72,7 @@ class AgentController extends Controller
             $plan = \App\Models\Plan::where('slug', 'free')->firstOrFail();
             app(CheckoutController::class)->activateFreeForAgent($user, $plan);
 
-            return redirect()->route('agent.dashboard')
+            return redirect()->route('free.agent.dashboard')
                 ->with('success', 'Free plan activated!');
         }
 

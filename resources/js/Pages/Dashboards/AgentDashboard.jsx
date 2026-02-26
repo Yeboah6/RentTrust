@@ -1576,10 +1576,6 @@ const Users = ({ style }) => (
 );
 
 const AgentDashboardPage = ({ agentData, rentals, reviews }) => {
-
-  // ── Pull billing data + plans from Inertia page props ──────────────────────
-  // billing  → passed by DashboardController::agentDashboard() (see DashboardController_additions.php)
-  // plans    → passed by DashboardController::agentDashboard() via plansForModal()
   const { billing, plans } = usePage().props;
 
   const [activeTab, setActiveTab] = useState("overview");

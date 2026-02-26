@@ -7,7 +7,7 @@ const ReviewForm = ({ propertyId, agentId, onSuccess, rental, setShowAddReviewFo
   const [hoveredRating, setHoveredRating] = useState(0);
   const [toast, setToast] = useState(null);
 
-  const userFullName = auth?.agent?.fullName || auth?.tenant?.fullName || auth?.super?.fullName || "";
+  const userFullName = auth?.agent?.name || auth?.tenant?.name || auth?.super?.name || "";
   console.log("Auth in ReviewForm:", auth);
   
   const { data, setData, post, processing, errors, reset } = useForm({
@@ -316,6 +316,7 @@ const ReviewForm = ({ propertyId, agentId, onSuccess, rental, setShowAddReviewFo
 
 export default function App({ setShowAddReviewForm, rental }) {
   const { auth } = usePage().props;
+  console.log("Rental agent name:", rental?.agent?.name);
 
   const handleSuccess = () => {
     console.log("Review submitted successfully!");
@@ -376,7 +377,7 @@ export default function App({ setShowAddReviewForm, rental }) {
             {rental.title} {rental.property_type}
           </h3>
           <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>
-            {rental.area}, {rental.city} • Agent: {rental.agent.fullName}
+            {rental.area}, {rental.city} • Agent: {rental.agent.name}
           </p>
         </div>
 
