@@ -6,6 +6,7 @@ use Illuminate\Foundation\Configuration\Middleware;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\EnsureAgentIsAuthenticated;
 use App\Http\Middleware\RoleMiddleware;
+use App\Http\Middleware\RequiresSubscription;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -19,6 +20,11 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
             $middleware->alias([
             'role' => RoleMiddleware::class,
+            'subscription' => RequiresSubscription::class,
+        ]);
+
+        $middleware->validateCsrfTokens(except: [
+            'webhooks/*',
         ]);
         
     })

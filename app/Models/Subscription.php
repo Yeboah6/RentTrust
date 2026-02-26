@@ -1,64 +1,64 @@
 <?php
-// app/Models/Subscription.php
 
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Subscription extends Model
 {
-    use HasFactory;
-
     protected $fillable = [
-        'user_id',
-        'plan_type',
-        'price',
-        'billing_cycle',
-        'status',
-        'provider',
-        'provider_subscription_id',
-        'authorization_code',
-        'card_type',
-        'last_four',
-        'next_billing_date',
-        'failed_attempts',
-        'last_payment_attempt',
-        'starts_at',
-        'ends_at',
-        'trial_ends_at'
+        'user_id', 'plan_id', 'provider',
+        'provider_subscription_id', 'provider_customer_code',
+        'status', 'starts_at', 'ends_at', 'grace_ends_at',
+        'retry_count', 'last_retry_at', 'meta',
     ];
 
     protected $casts = [
-        'price' => 'decimal:2',
-        'next_billing_date' => 'datetime',
-        'last_payment_attempt' => 'datetime',
-        'starts_at' => 'datetime',
-        'ends_at' => 'datetime',
-        'trial_ends_at' => 'datetime'
+        'starts_at'      => 'datetime',
+        'ends_at'        => 'datetime',
+        'grace_ends_at'  => 'datetime',
+        'last_retry_at'  => 'datetime',
+        'meta'           => 'array',
     ];
 
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    public function payments()
+    public function plan(): BelongsTo
     {
-        return $this->morphMany(Payment::class, 'payable');
+        return $this->belongsTo(Plan::class);
     }
 
-    public function isActive()
+    public function isActive(): bool
     {
-        return $this->status === 'active' && 
-               (!$this->ends_at || $this->ends_at->isFuture());
+        return $this->status === 'active' && ! $this->isExpired();
     }
 
-    public function needsRenewal()
+    public function isExpired(): bool
     {
-        return $this->status === 'active' && 
-               $this->next_billing_date && 
-               $this->next_billing_date->isPast() &&
-               $this->failed_attempts < 3;
+        if (is_null($this->ends_at)) {
+            return false;
+        }
+
+        // Allow grace period
+        if ($this->grace_ends_at && $this->grace_ends_at->isFuture()) {
+            return false;
+        }
+
+        return $this->ends_at->isPast();
+    }
+
+    public function inGracePeriod(): bool
+    {
+        return $this->ends_at?->isPast()
+            && $this->grace_ends_at?->isFuture();
+    }
+
+    public function daysUntilExpiry(): int
+    {
+        return max(0, (int) now()->diffInDays($this->ends_at, false));
     }
 }
