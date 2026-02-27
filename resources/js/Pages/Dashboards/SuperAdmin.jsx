@@ -2,6 +2,7 @@ import { useState } from "react";
 import Header from "@/Components/Layouts/Header";
 import Footer from "@/Components/Layouts/Footer";
 import { Link, useForm, router, usePage } from "@inertiajs/react";
+import AddRentalPage from "@/Components/Modules/AddRentals";
 import VerifyAgentDialog from '@/Components/Modules/VerifyAgent';
 import ViewRentals from "@/Components/Modules/ViewRental";
 import EditRentals from "@/Components/Modules/EditRentals";
@@ -93,6 +94,7 @@ const SuperAdminDashboard = ({ adminData, rentals, agentData, reviews, reports, 
   const [selectedRental, setSelectedRental] = useState(null);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showAgentProfile, setShowAgentProfile] = useState(false);
+  const [showAddListingModal, setShowAddListingModal] = useState(false);
   const [showEditListingModal, setShowEditListingModal] = useState(false);
   const [toast, setToast] = useState(null);
 
@@ -108,7 +110,7 @@ const SuperAdminDashboard = ({ adminData, rentals, agentData, reviews, reports, 
   const mockAdmin = {
     name: adminData?.name || "Super Admin",
     role: "Platform Administrator",
-    verification_status: "verified",
+    status: "verified",
     avatar_url: null,
     total_agents: agentData?.length,
     total_listings: rentals?.length,
@@ -234,7 +236,9 @@ const SuperAdminDashboard = ({ adminData, rentals, agentData, reviews, reports, 
   };
 
   const getStatusBadge = (status) => {
-    if (status === "verified") {
+    // normalize null/undefined
+    status = status || '';
+    if (status === "verified" || status === "approved") {
       return (
         <span style={{
           display: 'inline-flex',
@@ -248,7 +252,7 @@ const SuperAdminDashboard = ({ adminData, rentals, agentData, reviews, reports, 
           gap: '0.25rem'
         }}>
           <CheckCircle style={{ height: '0.75rem', width: '0.75rem' }} />
-          Verified
+          {status === 'approved' ? 'Approved' : 'Verified'}
         </span>
       );
     } else if (status === "pending") {
@@ -269,7 +273,25 @@ const SuperAdminDashboard = ({ adminData, rentals, agentData, reviews, reports, 
           Pending
         </span>
       );
-    } else {
+    } else if (status === "unverified") {
+      return (
+        <span style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          padding: '0.25rem 0.625rem',
+          fontSize: '0.75rem',
+          fontWeight: '500',
+          backgroundColor: 'hsl(40 30% 94%)',
+          color: 'hsl(200 25% 15%)',
+          borderRadius: '9999px',
+          gap: '0.25rem',
+          border: '1px solid hsl(40 20% 88%)'
+        }}>
+          <Clock style={{ height: '0.75rem', width: '0.75rem' }} />
+          Unverified
+        </span>
+      );
+    } else if (status === "suspended") {
       return (
         <span style={{
           display: 'inline-flex',
@@ -285,6 +307,43 @@ const SuperAdminDashboard = ({ adminData, rentals, agentData, reviews, reports, 
         }}>
           <AlertCircle style={{ height: '0.75rem', width: '0.75rem' }} />
           Suspended
+        </span>
+      );
+    } else if (status === "rejected") {
+      return (
+        <span style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          padding: '0.25rem 0.625rem',
+          fontSize: '0.75rem',
+          fontWeight: '500',
+          backgroundColor: '#d92626',
+          color: 'white',
+          borderRadius: '9999px',
+          gap: '0.25rem',
+          border: '1px solid hsl(40 20% 88%)'
+        }}>
+          <AlertCircle style={{ height: '0.75rem', width: '0.75rem' }} />
+          Rejected
+        </span>
+      );
+    } else {
+      // generic fallback
+      return (
+        <span style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          padding: '0.25rem 0.625rem',
+          fontSize: '0.75rem',
+          fontWeight: '500',
+          backgroundColor: '#d92626',
+          color: 'white',
+          borderRadius: '9999px',
+          gap: '0.25rem',
+          border: '1px solid hsl(40 20% 88%)'
+        }}>
+          <AlertCircle style={{ height: '0.75rem', width: '0.75rem' }} />
+          {status.charAt(0).toUpperCase() + status.slice(1)}
         </span>
       );
     }
@@ -390,7 +449,7 @@ const SuperAdminDashboard = ({ adminData, rentals, agentData, reviews, reports, 
                   <div style={{ flex: 1 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem', flexWrap: 'wrap' }}>
                       <h1 className="text-2xl font-bold" style={{ color: 'hsl(200 25% 15%)' }}>{agent.name}</h1>
-                      {getStatusBadge(agent.verification_status)}
+                      {getStatusBadge(agent.status)}
                     </div>
                     <p style={{ color: 'hsl(200 15% 45%)', marginBottom: '0.5rem' }}>{agent.role}</p>
                     <div style={{ display: 'flex', gap: '1rem', fontSize: '0.875rem', flexWrap: 'wrap' }}>
@@ -571,7 +630,7 @@ const SuperAdminDashboard = ({ adminData, rentals, agentData, reviews, reports, 
                           >
                             View Details
                           </button>
-                          {agentItem.status === 'unverified' && (
+                          { (agentItem.status === 'unverified' || agentItem.status === 'pending') && (
                             <button
                               onClick={() => handleVerifyClick(agentItem.id)}
                               style={{
@@ -586,6 +645,30 @@ const SuperAdminDashboard = ({ adminData, rentals, agentData, reviews, reports, 
                               }}
                             >
                               Verify Agent
+                            </button>
+                          )}
+
+                          { agentItem.status === 'verified' && (
+                            <button
+                              onClick={() => {
+                                if (!confirm(`Mark ${agentItem.fullName} as unverified?`)) return;
+                                router.put(`/admin/agents/${agentItem.id}/suspend`, { status: 'unverified' }, {
+                                  onSuccess: () => showToast('Agent updated', `${agentItem.fullName} is now unverified`),
+                                  onError: () => showToast('Error', 'Failed to update agent', 'error')
+                                });
+                              }}
+                              style={{
+                                padding: '0.375rem 0.75rem',
+                                background: 'white',
+                                color: 'hsl(200 25% 15%)',
+                                border: '1px solid hsl(40 20% 88%)',
+                                borderRadius: '0.375rem',
+                                fontSize: '0.875rem',
+                                fontWeight: '500',
+                                cursor: 'pointer'
+                              }}
+                            >
+                              Mark Unverified
                             </button>
                           )}
                           <button
@@ -618,7 +701,9 @@ const SuperAdminDashboard = ({ adminData, rentals, agentData, reviews, reports, 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
                     <h2 className="text-lg font-semibold" style={{ color: 'hsl(200 25% 15%)' }}>All Platform Listings</h2>
-                    <button style={{
+                    <button 
+                    onClick={() => setShowAddListingModal(true)}
+                    style={{
                       padding: '0.5rem 1rem',
                       background: 'linear-gradient(135deg, hsl(174 62% 32%) 0%, hsl(174 50% 25%) 100%)',
                       color: 'white',
@@ -1367,6 +1452,16 @@ const SuperAdminDashboard = ({ adminData, rentals, agentData, reviews, reports, 
           onClose={() => setShowAgentProfile(false)}
           auth={auth}
         />
+
+        {/* Add Listing Modal */}
+        {showAddListingModal && (
+          <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: 'clamp(0.5rem, 2vw, 1rem)' }}>
+            <div className="modal-content" style={{ backgroundColor: 'white', borderRadius: 'clamp(0.75rem, 2vw, 1rem)', maxHeight: '90vh', overflow: 'auto', maxWidth: 'clamp(90%, 95vw, 60%)', width: '100%', position: 'relative' }}>
+              <button onClick={() => setShowAddListingModal(false)} className="action-button" style={{ position: 'sticky', top: 0, right: 0, padding: 'clamp(0.75rem, 2vw, 1rem)', border: 'none', background: 'transparent', fontSize: 'clamp(1.25rem, 4vw, 1.5rem)', cursor: 'pointer', color: 'hsl(200 15% 45%)', float: 'right', zIndex: 10 }}>✕</button>
+              <AddRentalPage agentData={agentData} setShowAddListingModal={setShowAddListingModal} adminData={adminData} />
+            </div>
+          </div>
+        )}
 
         {/* Edit Listing Modal */}
         {showEditListingModal && selectedRental && (

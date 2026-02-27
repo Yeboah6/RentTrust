@@ -39,8 +39,8 @@ const EyeOff = ({ className, style }) => (
   </svg>
 );
 
-const AuthPage = () => {
-  const [isLogin, setIsLogin] = useState(true);
+const AuthPage = ({ isLogin: initialLogin = true }) => {
+  const [isLogin, setIsLogin] = useState(initialLogin);
   const [showPassword, setShowPassword] = useState(false);
 
   const { data, setData, post, processing, errors, reset } = useForm({

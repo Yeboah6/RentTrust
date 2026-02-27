@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { useForm } from '@inertiajs/react';
 import { Home, MapPin, DollarSign, Calendar, Image, FileText, CheckCircle2, AlertCircle, Upload, X } from 'lucide-react';
 
-const AddRentalPage = ({ agentData, setShowAddListingModal }) => {
+const AddRentalPage = ({ agentData, setShowAddListingModal, adminData }) => {
 
-  const { data, setData, post, processing, errors, reset } = useForm({
+  const { data, setData, post, transform, processing, errors, reset } = useForm({
     title: '',
     propertyType: '',
     area: '',
@@ -18,9 +18,9 @@ const AddRentalPage = ({ agentData, setShowAddListingModal }) => {
     amenities: [],
     images: [],
     description: '',
-    agentName: agentData?.name || '',
-    agentPhone: agentData?.phone || '',
-    agentEmail: agentData?.email || ''
+    agentName: agentData?.name || adminData?.name || '',
+    agentPhone: agentData?.phone || adminData?.phone || '',
+    agentEmail: agentData?.email || adminData?.email || '',
   });
 
   const [images, setImages] = useState([]);
@@ -41,7 +41,6 @@ const AddRentalPage = ({ agentData, setShowAddListingModal }) => {
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
     
-    // Filter valid files
     const validFiles = files.filter(file => {
       if (file.size > 5 * 1024 * 1024) {
         showToast("File too large", `${file.name} is larger than 5MB`, "error");
@@ -108,42 +107,13 @@ const AddRentalPage = ({ agentData, setShowAddListingModal }) => {
       return;
     }
 
-    const formData = new FormData();
-    
-    // Add all form fields
-    formData.append('title', data.title);
-    formData.append('propertyType', data.propertyType);
-    formData.append('area', data.area);
-    formData.append('city', data.city);
-    formData.append('address', data.address || '');
-    formData.append('rentMin', data.rentMin);
-    formData.append('rentMax', data.rentMax);
-    formData.append('advanceDuration', data.advanceDuration);
-    formData.append('bedrooms', data.bedrooms);
-    formData.append('bathrooms', data.bathrooms || '0');
+    // Convert amenities array to JSON string before sending
+    transform((d) => ({
+      ...d,
+      amenities: JSON.stringify(d.amenities ?? []),
+    }));
 
-     // Ensure amenities is always a string
-    const amenitiesString = Array.isArray(data.amenities) 
-      ? JSON.stringify(data.amenities) 
-      : data.amenities || '[]';
-    formData.append('amenities', amenitiesString);
-
-    formData.append('description', data.description || '');
-    formData.append('agentName', data.agentName);
-    formData.append('agentPhone', data.agentPhone);
-    formData.append('agentEmail', data.agentEmail);
-    
-    // Add images
-    if (data.images && data.images.length > 0) {
-      data.images.forEach((file, index) => {
-        if (file) {
-          formData.append(`images[${index}]`, file);
-        }
-      });
-    }
-    
     post('/rent', {
-      data: formData,
       forceFormData: true,
       onSuccess: () => {
         showToast("Listing Submitted", "Your rental listing has been submitted for review.", "success");
@@ -183,7 +153,6 @@ const AddRentalPage = ({ agentData, setShowAddListingModal }) => {
           ring-color: hsl(174 62% 32%);
         }
 
-        /* Mobile responsive styles */
         @media (max-width: 768px) {
           .modal-content { 
             max-height: 85vh !important; 
@@ -284,7 +253,6 @@ const AddRentalPage = ({ agentData, setShowAddListingModal }) => {
           }
         }
 
-        /* Prevent zoom on iOS */
         @media (max-width: 768px) {
           input[type="text"],
           input[type="email"],
@@ -296,7 +264,6 @@ const AddRentalPage = ({ agentData, setShowAddListingModal }) => {
           }
         }
 
-        /* Tablet and medium screens */
         @media (min-width: 481px) and (max-width: 768px) {
           .form-grid { 
             grid-template-columns: repeat(2, 1fr) !important;
@@ -311,7 +278,6 @@ const AddRentalPage = ({ agentData, setShowAddListingModal }) => {
           }
         }
 
-        /* Desktop */
         @media (min-width: 769px) {
           .amenities-grid { 
             grid-template-columns: repeat(3, 1fr) !important;
@@ -973,6 +939,7 @@ const AddRentalPage = ({ agentData, setShowAddListingModal }) => {
                     </p>
                   </div>
 
+                  {/* Agent Name */}
                   <div>
                     <label className="block font-medium mb-2" style={{ 
                       color: 'hsl(200 25% 15%)',
@@ -982,7 +949,7 @@ const AddRentalPage = ({ agentData, setShowAddListingModal }) => {
                     </label>
                     <input
                       type="text"
-                      value={data.agentName || agentData.fullName}
+                      value={data.agentName}
                       onChange={(e) => setData('agentName', e.target.value)}
                       className="w-full border rounded-lg focus:ring-2 transition-all"
                       style={{ 
@@ -1001,6 +968,7 @@ const AddRentalPage = ({ agentData, setShowAddListingModal }) => {
                     )}
                   </div>
 
+                  {/* Phone */}
                   <div>
                     <label className="block font-medium mb-2" style={{ 
                       color: 'hsl(200 25% 15%)',
@@ -1010,7 +978,7 @@ const AddRentalPage = ({ agentData, setShowAddListingModal }) => {
                     </label>
                     <input
                       type="tel"
-                      value={data.agentPhone || agentData.phone}
+                      value={data.agentPhone}
                       onChange={(e) => setData('agentPhone', e.target.value)}
                       className="w-full border rounded-lg focus:ring-2 transition-all"
                       style={{ 
@@ -1029,6 +997,7 @@ const AddRentalPage = ({ agentData, setShowAddListingModal }) => {
                     )}
                   </div>
 
+                  {/* Email */}
                   <div>
                     <label className="block font-medium mb-2" style={{ 
                       color: 'hsl(200 25% 15%)',
@@ -1038,7 +1007,7 @@ const AddRentalPage = ({ agentData, setShowAddListingModal }) => {
                     </label>
                     <input
                       type="email"
-                      value={data.agentEmail || agentData.email}
+                      value={data.agentEmail}
                       onChange={(e) => setData('agentEmail', e.target.value)}
                       className="w-full border rounded-lg focus:ring-2 transition-all"
                       style={{ 

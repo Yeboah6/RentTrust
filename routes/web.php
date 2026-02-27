@@ -117,7 +117,13 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 Route::get('/sign-up', [AuthController::class, 'signUp']) -> name('sign-up.page');
 Route::post('/sign-up', [AuthController::class, 'store']);
-Route::post('/login', [AuthController::class, 'login']);
+
+// login form and action routes
+Route::get('/login', function () {
+    return inertia('Auth/AuthPage', ['isLogin' => true]);
+})->name('login');
+
+Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 
 Route::get('/forgot-password', [PasswordResetController::class, 'showForgotPasswordForm'])
     ->name('password.request');

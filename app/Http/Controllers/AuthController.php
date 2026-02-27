@@ -14,7 +14,8 @@ class AuthController extends Controller
         $referrer = $request->headers->get('referer') ?? '/';
         $request->session()->put('signup_referrer', $referrer);
         
-        return inertia('Auth/AuthPage');
+        // pass flag to show signup form by default
+        return inertia('Auth/AuthPage', ['isLogin' => false]);
     }
 
     public function store(Request $request) {

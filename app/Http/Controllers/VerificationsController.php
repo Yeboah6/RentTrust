@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Agent;
+use App\Models\User;
 use App\Models\Rental;
 use App\Models\VerificationRequest;
 use Illuminate\Support\Facades\Auth;
@@ -20,7 +20,7 @@ class VerificationsController extends Controller
             'status' => 'required|in:verified,rejected,request_info',
         ]);
 
-        $verify = Agent::findOrFail($id);
+        $verify = User::findOrFail($id);
         $verify->update([
             'status' => $validated['status'],
             'updated_at' => now(),
@@ -35,7 +35,7 @@ class VerificationsController extends Controller
             'status' => 'required|in:suspended,unverified',
         ]);
 
-        $agent = Agent::findOrFail($id);
+        $agent = User::findOrFail($id);
         $agent->update([
             'status' => $validated['status'],
             'updated_at' => now(),
@@ -351,12 +351,14 @@ class VerificationsController extends Controller
                 if ($request->status === 'approved') {
                     $rental->update([
                         'verification_status' => 'verified',
+                        'status' => 'approved',
                         'verified_at' => now(),
                         'is_verified' => true
                     ]);
                 } elseif ($request->status === 'rejected') {
                     $rental->update([
                         'verification_status' => 'rejected',
+                        'status' => 'rejected',
                         'verification_rejected_at' => now(),
                         'verification_rejection_reason' => $request->rejection_reason
                     ]);
@@ -364,11 +366,9 @@ class VerificationsController extends Controller
                     // If status changed back to pending
                     $rental->update([
                         'verification_status' => 'pending',
-                        'verified_at' => null,
-                        'is_verified' => false
+                        'status' => 'pending',
                     ]);
                 }
-            }
 
             DB::commit();
 
@@ -377,6 +377,8 @@ class VerificationsController extends Controller
                 'new_status' => $request->status,
                 'reviewed_by' => Auth::id()
             ]);
+
+            }
 
             // TODO: Send notification email to agent
 
