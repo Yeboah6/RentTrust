@@ -75,7 +75,7 @@ class AuthController extends Controller
         elseif ($user->role === 'agent') {
             return redirect()->intended('/agent-dashboard');
         } 
-        elseif ($user->role === 'admin' && $user->package === 'free') {
+        elseif ($user->role === 'admin' && $user->package === 'admin') {
             return redirect('/super-admin');
         }
 

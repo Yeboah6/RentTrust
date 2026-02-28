@@ -70,11 +70,6 @@ const buildAuditEntries = (activity) => {
     { id: 2, admin: 'Admin User', action: 'Subscription extended', affectedUser: 'Ama Serwaa', timestamp: '2024-02-14 09:15:22', notes: 'Manually extended by 1 month — customer service compensation', type: 'subscription', icon: CheckCircle, iconBg: 'hsl(152 60% 95%)', iconColor: 'hsl(152 60% 40%)' },
     { id: 3, admin: 'Super Admin', action: 'Account suspended', affectedUser: 'Kofi Asante', timestamp: '2024-02-14 08:45:10', notes: 'Suspended due to fraudulent activity', type: 'suspension', icon: XCircle, iconBg: 'hsl(0 70% 95%)', iconColor: 'hsl(0 70% 50%)' },
     { id: 4, admin: 'Admin User', action: 'Payment verified', affectedUser: 'Yaw Boateng', timestamp: '2024-02-13 16:20:33', notes: 'Manual payment verification — bank confirmation received', type: 'payment', icon: CheckCircle, iconBg: 'hsl(152 60% 95%)', iconColor: 'hsl(152 60% 40%)' },
-    { id: 5, admin: 'Super Admin', action: 'Subscription cancelled', affectedUser: 'Kwesi Nyarko', timestamp: '2024-02-13 11:15:40', notes: 'Cancelled at user request — no refund issued', type: 'subscription', icon: XCircle, iconBg: 'hsl(0 70% 95%)', iconColor: 'hsl(0 70% 50%)' },
-    { id: 6, admin: 'Admin User', action: 'Plan upgraded', affectedUser: 'Efua Mensah', timestamp: '2024-02-12 15:45:27', notes: 'Upgraded from Free to Pro — manual override', type: 'subscription', icon: TrendingUp, iconBg: 'hsl(214 100% 95%)', iconColor: 'hsl(214 100% 50%)' },
-    { id: 7, admin: 'Super Admin', action: 'Payment disputed', affectedUser: 'Yaa Mensah', timestamp: '2024-02-10 16:45:12', notes: 'Payment dispute opened — under investigation', type: 'payment', icon: AlertCircle, iconBg: 'hsl(40 30% 94%)', iconColor: 'hsl(40 90% 50%)' },
-    { id: 8, admin: 'Admin User', action: 'Free month granted', affectedUser: 'Kwame Asare', timestamp: '2024-02-11 14:25:38', notes: 'Free month granted — service outage compensation', type: 'subscription', icon: CheckCircle, iconBg: 'hsl(152 60% 95%)', iconColor: 'hsl(152 60% 40%)' },
-    { id: 9, admin: 'Super Admin', action: 'Settings updated', affectedUser: 'Ama Darko', timestamp: '2024-02-09 13:15:33', notes: 'Account settings updated — email preferences modified', type: 'settings', icon: Edit, iconBg: 'hsl(261 51% 95%)', iconColor: 'hsl(261 51% 51%)' },
   ];
 };
 
