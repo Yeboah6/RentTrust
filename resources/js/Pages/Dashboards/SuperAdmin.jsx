@@ -1,23 +1,19 @@
 import { useState } from "react";
 import Header from "@/Components/Layouts/Header";
 import Footer from "@/Components/Layouts/Footer";
-import { Link, useForm, router, usePage } from "@inertiajs/react";
+import { Link, router, usePage } from "@inertiajs/react";
 import AddRentalPage from "@/Components/Modules/AddRentals";
 import VerifyAgentDialog from '@/Components/Modules/VerifyAgent';
 import ViewRentals from "@/Components/Modules/ViewRental";
 import EditRentals from "@/Components/Modules/EditRentals";
 import ViewAgentVerifications from '@/Components/Modules/ViewAgentVerifications';
 import AgentProfileModal from '@/Components/Modules/AgentProfileModal';
-import { MapPin} from 'lucide-react';
+import GrantSubscriptionModal from '@/Components/Modules/GrantSubscriptionModal';
+import { MapPin } from 'lucide-react';
 
-// Icon components
+// ─── Icons ────────────────────────────────────────────────────────────────────
+
 const Shield = ({ style }) => (
-  <svg style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-  </svg>
-);
-
-const Flag = ({ style }) => (
   <svg style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
   </svg>
@@ -65,18 +61,6 @@ const ShieldCheck = ({ style }) => (
   </svg>
 );
 
-const Menu = ({ style }) => (
-  <svg style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-  </svg>
-);
-
-const X = ({ style }) => (
-  <svg style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-  </svg>
-);
-
 const Settings = ({ style }) => (
   <svg style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
@@ -84,7 +68,30 @@ const Settings = ({ style }) => (
   </svg>
 );
 
-const SuperAdminDashboard = ({ adminData, rentals, agentData, reviews, reports, verifications }) => {
+const Gift = ({ style }) => (
+  <svg style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
+  </svg>
+);
+
+// Plan badge for agent cards
+const PlanBadge = ({ slug }) => {
+  const configs = {
+    pro:      { label: 'Pro',      bg: 'hsl(174 62% 32%)',   text: 'white' },
+    verified: { label: 'Verified', bg: 'hsl(214 100% 50%)',  text: 'white' },
+    free:     { label: 'Free',     bg: 'hsl(40 20% 88%)',    text: 'hsl(200 25% 35%)' },
+  };
+  const c = configs[slug ?? 'free'] ?? configs.free;
+  return (
+    <span style={{ display: 'inline-block', padding: '0.15rem 0.5rem', borderRadius: '9999px', fontSize: '0.68rem', fontWeight: '700', backgroundColor: c.bg, color: c.text, letterSpacing: '0.03em' }}>
+      {c.label}
+    </span>
+  );
+};
+
+// ─── Main Component ───────────────────────────────────────────────────────────
+
+const SuperAdminDashboard = ({ adminData, rentals, agentData, reviews, reports, verifications, plans }) => {
   const { auth } = usePage().props;
   const [activeTab, setActiveTab] = useState("agents");
   const [respondingTo, setRespondingTo] = useState(null);
@@ -96,16 +103,16 @@ const SuperAdminDashboard = ({ adminData, rentals, agentData, reviews, reports, 
   const [showAgentProfile, setShowAgentProfile] = useState(false);
   const [showAddListingModal, setShowAddListingModal] = useState(false);
   const [showEditListingModal, setShowEditListingModal] = useState(false);
+  // Grant subscription modal state
+  const [grantTarget, setGrantTarget] = useState(null);
+  const [showGrantModal, setShowGrantModal] = useState(false);
+
   const [toast, setToast] = useState(null);
 
   const showToast = (title, description, variant = "success") => {
     setToast({ title, description, variant });
-    setTimeout(() => setToast(null), 3000);
+    setTimeout(() => setToast(null), 3500);
   };
-
-  const { put, data, setData, processing } = useForm({
-    status: ''
-  });
 
   const mockAdmin = {
     name: adminData?.name || "Super Admin",
@@ -117,309 +124,107 @@ const SuperAdminDashboard = ({ adminData, rentals, agentData, reviews, reports, 
     total_reports: reports?.length
   };
 
-  const agent = mockAdmin;
-  const agents = agentData || [];
+  const agent   = mockAdmin;
+  const agents  = agentData || [];
   const properties = rentals || [];
 
+  // ── Handlers ──────────────────────────────────────────────────────────────
 
   const handleVerifyClick = (agentId) => {
-    const verifyAgent = agents.find(a => a.id === agentId);
-    setSelectedAgent(verifyAgent);
+    setSelectedAgent(agents.find(a => a.id === agentId));
     setShowDialog(true);
   };
 
   const handleViewClick = (rental) => {
-    const selectViewData = rentals.find(r => r.id === rental.id);
-    setSelectedRental(selectViewData);
+    setSelectedRental(rentals.find(r => r.id === rental.id));
     setShowViewModal(true);
   };
 
   const handleViewProfile = (agentData) => {
-    const payload = agentData && agentData._original ? agentData._original : agentData;
-    setSelectedAgent(payload);
+    setSelectedAgent(agentData?._original ?? agentData);
     setShowAgentProfile(true);
   };
 
   const handleEditClick = (rental) => {
-    const selectedRentalData = rentals.find(r => r.id === rental.id);
-    setSelectedRental(selectedRentalData);
+    setSelectedRental(rentals.find(r => r.id === rental.id));
     setShowEditListingModal(true);
   };
 
+  const handleGrantClick = (agentItem) => {
+    setGrantTarget(agentItem);
+    setShowGrantModal(true);
+  };
+
   const handleSuspendAgent = (agentId) => {
-    const agent = agents.find(a => a.id === agentId);
-
-    if (!agent) {
-      showToast("Error", "Agent not found.", "error");
-      return;
-    }
-
-    const isSuspended = agent.status === 'suspended';
-    const newStatus = isSuspended ? 'unverified' : 'suspended';
-    const actionText = isSuspended ? 'unsuspend' : 'suspend';
-
-    if (confirm(`Are you sure you want to ${actionText} ${agent.fullName}?`)) {
-      router.put(`/admin/agents/${agentId}/suspend`, {
-        status: newStatus
-      }, {
-        onSuccess: () => {
-          showToast(
-            isSuspended ? "Agent Unsuspended" : "Agent Suspended",
-            `${agent.fullName} has been ${actionText}ed successfully.`,
-            "success"
-          );
-        },
-        onError: (errors) => {
-          console.error('Suspension error:', errors);
-          showToast("Suspension Failed", `Unable to ${actionText} agent. Please try again.`, "error");
-        }
-      });
-    }
+    const a = agents.find(a => a.id === agentId);
+    if (!a) return;
+    const isSuspended = a.status === 'suspended';
+    const newStatus   = isSuspended ? 'unverified' : 'suspended';
+    const action      = isSuspended ? 'unsuspend' : 'suspend';
+    if (!confirm(`Are you sure you want to ${action} ${a.fullName}?`)) return;
+    router.put(`/admin/agents/${agentId}/suspend`, { status: newStatus }, {
+      onSuccess: () => showToast(isSuspended ? 'Agent Unsuspended' : 'Agent Suspended', `${a.fullName} has been ${action}ed.`),
+      onError: () => showToast('Failed', `Unable to ${action} agent.`, 'error'),
+    });
   };
 
   const handleApproveToggle = (property) => {
     const isApproved = property.status === 'approved';
-    const actionText = isApproved ? 'revert to pending' : 'approve';
-    const confirmMessage = `Are you sure you want to ${actionText} "${property.title}"?`;
-
-    if (confirm(confirmMessage)) {
-      router.put(`/admin/listings/${property.id}/toggle-approval`, {}, {
-        onSuccess: () => {
-          showToast(
-            isApproved ? "Reverted to Pending" : "Listing Approved",
-            `${property.title} has been ${actionText}d successfully.`,
-            "success"
-          );
-        },
-        onError: (errors) => {
-          console.error('Approval toggle error:', errors);
-          showToast("Action Failed", `Unable to ${actionText}. Please try again.`, "error");
-        }
-      });
-    }
-  };
-
-  const handleReportAction = (reportId, action) => {
-    alert(`Report ${reportId} marked as ${action}`);
+    const action     = isApproved ? 'revert to pending' : 'approve';
+    if (!confirm(`Are you sure you want to ${action} "${property.title}"?`)) return;
+    router.put(`/admin/listings/${property.id}/toggle-approval`, {}, {
+      onSuccess: () => showToast(isApproved ? 'Reverted to Pending' : 'Listing Approved', `${property.title} updated.`),
+      onError: () => showToast('Action Failed', `Unable to ${action}.`, 'error'),
+    });
   };
 
   const handleDeleteListing = (property) => {
-    if (confirm(`Are you sure you want to delete "${property.title}"? This action cannot be undone.`)) {
-      router.delete(`/rent/${property.id}`, {}, {
-        onSuccess: () => {
-          showToast(
-            "Listing Deleted",
-            `"${property.title}" has been deleted successfully.`,
-            "success"
-          );
-        },
-        onError: (errors) => {
-          console.error('Delete error:', errors);
-          showToast("Delete Failed", `Unable to delete listing. Please try again.`, "error");
-        }
-      });
-    }
+    if (!confirm(`Delete "${property.title}"? This cannot be undone.`)) return;
+    router.delete(`/rent/${property.id}`, {}, {
+      onSuccess: () => showToast('Listing Deleted', `"${property.title}" deleted.`),
+      onError: () => showToast('Delete Failed', 'Unable to delete.', 'error'),
+    });
   };
 
-  const renderStars = (rating) => {
-    return Array.from({ length: 5 }).map((_, i) => (
-      <Star
-        key={i}
-        style={{
-          height: '1rem',
-          width: '1rem',
-          color: i < rating ? 'hsl(38 92% 50%)' : 'hsl(200 15% 45%)',
-          fill: i < rating ? 'hsl(38 92% 50%)' : 'none'
-        }}
-      />
+  const renderStars = (rating) =>
+    Array.from({ length: 5 }).map((_, i) => (
+      <Star key={i} style={{ height: '1rem', width: '1rem', color: i < rating ? 'hsl(38 92% 50%)' : 'hsl(200 15% 45%)', fill: i < rating ? 'hsl(38 92% 50%)' : 'none' }} />
     ));
-  };
 
   const getStatusBadge = (status) => {
-    // normalize null/undefined
     status = status || '';
-    if (status === "verified" || status === "approved") {
-      return (
-        <span style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          padding: '0.25rem 0.625rem',
-          fontSize: '0.75rem',
-          fontWeight: '500',
-          backgroundColor: 'hsl(152 60% 40%)',
-          color: 'white',
-          borderRadius: '9999px',
-          gap: '0.25rem'
-        }}>
-          <CheckCircle style={{ height: '0.75rem', width: '0.75rem' }} />
-          {status === 'approved' ? 'Approved' : 'Verified'}
-        </span>
-      );
-    } else if (status === "pending") {
-      return (
-        <span style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          padding: '0.25rem 0.625rem',
-          fontSize: '0.75rem',
-          fontWeight: '500',
-          backgroundColor: 'hsl(40 30% 94%)',
-          color: 'hsl(200 25% 15%)',
-          borderRadius: '9999px',
-          gap: '0.25rem',
-          border: '1px solid hsl(40 20% 88%)'
-        }}>
-          <Clock style={{ height: '0.75rem', width: '0.75rem' }} />
-          Pending
-        </span>
-      );
-    } else if (status === "unverified") {
-      return (
-        <span style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          padding: '0.25rem 0.625rem',
-          fontSize: '0.75rem',
-          fontWeight: '500',
-          backgroundColor: 'hsl(40 30% 94%)',
-          color: 'hsl(200 25% 15%)',
-          borderRadius: '9999px',
-          gap: '0.25rem',
-          border: '1px solid hsl(40 20% 88%)'
-        }}>
-          <Clock style={{ height: '0.75rem', width: '0.75rem' }} />
-          Unverified
-        </span>
-      );
-    } else if (status === "suspended") {
-      return (
-        <span style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          padding: '0.25rem 0.625rem',
-          fontSize: '0.75rem',
-          fontWeight: '500',
-          backgroundColor: '#d92626',
-          color: 'white',
-          borderRadius: '9999px',
-          gap: '0.25rem',
-          border: '1px solid hsl(40 20% 88%)'
-        }}>
-          <AlertCircle style={{ height: '0.75rem', width: '0.75rem' }} />
-          Suspended
-        </span>
-      );
-    } else if (status === "rejected") {
-      return (
-        <span style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          padding: '0.25rem 0.625rem',
-          fontSize: '0.75rem',
-          fontWeight: '500',
-          backgroundColor: '#d92626',
-          color: 'white',
-          borderRadius: '9999px',
-          gap: '0.25rem',
-          border: '1px solid hsl(40 20% 88%)'
-        }}>
-          <AlertCircle style={{ height: '0.75rem', width: '0.75rem' }} />
-          Rejected
-        </span>
-      );
-    } else {
-      // generic fallback
-      return (
-        <span style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          padding: '0.25rem 0.625rem',
-          fontSize: '0.75rem',
-          fontWeight: '500',
-          backgroundColor: '#d92626',
-          color: 'white',
-          borderRadius: '9999px',
-          gap: '0.25rem',
-          border: '1px solid hsl(40 20% 88%)'
-        }}>
-          <AlertCircle style={{ height: '0.75rem', width: '0.75rem' }} />
-          {status.charAt(0).toUpperCase() + status.slice(1)}
-        </span>
-      );
-    }
+    const configs = {
+      verified:   { icon: CheckCircle, bg: 'hsl(152 60% 40%)', color: 'white', label: 'Verified' },
+      approved:   { icon: CheckCircle, bg: 'hsl(152 60% 40%)', color: 'white', label: 'Approved' },
+      pending:    { icon: Clock,       bg: 'hsl(40 30% 94%)', color: 'hsl(200 25% 15%)', label: 'Pending', border: '1px solid hsl(40 20% 88%)' },
+      unverified: { icon: Clock,       bg: 'hsl(40 30% 94%)', color: 'hsl(200 25% 15%)', label: 'Unverified', border: '1px solid hsl(40 20% 88%)' },
+      suspended:  { icon: AlertCircle, bg: '#d92626',         color: 'white', label: 'Suspended' },
+      rejected:   { icon: AlertCircle, bg: '#d92626',         color: 'white', label: 'Rejected' },
+    };
+    const c = configs[status] ?? { icon: AlertCircle, bg: '#d92626', color: 'white', label: status.charAt(0).toUpperCase() + status.slice(1) };
+    const IconComp = c.icon;
+    return (
+      <span style={{ display: 'inline-flex', alignItems: 'center', padding: '0.25rem 0.625rem', fontSize: '0.75rem', fontWeight: '500', backgroundColor: c.bg, color: c.color, borderRadius: '9999px', gap: '0.25rem', border: c.border ?? 'none' }}>
+        <IconComp style={{ height: '0.75rem', width: '0.75rem' }} />
+        {c.label}
+      </span>
+    );
   };
 
-  const handleResponseSubmit = (reviewId) => {
-    if (!responseText.trim()) return;
-    alert(`Response submitted for review ${reviewId}`);
-    setRespondingTo(null);
-    setResponseText("");
-  };
+  // Check if agent can be upgraded (not already on Pro)
+  const canUpgrade = (agentItem) => (agentItem.package ?? 'free') !== 'pro';
 
   return (
     <>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-        * {
-          font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
-          box-sizing: border-box;
-        }
-        body {
-          margin: 0;
-          padding: 0;
-        }
-        h1, h2, h3, h4, h5, h6 {
-          font-weight: 600;
-          margin: 0;
-        }
-        p {
-          margin: 0;
-        }
-        textarea {
-          resize: vertical;
-        }
+        * { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; box-sizing: border-box; }
+        body { margin: 0; padding: 0; }
+        h1,h2,h3,h4,h5,h6 { font-weight: 600; margin: 0; }
+        p { margin: 0; }
+        @keyframes slideIn { from { transform: translateX(400px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         @media (min-width: 768px) {
-          .md\\:flex { display: flex !important; }
-          .md\\:hidden { display: none !important; }
-          .md\\:grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
-        }
-        .container {
-          width: 100%;
-          margin-left: auto;
-          margin-right: auto;
-        }
-        .grid {
-          display: grid;
-        }
-        .gap-4 {
-          gap: 1rem;
-        }
-        .text-2xl {
-          font-size: 1.5rem;
-          line-height: 2rem;
-        }
-        .text-lg {
-          font-size: 1.125rem;
-          line-height: 1.75rem;
-        }
-        .font-bold {
-          font-weight: 700;
-        }
-        .font-semibold {
-          font-weight: 600;
-        }
-        .font-medium {
-          font-weight: 500;
-        }
-        @keyframes slideIn {
-          from {
-            transform: translateX(400px);
-            opacity: 0;
-          }
-          to {
-            transform: translateX(0);
-            opacity: 1;
-          }
+          .md-grid-3 { grid-template-columns: repeat(3, 1fr) !important; }
         }
       `}</style>
 
@@ -427,1105 +232,428 @@ const SuperAdminDashboard = ({ adminData, rentals, agentData, reviews, reports, 
         <Header />
 
         <main style={{ flex: 1, padding: '2rem 1rem' }}>
-          <div className="container" style={{ maxWidth: '1200px', margin: '0 auto' }}>
+          <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+
             {/* Profile Header */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginBottom: '2rem' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
-                  <div style={{
-                    width: '5rem',
-                    height: '5rem',
-                    borderRadius: '50%',
-                    backgroundColor: 'hsl(174 62% 32% / 0.1)',
-                    color: 'hsl(174 62% 32%)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '2rem',
-                    fontWeight: '600'
-                  }}>
-                    {agent.name[0]}
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem', flexWrap: 'wrap' }}>
-                      <h1 className="text-2xl font-bold" style={{ color: 'hsl(200 25% 15%)' }}>{agent.name}</h1>
-                      {getStatusBadge(agent.status)}
-                    </div>
-                    <p style={{ color: 'hsl(200 15% 45%)', marginBottom: '0.5rem' }}>{agent.role}</p>
-                    <div style={{ display: 'flex', gap: '1rem', fontSize: '0.875rem', flexWrap: 'wrap' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: 'hsl(200 15% 45%)' }}>
-                        <Shield style={{ height: '1rem', width: '1rem' }} />
-                        {agent.total_agents} Agents
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: 'hsl(200 15% 45%)' }}>
-                        <Home style={{ height: '1rem', width: '1rem' }} />
-                        {agent.total_listings} Listings
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: 'hsl(200 15% 45%)' }}>
-                        <AlertCircle style={{ height: '1rem', width: '1rem' }} />
-                        {reports.length} Reports 
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: 'hsl(200 15% 45%)' }}>
-                        <MessageSquare style={{ height: '1rem', width: '1rem' }} />
-                        {reviews.length} Reviews
-                      </div>
-                    </div>
-                  </div>
-                  <Link 
-                  href="/admin/payments/dashboard"
-                  style={{
-                    padding: '0.5rem 1rem',
-                    border: '1px solid hsl(40 20% 88%)',
-                    borderRadius: '0.5rem',
-                    backgroundColor: 'white',
-                    color: 'hsl(174 62% 32%)',
-                    fontWeight: '500',
-                    cursor: 'pointer',
-                    alignSelf: 'flex-start'
-                  }}>
-                    Payment Dashboard
-                  </Link>
-                  <Link 
-                  href="/settings"
-                  style={{
-                    padding: '0.5rem 1rem',
-                    border: '1px solid hsl(40 20% 88%)',
-                    borderRadius: '0.5rem',
-                    backgroundColor: 'white',
-                    color: 'hsl(174 62% 32%)',
-                    fontWeight: '500',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 'clamp(0.5rem, 2vw, 0.5rem)',
-                    textDecoration: 'none',
-                    fontSize: 'clamp(0.875rem, 2vw, 0.875rem)',
-                    transition: 'all 0.2s',
-                    whiteSpace: 'nowrap',
-                    height: 'fit-content',
-                    alignSelf: 'flex-start'
-                  }}>
-                    <Settings style={{ 
-                      height: 'clamp(1rem, 3vw, 1rem)', 
-                      width: 'clamp(1rem, 3vw, 1rem)' 
-                    }} />
-                    Settings
-                  </Link>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap', marginBottom: '2rem' }}>
+              <div style={{ width: '5rem', height: '5rem', borderRadius: '50%', backgroundColor: 'hsl(174 62% 32% / 0.1)', color: 'hsl(174 62% 32%)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', fontWeight: '600' }}>
+                {agent.name[0]}
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem', flexWrap: 'wrap' }}>
+                  <h1 style={{ fontSize: '1.5rem', fontWeight: '700', color: 'hsl(200 25% 15%)' }}>{agent.name}</h1>
+                  {getStatusBadge(agent.status)}
+                </div>
+                <p style={{ color: 'hsl(200 15% 45%)', marginBottom: '0.5rem' }}>{agent.role}</p>
+                <div style={{ display: 'flex', gap: '1rem', fontSize: '0.875rem', flexWrap: 'wrap' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: 'hsl(200 15% 45%)' }}><Shield style={{ height: '1rem', width: '1rem' }} />{agent.total_agents} Agents</span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: 'hsl(200 15% 45%)' }}><Home style={{ height: '1rem', width: '1rem' }} />{agent.total_listings} Listings</span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: 'hsl(200 15% 45%)' }}><AlertCircle style={{ height: '1rem', width: '1rem' }} />{reports.length} Reports</span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: 'hsl(200 15% 45%)' }}><MessageSquare style={{ height: '1rem', width: '1rem' }} />{reviews.length} Reviews</span>
                 </div>
               </div>
+              <Link href="/admin/payments/dashboard" style={{ padding: '0.5rem 1rem', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.5rem', backgroundColor: 'white', color: 'hsl(174 62% 32%)', fontWeight: '500', cursor: 'pointer', textDecoration: 'none', alignSelf: 'flex-start' }}>
+                Payment Dashboard
+              </Link>
+              <Link href="/settings" style={{ padding: '0.5rem 1rem', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.5rem', backgroundColor: 'white', color: 'hsl(174 62% 32%)', fontWeight: '500', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none', alignSelf: 'flex-start' }}>
+                <Settings style={{ height: '1rem', width: '1rem' }} />Settings
+              </Link>
             </div>
 
             {/* Tabs */}
-            <div>
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
-                gap: '0.5rem',
-                backgroundColor: 'hsl(40 30% 94%)',
-                padding: '0.25rem',
-                borderRadius: '0.5rem',
-                marginBottom: '2rem'
-              }}>
-                {['agents', 'listings', 'verifications', 'reports', 'reviews'].map((tab) => (
-                  <button
-                    key={tab}
-                    onClick={() => setActiveTab(tab)}
-                    style={{
-                      padding: '0.5rem 1rem',
-                      border: 'none',
-                      borderRadius: '0.375rem',
-                      backgroundColor: activeTab === tab ? 'white' : 'transparent',
-                      color: activeTab === tab ? 'hsl(200 25% 15%)' : 'hsl(200 15% 45%)',
-                      fontWeight: '500',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '0.5rem',
-                      transition: 'all 0.2s',
-                      boxShadow: activeTab === tab ? '0 1px 2px 0 hsl(200 25% 15% / 0.05)' : 'none',
-                      textTransform: 'capitalize'
-                    }}
-                  >
-                    {tab === 'agents' && <Shield style={{ height: '1rem', width: '1rem' }} />}
-                    {tab === 'listings' && <Home style={{ height: '1rem', width: '1rem' }} />}
-                    {tab === 'verifications' && <ShieldCheck style={{ height: '1rem', width: '1rem' }} />}
-                    {tab === 'reports' && <AlertCircle style={{ height: '1rem', width: '1rem' }} />}
-                    {tab === 'reviews' && <MessageSquare style={{ height: '1rem', width: '1rem' }} />}
-                    {/* {tab === 'reviews' && <MessageSquare style={{ height: '1rem', width: '1rem' }} />} */}
-                    {tab}
-                  </button>
-                ))}
-              </div>
-
-              {/* Agents Tab */}
-              {activeTab === 'agents' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-                    <h2 className="text-lg font-semibold" style={{ color: 'hsl(200 25% 15%)' }}>Platform Agents</h2>
-                    <Link
-                    href="/become-agent"
-                     style={{
-                      padding: '0.5rem 1rem',
-                      background: 'linear-gradient(135deg, hsl(174 62% 32%) 0%, hsl(174 50% 25%) 100%)',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '0.5rem',
-                      fontWeight: '500',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.5rem'
-                    }}>
-                      <Home style={{ height: '1rem', width: '1rem' }} />
-                      Add New Agent
-                    </Link>
-                  </div>
-
-                  <div className="grid md:grid-cols-3 gap-4" style={{ gap: '1rem' }}>
-                    {agents.map((agentItem) => (
-                      <div key={agentItem.id} style={{
-                        backgroundColor: 'white',
-                        border: '1px solid hsl(40 20% 88%)',
-                        borderRadius: '0.75rem',
-                        padding: '1.5rem'
-                      }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
-                          <div style={{ flex: 1, minWidth: '250px' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem', flexWrap: 'wrap' }}>
-                              <h3 className="font-semibold" style={{ color: 'hsl(200 25% 15%)' }}>
-                                {agentItem.fullName}
-                              </h3>
-                              {getStatusBadge(agentItem.status)}
-                            </div>
-                            <p style={{ fontSize: '0.875rem', color: 'hsl(200 15% 45%)', marginBottom: '0.25rem' }}>
-                              {agentItem.email}
-                            </p>
-                            {agentItem.company && (
-                              <p style={{ fontSize: '0.875rem', color: 'hsl(200 15% 45%)', marginBottom: '0.5rem' }}>
-                                {agentItem.company}
-                              </p>
-                            )}
-                            <div style={{ display: 'flex', gap: '1rem', fontSize: '0.75rem', color: 'hsl(200 15% 45%)', marginTop: '0.5rem', flexWrap: 'wrap' }}>
-                              <span>{agentItem.total_listings} listings</span>
-                              <span>Joined {new Date(agentItem.created_at).toLocaleDateString()}</span>
-                              <span>Last active {new Date(agentItem.updated_at).toLocaleDateString()}</span>
-                            </div>
-                          </div>
-                        </div>
-                        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                          <button
-                            onClick={() => handleViewProfile(agentItem)}
-                            style={{
-                              padding: '0.375rem 0.75rem',
-                              border: '1px solid hsl(40 20% 88%)',
-                              borderRadius: '0.375rem',
-                              backgroundColor: 'white',
-                              color: 'hsl(174 62% 32%)',
-                              fontSize: '0.875rem',
-                              fontWeight: '500',
-                              cursor: 'pointer'
-                            }}
-                          >
-                            View Details
-                          </button>
-                          { (agentItem.status === 'unverified' || agentItem.status === 'pending') && (
-                            <button
-                              onClick={() => handleVerifyClick(agentItem.id)}
-                              style={{
-                                padding: '0.375rem 0.75rem',
-                                background: 'linear-gradient(135deg, hsl(152 60% 40%) 0%, hsl(152 50% 35%) 100%)',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '0.375rem',
-                                fontSize: '0.875rem',
-                                fontWeight: '500',
-                                cursor: 'pointer'
-                              }}
-                            >
-                              Verify Agent
-                            </button>
-                          )}
-
-                          { agentItem.status === 'verified' && (
-                            <button
-                              onClick={() => {
-                                if (!confirm(`Mark ${agentItem.fullName} as unverified?`)) return;
-                                router.put(`/admin/agents/${agentItem.id}/suspend`, { status: 'unverified' }, {
-                                  onSuccess: () => showToast('Agent updated', `${agentItem.fullName} is now unverified`),
-                                  onError: () => showToast('Error', 'Failed to update agent', 'error')
-                                });
-                              }}
-                              style={{
-                                padding: '0.375rem 0.75rem',
-                                background: 'white',
-                                color: 'hsl(200 25% 15%)',
-                                border: '1px solid hsl(40 20% 88%)',
-                                borderRadius: '0.375rem',
-                                fontSize: '0.875rem',
-                                fontWeight: '500',
-                                cursor: 'pointer'
-                              }}
-                            >
-                              Mark Unverified
-                            </button>
-                          )}
-                          <button
-                            onClick={() => handleSuspendAgent(agentItem.id)}
-                            style={{
-                              padding: '0.375rem 0.75rem',
-                              border: '1px solid #d92626',
-                              borderRadius: '0.375rem',
-                              backgroundColor: 'white',
-                              color: '#d92626',
-                              fontSize: '0.875rem',
-                              fontWeight: '500',
-                              cursor: 'pointer',
-                              transition: 'background-color 0.2s'
-                            }}
-                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(0 70% 95%)'}
-                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
-                          >
-                          {agentItem.status === 'suspended' ? 'Unsuspend' : 'Suspend'}
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Listings Tab */}
-              {activeTab === 'listings' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-                    <h2 className="text-lg font-semibold" style={{ color: 'hsl(200 25% 15%)' }}>All Platform Listings</h2>
-                    <button 
-                    onClick={() => setShowAddListingModal(true)}
-                    style={{
-                      padding: '0.5rem 1rem',
-                      background: 'linear-gradient(135deg, hsl(174 62% 32%) 0%, hsl(174 50% 25%) 100%)',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '0.5rem',
-                      fontWeight: '500',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.5rem'
-                    }}>
-                      <Home style={{ height: '1rem', width: '1rem' }} />
-                      Add New Listing
-                    </button>
-                  </div>
-
-                  <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))' }}>
-                    {properties.map((property) => (
-                      <div key={property.id} style={{
-                        backgroundColor: 'white',
-                        border: '1px solid hsl(40 20% 88%)',
-                        borderRadius: '0.75rem',
-                        padding: '1rem'
-                      }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '1rem' }}>
-                          <div>
-                            <h3 className="font-medium" style={{ color: 'hsl(200 25% 15%)', marginBottom: '0.25rem' }}>
-                              {property.title}
-                            </h3>
-                            <p style={{ fontSize: '0.875rem', color: 'hsl(200 15% 45%)', marginBottom: '0.5rem' }}>
-                              {property.address}, {property.city}
-                            </p>
-                            <p style={{ fontSize: '0.75rem', color: 'hsl(200 15% 45%)', marginBottom: '0.5rem' }}>
-                              Agent: {property.agent_name}
-                            </p>
-                            <p className="font-medium" style={{ fontSize: '0.875rem', color: 'hsl(174 62% 32%)' }}>
-                              GH₵{property.rent_min.toLocaleString()} - GH₵{property.rent_max.toLocaleString()}
-                            </p>
-                          </div>
-                          {getStatusBadge(property.status)}
-                        </div>
-                        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                          <button
-                           onClick={() => handleViewClick(property)}
-                            style={{
-                            padding: '0.375rem 0.75rem',
-                            border: '1px solid hsl(40 20% 88%)',
-                            borderRadius: '0.375rem',
-                            backgroundColor: 'white',
-                            color: 'hsl(174 62% 32%)',
-                            fontSize: '0.875rem',
-                            fontWeight: '500',
-                            cursor: 'pointer'
-                          }}>
-                            View
-                          </button>
-                          <button 
-                          onClick={() => handleEditClick(property)}
-                          style={{
-                            padding: '0.375rem 0.75rem',
-                            border: '1px solid hsl(40 20% 88%)',
-                            borderRadius: '0.375rem',
-                            backgroundColor: 'white',
-                            color: 'hsl(174 62% 32%)',
-                            fontSize: '0.875rem',
-                            fontWeight: '500',
-                            cursor: 'pointer'
-                          }}>
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleApproveToggle(property)}
-                            style={{
-                              padding: '0.375rem 0.75rem',
-                              background: property.status === 'approved'
-                                ? 'linear-gradient(135deg, hsl(300 70% 50%) 0%, hsl(300 60% 40%) 100%)'
-                                : 'linear-gradient(135deg, hsl(152 60% 40%) 0%, hsl(152 50% 35%) 100%)',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '0.375rem',
-                              fontSize: '0.875rem',
-                              fontWeight: '500',
-                              cursor: 'pointer'
-                            }}
-                          >
-                            {property.status === 'approved' ? 'Revert' : 'Approve'}
-                          </button>
-                          <button
-                            onClick={() => handleDeleteListing(property)}
-                            style={{
-                              padding: '0.375rem 0.75rem',
-                              border: '1px solid hsl(0 70% 50%)',
-                              borderRadius: '0.375rem',
-                              backgroundColor: 'white',
-                              color: 'hsl(0 70% 50%)',
-                              fontSize: '0.875rem',
-                              fontWeight: '500',
-                              cursor: 'pointer'
-                            }}
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Reports Tab */}
-              {activeTab === 'reports' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-                    <h2 className="text-lg font-semibold" style={{ color: 'hsl(200 25% 15%)' }}>
-                      Platform Reports ({reports.length})
-                    </h2>
-                  </div>
-
-                  {reports.length > 0 ? (
-                    <div className="grid md:grid-cols-3 gap-4" style={{ display: 'grid', flexDirection: 'column', gap: '1rem' }}>
-                      {reports.map((report) => {
-                        const getReportTypeBadge = (type) => {
-                          const types = {
-                            'Fraudulent agent/landlord': { label: 'Fraudulent Agent/Landlord', color: 'hsl(0 70% 50%)' },
-                            'Fraudulent listing': { label: 'Fraudulent Listing', color: 'hsl(0 70% 50%)' },
-                            'Harassment': { label: 'Harassment', color: 'hsl(25 95% 53%)' },
-                            'False information': { label: 'False Information', color: 'hsl(40 92% 50%)' },
-                            'Scam': { label: 'Scam', color: 'hsl(0 84% 60%)' },
-                            'Other': { label: 'Other', color: 'hsl(200 15% 45%)' }
-                          };
-                          const config = types[type] || { label: type, color: 'hsl(200 15% 45%)' };
-                          return (
-                            <span style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              padding: '0.25rem 0.625rem',
-                              fontSize: '0.75rem',
-                              fontWeight: '500',
-                              backgroundColor: config.color,
-                              color: 'white',
-                              borderRadius: '9999px'
-                            }}>
-                              {config.label}
-                            </span>
-                          );
-                        };
-                      
-                        const getReportStatusBadge = (status) => {
-                          const statuses = {
-                            pending: { label: 'Pending', bg: 'hsl(40 30% 94%)', color: 'hsl(200 25% 15%)', border: 'hsl(40 20% 88%)' },
-                            investigating: { label: 'Investigating', bg: 'hsl(214 100% 95%)', color: 'hsl(214 100% 40%)', border: 'hsl(214 100% 80%)' },
-                            resolved: { label: 'Resolved', bg: 'hsl(152 60% 95%)', color: 'hsl(152 60% 35%)', border: 'hsl(152 60% 80%)' },
-                            dismissed: { label: 'Dismissed', bg: 'hsl(0 0% 95%)', color: 'hsl(0 0% 45%)', border: 'hsl(0 0% 80%)' }
-                          };
-                          const config = statuses[status] || statuses.pending;
-                          return (
-                            <span style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              padding: '0.25rem 0.625rem',
-                              fontSize: '0.75rem',
-                              fontWeight: '500',
-                              backgroundColor: config.bg,
-                              color: config.color,
-                              borderRadius: '9999px',
-                              border: `1px solid ${config.border}`
-                            }}>
-                              {config.label}
-                            </span>
-                          );
-                        };
-                      
-                        // Parse evidence if it's a JSON string
-                        const evidence = typeof report.evidence === 'string' 
-                          ? JSON.parse(report.evidence) 
-                          : (report.evidence || []);
-                      
-                        return (
-                          <div key={report.id} style={{
-                            backgroundColor: 'white',
-                            border: '1px solid hsl(40 20% 88%)',
-                            borderRadius: '0.75rem',
-                            padding: '1.5rem'
-                          }}>
-                            {/* Header Section */}
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
-                              <div style={{ flex: 1 }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
-                                  {getReportTypeBadge(report.report_type)}
-                                  {getReportStatusBadge(report.status || 'pending')}
-                                </div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                                  <div style={{
-                                    width: '2rem',
-                                    height: '2rem',
-                                    borderRadius: '50%',
-                                    backgroundColor: 'hsl(0 70% 50% / 0.1)',
-                                    color: 'hsl(0 70% 50%)',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    fontSize: '0.875rem',
-                                    fontWeight: '600'
-                                  }}>
-                                    {report.full_name?.[0] || 'R'}
-                                  </div>
-                                  <div>
-                                    <p style={{ fontSize: '0.875rem', fontWeight: '500', color: 'hsl(200 25% 15%)' }}>
-                                      Reported by: {report.full_name || 'Anonymous'}
-                                    </p>
-                                    <p style={{ fontSize: '0.75rem', color: 'hsl(200 15% 45%)' }}>
-                                      {new Date(report.created_at).toLocaleDateString('en-US', {
-                                        year: 'numeric',
-                                        month: 'short',
-                                        day: 'numeric',
-                                        hour: '2-digit',
-                                        minute: '2-digit'
-                                      })}
-                                    </p>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                                    
-                            {/* Report Description */}
-                            <div style={{
-                              backgroundColor: 'hsl(40 30% 97%)',
-                              padding: '1rem',
-                              borderRadius: '0.5rem',
-                              marginBottom: '1rem',
-                              borderLeft: '3px solid hsl(0 70% 50% / 0.3)'
-                            }}>
-                              <p style={{ fontSize: '0.75rem', fontWeight: '600', color: 'hsl(200 15% 45%)', marginBottom: '0.5rem' }}>
-                                Report Description
-                              </p>
-                              <p style={{ color: 'hsl(200 25% 15%)', fontSize: '0.875rem', lineHeight: '1.5' }}>
-                                {report.report_description || 'No description provided'}
-                              </p>
-                            </div>
-                          
-                            {/* Related Property */}
-                            {report.rental && (
-                              <div style={{
-                                backgroundColor: 'hsl(174 62% 32% / 0.05)',
-                                padding: '1rem',
-                                borderRadius: '0.5rem',
-                                marginBottom: '1rem',
-                                border: '1px solid hsl(174 62% 32% / 0.2)'
-                              }}>
-                                <p style={{ fontSize: '0.75rem', fontWeight: '600', color: 'hsl(174 62% 32%)', marginBottom: '0.5rem' }}>
-                                  Related Property
-                                </p>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: '1rem', flexWrap: 'wrap' }}>
-                                  <div style={{ flex: 1 }}>
-                                    <p style={{ fontSize: '0.875rem', fontWeight: '500', color: 'hsl(200 25% 15%)', marginBottom: '0.25rem' }}>
-                                      {report.rental.title || 'Untitled Property'}
-                                    </p>
-                                    <p style={{ fontSize: '0.75rem', color: 'hsl(200 15% 45%)', marginBottom: '0.25rem' }}>
-                                      <MapPin style={{ height: '0.75rem', width: '0.75rem', display: 'inline', marginRight: '0.25rem' }} />
-                                      {report.rental.address}, {report.rental.city}
-                                    </p>
-                                    <p style={{ fontSize: '0.75rem', color: 'hsl(200 15% 45%)' }}>
-                                      Property ID: #{report.rental_id}
-                                    </p>
-                                    {report.rental.agent && (
-                                      <p style={{ fontSize: '0.75rem', color: 'hsl(200 15% 45%)', marginTop: '0.25rem' }}>
-                                        Agent: {report.rental.agent.fullName || 'Unknown'}
-                                      </p>
-                                    )}
-                                  </div>
-                                  <button
-                                    onClick={() => handleViewClick(report.rental)}
-                                    style={{
-                                      padding: '0.375rem 0.75rem',
-                                      border: '1px solid hsl(174 62% 32%)',
-                                      borderRadius: '0.375rem',
-                                      backgroundColor: 'white',
-                                      color: 'hsl(174 62% 32%)',
-                                      fontSize: '0.75rem',
-                                      fontWeight: '500',
-                                      cursor: 'pointer',
-                                      whiteSpace: 'nowrap',
-                                      transition: 'all 0.2s'
-                                    }}
-                                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(174 62% 32% / 0.05)'}
-                                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
-                                  >
-                                    View Property
-                                  </button>
-                                </div>
-                              </div>
-                            )}
-
-                            {/* Evidence Section */}
-                            {evidence.length > 0 && (
-                              <div style={{
-                                backgroundColor: 'hsl(40 30% 97%)',
-                                padding: '1rem',
-                                borderRadius: '0.5rem',
-                                marginBottom: '1rem'
-                              }}>
-                                <p style={{ fontSize: '0.75rem', fontWeight: '600', color: 'hsl(200 15% 45%)', marginBottom: '0.5rem' }}>
-                                  Evidence Attached ({evidence.length})
-                                </p>
-                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                                  {evidence.map((item, index) => (
-                                    <span key={index} style={{
-                                      padding: '0.25rem 0.625rem',
-                                      fontSize: '0.75rem',
-                                      backgroundColor: 'white',
-                                      color: 'hsl(200 25% 15%)',
-                                      borderRadius: '0.375rem',
-                                      border: '1px solid hsl(40 20% 88%)'
-                                    }}>
-                                      📎 {item.name || `Evidence ${index + 1}`}
-                                    </span>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-
-                            {/* Action Buttons */}
-                            {(!report.status || report.status !== 'resolved') && (
-                              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                                <button
-                                  onClick={() => {
-                                    router.put(`/admin/reports/${report.id}/status`, {
-                                      status: 'investigating'
-                                    }, {
-                                      onSuccess: () => {
-                                        showToast("Status Updated", "Report marked as investigating.", "success");
-                                      }
-                                    });
-                                  }}
-                                  style={{
-                                    padding: '0.375rem 0.75rem',
-                                    background: 'linear-gradient(135deg, hsl(214 100% 40%) 0%, hsl(214 100% 35%) 100%)',
-                                    color: 'white',
-                                    border: 'none',
-                                    borderRadius: '0.375rem',
-                                    fontSize: '0.875rem',
-                                    fontWeight: '500',
-                                    cursor: 'pointer',
-                                    transition: 'transform 0.2s'
-                                  }}
-                                  onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
-                                  onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
-                                >
-                                  Mark as Investigating
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    if (confirm("Are you sure you want to resolve this report?")) {
-                                      router.put(`/admin/reports/${report.id}/status`, {
-                                        status: 'resolved'
-                                      }, {
-                                        onSuccess: () => {
-                                          showToast("Report Resolved", "The report has been marked as resolved.", "success");
-                                        }
-                                      });
-                                    }
-                                  }}
-                                  style={{
-                                    padding: '0.375rem 0.75rem',
-                                    background: 'linear-gradient(135deg, hsl(152 60% 40%) 0%, hsl(152 50% 35%) 100%)',
-                                    color: 'white',
-                                    border: 'none',
-                                    borderRadius: '0.375rem',
-                                    fontSize: '0.875rem',
-                                    fontWeight: '500',
-                                    cursor: 'pointer',
-                                    transition: 'transform 0.2s'
-                                  }}
-                                  onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
-                                  onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
-                                >
-                                  Resolve Report
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    if (confirm("Are you sure you want to dismiss this report?")) {
-                                      router.put(`/admin/reports/${report.id}/status`, {
-                                        status: 'dismissed'
-                                      }, {
-                                        onSuccess: () => {
-                                          showToast("Report Dismissed", "The report has been dismissed.", "success");
-                                        }
-                                      });
-                                    }
-                                  }}
-                                  style={{
-                                    padding: '0.375rem 0.75rem',
-                                    border: '1px solid hsl(0 0% 70%)',
-                                    borderRadius: '0.375rem',
-                                    backgroundColor: 'white',
-                                    color: 'hsl(0 0% 45%)',
-                                    fontSize: '0.875rem',
-                                    fontWeight: '500',
-                                    cursor: 'pointer',
-                                    transition: 'all 0.2s'
-                                  }}
-                                  onMouseEnter={(e) => {
-                                    e.currentTarget.style.backgroundColor = 'hsl(0 0% 95%)';
-                                  }}
-                                  onMouseLeave={(e) => {
-                                    e.currentTarget.style.backgroundColor = 'white';
-                                  }}
-                                >
-                                  Dismiss Report
-                                </button>
-                              </div>
-                            )}
-
-                            {/* Resolved Status Message */}
-                            {report.status === 'resolved' && (
-                              <div style={{
-                                padding: '0.75rem',
-                                backgroundColor: 'hsl(152 60% 95%)',
-                                border: '1px solid hsl(152 60% 80%)',
-                                borderRadius: '0.5rem',
-                                color: 'hsl(152 60% 35%)',
-                                fontSize: '0.875rem',
-                                fontWeight: '500',
-                                textAlign: 'center'
-                              }}>
-                                ✓ This report has been resolved
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <div style={{
-                      backgroundColor: 'white',
-                      border: '1px solid hsl(40 20% 88%)',
-                      borderRadius: '0.75rem',
-                      padding: '3rem 2rem',
-                      textAlign: 'center'
-                    }}>
-                      <Flag style={{ 
-                        height: '3rem', 
-                        width: '3rem', 
-                        color: 'hsl(200 15% 45%)',
-                        margin: '0 auto 1rem auto'
-                      }} />
-                      <h3 style={{ 
-                        fontSize: '1.125rem', 
-                        fontWeight: '600', 
-                        color: 'hsl(200 25% 15%)',
-                        marginBottom: '0.5rem'
-                      }}>
-                        No Reports Yet
-                      </h3>
-                      <p style={{ color: 'hsl(200 15% 45%)' }}>
-                        There are no reports on the platform yet.
-                      </p>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Verifications Tab */}
-              {activeTab === 'verifications' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-                    <h2 className="text-lg font-semibold" style={{ color: 'hsl(200 25% 15%)' }}>
-                      Agent Verification Requests
-                    </h2>
-                    <div style={{
-                      padding: '0.5rem 1rem',
-                      backgroundColor: 'hsl(174 62% 32% / 0.1)',
-                      color: 'hsl(174 62% 32%)',
-                      borderRadius: '0.375rem',
-                      fontSize: '0.875rem',
-                      fontWeight: '600'
-                    }}>
-                      Total: {verifications?.length || 0}
-                    </div>
-                  </div>
-                  <ViewAgentVerifications verifications={verifications || []} />
-                </div>
-              )}
-
-              {/* Reviews Tab */}
-              {activeTab === 'reviews' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-                    <h2 className="text-lg font-semibold" style={{ color: 'hsl(200 25% 15%)' }}>
-                      All Platform Reviews ({reviews.length})
-                    </h2>
-                    {/* Optional: Add filter/sort controls */}
-                  </div>
-
-                  {reviews.length > 0 ? (
-                    <div className="grid md:grid-cols-3 gap-4" style={{ display: 'grid', flexDirection: 'column', gap: '1rem' }}>
-                      {reviews.map((review) => (
-                        <div key={review.id} style={{
-                          backgroundColor: 'white',
-                          border: '1px solid hsl(40 20% 88%)',
-                          borderRadius: '0.75rem',
-                          padding: '1.5rem'
-                        }}>
-                          {/* Header Section */}
-                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-                            <div style={{ flex: 1 }}>
-                              <p style={{ fontSize: '0.875rem', color: 'hsl(200 15% 45%)', marginBottom: '0.5rem' }}>
-                                Review for Property #{review.rental_id || 'Unknown'}
-                              </p>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
-                                <div style={{
-                                  width: '2rem',
-                                  height: '2rem',
-                                  borderRadius: '50%',
-                                  backgroundColor: 'hsl(174 62% 32% / 0.1)',
-                                  color: 'hsl(174 62% 32%)',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  fontSize: '0.875rem',
-                                  fontWeight: '600'
-                                }}>
-                                  {review.full_name?.[0] || 'T'}
-                                </div>
-                                <div>
-                                  <span className="font-medium" style={{ color: 'hsl(200 25% 15%)', display: 'block' }}>
-                                    {review.full_name || 'Anonymous Tenant'}
-                                  </span>
-                                  <div style={{ display: 'flex', gap: '0.25rem' }}>
-                                    {renderStars(review.overall_rating)}
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                            <span style={{ fontSize: '0.75rem', color: 'hsl(200 15% 45%)' }}>
-                              {new Date(review.created_at).toLocaleDateString('en-US', {
-                                year: 'numeric',
-                                month: 'short',
-                                day: 'numeric'
-                              })}
-                            </span>
-                          </div>
-                            
-                          {/* Review Attributes */}
-                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
-                            {review.landlord_responsive === 1 && (
-                              <span style={{
-                                padding: '0.25rem 0.625rem',
-                                fontSize: '0.75rem',
-                                backgroundColor: 'hsl(152 60% 95%)',
-                                color: 'hsl(152 60% 35%)',
-                                borderRadius: '9999px',
-                                border: '1px solid hsl(152 60% 85%)'
-                              }}>
-                                ✓ Responsive Landlord
-                              </span>
-                            )}
-                            {review.property_matched_description === 1 && (
-                              <span style={{
-                                padding: '0.25rem 0.625rem',
-                                fontSize: '0.75rem',
-                                backgroundColor: 'hsl(152 60% 95%)',
-                                color: 'hsl(152 60% 35%)',
-                                borderRadius: '9999px',
-                                border: '1px solid hsl(152 60% 85%)'
-                              }}>
-                                ✓ Accurate Description
-                              </span>
-                            )}
-                            {review.fair_pricing === 1 && (
-                              <span style={{
-                                padding: '0.25rem 0.625rem',
-                                fontSize: '0.75rem',
-                                backgroundColor: 'hsl(152 60% 95%)',
-                                color: 'hsl(152 60% 35%)',
-                                borderRadius: '9999px',
-                                border: '1px solid hsl(152 60% 85%)'
-                              }}>
-                                ✓ Fair Pricing
-                              </span>
-                            )}
-                            {review.good_communication === 1 && (
-                              <span style={{
-                                padding: '0.25rem 0.625rem',
-                                fontSize: '0.75rem',
-                                backgroundColor: 'hsl(152 60% 95%)',
-                                color: 'hsl(152 60% 35%)',
-                                borderRadius: '9999px',
-                                border: '1px solid hsl(152 60% 85%)'
-                              }}>
-                                ✓ Good Communication
-                              </span>
-                            )}
-                          </div>
-                          
-                          {/* Comment */}
-                          {review.comments && (
-                            <p style={{ 
-                              color: 'hsl(200 15% 45%)', 
-                              marginBottom: '1rem',
-                              fontSize: '0.875rem',
-                              lineHeight: '1.5',
-                              padding: '0.75rem',
-                              backgroundColor: 'hsl(40 30% 97%)',
-                              borderRadius: '0.5rem',
-                              borderLeft: '3px solid hsl(174 62% 32% / 0.3)'
-                            }}>
-                              "{review.comments}"
-                            </p>
-                          )}
-
-                          {/* Agent Response */}
-                          {review.response && (
-                            <div style={{
-                              backgroundColor: 'hsl(210 20% 98%)',
-                              padding: '0.75rem',
-                              borderRadius: '0.5rem',
-                              marginBottom: '1rem',
-                              borderLeft: '3px solid hsl(174 62% 32%)'
-                            }}>
-                              <p style={{ 
-                                fontSize: '0.75rem', 
-                                fontWeight: '600', 
-                                color: 'hsl(174 62% 32%)', 
-                                marginBottom: '0.25rem' 
-                              }}>
-                                Response {review.response_person && `by ${review.response_person}`}
-                              </p>
-                              <p style={{ 
-                                fontSize: '0.875rem', 
-                                color: 'hsl(200 25% 15%)',
-                                lineHeight: '1.5'
-                              }}>
-                                {review.response}
-                              </p>
-                            </div>
-                          )}
-
-                          {/* Action Buttons */}
-                          <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem', flexWrap: 'wrap' }}>
-                            { review.review_type === 'rent' && (
-                              <button
-                              onClick={() => {
-                                const rental = properties.find(p => p.id === review.rental_id);
-                                if (rental) handleViewClick(rental);
-                              }}
-                              style={{
-                                padding: '0.375rem 0.75rem',
-                                border: '1px solid hsl(40 20% 88%)',
-                                borderRadius: '0.375rem',
-                                backgroundColor: 'white',
-                                color: 'hsl(174 62% 32%)',
-                                fontSize: '0.875rem',
-                                fontWeight: '500',
-                                cursor: 'pointer',
-                                transition: 'all 0.2s'
-                              }}
-                              onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor = 'hsl(174 62% 32% / 0.05)';
-                              }}
-                              onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = 'white';
-                              }}
-                            >
-                              View Property
-                            </button>
-                            ) }
-                            
-                            <button
-                              onClick={() => {
-                                if (confirm("Are you sure you want to delete this review? This action cannot be undone.")) {
-                                  router.delete(`/admin/reviews/${review.id}`, {
-                                    onSuccess: () => {
-                                      showToast("Review Deleted", "The review has been removed successfully.", "success");
-                                    },
-                                    onError: () => {
-                                      showToast("Delete Failed", "Unable to delete the review. Please try again.", "error");
-                                    }
-                                  });
-                                }
-                              }}
-                              style={{
-                                padding: '0.375rem 0.75rem',
-                                border: '1px solid hsl(0 70% 50%)',
-                                borderRadius: '0.375rem',
-                                backgroundColor: 'white',
-                                color: 'hsl(0 70% 50%)',
-                                fontSize: '0.875rem',
-                                fontWeight: '500',
-                                cursor: 'pointer',
-                                transition: 'all 0.2s'
-                              }}
-                              onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor = 'hsl(0 70% 50% / 0.05)';
-                              }}
-                              onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = 'white';
-                              }}
-                            >
-                              Delete Review
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div style={{
-                      backgroundColor: 'white',
-                      border: '1px solid hsl(40 20% 88%)',
-                      borderRadius: '0.75rem',
-                      padding: '3rem 2rem',
-                      textAlign: 'center'
-                    }}>
-                      <Star style={{ 
-                        height: '3rem', 
-                        width: '3rem', 
-                        color: 'hsl(200 15% 45%)',
-                        margin: '0 auto 1rem auto',
-                        fill: 'none'
-                      }} />
-                      <h3 style={{ 
-                        fontSize: '1.125rem', 
-                        fontWeight: '600', 
-                        color: 'hsl(200 25% 15%)',
-                        marginBottom: '0.5rem'
-                      }}>
-                        No Reviews Yet
-                      </h3>
-                      <p style={{ color: 'hsl(200 15% 45%)' }}>
-                        There are no reviews on the platform yet.
-                      </p>
-                    </div>
-                  )}
-                </div>
-              )}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '0.5rem', backgroundColor: 'hsl(40 30% 94%)', padding: '0.25rem', borderRadius: '0.5rem', marginBottom: '2rem' }}>
+              {['agents', 'listings', 'verifications', 'reports', 'reviews'].map(tab => (
+                <button key={tab} onClick={() => setActiveTab(tab)} style={{ padding: '0.5rem 1rem', border: 'none', borderRadius: '0.375rem', backgroundColor: activeTab === tab ? 'white' : 'transparent', color: activeTab === tab ? 'hsl(200 25% 15%)' : 'hsl(200 15% 45%)', fontWeight: '500', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', transition: 'all 0.2s', boxShadow: activeTab === tab ? '0 1px 2px 0 hsl(200 25% 15% / 0.05)' : 'none', textTransform: 'capitalize' }}>
+                  {tab === 'agents' && <Shield style={{ height: '1rem', width: '1rem' }} />}
+                  {tab === 'listings' && <Home style={{ height: '1rem', width: '1rem' }} />}
+                  {tab === 'verifications' && <ShieldCheck style={{ height: '1rem', width: '1rem' }} />}
+                  {tab === 'reports' && <AlertCircle style={{ height: '1rem', width: '1rem' }} />}
+                  {tab === 'reviews' && <MessageSquare style={{ height: '1rem', width: '1rem' }} />}
+                  {tab}
+                </button>
+              ))}
             </div>
+
+            {/* ── AGENTS TAB ──────────────────────────────────────────────────── */}
+            {activeTab === 'agents' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                  <h2 style={{ fontSize: '1.125rem', fontWeight: '600', color: 'hsl(200 25% 15%)' }}>Platform Agents</h2>
+                  <Link href="/become-agent" style={{ padding: '0.5rem 1rem', background: 'linear-gradient(135deg, hsl(174 62% 32%) 0%, hsl(174 50% 25%) 100%)', color: 'white', border: 'none', borderRadius: '0.5rem', fontWeight: '500', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}>
+                    <Home style={{ height: '1rem', width: '1rem' }} />Add New Agent
+                  </Link>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1rem' }}>
+                  {agents.map(agentItem => (
+                    <div key={agentItem.id} style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.75rem', padding: '1.5rem' }}>
+                      {/* Card header */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                        <div style={{ flex: 1, minWidth: '200px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.375rem', flexWrap: 'wrap' }}>
+                            <h3 style={{ fontWeight: '600', color: 'hsl(200 25% 15%)', fontSize: '0.9rem' }}>{agentItem.fullName}</h3>
+                            {getStatusBadge(agentItem.status)}
+                          </div>
+                          <p style={{ fontSize: '0.8rem', color: 'hsl(200 15% 45%)', marginBottom: '0.2rem' }}>{agentItem.email}</p>
+                          {agentItem.company && <p style={{ fontSize: '0.8rem', color: 'hsl(200 15% 45%)' }}>{agentItem.company}</p>}
+                        </div>
+                        {/* Plan badge */}
+                        <PlanBadge slug={agentItem.package} />
+                      </div>
+
+                      {/* Meta */}
+                      <div style={{ display: 'flex', gap: '1rem', fontSize: '0.73rem', color: 'hsl(200 15% 50%)', marginBottom: '1rem', flexWrap: 'wrap' }}>
+                        <span>{agentItem.total_listings} listings</span>
+                        <span>Joined {new Date(agentItem.created_at).toLocaleDateString()}</span>
+                        <span>Active {new Date(agentItem.updated_at).toLocaleDateString()}</span>
+                      </div>
+
+                      {/* Actions */}
+                      <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+                        <button onClick={() => handleViewProfile(agentItem)} style={{ padding: '0.35rem 0.7rem', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.375rem', backgroundColor: 'white', color: 'hsl(174 62% 32%)', fontSize: '0.8rem', fontWeight: '500', cursor: 'pointer' }}>
+                          View Details
+                        </button>
+
+                        {(agentItem.status === 'unverified' || agentItem.status === 'pending') && (
+                          <button onClick={() => handleVerifyClick(agentItem.id)} style={{ padding: '0.35rem 0.7rem', background: 'linear-gradient(135deg, hsl(152 60% 40%) 0%, hsl(152 50% 35%) 100%)', color: 'white', border: 'none', borderRadius: '0.375rem', fontSize: '0.8rem', fontWeight: '500', cursor: 'pointer' }}>
+                            Verify
+                          </button>
+                        )}
+
+                        {agentItem.status === 'verified' && (
+                          <button onClick={() => { if (!confirm(`Mark ${agentItem.fullName} as unverified?`)) return; router.put(`/admin/agents/${agentItem.id}/suspend`, { status: 'unverified' }, { onSuccess: () => showToast('Updated', `${agentItem.fullName} is now unverified`), onError: () => showToast('Error', 'Failed', 'error') }); }} style={{ padding: '0.35rem 0.7rem', backgroundColor: 'white', color: 'hsl(200 25% 15%)', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.375rem', fontSize: '0.8rem', fontWeight: '500', cursor: 'pointer' }}>
+                            Mark Unverified
+                          </button>
+                        )}
+
+                        {/* ── UPGRADE BUTTON ─────────────────────────────── */}
+                        {canUpgrade(agentItem) && plans?.length > 0 && (
+                          <button
+                            onClick={() => handleGrantClick(agentItem)}
+                            style={{ padding: '0.35rem 0.7rem', border: '1px solid hsl(271 76% 53%)', borderRadius: '0.375rem', backgroundColor: 'white', color: 'hsl(271 76% 53%)', fontSize: '0.8rem', fontWeight: '600', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.3rem', transition: 'all 0.15s' }}
+                            onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'hsl(271 76% 97%)'; }}
+                            onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'white'; }}
+                          >
+                            <Gift style={{ height: '0.8rem', width: '0.8rem' }} />
+                            Upgrade
+                          </button>
+                        )}
+
+                        <button onClick={() => handleSuspendAgent(agentItem.id)} style={{ padding: '0.35rem 0.7rem', border: '1px solid #d92626', borderRadius: '0.375rem', backgroundColor: 'white', color: '#d92626', fontSize: '0.8rem', fontWeight: '500', cursor: 'pointer' }}
+                          onMouseEnter={e => e.currentTarget.style.backgroundColor = 'hsl(0 70% 97%)'}
+                          onMouseLeave={e => e.currentTarget.style.backgroundColor = 'white'}
+                        >
+                          {agentItem.status === 'suspended' ? 'Unsuspend' : 'Suspend'}
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* ── LISTINGS TAB ─────────────────────────────────────────────── */}
+            {activeTab === 'listings' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                  <h2 style={{ fontSize: '1.125rem', fontWeight: '600', color: 'hsl(200 25% 15%)' }}>All Platform Listings</h2>
+                  <button onClick={() => setShowAddListingModal(true)} style={{ padding: '0.5rem 1rem', background: 'linear-gradient(135deg, hsl(174 62% 32%) 0%, hsl(174 50% 25%) 100%)', color: 'white', border: 'none', borderRadius: '0.5rem', fontWeight: '500', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <Home style={{ height: '1rem', width: '1rem' }} />Add New Listing
+                  </button>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem' }}>
+                  {properties.map(property => (
+                    <div key={property.id} style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.75rem', padding: '1rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '1rem' }}>
+                        <div>
+                          <h3 style={{ fontWeight: '500', color: 'hsl(200 25% 15%)', marginBottom: '0.25rem' }}>{property.title}</h3>
+                          <p style={{ fontSize: '0.875rem', color: 'hsl(200 15% 45%)', marginBottom: '0.25rem' }}>{property.address}, {property.city}</p>
+                          <p style={{ fontSize: '0.75rem', color: 'hsl(200 15% 45%)', marginBottom: '0.25rem' }}>Agent: {property.agent_name}</p>
+                          <p style={{ fontSize: '0.875rem', fontWeight: '500', color: 'hsl(174 62% 32%)' }}>GH₵{property.rent_min?.toLocaleString()} – GH₵{property.rent_max?.toLocaleString()}</p>
+                        </div>
+                        {getStatusBadge(property.status)}
+                      </div>
+                      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                        <button onClick={() => handleViewClick(property)} style={{ padding: '0.375rem 0.75rem', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.375rem', backgroundColor: 'white', color: 'hsl(174 62% 32%)', fontSize: '0.875rem', fontWeight: '500', cursor: 'pointer' }}>View</button>
+                        <button onClick={() => handleEditClick(property)} style={{ padding: '0.375rem 0.75rem', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.375rem', backgroundColor: 'white', color: 'hsl(174 62% 32%)', fontSize: '0.875rem', fontWeight: '500', cursor: 'pointer' }}>Edit</button>
+                        <button onClick={() => handleApproveToggle(property)} style={{ padding: '0.375rem 0.75rem', background: property.status === 'approved' ? 'linear-gradient(135deg, hsl(300 70% 50%) 0%, hsl(300 60% 40%) 100%)' : 'linear-gradient(135deg, hsl(152 60% 40%) 0%, hsl(152 50% 35%) 100%)', color: 'white', border: 'none', borderRadius: '0.375rem', fontSize: '0.875rem', fontWeight: '500', cursor: 'pointer' }}>
+                          {property.status === 'approved' ? 'Revert' : 'Approve'}
+                        </button>
+                        <button onClick={() => handleDeleteListing(property)} style={{ padding: '0.375rem 0.75rem', border: '1px solid hsl(0 70% 50%)', borderRadius: '0.375rem', backgroundColor: 'white', color: 'hsl(0 70% 50%)', fontSize: '0.875rem', fontWeight: '500', cursor: 'pointer' }}>Delete</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* ── REPORTS TAB ──────────────────────────────────────────────── */}
+            {activeTab === 'reports' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                  <h2 style={{ fontSize: '1.125rem', fontWeight: '600', color: 'hsl(200 25% 15%)' }}>Platform Reports ({reports.length})</h2>
+                </div>
+
+                {reports.length > 0 ? (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '1rem' }}>
+                    {reports.map(report => {
+                      const evidence = typeof report.evidence === 'string' ? JSON.parse(report.evidence) : (report.evidence || []);
+
+                      const reportTypeBadge = (type) => {
+                        const types = {
+                          'Fraudulent agent/landlord': 'hsl(0 70% 50%)',
+                          'Fraudulent listing':        'hsl(0 70% 50%)',
+                          'Harassment':                'hsl(25 95% 53%)',
+                          'False information':         'hsl(40 92% 50%)',
+                          'Scam':                      'hsl(0 84% 60%)',
+                          'Other':                     'hsl(200 15% 45%)',
+                        };
+                        const color = types[type] ?? 'hsl(0 70% 50%)';
+                        return <span style={{ display: 'inline-flex', alignItems: 'center', padding: '0.25rem 0.625rem', fontSize: '0.72rem', fontWeight: '600', backgroundColor: color, color: 'white', borderRadius: '9999px' }}>{type}</span>;
+                      };
+
+                      const reportStatusBadge = (status) => {
+                        const s = {
+                          pending:       { label: 'Pending',       bg: 'hsl(40 30% 94%)',    color: 'hsl(200 25% 15%)', border: 'hsl(40 20% 88%)' },
+                          investigating: { label: 'Investigating', bg: 'hsl(214 100% 95%)',  color: 'hsl(214 100% 40%)', border: 'hsl(214 100% 80%)' },
+                          resolved:      { label: 'Resolved',      bg: 'hsl(152 60% 95%)',  color: 'hsl(152 60% 35%)', border: 'hsl(152 60% 80%)' },
+                          dismissed:     { label: 'Dismissed',     bg: 'hsl(0 0% 95%)',     color: 'hsl(0 0% 45%)',    border: 'hsl(0 0% 80%)' },
+                        };
+                        const c = s[status] ?? s.pending;
+                        return <span style={{ display: 'inline-flex', alignItems: 'center', padding: '0.25rem 0.625rem', fontSize: '0.72rem', fontWeight: '500', backgroundColor: c.bg, color: c.color, borderRadius: '9999px', border: `1px solid ${c.border}` }}>{c.label}</span>;
+                      };
+
+                      return (
+                        <div key={report.id} style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.75rem', padding: '1.5rem' }}>
+                          {/* Type + Status badges */}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.875rem', flexWrap: 'wrap' }}>
+                            {reportTypeBadge(report.report_type)}
+                            {reportStatusBadge(report.status ?? 'pending')}
+                          </div>
+
+                          {/* Reporter */}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.875rem' }}>
+                            <div style={{ width: '2rem', height: '2rem', borderRadius: '50%', backgroundColor: 'hsl(0 70% 50% / 0.1)', color: 'hsl(0 70% 50%)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.875rem', fontWeight: '600', flexShrink: 0 }}>
+                              {report.full_name?.[0] ?? 'R'}
+                            </div>
+                            <div>
+                              <p style={{ fontSize: '0.85rem', fontWeight: '500', color: 'hsl(200 25% 15%)', margin: 0 }}>Reported by: {report.full_name ?? 'Anonymous'}</p>
+                              <p style={{ fontSize: '0.75rem', color: 'hsl(200 15% 45%)', margin: 0 }}>{new Date(report.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+                            </div>
+                          </div>
+
+                          {/* Description */}
+                          <div style={{ backgroundColor: 'hsl(40 30% 97%)', padding: '0.875rem', borderRadius: '0.5rem', marginBottom: '1rem', borderLeft: '3px solid hsl(0 70% 50% / 0.3)' }}>
+                            <p style={{ fontSize: '0.72rem', fontWeight: '600', color: 'hsl(200 15% 45%)', marginBottom: '0.375rem' }}>Report Description</p>
+                            <p style={{ color: 'hsl(200 25% 15%)', fontSize: '0.875rem', lineHeight: '1.5', margin: 0 }}>{report.report_description ?? 'No description provided'}</p>
+                          </div>
+
+                          {/* Related Property */}
+                          {report.rental && (
+                            <div style={{ backgroundColor: 'hsl(174 62% 32% / 0.05)', padding: '0.875rem', borderRadius: '0.5rem', marginBottom: '1rem', border: '1px solid hsl(174 62% 32% / 0.2)' }}>
+                              <p style={{ fontSize: '0.72rem', fontWeight: '600', color: 'hsl(174 62% 32%)', marginBottom: '0.5rem' }}>Related Property</p>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: '0.75rem', flexWrap: 'wrap' }}>
+                                <div style={{ flex: 1 }}>
+                                  <p style={{ fontSize: '0.875rem', fontWeight: '500', color: 'hsl(200 25% 15%)', marginBottom: '0.2rem' }}>{report.rental.title ?? 'Untitled Property'}</p>
+                                  <p style={{ fontSize: '0.75rem', color: 'hsl(200 15% 45%)', marginBottom: '0.2rem' }}>{report.rental.address}, {report.rental.city}</p>
+                                  <p style={{ fontSize: '0.75rem', color: 'hsl(200 15% 45%)' }}>Property ID: #{report.rental_id}</p>
+                                  {report.rental.agent && <p style={{ fontSize: '0.75rem', color: 'hsl(200 15% 45%)', marginTop: '0.2rem' }}>Agent: {report.rental.agent.fullName ?? 'Unknown'}</p>}
+                                </div>
+                                <button onClick={() => handleViewClick(report.rental)} style={{ padding: '0.3rem 0.65rem', border: '1px solid hsl(174 62% 32%)', borderRadius: '0.375rem', backgroundColor: 'white', color: 'hsl(174 62% 32%)', fontSize: '0.75rem', fontWeight: '500', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                                  onMouseEnter={e => e.currentTarget.style.backgroundColor = 'hsl(174 62% 32% / 0.05)'}
+                                  onMouseLeave={e => e.currentTarget.style.backgroundColor = 'white'}
+                                >View Property</button>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Evidence */}
+                          {evidence.length > 0 && (
+                            <div style={{ backgroundColor: 'hsl(40 30% 97%)', padding: '0.875rem', borderRadius: '0.5rem', marginBottom: '1rem' }}>
+                              <p style={{ fontSize: '0.72rem', fontWeight: '600', color: 'hsl(200 15% 45%)', marginBottom: '0.5rem' }}>Evidence Attached ({evidence.length})</p>
+                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
+                                {evidence.map((item, idx) => (
+                                  <span key={idx} style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem', backgroundColor: 'white', color: 'hsl(200 25% 15%)', borderRadius: '0.375rem', border: '1px solid hsl(40 20% 88%)' }}>📎 {item.name ?? `Evidence ${idx + 1}`}</span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Action buttons */}
+                          {(!report.status || report.status !== 'resolved') && report.status !== 'dismissed' && (
+                            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                              <button onClick={() => router.put(`/admin/reports/${report.id}/status`, { status: 'investigating' }, { onSuccess: () => showToast('Status Updated', 'Marked as investigating.') })}
+                                style={{ padding: '0.35rem 0.7rem', background: 'linear-gradient(135deg, hsl(214 100% 40%) 0%, hsl(214 100% 35%) 100%)', color: 'white', border: 'none', borderRadius: '0.375rem', fontSize: '0.8rem', fontWeight: '500', cursor: 'pointer' }}>
+                                Mark as Investigating
+                              </button>
+                              <button onClick={() => { if (confirm('Resolve this report?')) router.put(`/admin/reports/${report.id}/status`, { status: 'resolved' }, { onSuccess: () => showToast('Report Resolved', 'Marked as resolved.') }); }}
+                                style={{ padding: '0.35rem 0.7rem', background: 'linear-gradient(135deg, hsl(152 60% 40%) 0%, hsl(152 50% 35%) 100%)', color: 'white', border: 'none', borderRadius: '0.375rem', fontSize: '0.8rem', fontWeight: '500', cursor: 'pointer' }}>
+                                Resolve Report
+                              </button>
+                              <button onClick={() => { if (confirm('Dismiss this report?')) router.put(`/admin/reports/${report.id}/status`, { status: 'dismissed' }, { onSuccess: () => showToast('Report Dismissed', '') }); }}
+                                style={{ padding: '0.35rem 0.7rem', border: '1px solid hsl(0 0% 70%)', borderRadius: '0.375rem', backgroundColor: 'white', color: 'hsl(0 0% 45%)', fontSize: '0.8rem', fontWeight: '500', cursor: 'pointer' }}
+                                onMouseEnter={e => e.currentTarget.style.backgroundColor = 'hsl(0 0% 95%)'}
+                                onMouseLeave={e => e.currentTarget.style.backgroundColor = 'white'}
+                              >Dismiss Report</button>
+                            </div>
+                          )}
+                          {report.status === 'resolved' && (
+                            <div style={{ padding: '0.625rem', backgroundColor: 'hsl(152 60% 95%)', borderRadius: '0.5rem', color: 'hsl(152 60% 35%)', fontSize: '0.8rem', fontWeight: '500', textAlign: 'center' }}>✓ This report has been resolved</div>
+                          )}
+                          {report.status === 'dismissed' && (
+                            <div style={{ padding: '0.625rem', backgroundColor: 'hsl(0 0% 95%)', borderRadius: '0.5rem', color: 'hsl(0 0% 45%)', fontSize: '0.8rem', fontWeight: '500', textAlign: 'center' }}>Report dismissed</div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.75rem', padding: '3rem', textAlign: 'center' }}>
+                    <AlertCircle style={{ height: '3rem', width: '3rem', color: 'hsl(200 15% 70%)', margin: '0 auto 1rem' }} />
+                    <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: 'hsl(200 25% 15%)', marginBottom: '0.5rem' }}>No Reports Yet</h3>
+                    <p style={{ color: 'hsl(200 15% 45%)' }}>There are no reports on the platform yet.</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ── VERIFICATIONS TAB ────────────────────────────────────────── */}
+            {activeTab === 'verifications' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <h2 style={{ fontSize: '1.125rem', fontWeight: '600', color: 'hsl(200 25% 15%)' }}>Agent Verification Requests</h2>
+                  <span style={{ padding: '0.5rem 1rem', backgroundColor: 'hsl(174 62% 32% / 0.1)', color: 'hsl(174 62% 32%)', borderRadius: '0.375rem', fontSize: '0.875rem', fontWeight: '600' }}>Total: {verifications?.length ?? 0}</span>
+                </div>
+                <ViewAgentVerifications verifications={verifications ?? []} />
+              </div>
+            )}
+
+            {/* ── REVIEWS TAB ──────────────────────────────────────────────── */}
+            {activeTab === 'reviews' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                <h2 style={{ fontSize: '1.125rem', fontWeight: '600', color: 'hsl(200 25% 15%)' }}>All Platform Reviews ({reviews.length})</h2>
+                {reviews.length > 0 ? (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1rem' }}>
+                    {reviews.map(review => (
+                      <div key={review.id} style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.75rem', padding: '1.5rem' }}>
+                        {/* Header */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.875rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                          <div style={{ flex: 1 }}>
+                            <p style={{ fontSize: '0.78rem', color: 'hsl(200 15% 45%)', marginBottom: '0.4rem' }}>Review for Property #{review.rental_id ?? 'Unknown'}</p>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginBottom: '0.4rem' }}>
+                              <div style={{ width: '2rem', height: '2rem', borderRadius: '50%', backgroundColor: 'hsl(174 62% 32% / 0.1)', color: 'hsl(174 62% 32%)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.875rem', fontWeight: '600', flexShrink: 0 }}>
+                                {review.full_name?.[0] ?? 'T'}
+                              </div>
+                              <div>
+                                <p style={{ fontWeight: '600', color: 'hsl(200 25% 15%)', fontSize: '0.875rem', margin: 0 }}>{review.full_name ?? 'Anonymous'}</p>
+                                <div style={{ display: 'flex', gap: '0.2rem' }}>{renderStars(review.overall_rating)}</div>
+                              </div>
+                            </div>
+                          </div>
+                          <span style={{ fontSize: '0.75rem', color: 'hsl(200 15% 45%)' }}>{new Date(review.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</span>
+                        </div>
+
+                        {/* Attribute pills */}
+                        {(review.landlord_responsive || review.property_matched_description || review.fair_pricing || review.good_communication) && (
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.375rem', marginBottom: '0.875rem' }}>
+                            {review.landlord_responsive == 1 && <span style={{ padding: '0.2rem 0.55rem', fontSize: '0.72rem', backgroundColor: 'hsl(152 60% 95%)', color: 'hsl(152 60% 35%)', borderRadius: '9999px', border: '1px solid hsl(152 60% 85%)' }}>✓ Responsive Landlord</span>}
+                            {review.property_matched_description == 1 && <span style={{ padding: '0.2rem 0.55rem', fontSize: '0.72rem', backgroundColor: 'hsl(152 60% 95%)', color: 'hsl(152 60% 35%)', borderRadius: '9999px', border: '1px solid hsl(152 60% 85%)' }}>✓ Accurate Description</span>}
+                            {review.fair_pricing == 1 && <span style={{ padding: '0.2rem 0.55rem', fontSize: '0.72rem', backgroundColor: 'hsl(152 60% 95%)', color: 'hsl(152 60% 35%)', borderRadius: '9999px', border: '1px solid hsl(152 60% 85%)' }}>✓ Fair Pricing</span>}
+                            {review.good_communication == 1 && <span style={{ padding: '0.2rem 0.55rem', fontSize: '0.72rem', backgroundColor: 'hsl(152 60% 95%)', color: 'hsl(152 60% 35%)', borderRadius: '9999px', border: '1px solid hsl(152 60% 85%)' }}>✓ Good Communication</span>}
+                          </div>
+                        )}
+
+                        {/* Comment */}
+                        {review.comments && (
+                          <p style={{ color: 'hsl(200 15% 45%)', fontSize: '0.875rem', lineHeight: '1.5', padding: '0.75rem', backgroundColor: 'hsl(40 30% 97%)', borderRadius: '0.5rem', borderLeft: '3px solid hsl(174 62% 32% / 0.3)', marginBottom: '0.875rem' }}>"{review.comments}"</p>
+                        )}
+
+                        {/* Agent response */}
+                        {review.response && (
+                          <div style={{ backgroundColor: 'hsl(210 20% 98%)', padding: '0.75rem', borderRadius: '0.5rem', marginBottom: '0.875rem', borderLeft: '3px solid hsl(174 62% 32%)' }}>
+                            <p style={{ fontSize: '0.72rem', fontWeight: '600', color: 'hsl(174 62% 32%)', marginBottom: '0.25rem' }}>Response {review.response_person ? `by ${review.response_person}` : ''}</p>
+                            <p style={{ fontSize: '0.875rem', color: 'hsl(200 25% 15%)', lineHeight: '1.5', margin: 0 }}>{review.response}</p>
+                          </div>
+                        )}
+
+                        {/* Actions */}
+                        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                          {review.review_type === 'rent' && (
+                            <button onClick={() => { const r = properties.find(p => p.id === review.rental_id); if (r) handleViewClick(r); }}
+                              style={{ padding: '0.35rem 0.7rem', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.375rem', backgroundColor: 'white', color: 'hsl(174 62% 32%)', fontSize: '0.8rem', fontWeight: '500', cursor: 'pointer' }}
+                              onMouseEnter={e => e.currentTarget.style.backgroundColor = 'hsl(174 62% 32% / 0.05)'}
+                              onMouseLeave={e => e.currentTarget.style.backgroundColor = 'white'}
+                            >View Property</button>
+                          )}
+                          <button onClick={() => { if (confirm('Delete this review? This cannot be undone.')) router.delete(`/admin/reviews/${review.id}`, { onSuccess: () => showToast('Review Deleted', 'Removed successfully.'), onError: () => showToast('Delete Failed', 'Please try again.', 'error') }); }}
+                            style={{ padding: '0.35rem 0.7rem', border: '1px solid hsl(0 70% 50%)', borderRadius: '0.375rem', backgroundColor: 'white', color: 'hsl(0 70% 50%)', fontSize: '0.8rem', fontWeight: '500', cursor: 'pointer' }}
+                            onMouseEnter={e => e.currentTarget.style.backgroundColor = 'hsl(0 70% 50% / 0.05)'}
+                            onMouseLeave={e => e.currentTarget.style.backgroundColor = 'white'}
+                          >Delete Review</button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.75rem', padding: '3rem', textAlign: 'center' }}>
+                    <Star style={{ height: '3rem', width: '3rem', color: 'hsl(200 15% 70%)', margin: '0 auto 1rem', fill: 'none' }} />
+                    <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: 'hsl(200 25% 15%)', marginBottom: '0.5rem' }}>No Reviews Yet</h3>
+                    <p style={{ color: 'hsl(200 15% 45%)' }}>There are no reviews on the platform yet.</p>
+                  </div>
+                )}
+              </div>
+            )}
+
           </div>
         </main>
 
         <Footer />
 
-        {/* Agent Profile Modal */}
-        <AgentProfileModal
-          agent={selectedAgent}
-          isOpen={showAgentProfile} 
-          onClose={() => setShowAgentProfile(false)}
-          auth={auth}
-        />
+        {/* ── Modals ───────────────────────────────────────────────────────── */}
 
-        {/* Add Listing Modal */}
+        <AgentProfileModal agent={selectedAgent} isOpen={showAgentProfile} onClose={() => setShowAgentProfile(false)} auth={auth} />
+
         {showAddListingModal && (
-          <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: 'clamp(0.5rem, 2vw, 1rem)' }}>
-            <div className="modal-content" style={{ backgroundColor: 'white', borderRadius: 'clamp(0.75rem, 2vw, 1rem)', maxHeight: '90vh', overflow: 'auto', maxWidth: 'clamp(90%, 95vw, 60%)', width: '100%', position: 'relative' }}>
-              <button onClick={() => setShowAddListingModal(false)} className="action-button" style={{ position: 'sticky', top: 0, right: 0, padding: 'clamp(0.75rem, 2vw, 1rem)', border: 'none', background: 'transparent', fontSize: 'clamp(1.25rem, 4vw, 1.5rem)', cursor: 'pointer', color: 'hsl(200 15% 45%)', float: 'right', zIndex: 10 }}>✕</button>
+          <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: '1rem' }}>
+            <div style={{ backgroundColor: 'white', borderRadius: '1rem', maxHeight: '90vh', overflow: 'auto', maxWidth: '60%', width: '100%', position: 'relative' }}>
+              <button onClick={() => setShowAddListingModal(false)} style={{ position: 'sticky', top: 0, right: 0, padding: '1rem', border: 'none', background: 'transparent', fontSize: '1.5rem', cursor: 'pointer', color: 'hsl(200 15% 45%)', float: 'right', zIndex: 10 }}>✕</button>
               <AddRentalPage agentData={agentData} setShowAddListingModal={setShowAddListingModal} adminData={adminData} />
             </div>
           </div>
         )}
 
-        {/* Edit Listing Modal */}
         {showEditListingModal && selectedRental && (
-          <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: 'clamp(0.5rem, 2vw, 1rem)' }}>
-            <div className="modal-content" style={{ backgroundColor: 'white', borderRadius: 'clamp(0.75rem, 2vw, 1rem)', maxHeight: '90vh', overflow: 'auto', maxWidth: 'clamp(90%, 95vw, 60%)', width: '100%', position: 'relative' }}>
-              <button onClick={() => { setShowEditListingModal(false); setSelectedRental(null); }} className="action-button" style={{ position: 'sticky', top: 0, right: 0, padding: 'clamp(0.75rem, 2vw, 1rem)', border: 'none', background: 'transparent', fontSize: 'clamp(1.25rem, 4vw, 1.5rem)', cursor: 'pointer', color: 'hsl(200 15% 45%)', float: 'right', zIndex: 10 }}>✕</button>
+          <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: '1rem' }}>
+            <div style={{ backgroundColor: 'white', borderRadius: '1rem', maxHeight: '90vh', overflow: 'auto', maxWidth: '60%', width: '100%', position: 'relative' }}>
+              <button onClick={() => { setShowEditListingModal(false); setSelectedRental(null); }} style={{ position: 'sticky', top: 0, right: 0, padding: '1rem', border: 'none', background: 'transparent', fontSize: '1.5rem', cursor: 'pointer', color: 'hsl(200 15% 45%)', float: 'right', zIndex: 10 }}>✕</button>
               <EditRentals agentData={agentData} setShowEditListingModal={setShowEditListingModal} rental={selectedRental} />
             </div>
           </div>
         )}
 
-        {selectedAgent && (
-          <VerifyAgentDialog
-            agentItem={selectedAgent}
-            isOpen={showDialog}
-            onClose={() => setShowDialog(false)}
-          />
-        )}
+        {selectedAgent && <VerifyAgentDialog agentItem={selectedAgent} isOpen={showDialog} onClose={() => setShowDialog(false)} />}
+
         {showViewModal && selectedRental && (
-          <div style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 50,
-            padding: '1rem'
-          }}>
-            <div style={{
-              backgroundColor: 'white',
-              borderRadius: '1rem',
-              maxHeight: '90vh',
-              overflow: 'auto',
-              maxWidth: '60%',
-              width: '100%',
-              position: 'relative'
-            }}>
-              <ViewRentals
-                rental={selectedRental}
-                setShowViewModal={setShowViewModal}
-              />
+          <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: '1rem' }}>
+            <div style={{ backgroundColor: 'white', borderRadius: '1rem', maxHeight: '90vh', overflow: 'auto', maxWidth: '60%', width: '100%' }}>
+              <ViewRentals rental={selectedRental} setShowViewModal={setShowViewModal} />
             </div>
           </div>
         )}
 
-        {/* Toast Notification */}
+        {/* ── Grant Subscription Modal ─────────────────────────────────────── */}
+        {showGrantModal && grantTarget && (
+          <GrantSubscriptionModal
+            agent={grantTarget}
+            plans={plans ?? []}
+            onClose={() => { setShowGrantModal(false); setGrantTarget(null); }}
+            onSuccess={(msg) => showToast('Plan Granted 🎉', msg)}
+          />
+        )}
+
+        {/* Toast */}
         {toast && (
-          <div style={{
-            position: 'fixed',
-            top: '1rem',
-            right: '1rem',
-            backgroundColor: toast.variant === 'error' ? 'hsl(0 70% 50%)' : 'hsl(152 60% 40%)',
-            color: 'white',
-            padding: '1rem 1.5rem',
-            borderRadius: '0.5rem',
-            boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
-            zIndex: 9999,
-            maxWidth: '400px',
-            animation: 'slideIn 0.3s ease-out'
-          }}>
+          <div style={{ position: 'fixed', top: '1rem', right: '1rem', backgroundColor: toast.variant === 'error' ? 'hsl(0 70% 50%)' : 'hsl(152 60% 40%)', color: 'white', padding: '1rem 1.5rem', borderRadius: '0.5rem', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', zIndex: 9999, maxWidth: '400px', animation: 'slideIn 0.3s ease-out' }}>
             <div style={{ fontWeight: '600', marginBottom: '0.25rem' }}>{toast.title}</div>
             <div style={{ fontSize: '0.875rem' }}>{toast.description}</div>
           </div>

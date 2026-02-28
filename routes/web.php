@@ -36,11 +36,11 @@ Route::post('/report-listing', [RentController::class, 'reportListing'])->name('
 Route::post('/review-forms', [RentController::class, 'storeReviewForms']);
 Route::post('/reviews/app', [RentController::class, 'storeReviewApp'])->name('reviews.app');
 
+// ── Pricing page (public) ────────────────────────────────────────────────────
 Route::get('pricing', [RentController::class, 'pricing'])->name('pricing.page');
-// Route::get('/checkout/plan={plan}', [RentController::class, 'checkout'])->name('checkout.page');
-Route::get('/select-plan', function () {
-    return inertia('SelectPlan');
-})->name('agent.plan.select')->middleware('auth');
+// Route::get('/select-plan', function () {
+//     return inertia('SelectPlan');
+// })->name('agent.plan.select')->middleware('auth');
 
 Route::post('/agent/select-plan', [AgentController::class, 'selectPlan'])
     ->middleware('auth');
@@ -69,12 +69,9 @@ Route::prefix('webhooks')->group(function () {
 
 // ─── Checkout (auth required) ─────────────────────────────────────────────────
 Route::middleware(['auth'])->group(function () {
-
-    // Single route handles: /checkout/2, /checkout/verified, /checkout/plan=verified
-    // The show() method resolves all three formats internally.
     Route::get('/checkout/{plan}', [CheckoutController::class, 'show'])
         ->name('checkout.show')
-        ->where('plan', '.*');  // allow = sign and URL-encoded chars in segment
+        ->where('plan', '.*');
 
     Route::post('/checkout/start', [CheckoutController::class, 'start'])
         ->name('checkout.start');
@@ -86,7 +83,7 @@ Route::middleware(['auth'])->group(function () {
         ->name('payment.callback');
 });
 
-
+// ── Admin Routes ──────────────────────────────────────────────────────────────
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/super-admin', [DashboardController::class, 'superAdmin'])->name('admin.dashboard');
     Route::put('/admin/reports/{id}/status', [RentController::class, 'updateReportStatus'])
@@ -103,37 +100,43 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         ->name('verification.update-status');
     Route::get('/api/verification-requests/{id}', [VerificationsController::class, 'show'])
         ->name('verification.show');
-    Route::get('/admin/payments/dashboard', [PaymentsController::class, 'paymentDashboard']);
+    Route::get('/admin/payments/dashboard', [PaymentsController::class, 'paymentDashboard'])
+        ->name('admin.payments.dashboard');
+
+    Route::post('/admin/agents/{userId}/grant-subscription', [PaymentsController::class, 'grantSubscription'])
+        ->name('admin.agents.grant-subscription');
+
+    Route::post('/admin/payments/{id}/refund', [PaymentsController::class, 'refundPayment'])
+        ->name('admin.payments.refund');
+
+    Route::post('/admin/subscriptions/{id}/cancel', [PaymentsController::class, 'cancelSubscription'])
+        ->name('admin.subscriptions.cancel');
+
+    Route::get('/admin/payments/filter', [PaymentsController::class, 'filterPayments'])
+        ->name('admin.payments.filter');
 });
 
+// ── Settings ──────────────────────────────────────────────────────────────────
 Route::get('settings', [AuthController::class, 'settings'])->name('settings.page');
 Route::put('settings/profile/agent', [AuthController::class, 'updateAgentProfile'])->name('settings.agent.page');
 Route::put('settings/profile/admin', [AuthController::class, 'updateAdminProfile'])->name('settings.admin.page');
-// password update route (current user)
 Route::put('settings/password', [AuthController::class, 'updatePassword'])->name('settings.password');
 
+// ── Auth ──────────────────────────────────────────────────────────────────────
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-
-
 Route::get('/sign-up', [AuthController::class, 'signUp']) -> name('sign-up.page');
 Route::post('/sign-up', [AuthController::class, 'store']);
 
-// login form and action routes
 Route::get('/login', function () {
     return inertia('Auth/AuthPage', ['isLogin' => true]);
 })->name('login');
-
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 
 Route::get('/forgot-password', [PasswordResetController::class, 'showForgotPasswordForm'])
     ->name('password.request');
-
 Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLink'])
     ->name('password.email');
-
 Route::get('/reset-password/{token}', [PasswordResetController::class, 'showResetPasswordForm'])
         ->name('password.reset');
-
-// Handle reset password form submission
 Route::post('/reset-password', [PasswordResetController::class, 'resetPassword'])
     ->name('password.update');

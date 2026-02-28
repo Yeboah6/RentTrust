@@ -10,93 +10,50 @@ const TrendingDown = ({ style }) => (
   </svg>
 );
 
-const AdminKpiCard = ({
-  icon: Icon,
-  iconBg,
-  iconColor,
-  badge,
-  value,
-  label,
-  change,
-  positive,
-  subValue
-}) => {
+const AdminKpiCard = ({ icon: Icon, iconBg, iconColor, badge, value, label, change, positive, subValue }) => {
   return (
-    <div style={{
-      backgroundColor: 'white',
-      border: '1px solid hsl(40 20% 88%)',
-      borderRadius: '0.75rem',
-      padding: '1.5rem',
-      transition: 'all 0.3s ease',
-      cursor: 'default'
-    }}
-    onMouseEnter={(e) => {
-      e.currentTarget.style.transform = 'translateY(-2px)';
-      e.currentTarget.style.boxShadow = '0 12px 24px hsl(200 25% 15% / 0.1)';
-    }}
-    onMouseLeave={(e) => {
-      e.currentTarget.style.transform = 'translateY(0)';
-      e.currentTarget.style.boxShadow = 'none';
-    }}
+    <div
+      style={{
+        backgroundColor: 'white',
+        border: '1px solid hsl(40 20% 88%)',
+        borderRadius: '0.75rem',
+        padding: '1.5rem',
+        transition: 'all 0.3s ease',
+        cursor: 'default',
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = 'translateY(-2px)';
+        e.currentTarget.style.boxShadow = '0 12px 24px hsl(200 25% 15% / 0.1)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = 'translateY(0)';
+        e.currentTarget.style.boxShadow = 'none';
+      }}
     >
-      {/* Header */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        marginBottom: '1rem'
-      }}>
-        <div style={{
-          width: '3rem',
-          height: '3rem',
-          borderRadius: '0.75rem',
-          backgroundColor: iconBg,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center'
-        }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+        <div style={{ width: '3rem', height: '3rem', borderRadius: '0.75rem', backgroundColor: iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <Icon style={{ height: '1.5rem', width: '1.5rem', color: iconColor }} />
         </div>
         {badge && (
-          <span style={{
-            fontSize: '0.625rem',
-            fontWeight: '600',
-            color: 'hsl(200 15% 45%)',
-            letterSpacing: '0.05em'
-          }}>
+          <span style={{ fontSize: '0.625rem', fontWeight: '600', color: 'hsl(200 15% 45%)', letterSpacing: '0.05em' }}>
             {badge}
           </span>
         )}
       </div>
 
-      {/* Value */}
       <div style={{ marginBottom: '0.5rem' }}>
-        <h3 style={{
-          fontSize: '1.875rem',
-          fontWeight: '700',
-          color: 'hsl(200 25% 15%)',
-          marginBottom: '0.25rem'
-        }}>
+        <h3 style={{ fontSize: '1.875rem', fontWeight: '700', color: 'hsl(200 25% 15%)', marginBottom: '0.25rem', margin: '0 0 0.25rem' }}>
           {value}
         </h3>
-        <p style={{
-          fontSize: '0.875rem',
-          color: 'hsl(200 15% 45%)'
-        }}>
+        <p style={{ fontSize: '0.875rem', color: 'hsl(200 15% 45%)', margin: 0 }}>
           {label}
         </p>
       </div>
 
-      {/* Change indicator or sub-value */}
-      <div style={{ display: 'flex', alignItems: 'center', fontSize: '0.875rem' }}>
-        {change !== undefined ? (
+      <div style={{ display: 'flex', alignItems: 'center', fontSize: '0.875rem', marginTop: '0.5rem' }}>
+        {change !== undefined && change !== null ? (
           <>
-            <span style={{
-              display: 'flex',
-              alignItems: 'center',
-              color: positive ? 'hsl(152 60% 40%)' : 'hsl(0 70% 50%)',
-              fontWeight: '500'
-            }}>
+            <span style={{ display: 'flex', alignItems: 'center', color: positive ? 'hsl(152 60% 40%)' : 'hsl(0 70% 50%)', fontWeight: '500' }}>
               {positive ? (
                 <TrendingUp style={{ height: '1rem', width: '1rem', marginRight: '0.25rem' }} />
               ) : (
@@ -104,14 +61,10 @@ const AdminKpiCard = ({
               )}
               {Math.abs(change)}%
             </span>
-            <span style={{ marginLeft: '0.5rem', color: 'hsl(200 15% 45%)' }}>
-              vs last period
-            </span>
+            <span style={{ marginLeft: '0.5rem', color: 'hsl(200 15% 45%)' }}>vs last period</span>
           </>
         ) : subValue ? (
-          <span style={{ color: 'hsl(200 15% 45%)' }}>
-            {subValue}
-          </span>
+          <span style={{ color: 'hsl(200 15% 45%)' }}>{subValue}</span>
         ) : null}
       </div>
     </div>

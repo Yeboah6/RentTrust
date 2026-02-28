@@ -1497,7 +1497,7 @@ import AddRentalPage from "@/Components/Modules/AddRentals";
 import EditRentals from "@/Components/Modules/EditRentals";
 import VerificationRequestModal from "@/Components/Modules/VerifyRentals";
 import ViewRentals from "@/Components/Modules/ViewRental";
-import BillingModule from "@/Components/Modules/BillingDashboard";
+import BillingModule from "@/Components/Modules/BillingModule";
 import PricingModal from '@/Components/Modules/PricingModal';
 
 // Icon components
