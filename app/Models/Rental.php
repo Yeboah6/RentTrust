@@ -55,6 +55,16 @@ class Rental extends Model
         return $this->hasMany(Review::class);
     }
 
+    public function views()
+    {
+        return $this->hasMany(ListingView::class);
+    }
+
+    public function inquiries()
+    {
+        return $this->hasMany(ListingInquiry::class);
+    }
+
     protected function amenities(): Attribute
     {
         return Attribute::make(

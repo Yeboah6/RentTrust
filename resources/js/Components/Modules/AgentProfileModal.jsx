@@ -1,7 +1,23 @@
 import React from 'react';
 import { X, Shield, Star, Mail, Phone, MapPin } from 'lucide-react';
 
-const AgentProfileModal = ({ agent, isOpen, onClose, auth }) => {
+const AgentProfileModal = ({ agent, isOpen, onClose, auth, rentalId = null }) => {
+  const trackInquiry = (type) => {
+    if (!rentalId) {
+      return;
+    }
+    const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    fetch(`/api/listings/${rentalId}/track-inquiry`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': token,
+      },
+      body: JSON.stringify({ type }),
+    }).catch(() => {
+      // silently ignore
+    });
+  };
   if (!isOpen || !agent) return null;
 
   const renderStars = (rating) => {
@@ -258,6 +274,7 @@ const AgentProfileModal = ({ agent, isOpen, onClose, auth }) => {
           <div style={{ display: 'flex', gap: '1rem' }}>
             <a
                 href={`tel:${auth.phone || agent.phone}`}
+                onClick={() => trackInquiry('phone')}
                 className="flex-1 px-6 py-3 rounded-lg font-semibold text-white transition-all duration-200 active:scale-95 text-center"
                 style={{ backgroundColor: '#1f847a' }}
               >

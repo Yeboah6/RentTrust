@@ -11,6 +11,7 @@ use App\Http\Controllers\PaymentsController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\WebhookController;
 use App\Http\Controllers\VerificationsController;
+use App\Http\Controllers\AgentAnalyticsController;
 
 Route::resource('rent', RentController::class) -> except('index');
 
@@ -21,6 +22,14 @@ Route::get('/api/listings/more', [RentController::class, 'getMoreListings'])->na
 
 Route::get('/areas', [RentController::class, 'areas']);
 Route::get('/areas/{city}/{area}', [RentController::class, 'showArea'])->name('areas.show');
+
+// tracking endpoints
+Route::post('/api/listings/{rent}/track-view', [RentController::class, 'trackView'])->name('listings.trackView');
+Route::post('/api/listings/{rent}/track-inquiry', [RentController::class, 'trackInquiry'])->name('listings.trackInquiry');
+
+// analytics endpoints
+Route::get('/api/listings/analytics', [AgentAnalyticsController::class, 'index'])->name('listings.analytics.index');
+Route::get('/api/listings/{rent}/analytics', [AgentAnalyticsController::class, 'summary'])->name('listings.analytics.summary');
 Route::get('/api/areas/search', [RentController::class, 'searchAreas'])->name('areas.search');
 Route::get('/api/areas/city/{city}', [RentController::class, 'getAreasByCity'])->name('areas.by-city');
 

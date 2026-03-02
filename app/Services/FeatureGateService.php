@@ -118,4 +118,77 @@ class FeatureGateService
             'analytics_access'=> $plan?->analytics_access ?? false,
         ];
     }
+
+    /**
+     * Check if user can view basic listing analytics.
+     * Available to: Pro, Elite
+     */
+    public function canViewAnalytics(User $user): bool
+    {
+        $plan = $this->activePlan($user);
+
+        return $plan?->analytics_access ?? false;
+    }
+
+    /**
+     * Check if user can view advanced analytics (7-day, 30-day trends, conversion rate, performance score).
+     * Available to: Pro, Elite
+     */
+    public function canViewAdvancedAnalytics(User $user): bool
+    {
+        $plan = $this->activePlan($user);
+
+        return $plan?->analytics_access ?? false;
+    }
+
+    /**
+     * Check if user can view premium analytics (30-day trends, performance comparisons).
+     * Available to: Elite only
+     */
+    public function canViewPremiumAnalytics(User $user): bool
+    {
+        $plan = $this->activePlan($user);
+
+        // Only Elite plan (highest tier) gets premium analytics
+        // Assuming plan slug 'elite' for Elite tier
+        return $plan && strtolower($plan->slug) === 'elite';
+    }
+
+    /**
+     * Get analytics features available for the user's plan.
+     */
+    public function getAnalyticsFeatures(User $user): array
+    {
+        $plan = $this->activePlan($user);
+
+        if (!$plan) {
+            return [
+                'can_view_total_views' => false,
+                'can_view_total_inquiries' => false,
+                'can_view_7_day_stats' => false,
+                'can_view_30_day_stats' => false,
+                'can_see_conversion_rate' => false,
+                'can_see_performance_score' => false,
+                'can_see_inquiry_breakdown' => false,
+            ];
+        }
+
+        $planSlug = strtolower($plan->slug);
+        $isElite = $planSlug === 'elite';
+        $isPro = $planSlug === 'pro' || $isElite;
+        $hasTierAccess = $plan->analytics_access;
+
+        return [
+            // Free plan: Limited visibility (partial)
+            'can_view_total_views' => $hasTierAccess,
+            'can_view_total_inquiries' => $hasTierAccess,
+            // Pro plan and above
+            'can_view_7_day_stats' => $isPro,
+            'can_see_conversion_rate' => $isPro,
+            'can_see_performance_score' => $isPro,
+            'can_see_inquiry_breakdown' => $isPro,
+            // Elite plan only
+            'can_view_30_day_stats' => $isElite,
+        ];
+    }
 }

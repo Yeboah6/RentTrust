@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Header from '../Components/Layouts/Header';
 import Footer from '../Components/Layouts/Footer';
 import { Link, usePage } from "@inertiajs/react";
@@ -72,6 +72,17 @@ const PropertyDetailsPage = ({ rental, reviews }) => {
   const { auth } = usePage().props;
   const formatCurrency = (amount) => `GH₵${amount?.toLocaleString() || '0'}`;
   const [showAddListingModal, setShowAddListingModal] = useState(false);
+
+  // track view after component mounts
+  useEffect(() => {
+    const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    fetch(`/api/listings/${rental.id}/track-view`, {
+      method: 'POST',
+      headers: {
+        'X-CSRF-TOKEN': token,
+      },
+    }).catch(() => {});
+  }, [rental.id]);
   const [showAddReviewForm, setShowAddReviewForm] = useState(false);
   const [showAgentProfile, setShowAgentProfile] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -824,6 +835,7 @@ const PropertyDetailsPage = ({ rental, reviews }) => {
         {/* Agent Profile Modal */}
         <AgentProfileModal 
           agent={rental.user} 
+          rentalId={rental.id}
           isOpen={showAgentProfile} 
           onClose={() => setShowAgentProfile(false)}
           auth={auth}

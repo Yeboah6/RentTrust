@@ -6,6 +6,8 @@ use App\Models\Agent;
 use App\Models\Rental;
 use App\Models\Report;
 use App\Models\Review;
+use App\Models\ListingView;
+use App\Models\ListingInquiry;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -215,8 +217,24 @@ class RentController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Rental $rent)
+    public function show(Request $request, Rental $rent)
     {
+        // record view if not already counted in past 24h
+        try {
+            $ip = $request->ip();
+            if (! ListingView::hasViewInWindow($rent->id, $ip)) {
+                ListingView::create([
+                    'rental_id'  => $rent->id,
+                    'user_id'    => Auth::id(),
+                    'ip'         => $ip,
+                    'user_agent' => $request->userAgent(),
+                    'referrer'   => $request->headers->get('referer'),
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::warning('Failed to track listing view: ' . $e->getMessage());
+        }
+
         $rent->load('user');
 
         $reviews = Review::where('rental_id', $rent->id)
@@ -847,6 +865,46 @@ class RentController extends Controller
         $trends = ['+12%', '+8%', '+5%', '-3%', '+15%', '+10%', '+2%'];
 
         return $trends[array_rand($trends)];
+    }
+
+    /**
+     * Ajax endpoint that explicitly tracks a view (useful when the page is cached or rendered as SPA)
+     */
+    public function trackView(Request $request, Rental $rent)
+    {
+        $ip = $request->ip();
+        if (! ListingView::hasViewInWindow($rent->id, $ip)) {
+            ListingView::create([
+                'rental_id'  => $rent->id,
+                'user_id'    => Auth::id(),
+                'ip'         => $ip,
+                'user_agent' => $request->userAgent(),
+                'referrer'   => $request->headers->get('referer'),
+            ]);
+        }
+
+        return response()->json(['tracked' => true]);
+    }
+
+    /**
+     * Record an inquiry event tied to a listing.
+     */
+    public function trackInquiry(Request $request, Rental $rent)
+    {
+        $data = $request->validate([
+            'type'    => ['required', 'in:' . implode(',', ListingInquiry::validTypes())],
+            'message' => 'nullable|string',
+        ]);
+
+        ListingInquiry::create([
+            'rental_id' => $rent->id,
+            'user_id'   => Auth::id(),
+            'type'      => $data['type'],
+            'message'   => $data['message'] ?? null,
+            'ip'        => $request->ip(),
+        ]);
+
+        return response()->json(['tracked' => true]);
     }
 
     public function showArea($city, $area)
