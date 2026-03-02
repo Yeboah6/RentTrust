@@ -84,7 +84,6 @@ const BarChart = ({ style }) => (
 
 const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [] }) => {
   const [activeTab, setActiveTab] = useState("overview");
-  // const [respondingTo, setRespondingTo] = useState(null);
   const [showAddListingModal, setShowAddListingModal] = useState(false);
   const [selectedRental, setSelectedRental] = useState(null);
   const [showViewModal, setShowViewModal] = useState(false);
@@ -114,8 +113,8 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [] }) => {
       rent_min: rental.rent_min || 0,
       rent_max: rental.rent_max || 0,
       listing_status: rental.status || "unverified",
-      views: Math.floor(Math.random() * 100), // Mock data
-      inquiries: Math.floor(Math.random() * 10),
+      views: rental.views_count || 0,
+      inquiries: rental.inquiries_count || 0,
     }))
     : [];
 

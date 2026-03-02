@@ -22,7 +22,11 @@ class DashboardController extends Controller
     public function agentDashboard() {
         $agentData = Auth::user();
 
-        $rentals = Rental::where('user_id', $agentData->id)->latest()->get();
+        // include view/inquiry/review counts for each rental
+        $rentals = Rental::where('user_id', $agentData->id)
+            ->withCount(['views', 'inquiries', 'reviews'])
+            ->latest()
+            ->get();
         $rentalIds = $rentals->pluck('id');
         $reviews = Review::whereIn('rental_id', $rentalIds)->latest()->get();
         $plans = app(\App\Http\Controllers\CheckoutController::class)->plansForModal();
@@ -142,7 +146,11 @@ class DashboardController extends Controller
     public function freeTier() {
         $agentData = Auth::user();
 
-        $rentals = Rental::where('user_id', $agentData->id)->latest()->get();
+        // include counts for free tier dashboard as well
+        $rentals = Rental::where('user_id', $agentData->id)
+            ->withCount(['views', 'inquiries', 'reviews'])
+            ->latest()
+            ->get();
         $rentalIds = $rentals->pluck('id');
         $reviews = Review::whereIn('rental_id', $rentalIds)->latest()->get();
         $plans = app(\App\Http\Controllers\CheckoutController::class)->plansForModal();
