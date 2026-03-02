@@ -95,11 +95,11 @@ const CTASection = () => {
                   and connect with serious tenants.
                 </p>
                 <Link
-                  href='/claim-listings'
+                  href='/become-agent'
                   className="gradient-accent inline-flex items-center px-6 py-3 font-semibold rounded-lg transition-all duration-200 active:scale-95 shadow-md hover:shadow-lg"
                   style={{ color: 'hsl(200 25% 10%)' }}
                 >
-                  Claim Your Listing
+                  Become an Agent
                   <ArrowRight className="h-4 w-4 ml-2" />
                 </Link>
               </div>

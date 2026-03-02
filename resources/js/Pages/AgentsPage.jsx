@@ -389,7 +389,7 @@ const AgentsPage = ({ agents }) => {
                   onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(174 55% 28%)'}
                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'hsl(174 62% 32%)'}
                 >
-                  Become an Landlord
+                  Become an Agent
                 </Link>
               </div>
             </div>

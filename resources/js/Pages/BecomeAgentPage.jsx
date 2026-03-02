@@ -398,7 +398,7 @@ const BecomeAgentPage = () => {
                       </div>
                       <div style={{ display: 'flex', alignItems: 'start', gap: '0.5rem' }}>
                         <CheckCircle style={{ height: '1rem', width: '1rem', marginTop: '0.125rem', color: 'hsl(152 60% 40%)', flexShrink: 0 }} />
-                        <span>Claim and manage property listings</span>
+                        <span>Manage property listings</span>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'start', gap: '0.5rem' }}>
                         <CheckCircle style={{ height: '1rem', width: '1rem', marginTop: '0.125rem', color: 'hsl(152 60% 40%)', flexShrink: 0 }} />

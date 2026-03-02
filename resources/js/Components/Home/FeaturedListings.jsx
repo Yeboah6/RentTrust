@@ -218,7 +218,7 @@ const FeaturedListings = ({ recentListings = [] }) => {
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
             <div>
               <h2 className="text-2xl md:text-3xl font-bold mb-2 tracking-tight" style={{ color: 'hsl(200 25% 15%)' }}>
-                Recent Listings
+                Featured Listings
               </h2>
               <p style={{ color: 'hsl(200 15% 45%)' }}>
                 Browse the latest properties with transparent rent information

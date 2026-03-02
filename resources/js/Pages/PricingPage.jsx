@@ -306,17 +306,16 @@ const Pricing = () => {
         </div>
       ),
       features: [
-        "Submit limited listings to the platform",
+        "Limited listings to the platform",
         "Limited visibility in search results",
         "Basic listing management",
-        "Access to tenant inquiries",
         "Standard support"
       ],
       ctaText: "Get Started Free",
       isPopular: false
     },
     {
-      name: "Verified",
+      name: "Pro",
       price: 149,
       description: "Build trust and stand out",
       icon: (
@@ -339,17 +338,16 @@ const Pricing = () => {
         "Everything in Free, plus:",
         "Verified landlord badge",
         "Higher ranking in search results",
-        "Ability to respond to reviews",
-        // "Basic listing insights & analytics",
-        "Priority customer support"
+        "Respond to reviews",
+        "Access to tenant inquiries"
       ],
-      ctaText: "Start Verification",
+      ctaText: "Go Pro",
       isPopular: true
     },
     {
-      name: "Pro",
-      price: 349,
-      description: "Advanced tools for professionals",
+      name: "Elite",
+      price: 249,
+      description: "Advanced tools for Elites",
       icon: (
         <div
           style={{
@@ -367,15 +365,13 @@ const Pricing = () => {
         </div>
       ),
       features: [
-        "Everything in Verified, plus:",
+        "Everything in Pro, plus:",
         "Unlimited property listings",
         "Lead unlock credits (50/month)",
-        // "Advanced analytics dashboard",
         "Featured listing placement",
-        "Dedicated account manager",
-        // "API access for integrations"
+        "Priority customer support",
       ],
-      ctaText: "Go Pro",
+      ctaText: "Elite",
       isPopular: false
     }
   ];

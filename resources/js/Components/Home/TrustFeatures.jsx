@@ -25,7 +25,7 @@ const features = [
   {
     icon: CheckCircle2,
     title: "Agent Accountability",
-    description: "Agents can claim listings and respond to reviews, building their reputation.",
+    description: "Agents respond to reviews, building their reputation.",
   },
   {
     icon: Users,

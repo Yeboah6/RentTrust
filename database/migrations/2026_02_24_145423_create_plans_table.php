@@ -68,7 +68,7 @@ return new class extends Migration
             [
                 'name' => 'Elite',
                 'slug' => 'elite',
-                'price' => 299.00,
+                'price' => 249.00,
                 'currency' => 'GHS',
                 'interval' => 'monthly',
                 'listing_limit' => null,

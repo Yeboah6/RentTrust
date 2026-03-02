@@ -72,11 +72,11 @@ class AuthController extends Controller
         elseif ($user->role === 'agent' && $user->package === null || $user->package === 'free') {
             return redirect()->intended('/agent/dashboard');
         } 
-        elseif ($user->role === 'agent') {
+        elseif ($user->role === 'agent' && $user->package === 'pro' && $user->package === 'elite') {
             return redirect()->intended('/agent-dashboard');
         } 
         elseif ($user->role === 'admin' && $user->package === 'admin') {
-            return redirect('/super-admin');
+            return redirect('/admin');
         }
 
         // Fallback redirect (shouldn't normally reach here)

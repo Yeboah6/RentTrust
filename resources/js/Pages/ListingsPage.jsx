@@ -420,7 +420,7 @@ const PropertyCard = ({ listing }) => {
               <span style={{ fontSize: '0.875rem', color: 'hsl(200 15% 45%)' }}>
                 {listing.agentName}
               </span>
-              {listing.isVerified && (
+              {listing.status === "verified" && (
                 <span
                   style={{
                     display: 'inline-flex',

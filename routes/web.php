@@ -50,7 +50,7 @@ Route::get('/become-agent', [AgentController::class, 'becomeAgent']);
 Route::post('/become-agent', [AgentController::class, 'storeBecomeAgent']);
 
 // Protected Agent Routes
-Route::middleware(['auth', 'role:agent'])->group(function () {
+Route::middleware(['auth', 'verified', 'throttle:60,1', 'role:agent'])->group(function () {
     Route::get('/agent-dashboard', [DashboardController::class, 'agentDashboard'])->name('agent.dashboard');
     Route::post('/rent', [RentController::class, 'store']);
     Route::put('/response', [RentController::class, 'response']);
@@ -60,15 +60,15 @@ Route::middleware(['auth', 'role:agent'])->group(function () {
         ->name('verification.destroy');
 });
 
-Route::get('/agent/dashboard', [DashboardController::class, 'freeTier'])->name('free.agent.dashboard');
+Route::get('/agent/dashboard', [DashboardController::class, 'freeTier'])->middleware(['auth','verified','throttle:60,1'])->name('free.agent.dashboard');
 
 Route::prefix('webhooks')->group(function () {
     Route::post('/paystack', [WebhookController::class, 'paystack'])->name('webhook.paystack');
     Route::post('/flutterwave', [WebhookController::class, 'flutterwave'])->name('webhook.flutterwave');
 });
 
-// ─── Checkout (auth required) ─────────────────────────────────────────────────
-Route::middleware(['auth'])->group(function () {
+// ─── Checkout (auth + verified required) ──────────────────────────────────────
+Route::middleware(['auth','verified'])->group(function () {
     Route::get('/checkout/{plan}', [CheckoutController::class, 'show'])
         ->name('checkout.show')
         ->where('plan', '.*');
@@ -84,8 +84,8 @@ Route::middleware(['auth'])->group(function () {
 });
 
 // ── Admin Routes ──────────────────────────────────────────────────────────────
-Route::middleware(['auth', 'role:admin'])->group(function () {
-    Route::get('/super-admin', [DashboardController::class, 'superAdmin'])->name('admin.dashboard');
+Route::middleware(['auth','verified','throttle:60,1','role:admin'])->group(function () {
+    Route::get('/admin', [DashboardController::class, 'superAdmin'])->name('admin.dashboard');
     Route::put('/admin/reports/{id}/status', [RentController::class, 'updateReportStatus'])
     ->name('admin.reports.status');
     Route::put('/admin/agents/{id}/verify', [VerificationsController::class, 'verifyAgent'])
@@ -116,21 +116,23 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         ->name('admin.payments.filter');
 });
 
-// ── Settings ──────────────────────────────────────────────────────────────────
-Route::get('settings', [AuthController::class, 'settings'])->name('settings.page');
-Route::put('settings/profile/agent', [AuthController::class, 'updateAgentProfile'])->name('settings.agent.page');
-Route::put('settings/profile/admin', [AuthController::class, 'updateAdminProfile'])->name('settings.admin.page');
-Route::put('settings/password', [AuthController::class, 'updatePassword'])->name('settings.password');
+// ── Settings (protected + verified) ──────────────────────────────────────────
+Route::middleware(['auth','verified'])->group(function () {
+    Route::get('settings', [AuthController::class, 'settings'])->name('settings.page');
+    Route::put('settings/profile/agent', [AuthController::class, 'updateAgentProfile'])->name('settings.agent.page');
+    Route::put('settings/profile/admin', [AuthController::class, 'updateAdminProfile'])->name('settings.admin.page');
+    Route::put('settings/password', [AuthController::class, 'updatePassword'])->name('settings.password')->middleware('password.confirm');
+});
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
-Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+Route::post('/logout', [AuthController::class, 'logout'])->middleware(['auth','verified'])->name('logout');
 Route::get('/sign-up', [AuthController::class, 'signUp']) -> name('sign-up.page');
 Route::post('/sign-up', [AuthController::class, 'store']);
 
 Route::get('/login', function () {
     return inertia('Auth/AuthPage', ['isLogin' => true]);
 })->name('login');
-Route::post('/login', [AuthController::class, 'login'])->name('login.post');
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:10,1')->name('login.post');
 
 Route::get('/forgot-password', [PasswordResetController::class, 'showForgotPasswordForm'])
     ->name('password.request');

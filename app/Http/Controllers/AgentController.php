@@ -67,7 +67,7 @@ class AgentController extends Controller
 
         $user = Auth::user();
 
-        if ($request->package === 'free') {
+        if ($request->package === 'free' || $request->package === null) {
             // Activate free plan properly via CheckoutController helper
             $plan = \App\Models\Plan::where('slug', 'free')->firstOrFail();
             app(CheckoutController::class)->activateFreeForAgent($user, $plan);

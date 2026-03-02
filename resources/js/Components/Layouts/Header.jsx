@@ -277,7 +277,7 @@ const Header = () => {
             {/* Agent Logged In */}
             {isAgentLoggedIn && (
               <>
-                <Link href={agentData?.package === 'free' ? '/agent/dashboard' : '/agent-dashboard'}
+                <Link href={agentData?.package === 'free' || agentData?.package === null ? '/agent/dashboard' : '/agent-dashboard'}
                   // href="/agent-dashboard"
                   onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(40 30% 94%)'}
                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
@@ -327,7 +327,7 @@ const Header = () => {
             {isSuperAdminLoggedIn && (
               <>
                 <Link
-                  href="/super-admin"
+                  href="/admin"
                   onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(40 30% 94%)'}
                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
                   className="inline-flex items-center rounded-lg border transition-colors"
@@ -644,7 +644,7 @@ const Header = () => {
               {isSuperAdminLoggedIn && (
                 <>
                   <Link
-                    href="/super-admin"
+                    href="/admin"
                     onClick={handleMobileLinkClick}
                     className="w-full inline-flex items-center justify-start rounded-lg border transition-colors"
                     style={{
