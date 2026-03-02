@@ -22,10 +22,6 @@ class DashboardController extends Controller
     public function agentDashboard() {
         $agentData = Auth::user();
 
-        if (!$agentData) {
-            return redirect('/sign-up');
-        }
-
         $rentals = Rental::where('user_id', $agentData->id)->latest()->get();
         $rentalIds = $rentals->pluck('id');
         $reviews = Review::whereIn('rental_id', $rentalIds)->latest()->get();
@@ -82,10 +78,6 @@ class DashboardController extends Controller
 
     public function superAdmin() {
         $adminData = Auth::user();
-
-        if (!$adminData) {
-            return redirect('/sign-up');
-        }
 
         $sub  = $adminData->subscription()->with('plan')->first();
         
@@ -149,10 +141,6 @@ class DashboardController extends Controller
 
     public function freeTier() {
         $agentData = Auth::user();
-
-        if (!$agentData) {
-            return redirect('/sign-up');
-        }
 
         $rentals = Rental::where('user_id', $agentData->id)->latest()->get();
         $rentalIds = $rentals->pluck('id');
