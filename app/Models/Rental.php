@@ -12,11 +12,13 @@ class Rental extends Model
         'user_id',
         'title',
         'property_type',
+        'purpose',
         'city',
         'area',
         'address',
         'rent_min',
         'rent_max',
+        'sale_price',
         'advance_duration',
         'bedrooms',
         'bathrooms',
@@ -29,6 +31,8 @@ class Rental extends Model
         'status',
         'is_verified',
         'is_claimed',
+        'is_sold',
+        'sold_at',
     ];
 
     protected $casts = [
@@ -36,11 +40,14 @@ class Rental extends Model
         'amenities' => 'array',
         'rent_min' => 'decimal:2',
         'rent_max' => 'decimal:2',
+        'sale_price' => 'decimal:2',
         'bedrooms' => 'integer',
         'bathrooms' => 'integer',
         'advance_duration' => 'integer',
         'is_verified' => 'boolean',
         'is_claimed' => 'boolean',
+        'is_sold' => 'boolean',
+        'sold_at' => 'datetime',
     ];
 
     // protected $with = ['agent'];
@@ -71,5 +78,51 @@ class Rental extends Model
             get: fn ($value) => json_decode($value, true) ?? [],
             set: fn ($value) => is_array($value) ? json_encode($value) : $value,
         );
+    }
+
+    /**
+     * Check if this is a rental listing
+     */
+    public function isRental(): bool
+    {
+        return $this->purpose === 'rent';
+    }
+
+    /**
+     * Check if this is a sale listing
+     */
+    public function isSale(): bool
+    {
+        return $this->purpose === 'sale';
+    }
+
+    /**
+     * Check if listing is active
+     */
+    public function isActive(): bool
+    {
+        return $this->status === 'approved' && !$this->is_sold;
+    }
+
+    /**
+     * Get days on market for sale listings
+     */
+    public function getDaysOnMarket(): ?int
+    {
+        if (!$this->isSale()) {
+            return null;
+        }
+        return now()->diffInDays($this->created_at);
+    }
+
+    /**
+     * Mark listing as sold
+     */
+    public function markAsSold(): void
+    {
+        $this->update([
+            'is_sold' => true,
+            'sold_at' => now(),
+        ]);
     }
 }

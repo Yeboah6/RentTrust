@@ -84,7 +84,7 @@ const Users = ({ style }) => (
   </svg>
 );
 
-const AgentDashboardPage = ({ agentData, rentals, reviews }) => {
+const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views = [] }) => {
   const { billing, plans } = usePage().props;
 
   const [activeTab, setActiveTab] = useState("overview");
@@ -253,21 +253,26 @@ const AgentDashboardPage = ({ agentData, rentals, reviews }) => {
           .profile-header-container { flex-direction: column !important; align-items: flex-start !important; }
           .profile-avatar { margin-bottom: clamp(1rem, 3vw, 1rem) !important; }
           .settings-link { align-self: stretch !important; margin-top: 1rem !important; width: 100% !important; }
-          .tabs-grid { grid-template-columns: 1fr !important; }
+          .tabs-grid { grid-template-columns: 1fr 1fr !important; }
           .listing-grid { grid-template-columns: 1fr !important; }
           .review-grid { grid-template-columns: 1fr !important; }
           .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
           .modal-content { max-width: 95% !important; margin: 0.5rem; }
         }
-        @media (min-width: 769px) {
+        @media (min-width: 769px) and (max-width: 1023px) {
           .profile-header-container { flex-direction: row !important; }
           .settings-link { align-self: flex-start !important; margin-top: 0 !important; }
-          .tabs-grid { grid-template-columns: repeat(4, 1fr) !important; }
-          .listing-grid { grid-template-columns: repeat(3, 1fr) !important; }
+          .tabs-grid { grid-template-columns: repeat(3, 1fr) !important; }
+          .listing-grid { grid-template-columns: repeat(2, 1fr) !important; }
+          .review-grid { grid-template-columns: repeat(2, 1fr) !important; }
+          .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
+        }
+        @media (min-width: 1024px) { 
+          .tabs-grid { grid-template-columns: repeat(6, 1fr) !important; }
+          .listing-grid { grid-template-columns: repeat(4, 1fr) !important; } 
           .review-grid { grid-template-columns: repeat(3, 1fr) !important; }
           .stats-grid { grid-template-columns: repeat(4, 1fr) !important; }
         }
-        @media (min-width: 1024px) { .listing-grid { grid-template-columns: repeat(4, 1fr) !important; } }
         .toast-container { position: fixed; top: 1rem; right: 1rem; z-index: 1000; max-width: 24rem; width: 100%; }
         .toast-success { background-color: hsl(152 60% 40%); color: white; }
         .toast-error { background-color: hsl(0 72% 51%); color: white; }
@@ -318,11 +323,13 @@ const AgentDashboardPage = ({ agentData, rentals, reviews }) => {
             {/* Tabs */}
             <div>
               <div className="tabs-grid" style={{ display: 'grid', gap: 'clamp(0.25rem, 1vw, 0.5rem)', backgroundColor: 'hsl(40 30% 94%)', padding: 'clamp(0.25rem, 1vw, 0.25rem)', borderRadius: 'clamp(0.375rem, 2vw, 0.5rem)', marginBottom: 'clamp(1.5rem, 4vw, 2rem)' }}>
-                {['overview', 'listings', 'reviews', 'billing'].map((tab) => (
+                {['overview', 'listings', 'inquiries', 'reviews', 'views', 'billing'].map((tab) => (
                   <button key={tab} onClick={() => setActiveTab(tab)} className="action-button" style={{ padding: 'clamp(0.5rem, 2vw, 0.5rem) clamp(0.75rem, 3vw, 1rem)', border: 'none', borderRadius: 'clamp(0.25rem, 1.5vw, 0.375rem)', backgroundColor: activeTab === tab ? 'white' : 'transparent', color: activeTab === tab ? 'hsl(200 25% 15%)' : 'hsl(200 15% 45%)', fontWeight: '500', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'clamp(0.25rem, 1vw, 0.5rem)', transition: 'all 0.2s', boxShadow: activeTab === tab ? '0 1px 2px 0 hsl(200 25% 15% / 0.05)' : 'none', textTransform: 'capitalize', fontSize: 'clamp(0.875rem, 2vw, 0.875rem)', whiteSpace: 'nowrap' }}>
                     {tab === 'overview' && <BarChart style={{ height: 'clamp(0.875rem, 2.5vw, 1rem)', width: 'clamp(0.875rem, 2.5vw, 1rem)' }} />}
                     {tab === 'listings' && <Home style={{ height: 'clamp(0.875rem, 2.5vw, 1rem)', width: 'clamp(0.875rem, 2.5vw, 1rem)' }} />}
+                    {tab === 'inquiries' && <MessageSquare style={{ height: 'clamp(0.875rem, 2.5vw, 1rem)', width: 'clamp(0.875rem, 2.5vw, 1rem)' }} />}
                     {tab === 'reviews' && <MessageSquare style={{ height: 'clamp(0.875rem, 2.5vw, 1rem)', width: 'clamp(0.875rem, 2.5vw, 1rem)' }} />}
+                    {tab === 'views' && <Eye style={{ height: 'clamp(0.875rem, 2.5vw, 1rem)', width: 'clamp(0.875rem, 2.5vw, 1rem)' }} />}
                     {tab === 'billing' && <svg style={{ height: 'clamp(0.875rem, 2.5vw, 1rem)', width: 'clamp(0.875rem, 2.5vw, 1rem)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>}
                     {tab}
                   </button>
@@ -472,6 +479,128 @@ const AgentDashboardPage = ({ agentData, rentals, reviews }) => {
                       <MessageSquare style={{ height: 'clamp(2.5rem, 10vw, 3rem)', width: 'clamp(2.5rem, 10vw, 3rem)', color: 'hsl(200 15% 45%)', margin: '0 auto clamp(0.75rem, 2vw, 1rem) auto' }} />
                       <h3 style={{ fontSize: 'clamp(1rem, 3vw, 1.125rem)', fontWeight: '600', color: 'hsl(200 25% 15%)', marginBottom: 'clamp(0.375rem, 1.5vw, 0.5rem)' }}>No Reviews Yet</h3>
                       <p style={{ color: 'hsl(200 15% 45%)', fontSize: 'clamp(0.875rem, 2vw, 0.875rem)' }}>You haven't received any reviews from tenants yet.</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Inquiries Tab */}
+              {activeTab === 'inquiries' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(1rem, 3vw, 1.5rem)' }}>
+                  <h2 style={{ color: 'hsl(200 25% 15%)', fontSize: 'clamp(1rem, 3vw, 1.125rem)', fontWeight: '600' }}>Property Inquiries ({inquiries.length})</h2>
+                  {inquiries.length > 0 ? (
+                    <div className="review-grid" style={{ display: 'grid', gap: 'clamp(0.75rem, 2vw, 1rem)' }}>
+                      {inquiries.map((inquiry) => {
+                        const propertyTitle = rentals?.find(r => r.id === inquiry.rental_id)?.title || `Property #${inquiry.rental_id}`;
+                        const propertyAddress = rentals?.find(r => r.id === inquiry.rental_id)?.address || 'Unknown';
+                        const propertyCity = rentals?.find(r => r.id === inquiry.rental_id)?.city || 'Unknown';
+                        
+                        return (
+                          <div key={inquiry.id} style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.5rem, 2vw, 0.75rem)', padding: 'clamp(0.75rem, 2vw, 1rem)' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 'clamp(0.75rem, 2vw, 1rem)', gap: 'clamp(0.5rem, 2vw, 1rem)', flexWrap: 'wrap' }}>
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <h3 style={{ color: 'hsl(200 25% 15%)', fontSize: 'clamp(0.875rem, 2.5vw, 1rem)', fontWeight: '600', marginBottom: 'clamp(0.25rem, 1vw, 0.5rem)', wordBreak: 'break-word' }}>{propertyTitle}</h3>
+                                <p style={{ fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', color: 'hsl(200 15% 45%)', marginBottom: 'clamp(0.5rem, 2vw, 0.75rem)', wordBreak: 'break-word' }}>{propertyAddress}, {propertyCity}</p>
+                              </div>
+                              <span style={{ padding: 'clamp(0.25rem, 1vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem)', fontSize: 'clamp(0.6875rem, 2vw, 0.75rem)', fontWeight: '500', backgroundColor: 'hsl(174 62% 32% / 0.1)', color: 'hsl(174 62% 32%)', borderRadius: '9999px', whiteSpace: 'nowrap' }}>
+                                {inquiry.type === 'form' ? '📝 Form' : inquiry.type === 'whatsapp' ? '💬 WhatsApp' : '📞 Phone'}
+                              </span>
+                            </div>
+
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.75rem, 2vw, 1rem)', marginBottom: 'clamp(0.75rem, 2vw, 1rem)', paddingBottom: 'clamp(0.75rem, 2vw, 1rem)', borderBottom: '1px solid hsl(40 20% 88%)' }}>
+                              <div style={{ width: 'clamp(2rem, 8vw, 2.5rem)', height: 'clamp(2rem, 8vw, 2.5rem)', borderRadius: '50%', backgroundColor: 'hsl(174 62% 32% / 0.1)', color: 'hsl(174 62% 32%)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 'clamp(0.875rem, 2.5vw, 1rem)', fontWeight: '600', flexShrink: 0 }}>
+                                {inquiry.user?.name?.[0] || 'T'}
+                              </div>
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <p style={{ fontSize: 'clamp(0.875rem, 2.5vw, 1rem)', fontWeight: '500', color: 'hsl(200 25% 15%)', margin: 0, wordBreak: 'break-word' }}>
+                                  {inquiry.user?.name || 'Anonymous Tenant'}
+                                </p>
+                                <p style={{ fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', color: 'hsl(200 15% 45%)', margin: '0.25rem 0 0', wordBreak: 'break-word' }}>
+                                  {inquiry.user?.email || 'No email provided'}
+                                </p>
+                              </div>
+                              <span style={{ fontSize: 'clamp(0.75rem, 2vw, 0.75rem)', color: 'hsl(200 15% 45%)', whiteSpace: 'nowrap' }}>
+                                {new Date(inquiry.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                              </span>
+                            </div>
+
+                            {inquiry.message && (
+                              <div style={{ backgroundColor: 'hsl(40 33% 98%)', padding: 'clamp(0.75rem, 2vw, 1rem)', borderRadius: 'clamp(0.375rem, 2vw, 0.5rem)', marginBottom: 'clamp(0.75rem, 2vw, 1rem)' }}>
+                                <p style={{ fontSize: 'clamp(0.75rem, 2vw, 0.75rem)', fontWeight: '600', color: 'hsl(200 25% 15%)', marginBottom: '0.5rem' }}>Message:</p>
+                                <p style={{ fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)', color: 'hsl(200 15% 45%)', margin: 0, lineHeight: '1.5', wordBreak: 'break-word' }}>"{inquiry.message}"</p>
+                              </div>
+                            )}
+
+                            <div style={{ display: 'flex', gap: 'clamp(0.5rem, 2vw, 0.75rem)', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', color: 'hsl(200 15% 45%)' }}>
+                              <span>📍 {inquiry.ip || 'IP not recorded'}</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.5rem, 2vw, 0.75rem)', padding: 'clamp(1.5rem, 4vw, 2rem)', textAlign: 'center' }}>
+                      <MessageSquare style={{ height: 'clamp(2.5rem, 10vw, 3rem)', width: 'clamp(2.5rem, 10vw, 3rem)', color: 'hsl(200 15% 45%)', margin: '0 auto clamp(0.75rem, 2vw, 1rem) auto' }} />
+                      <h3 style={{ fontSize: 'clamp(1rem, 3vw, 1.125rem)', fontWeight: '600', color: 'hsl(200 25% 15%)', marginBottom: 'clamp(0.375rem, 1.5vw, 0.5rem)' }}>No Inquiries Yet</h3>
+                      <p style={{ color: 'hsl(200 15% 45%)', fontSize: 'clamp(0.875rem, 2vw, 0.875rem)' }}>You haven't received any inquiries from tenants yet.</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Views Tab */}
+              {activeTab === 'views' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(1rem, 3vw, 1.5rem)' }}>
+                  <h2 style={{ color: 'hsl(200 25% 15%)', fontSize: 'clamp(1rem, 3vw, 1.125rem)', fontWeight: '600' }}>Property Views ({views.length})</h2>
+                  {views.length > 0 ? (
+                    <div className="review-grid" style={{ display: 'grid', gap: 'clamp(0.75rem, 2vw, 1rem)' }}>
+                      {views.map((view) => {
+                        const propertyTitle = rentals?.find(r => r.id === view.rental_id)?.title || `Property #${view.rental_id}`;
+                        const propertyAddress = rentals?.find(r => r.id === view.rental_id)?.address || 'Unknown';
+                        const propertyCity = rentals?.find(r => r.id === view.rental_id)?.city || 'Unknown';
+                        
+                        return (
+                          <div key={view.id} style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.5rem, 2vw, 0.75rem)', padding: 'clamp(0.75rem, 2vw, 1rem)' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 'clamp(0.75rem, 2vw, 1rem)', gap: 'clamp(0.5rem, 2vw, 1rem)', flexWrap: 'wrap' }}>
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <h3 style={{ color: 'hsl(200 25% 15%)', fontSize: 'clamp(0.875rem, 2.5vw, 1rem)', fontWeight: '600', marginBottom: 'clamp(0.25rem, 1vw, 0.5rem)', wordBreak: 'break-word' }}>{propertyTitle}</h3>
+                                <p style={{ fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', color: 'hsl(200 15% 45%)', marginBottom: 'clamp(0.5rem, 2vw, 0.75rem)', wordBreak: 'break-word' }}>{propertyAddress}, {propertyCity}</p>
+                              </div>
+                              <span style={{ padding: 'clamp(0.25rem, 1vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem)', fontSize: 'clamp(0.6875rem, 2vw, 0.75rem)', fontWeight: '500', backgroundColor: 'hsl(152 60% 40% / 0.1)', color: 'hsl(152 60% 40%)', borderRadius: '9999px', whiteSpace: 'nowrap' }}>
+                                👁️ Viewed
+                              </span>
+                            </div>
+
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.75rem, 2vw, 1rem)', marginBottom: 'clamp(0.75rem, 2vw, 1rem)', paddingBottom: 'clamp(0.75rem, 2vw, 1rem)', borderBottom: '1px solid hsl(40 20% 88%)' }}>
+                              <div style={{ width: 'clamp(2rem, 8vw, 2.5rem)', height: 'clamp(2rem, 8vw, 2.5rem)', borderRadius: '50%', backgroundColor: 'hsl(174 62% 32% / 0.1)', color: 'hsl(174 62% 32%)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 'clamp(0.875rem, 2.5vw, 1rem)', fontWeight: '600', flexShrink: 0 }}>
+                                {view.user?.name?.[0] || 'V'}
+                              </div>
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <p style={{ fontSize: 'clamp(0.875rem, 2.5vw, 1rem)', fontWeight: '500', color: 'hsl(200 25% 15%)', margin: 0, wordBreak: 'break-word' }}>
+                                  {view.user?.name || 'Anonymous Viewer'}
+                                </p>
+                                <p style={{ fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', color: 'hsl(200 15% 45%)', margin: '0.25rem 0 0', wordBreak: 'break-word' }}>
+                                  {view.user?.email || 'Not logged in'}
+                                </p>
+                              </div>
+                              <span style={{ fontSize: 'clamp(0.75rem, 2vw, 0.75rem)', color: 'hsl(200 15% 45%)', whiteSpace: 'nowrap' }}>
+                                {new Date(view.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                              </span>
+                            </div>
+
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(0.5rem, 2vw, 0.75rem)', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', color: 'hsl(200 15% 45%)' }}>
+                              <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', wordBreak: 'break-all' }}>📍 <span>IP: {view.ip || 'Not recorded'}</span></span>
+                              {view.referrer && <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', wordBreak: 'break-all' }}>🔗 <span>From: {view.referrer}</span></span>}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.5rem, 2vw, 0.75rem)', padding: 'clamp(1.5rem, 4vw, 2rem)', textAlign: 'center' }}>
+                      <Eye style={{ height: 'clamp(2.5rem, 10vw, 3rem)', width: 'clamp(2.5rem, 10vw, 3rem)', color: 'hsl(200 15% 45%)', margin: '0 auto clamp(0.75rem, 2vw, 1rem) auto' }} />
+                      <h3 style={{ fontSize: 'clamp(1rem, 3vw, 1.125rem)', fontWeight: '600', color: 'hsl(200 25% 15%)', marginBottom: 'clamp(0.375rem, 1.5vw, 0.5rem)' }}>No Views Yet</h3>
+                      <p style={{ color: 'hsl(200 15% 45%)', fontSize: 'clamp(0.875rem, 2vw, 0.875rem)' }}>Your properties haven't been viewed yet.</p>
                     </div>
                   )}
                 </div>

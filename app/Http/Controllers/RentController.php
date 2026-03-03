@@ -8,6 +8,7 @@ use App\Models\Report;
 use App\Models\Review;
 use App\Models\ListingView;
 use App\Models\ListingInquiry;
+use App\Services\ListingLimitService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -18,14 +19,21 @@ use Illuminate\Support\Facades\Validator;
 class RentController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Display homepage with recent listings
      */
     public function index()
     {
-        $recentListings = Rental::latest()->limit(4)->get();
+        // Show recent rental listings by default (rental-first positioning)
+        $recentListings = Rental::where('purpose', 'rent')
+            ->where('status', 'approved')
+            ->latest()
+            ->limit(4)
+            ->get();
 
-        // Get areas grouped by city with proper structure
-        $areas = Rental::select('city', 'area', 'rent_min', 'rent_max', 'created_at')
+        // Get rental areas grouped by city
+        $areas = Rental::where('purpose', 'rent')
+            ->where('status', 'approved')
+            ->select('city', 'area', 'rent_min', 'rent_max', 'created_at')
             ->get()
             ->groupBy('city')
             ->map(function ($cityAreas, $cityName) {
@@ -48,6 +56,8 @@ class RentController extends Controller
         return inertia('Home', [
             'recentListings' => $recentListings,
             'areas' => $areas,
+            'pageTitle' => 'RentTrust - Rent Smarter. Sell Confidently.',
+            'pageDescription' => 'Find the best rental properties or sell with confidence on RentTrust marketplace.',
         ]);
     }
 
@@ -64,6 +74,32 @@ class RentController extends Controller
                 ->with('error', 'Unauthorized. Please login to create a listing.');
         }
 
+        // Determine listing purpose (rent or sale)
+        $purpose = $request->input('purpose', 'rent');
+        if (!in_array($purpose, ['rent', 'sale'])) {
+            return redirect()->back()
+                ->with('error', 'Invalid listing purpose.')
+                ->withInput();
+        }
+
+        // Check subscription limits
+        $limitService = new ListingLimitService();
+        if ($purpose === 'rent') {
+            if (!$limitService->canCreateRental($user)) {
+                $status = $limitService->getLimitStatus($user);
+                return redirect()->back()
+                    ->with('error', "You've reached your rental listing limit for your {$status['plan']} plan. Please upgrade to create more.")
+                    ->withInput();
+            }
+        } else {
+            if (!$limitService->canCreateSale($user)) {
+                $status = $limitService->getLimitStatus($user);
+                return redirect()->back()
+                    ->with('error', "You've reached your sale listing limit for your {$status['plan']} plan. Please upgrade to create more.")
+                    ->withInput();
+            }
+        }
+
         // Decode amenities — frontend sends a JSON string
         $amenities = $request->amenities;
         if (is_string($amenities)) {
@@ -73,15 +109,13 @@ class RentController extends Controller
             $amenities = [];
         }
 
-        // Validate
-        $validator = Validator::make($request->all(), [
+        // Build validation rules based on purpose
+        $rules = [
             'title'           => 'required|string|max:255',
             'propertyType'    => 'required|string|max:50',
             'city'            => 'required|string|max:100',
             'area'            => 'required|string|max:255',
             'address'         => 'nullable|string|max:500',
-            'rentMin'         => 'required|numeric|min:0',
-            'rentMax'         => 'required|numeric|min:0|gte:rentMin',
             'advanceDuration' => 'required|in:1,2,3,4,5',
             'bedrooms'        => 'required|integer|min:0',
             'bathrooms'       => 'nullable|integer|min:0',
@@ -91,7 +125,21 @@ class RentController extends Controller
             'agentEmail'      => 'required|email|max:255',
             'amenities'       => 'nullable|string',
             'images.*'        => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
-        ], [
+        ];
+
+        // Purpose-specific validation
+        if ($purpose === 'rent') {
+            $rules['rentMin'] = 'required|numeric|min:0';
+            $rules['rentMax'] = 'required|numeric|min:0|gte:rentMin';
+            $rules['salePrice'] = 'prohibited';
+        } else {
+            $rules['salePrice'] = 'required|numeric|min:0';
+            $rules['rentMin'] = 'prohibited';
+            $rules['rentMax'] = 'prohibited';
+        }
+
+        // Custom error messages
+        $messages = [
             'title.required'        => 'Property title is required',
             'propertyType.required' => 'Property type is required',
             'city.required'         => 'City is required',
@@ -101,6 +149,8 @@ class RentController extends Controller
             'rentMax.required'      => 'Maximum rent is required',
             'rentMax.numeric'       => 'Maximum rent must be a valid number',
             'rentMax.gte'           => 'Maximum rent must be greater than or equal to minimum rent',
+            'salePrice.required'    => 'Sale price is required',
+            'salePrice.numeric'     => 'Sale price must be a valid number',
             'bedrooms.required'     => 'Number of bedrooms is required',
             'bedrooms.integer'      => 'Bedrooms must be a whole number',
             'agentName.required'    => 'Your name is required',
@@ -111,7 +161,10 @@ class RentController extends Controller
             'images.*.image'        => 'Each file must be a valid image',
             'images.*.mimes'        => 'Images must be in JPEG, PNG, JPG, or GIF format',
             'images.*.max'          => 'Each image must not exceed 5MB',
-        ]);
+        ];
+
+        // Validate
+        $validator = Validator::make($request->all(), $rules, $messages);
 
         if ($validator->fails()) {
             return redirect()->back()
@@ -132,16 +185,15 @@ class RentController extends Controller
                 }
             }
 
-            // Create rental listing
-            Rental::create([
+            // Build listing data based on purpose
+            $listingData = [
                 'user_id'             => $user->id,
+                'purpose'             => $purpose,
                 'title'               => $request->title,
                 'property_type'       => $request->propertyType,
                 'city'                => $request->city,
                 'area'                => $request->area,
                 'address'             => $request->address,
-                'rent_min'            => $request->rentMin,
-                'rent_max'            => $request->rentMax,
                 'advance_duration'    => $request->advanceDuration,
                 'bedrooms'            => $request->bedrooms,
                 'bathrooms'           => $request->bathrooms ?? 0,
@@ -152,18 +204,32 @@ class RentController extends Controller
                 'agent_email'         => $request->agentEmail,
                 'status'              => 'pending',
                 'is_verified'         => false,
-                'verification_status' => 'pending',
                 'images'              => $filePaths,
-            ]);
+            ];
 
+            // Add purpose-specific data
+            if ($purpose === 'rent') {
+                $listingData['rent_min'] = $request->rentMin;
+                $listingData['rent_max'] = $request->rentMax;
+                $listingData['sale_price'] = null;
+            } else {
+                $listingData['sale_price'] = $request->salePrice;
+                $listingData['rent_min'] = null;
+                $listingData['rent_max'] = null;
+            }
+
+            // Create listing
+            Rental::create($listingData);
+
+            $typeLabel = $purpose === 'rent' ? 'Rental' : 'Sale';
             return redirect()->back()
-                ->with('success', 'Rental listing created successfully! It will be reviewed and activated soon.');
+                ->with('success', "{$typeLabel} listing created successfully! It will be reviewed and activated soon.");
 
         } catch (\Exception $e) {
-            Log::error('Failed to create rental listing: ' . $e->getMessage());
+            Log::error('Failed to create listing: ' . $e->getMessage());
 
             return redirect()->back()
-                ->with('error', 'Failed to create rental listing. Please try again.')
+                ->with('error', 'Failed to create listing. Please try again.')
                 ->withInput();
         }
     }
@@ -904,7 +970,7 @@ class RentController extends Controller
             'ip'        => $request->ip(),
         ]);
 
-        return response()->json(['tracked' => true]);
+        return redirect()->back()->with('success', 'Your inquiry has been sent to the agent successfully!');
     }
 
     public function showArea($city, $area)

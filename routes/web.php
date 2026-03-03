@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use App\Http\Controllers\RentController;
+use App\Http\Controllers\RentalSearchController;
+use App\Http\Controllers\SaleSearchController;
 use App\Http\Controllers\AgentController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
@@ -17,6 +19,21 @@ Route::resource('rent', RentController::class) -> except('index');
 
 Route::get('/', [RentController::class, 'index']);
 
+// ── Rental Search Routes ──────────────────────────────────────────────────────
+Route::prefix('rent')->group(function () {
+    Route::get('/', [RentalSearchController::class, 'index'])->name('rent.index');
+    Route::get('/areas', [RentalSearchController::class, 'areas'])->name('rent.areas');
+    Route::get('/api/more', [RentalSearchController::class, 'getMore'])->name('rent.more');
+});
+
+// ── Sale Search Routes ────────────────────────────────────────────────────────
+Route::prefix('buy')->group(function () {
+    Route::get('/', [SaleSearchController::class, 'index'])->name('buy.index');
+    Route::get('/areas', [SaleSearchController::class, 'areas'])->name('buy.areas');
+    Route::get('/api/more', [SaleSearchController::class, 'getMore'])->name('buy.more');
+});
+
+// ── Legacy Listings Routes (for backward compatibility) ────────────────────────
 Route::get('/listings', [RentController::class, 'listings']);
 Route::get('/api/listings/more', [RentController::class, 'getMoreListings'])->name('listings.more');
 

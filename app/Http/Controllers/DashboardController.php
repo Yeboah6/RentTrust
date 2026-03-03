@@ -10,6 +10,8 @@ use App\Models\Payment;
 use App\Models\Plan;
 use App\Models\Report;
 use App\Models\VerificationRequest;
+use App\Models\ListingInquiry;
+use App\Models\ListingView;
 use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
@@ -29,6 +31,18 @@ class DashboardController extends Controller
             ->get();
         $rentalIds = $rentals->pluck('id');
         $reviews = Review::whereIn('rental_id', $rentalIds)->latest()->get();
+        
+        // Fetch inquiries and views for the agent's rentals
+        $inquiries = ListingInquiry::whereIn('rental_id', $rentalIds)
+            ->with(['user', 'rental'])
+            ->orderByDesc('created_at')
+            ->get();
+        
+        $views = ListingView::whereIn('rental_id', $rentalIds)
+            ->with(['user', 'rental'])
+            ->orderByDesc('created_at')
+            ->get();
+        
         $plans = app(\App\Http\Controllers\CheckoutController::class)->plansForModal();
         $sub  = $agentData->subscription()->with('plan')->first();
 
@@ -36,7 +50,9 @@ class DashboardController extends Controller
         [
             'agentData' => $agentData, 
             'rentals' => $rentals, 
-            'reviews' => $reviews, 
+            'reviews' => $reviews,
+            'inquiries' => $inquiries,
+            'views' => $views,
             'plans' => $plans,
             'open_plan_modal' => is_null($agentData->package)
             || session()->pull('show_plan_modal', false),

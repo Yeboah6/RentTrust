@@ -72,6 +72,13 @@ const PropertyDetailsPage = ({ rental, reviews }) => {
   const { auth } = usePage().props;
   const formatCurrency = (amount) => `GH₵${amount?.toLocaleString() || '0'}`;
   const [showAddListingModal, setShowAddListingModal] = useState(false);
+  const [toast, setToast] = useState(null);
+
+  // Show toast notification
+  const showToast = (title, description, variant = 'success') => {
+    setToast({ title, description, variant });
+    setTimeout(() => setToast(null), 4000);
+  };
 
   // track view after component mounts
   useEffect(() => {
@@ -93,7 +100,10 @@ const PropertyDetailsPage = ({ rental, reviews }) => {
   const [showAgentProfile, setShowAgentProfile] = useState(false);
   const [showInquiryForm, setShowInquiryForm] = useState(false);
   // useForm for inquiry
-  const { data: inquiryData, setData: setInquiryData, post: postInquiry, processing: inquiryProcessing, reset: resetInquiry, errors: inquiryErrors } = useForm({ message: '' });
+  const { data: inquiryData, setData: setInquiryData, post: postInquiry, processing: inquiryProcessing, reset: resetInquiry, errors: inquiryErrors } = useForm({ 
+    type: 'form',
+    message: '' 
+  });
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const handlePrevImage = (e) => {
@@ -113,16 +123,22 @@ const PropertyDetailsPage = ({ rental, reviews }) => {
   const handleSendInquiry = (e) => {
     e.preventDefault();
     if (!inquiryData.message.trim()) return;
+    
+    // Update form data with trimmed message before posting
+    setInquiryData('message', inquiryData.message.trim());
+    
     postInquiry(`/api/listings/${rental.id}/track-inquiry`, {
-      type: 'form',
-      message: inquiryData.message.trim(),
-    }, {
       onSuccess: () => {
+        // Close form and show success message
         setShowInquiryForm(false);
         resetInquiry();
+        
+        // Show toast notification
+        showToast('Inquiry Sent', 'Your inquiry has been sent to the agent successfully!', 'success');
       },
       onError: () => {
-        // errors will populate inquiryErrors
+        // Show error notification
+        showToast('Submission Failed', 'Failed to send inquiry. Please try again.', 'error');
       },
     });
   };
@@ -161,6 +177,17 @@ const PropertyDetailsPage = ({ rental, reviews }) => {
         }
         h1, h2, h3, h4, h5, h6 {
           font-weight: 600;
+        }
+
+        @keyframes slideIn {
+          from {
+            transform: translateX(400px);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
         }
 
         /* Mobile touch optimization */
@@ -1011,6 +1038,27 @@ const PropertyDetailsPage = ({ rental, reviews }) => {
               </div>
               </form>
             </div>
+          </div>
+        )}
+
+        {/* Toast Notification */}
+        {toast && (
+          <div style={{
+            position: 'fixed',
+            top: 'clamp(0.5rem, 2vw, 1rem)',
+            right: 'clamp(0.5rem, 2vw, 1rem)',
+            backgroundColor: toast.variant === 'error' ? '#ef4444' : '#10b981',
+            color: 'white',
+            padding: 'clamp(0.75rem, 2vw, 1rem)',
+            borderRadius: '0.5rem',
+            boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
+            zIndex: 9999,
+            maxWidth: '400px',
+            animation: 'slideIn 0.3s ease-out',
+            fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)'
+          }}>
+            <div style={{ fontWeight: '600', marginBottom: '0.25rem' }}>{toast.title}</div>
+            <div style={{ fontSize: 'clamp(0.75rem, 2vw, 0.875rem)' }}>{toast.description}</div>
           </div>
         )}
       </div>

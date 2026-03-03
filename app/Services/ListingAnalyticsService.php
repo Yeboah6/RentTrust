@@ -96,7 +96,26 @@ class ListingAnalyticsService
     }
 
     /**
-     * Calculate performance score.
+     * Get days on market for sale listings.
+     * Returns null for rental listings.
+     */
+    public function getDaysOnMarket(Rental $listing): ?int
+    {
+        if (!$listing->isSale()) {
+            return null;
+        }
+
+        // If listing is sold, return days until sold
+        if ($listing->is_sold && $listing->sold_at) {
+            return $listing->created_at->diffInDays($listing->sold_at);
+        }
+
+        // Otherwise, return days since created
+        return $listing->getDaysOnMarket();
+    }
+
+    /**
+     * Calculate performance score with sale-specific metrics.
      * Formula: (views × 1) + (inquiries × 3)
      */
     public function getPerformanceScore(Rental $listing): int
@@ -130,8 +149,9 @@ class ListingAnalyticsService
      */
     public function getListingAnalyticsSummary(Rental $listing): array
     {
-        return [
+        $summary = [
             'rental_id' => $listing->id,
+            'purpose' => $listing->purpose,
             'views_total' => $this->getTotalViews($listing),
             'views_7_days' => $this->getUniqueViewsLastDays($listing, 7),
             'views_30_days' => $this->getUniqueViewsLastDays($listing, 30),
@@ -144,6 +164,15 @@ class ListingAnalyticsService
             'performance_score' => $this->getPerformanceScore($listing),
             'inquiries_by_type' => $this->getInquiriesByType($listing),
         ];
+
+        // Add sale-specific metrics
+        if ($listing->isSale()) {
+            $summary['days_on_market'] = $this->getDaysOnMarket($listing);
+            $summary['is_sold'] = $listing->is_sold;
+            $summary['sold_at'] = $listing->sold_at;
+        }
+
+        return $summary;
     }
 
     /**

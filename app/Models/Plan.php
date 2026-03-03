@@ -9,7 +9,7 @@ class Plan extends Model
 {
     protected $fillable = [
         'name', 'slug', 'price', 'currency', 'interval',
-        'listing_limit', 'boost_limit', 'lead_limit',
+        'listing_limit', 'rental_limit', 'sale_limit', 'boost_limit', 'lead_limit',
         'verified_badge', 'priority_ranking', 'analytics_access',
         'paystack_plan_code', 'flutterwave_plan_id',
         'is_active', 'sort_order',
@@ -22,6 +22,8 @@ class Plan extends Model
         'analytics_access' => 'boolean',
         'is_active'        => 'boolean',
         'listing_limit'    => 'integer',
+        'rental_limit'     => 'integer',
+        'sale_limit'       => 'integer',
         'boost_limit'      => 'integer',
         'lead_limit'       => 'integer',
     ];
@@ -48,6 +50,16 @@ class Plan extends Model
     public function getListingLimitDisplayAttribute(): string
     {
         return is_null($this->listing_limit) ? 'Unlimited' : (string) $this->listing_limit;
+    }
+
+    public function getRentalLimitDisplayAttribute(): string
+    {
+        return is_null($this->rental_limit) ? 'Unlimited' : (string) $this->rental_limit;
+    }
+
+    public function getSaleLimitDisplayAttribute(): string
+    {
+        return is_null($this->sale_limit) ? 'Unlimited' : (string) $this->sale_limit;
     }
 
     public function scopeActive($query)
