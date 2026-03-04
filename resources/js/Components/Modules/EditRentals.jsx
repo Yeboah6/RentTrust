@@ -6,6 +6,7 @@ import { Home, MapPin, DollarSign, Calendar, Image, FileText, CheckCircle2, Aler
 const EditRentals = ({ agentData, setShowEditListingModal, rental }) => {
   // Use form for data management
   const { data, setData, processing, errors, reset } = useForm({
+    purpose: 'rent',
     id: rental?.id,
     title: rental?.title,
     propertyType: '',
@@ -14,6 +15,7 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental }) => {
     address: '',
     rentMin: '',
     rentMax: '',
+    salePrice: '',
     advanceDuration: '1',
     bedrooms: '',
     bathrooms: '',
@@ -97,6 +99,7 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental }) => {
       setExistingImages(existingImagesList);
       
       setData({
+        purpose: rental.purpose || 'rent',
         id: rental.id || '',
         title: rental.title || '',
         propertyType: rental.property_type || '',
@@ -105,6 +108,7 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental }) => {
         address: rental.address || '',
         rentMin: rental.rent_min || '',
         rentMax: rental.rent_max || '',
+        salePrice: rental.sale_price || '',
         advanceDuration: rental.advance_duration?.toString() || '1',
         bedrooms: rental.bedrooms?.toString() || '',
         bathrooms: rental.bathrooms?.toString() || '',
@@ -132,6 +136,17 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental }) => {
       ? data.amenities.filter(a => a !== amenity)
       : [...data.amenities, amenity];
     setData('amenities', updatedAmenities);
+  };
+
+  const handlePurposeChange = (value) => {
+    setData('purpose', value);
+    if (value === 'rent') {
+      setData('salePrice', '');
+    } else {
+      setData('rentMin', '');
+      setData('rentMax', '');
+      setData('advanceDuration', '1');
+    }
   };
 
   const handleImageUpload = (e) => {
@@ -196,7 +211,10 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental }) => {
     if (step === 1) {
       return data.title && data.propertyType && data.city && data.area;
     } else if (step === 2) {
-      return data.rentMin && data.rentMax && data.bedrooms && data.advanceDuration;
+      if (data.purpose === 'rent') {
+        return data.rentMin && data.rentMax && data.bedrooms && data.advanceDuration;
+      }
+      return data.salePrice && data.bedrooms;
     } else if (step === 3) {
       return data.agentName && data.agentPhone && data.agentEmail;
     }
@@ -237,9 +255,18 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental }) => {
     formData.append('area', data.area);
     formData.append('city', data.city);
     formData.append('address', data.address || '');
-    formData.append('rentMin', data.rentMin);
-    formData.append('rentMax', data.rentMax);
-    formData.append('advanceDuration', data.advanceDuration);
+    // only append relevant price fields
+    if (data.purpose === 'rent') {
+      formData.append('rentMin', data.rentMin);
+      formData.append('rentMax', data.rentMax);
+      formData.append('advanceDuration', data.advanceDuration);
+    } else {
+      formData.append('salePrice', data.salePrice);
+      // ensure old rent values are cleared server‑side
+      formData.append('rentMin', '');
+      formData.append('rentMax', '');
+      formData.append('advanceDuration', '');
+    }
     formData.append('bedrooms', data.bedrooms);
     formData.append('bathrooms', data.bathrooms || '0');
     formData.append('description', data.description || '');
@@ -273,7 +300,8 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental }) => {
     });
     
     // Submit using FormData with axios (includes _method for PUT spoofing)
-    axios.post(`/rent/${data.id}`, formData, {
+    const url = data.purpose === 'rent' ? `/rent/${data.id}` : `/sale/${data.id}`;
+    axios.post(url, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -584,6 +612,22 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental }) => {
                 {currentStep === 1 && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(1rem, 3vw, 1.5rem)' }}>
                     <div>
+                      <div className="flex gap-2 mb-4">
+                        <button
+                          type="button"
+                          onClick={() => handlePurposeChange('rent')}
+                          className={`px-4 py-2 rounded-lg font-medium transition-all ${data.purpose === 'rent' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700'}`}
+                        >
+                          For Rent
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handlePurposeChange('sale')}
+                          className={`px-4 py-2 rounded-lg font-medium transition-all ${data.purpose === 'sale' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700'}`}
+                        >
+                          For Sale
+                        </button>
+                      </div>
                       <h2 style={{ 
                         color: 'hsl(200 25% 15%)',
                         fontSize: 'clamp(1.125rem, 4vw, 1.25rem)',
@@ -898,135 +942,204 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental }) => {
                       display: 'grid',
                       gap: 'clamp(0.75rem, 2vw, 1rem)'
                     }}>
-                      <div>
-                        <label style={{ 
-                          fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', 
-                          fontWeight: '500',
-                          color: 'hsl(200 25% 15%)',
-                          display: 'block', 
-                          marginBottom: 'clamp(0.375rem, 1.5vw, 0.5rem)' 
-                        }}>
-                          Rent Minimum (GH₵) *
-                        </label>
-                        <div style={{ position: 'relative' }}>
-                          <DollarSign style={{ 
-                            position: 'absolute',
-                            left: 'clamp(0.75rem, 3vw, 1rem)',
-                            top: '50%',
-                            transform: 'translateY(-50%)',
-                            height: 'clamp(1rem, 3vw, 1.25rem)',
-                            width: 'clamp(1rem, 3vw, 1.25rem)',
-                            color: 'hsl(200 15% 45%)'
-                          }} />
-                          <input
-                            type="number"
-                            value={data.rentMin}
-                            onChange={(e) => setData('rentMin', e.target.value)}
-                            placeholder="1500"
-                            style={{
-                              width: '100%',
-                              paddingLeft: 'clamp(2.25rem, 8vw, 2.75rem)',
-                              paddingRight: 'clamp(0.75rem, 3vw, 1rem)',
-                              paddingTop: 'clamp(0.625rem, 2vw, 0.75rem)',
-                              paddingBottom: 'clamp(0.625rem, 2vw, 0.75rem)',
-                              border: `1px solid ${errors.rentMin ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)'}`,
-                              borderRadius: 'clamp(0.375rem, 2vw, 0.5rem)',
-                              fontSize: 'clamp(0.875rem, 2vw, 0.875rem)',
-                              fontFamily: 'inherit',
-                              transition: 'all 0.2s'
-                            }}
-                            onFocus={(e) => {
-                              e.target.style.borderColor = 'hsl(174 62% 32%)';
-                              e.target.style.boxShadow = '0 0 0 2px hsl(174 62% 32% / 0.2)';
-                            }}
-                            onBlur={(e) => {
-                              e.target.style.borderColor = errors.rentMin ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)';
-                              e.target.style.boxShadow = 'none';
-                            }}
-                          />
-                        </div>
-                        {errors.rentMin && (
-                          <p style={{ 
-                            fontSize: 'clamp(0.75rem, 2vw, 0.75rem)', 
-                            marginTop: 'clamp(0.25rem, 1vw, 0.375rem)', 
-                            color: 'hsl(0 72% 51%)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 'clamp(0.25rem, 1vw, 0.375rem)'
-                          }}>
-                            <AlertCircle style={{ 
-                              height: 'clamp(0.75rem, 2vw, 0.875rem)', 
-                              width: 'clamp(0.75rem, 2vw, 0.875rem)' 
-                            }} /> 
-                            {errors.rentMin}
-                          </p>
-                        )}
-                      </div>
+                      {data.purpose === 'rent' ? (
+                        <>
+                          <div>
+                            <label style={{ 
+                              fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                              fontWeight: '500',
+                              color: 'hsl(200 25% 15%)',
+                              display: 'block', 
+                              marginBottom: 'clamp(0.375rem, 1.5vw, 0.5rem)' 
+                            }}>
+                              Rent Minimum (GH₵) *
+                            </label>
+                            <div style={{ position: 'relative' }}>
+                              <DollarSign style={{ 
+                                position: 'absolute',
+                                left: 'clamp(0.75rem, 3vw, 1rem)',
+                                top: '50%',
+                                transform: 'translateY(-50%)',
+                                height: 'clamp(1rem, 3vw, 1.25rem)',
+                                width: 'clamp(1rem, 3vw, 1.25rem)',
+                                color: 'hsl(200 15% 45%)'
+                              }} />
+                              <input
+                                type="number"
+                                value={data.rentMin}
+                                onChange={(e) => setData('rentMin', e.target.value)}
+                                placeholder="1500"
+                                style={{
+                                  width: '100%',
+                                  paddingLeft: 'clamp(2.25rem, 8vw, 2.75rem)',
+                                  paddingRight: 'clamp(0.75rem, 3vw, 1rem)',
+                                  paddingTop: 'clamp(0.625rem, 2vw, 0.75rem)',
+                                  paddingBottom: 'clamp(0.625rem, 2vw, 0.75rem)',
+                                  border: `1px solid ${errors.rentMin ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)'}`,
+                                  borderRadius: 'clamp(0.375rem, 2vw, 0.5rem)',
+                                  fontSize: 'clamp(0.875rem, 2vw, 0.875rem)',
+                                  fontFamily: 'inherit',
+                                  transition: 'all 0.2s'
+                                }}
+                                onFocus={(e) => {
+                                  e.target.style.borderColor = 'hsl(174 62% 32%)';
+                                  e.target.style.boxShadow = '0 0 0 2px hsl(174 62% 32% / 0.2)';
+                                }}
+                                onBlur={(e) => {
+                                  e.target.style.borderColor = errors.rentMin ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)';
+                                  e.target.style.boxShadow = 'none';
+                                }}
+                              />
+                            </div>
+                            {errors.rentMin && (
+                              <p style={{ 
+                                fontSize: 'clamp(0.75rem, 2vw, 0.75rem)', 
+                                marginTop: 'clamp(0.25rem, 1vw, 0.375rem)', 
+                                color: 'hsl(0 72% 51%)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 'clamp(0.25rem, 1vw, 0.375rem)'
+                              }}>
+                                <AlertCircle style={{ 
+                                  height: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                                  width: 'clamp(0.75rem, 2vw, 0.875rem)' 
+                                }} /> 
+                                {errors.rentMin}
+                              </p>
+                            )}
+                          </div>
 
-                      <div>
-                        <label style={{ 
-                          fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', 
-                          fontWeight: '500',
-                          color: 'hsl(200 25% 15%)',
-                          display: 'block', 
-                          marginBottom: 'clamp(0.375rem, 1.5vw, 0.5rem)' 
-                        }}>
-                          Rent Maximum (GH₵) *
-                        </label>
-                        <div style={{ position: 'relative' }}>
-                          <DollarSign style={{ 
-                            position: 'absolute',
-                            left: 'clamp(0.75rem, 3vw, 1rem)',
-                            top: '50%',
-                            transform: 'translateY(-50%)',
-                            height: 'clamp(1rem, 3vw, 1.25rem)',
-                            width: 'clamp(1rem, 3vw, 1.25rem)',
-                            color: 'hsl(200 15% 45%)'
-                          }} />
-                          <input
-                            type="number"
-                            value={data.rentMax}
-                            onChange={(e) => setData('rentMax', e.target.value)}
-                            placeholder="2500"
-                            style={{
-                              width: '100%',
-                              paddingLeft: 'clamp(2.25rem, 8vw, 2.75rem)',
-                              paddingRight: 'clamp(0.75rem, 3vw, 1rem)',
-                              paddingTop: 'clamp(0.625rem, 2vw, 0.75rem)',
-                              paddingBottom: 'clamp(0.625rem, 2vw, 0.75rem)',
-                              border: `1px solid ${errors.rentMax ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)'}`,
-                              borderRadius: 'clamp(0.375rem, 2vw, 0.5rem)',
-                              fontSize: 'clamp(0.875rem, 2vw, 0.875rem)',
-                              fontFamily: 'inherit',
-                              transition: 'all 0.2s'
-                            }}
-                            onFocus={(e) => {
-                              e.target.style.borderColor = 'hsl(174 62% 32%)';
-                              e.target.style.boxShadow = '0 0 0 2px hsl(174 62% 32% / 0.2)';
-                            }}
-                            onBlur={(e) => {
-                              e.target.style.borderColor = errors.rentMax ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)';
-                              e.target.style.boxShadow = 'none';
-                            }}
-                          />
-                        </div>
-                        {errors.rentMax && (
-                          <p style={{ 
-                            fontSize: 'clamp(0.75rem, 2vw, 0.75rem)', 
-                            marginTop: 'clamp(0.25rem, 1vw, 0.375rem)', 
-                            color: 'hsl(0 72% 51%)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 'clamp(0.25rem, 1vw, 0.375rem)'
+                          <div>
+                            <label style={{ 
+                              fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                              fontWeight: '500',
+                              color: 'hsl(200 25% 15%)',
+                              display: 'block', 
+                              marginBottom: 'clamp(0.375rem, 1.5vw, 0.5rem)' 
+                            }}>
+                              Rent Maximum (GH₵) *
+                            </label>
+                            <div style={{ position: 'relative' }}>
+                              <DollarSign style={{ 
+                                position: 'absolute',
+                                left: 'clamp(0.75rem, 3vw, 1rem)',
+                                top: '50%',
+                                transform: 'translateY(-50%)',
+                                height: 'clamp(1rem, 3vw, 1.25rem)',
+                                width: 'clamp(1rem, 3vw, 1.25rem)',
+                                color: 'hsl(200 15% 45%)'
+                              }} />
+                              <input
+                                type="number"
+                                value={data.rentMax}
+                                onChange={(e) => setData('rentMax', e.target.value)}
+                                placeholder="2500"
+                                style={{
+                                  width: '100%',
+                                  paddingLeft: 'clamp(2.25rem, 8vw, 2.75rem)',
+                                  paddingRight: 'clamp(0.75rem, 3vw, 1rem)',
+                                  paddingTop: 'clamp(0.625rem, 2vw, 0.75rem)',
+                                  paddingBottom: 'clamp(0.625rem, 2vw, 0.75rem)',
+                                  border: `1px solid ${errors.rentMax ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)'}`,
+                                  borderRadius: 'clamp(0.375rem, 2vw, 0.5rem)',
+                                  fontSize: 'clamp(0.875rem, 2vw, 0.875rem)',
+                                  fontFamily: 'inherit',
+                                  transition: 'all 0.2s'
+                                }}
+                                onFocus={(e) => {
+                                  e.target.style.borderColor = 'hsl(174 62% 32%)';
+                                  e.target.style.boxShadow = '0 0 0 2px hsl(174 62% 32% / 0.2)';
+                                }}
+                                onBlur={(e) => {
+                                  e.target.style.borderColor = errors.rentMax ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)';
+                                  e.target.style.boxShadow = 'none';
+                                }}
+                              />
+                            </div>
+                            {errors.rentMax && (
+                              <p style={{ 
+                                fontSize: 'clamp(0.75rem, 2vw, 0.75rem)', 
+                                marginTop: 'clamp(0.25rem, 1vw, 0.375rem)', 
+                                color: 'hsl(0 72% 51%)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 'clamp(0.25rem, 1vw, 0.375rem)'
+                              }}>
+                                <AlertCircle style={{ 
+                                  height: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                                  width: 'clamp(0.75rem, 2vw, 0.875rem)' 
+                                }} /> 
+                                {errors.rentMax}
+                              </p>
+                            )}
+                          </div>
+                        </>
+                      ) : (
+                        <div>
+                          <label style={{ 
+                            fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                            fontWeight: '500',
+                            color: 'hsl(200 25% 15%)',
+                            display: 'block', 
+                            marginBottom: 'clamp(0.375rem, 1.5vw, 0.5rem)' 
                           }}>
-                            <AlertCircle style={{ 
-                              height: 'clamp(0.75rem, 2vw, 0.875rem)', 
-                              width: 'clamp(0.75rem, 2vw, 0.875rem)' 
-                            }} /> 
-                            {errors.rentMax}
-                          </p>
-                        )}
-                      </div>
+                            Sale Price (GH₵) *
+                          </label>
+                          <div style={{ position: 'relative' }}>
+                            <DollarSign style={{ 
+                              position: 'absolute',
+                              left: 'clamp(0.75rem, 3vw, 1rem)',
+                              top: '50%',
+                              transform: 'translateY(-50%)',
+                              height: 'clamp(1rem, 3vw, 1.25rem)',
+                              width: 'clamp(1rem, 3vw, 1.25rem)',
+                              color: 'hsl(200 15% 45%)'
+                            }} />
+                            <input
+                              type="number"
+                              value={data.salePrice}
+                              onChange={(e) => setData('salePrice', e.target.value)}
+                              placeholder="250000"
+                              style={{
+                                width: '100%',
+                                paddingLeft: 'clamp(2.25rem, 8vw, 2.75rem)',
+                                paddingRight: 'clamp(0.75rem, 3vw, 1rem)',
+                                paddingTop: 'clamp(0.625rem, 2vw, 0.75rem)',
+                                paddingBottom: 'clamp(0.625rem, 2vw, 0.75rem)',
+                                border: `1px solid ${errors.salePrice ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)'}`,
+                                borderRadius: 'clamp(0.375rem, 2vw, 0.5rem)',
+                                fontSize: 'clamp(0.875rem, 2vw, 0.875rem)',
+                                fontFamily: 'inherit',
+                                transition: 'all 0.2s'
+                              }}
+                              onFocus={(e) => {
+                                e.target.style.borderColor = 'hsl(174 62% 32%)';
+                                e.target.style.boxShadow = '0 0 0 2px hsl(174 62% 32% / 0.2)';
+                              }}
+                              onBlur={(e) => {
+                                e.target.style.borderColor = errors.salePrice ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)';
+                                e.target.style.boxShadow = 'none';
+                              }}
+                            />
+                          </div>
+                          {errors.salePrice && (
+                            <p style={{ 
+                              fontSize: 'clamp(0.75rem, 2vw, 0.75rem)', 
+                              marginTop: 'clamp(0.25rem, 1vw, 0.375rem)', 
+                              color: 'hsl(0 72% 51%)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 'clamp(0.25rem, 1vw, 0.375rem)'
+                            }}>
+                              <AlertCircle style={{ 
+                                height: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                                width: 'clamp(0.75rem, 2vw, 0.875rem)' 
+                              }} /> 
+                              {errors.salePrice}
+                            </p>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     <div>

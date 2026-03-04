@@ -5,6 +5,7 @@ import { Home, MapPin, DollarSign, Calendar, Image, FileText, CheckCircle2, Aler
 const AddRentalPage = ({ agentData, setShowAddListingModal, adminData }) => {
 
   const { data, setData, post, transform, processing, errors, reset } = useForm({
+    purpose: 'rent', // rent or sale
     title: '',
     propertyType: '',
     area: '',
@@ -12,6 +13,7 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData }) => {
     address: '',
     rentMin: '',
     rentMax: '',
+    salePrice: '',
     advanceDuration: '1',
     bedrooms: '',
     bathrooms: '',
@@ -49,6 +51,7 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData }) => {
       return true;
     });
 
+    // process the validated files into our preview format and update form
     const newImages = validFiles.map(file => ({
       id: Math.random().toString(36).substr(2, 9),
       name: file.name,
@@ -60,6 +63,18 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData }) => {
     setImages(updatedImages);
     setData('images', updatedImages.map(img => img.file));
   };
+
+  const handlePurposeChange = (value) => {
+    setData('purpose', value);
+    if (value === 'rent') {
+      setData('salePrice', '');
+    } else {
+      setData('rentMin', '');
+      setData('rentMax', '');
+      setData('advanceDuration', '1');
+    }
+  };
+
 
   const removeImage = (id) => {
     const updatedImages = images.filter(img => img.id !== id);
@@ -76,7 +91,11 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData }) => {
     if (step === 1) {
       return data.title && data.propertyType && data.city && data.area;
     } else if (step === 2) {
-      return data.rentMin && data.rentMax && data.bedrooms && data.advanceDuration;
+      if (data.purpose === 'rent') {
+        return data.rentMin && data.rentMax && data.bedrooms && data.advanceDuration;
+      }
+      // sale
+      return data.salePrice && data.bedrooms;
     } else if (step === 3) {
       return data.agentName && data.agentPhone && data.agentEmail;
     }
@@ -107,13 +126,19 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData }) => {
       return;
     }
 
-    // Convert amenities array to JSON string before sending
+    // Convert amenities array to JSON string before sending and clear unused price fields
     transform((d) => ({
       ...d,
       amenities: JSON.stringify(d.amenities ?? []),
+      rentMin: d.purpose === 'rent' ? d.rentMin : null,
+      rentMax: d.purpose === 'rent' ? d.rentMax : null,
+      advanceDuration: d.purpose === 'rent' ? d.advanceDuration : null,
+      salePrice: d.purpose === 'sale' ? d.salePrice : null,
     }));
 
-    post('/rent', {
+    // choose endpoint based on purpose
+    const endpoint = data.purpose === 'rent' ? '/rent' : '/sale';
+    post(endpoint, {
       forceFormData: true,
       onSuccess: () => {
         showToast("Listing Submitted", "Your rental listing has been submitted for review.", "success");
@@ -396,6 +421,22 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData }) => {
               {currentStep === 1 && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(1rem, 3vw, 1.5rem)' }}>
                   <div>
+                    <div className="flex gap-2 mb-4">
+                      <button
+                        type="button"
+                        onClick={() => handlePurposeChange('rent')}
+                        className={`px-4 py-2 rounded-lg font-medium transition-all ${data.purpose === 'rent' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700'}`}
+                      >
+                        For Rent
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handlePurposeChange('sale')}
+                        className={`px-4 py-2 rounded-lg font-medium transition-all ${data.purpose === 'sale' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700'}`}
+                      >
+                        For Sale
+                      </button>
+                    </div>
                     <h2 className="font-bold mb-1 tracking-tight" style={{ 
                       color: 'hsl(200 25% 15%)',
                       fontSize: 'clamp(1.125rem, 4vw, 1.5rem)'
@@ -585,20 +626,140 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData }) => {
                       color: 'hsl(200 15% 45%)',
                       fontSize: 'clamp(0.8125rem, 2.5vw, 0.875rem)'
                     }}>
-                      Help tenants understand the cost and features
+                      {data.purpose === 'rent' ? 'Help tenants understand the cost and features' : 'Set the sale price and highlight key features'}
                     </p>
                   </div>
 
-                  <div className="grid form-grid" style={{ 
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                    gap: 'clamp(0.75rem, 3vw, 1rem)'
-                  }}>
+                  {data.purpose === 'rent' ? (
+                    <>
+                      <div className="grid form-grid" style={{ 
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                        gap: 'clamp(0.75rem, 3vw, 1rem)'
+                      }}>
+                        <div>
+                          <label className="block font-medium mb-2" style={{ 
+                            color: 'hsl(200 25% 15%)',
+                            fontSize: 'clamp(0.8125rem, 2.5vw, 0.875rem)'
+                          }}>
+                            Rent Minimum (GH₵) *
+                          </label>
+                          <div className="relative">
+                            <DollarSign className="absolute top-1/2 -translate-y-1/2" style={{ 
+                              left: 'clamp(0.625rem, 2vw, 0.75rem)',
+                              height: 'clamp(1.125rem, 3vw, 1.25rem)',
+                              width: 'clamp(1.125rem, 3vw, 1.25rem)',
+                              color: 'hsl(200 15% 45%)'
+                            }} />
+                            <input
+                              type="number"
+                              value={data.rentMin}
+                              onChange={(e) => setData('rentMin', e.target.value)}
+                              placeholder="1500"
+                              className="w-full border rounded-lg focus:ring-2 transition-all"
+                              style={{ 
+                                borderColor: errors.rentMin ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)',
+                                paddingLeft: 'clamp(2.25rem, 8vw, 2.5rem)',
+                                paddingRight: 'clamp(0.75rem, 3vw, 1rem)',
+                                paddingTop: 'clamp(0.625rem, 2vw, 0.75rem)',
+                                paddingBottom: 'clamp(0.625rem, 2vw, 0.75rem)',
+                                fontSize: 'clamp(0.875rem, 2.5vw, 1rem)'
+                              }}
+                            />
+                          </div>
+                          {errors.rentMin && (
+                            <p className="mt-1 flex items-center gap-1" style={{ 
+                              color: 'hsl(0 72% 51%)',
+                              fontSize: 'clamp(0.75rem, 2vw, 0.875rem)'
+                            }}>
+                              <AlertCircle style={{ height: '1rem', width: '1rem' }} /> {errors.rentMin}
+                            </p>
+                          )}
+                        </div>
+
+                        <div>
+                          <label className="block font-medium mb-2" style={{ 
+                            color: 'hsl(200 25% 15%)',
+                            fontSize: 'clamp(0.8125rem, 2.5vw, 0.875rem)'
+                          }}>
+                            Rent Maximum (GH₵) *
+                          </label>
+                          <div className="relative">
+                            <DollarSign className="absolute top-1/2 -translate-y-1/2" style={{ 
+                              left: 'clamp(0.625rem, 2vw, 0.75rem)',
+                              height: 'clamp(1.125rem, 3vw, 1.25rem)',
+                              width: 'clamp(1.125rem, 3vw, 1.25rem)',
+                              color: 'hsl(200 15% 45%)'
+                            }} />
+                            <input
+                              type="number"
+                              value={data.rentMax}
+                              onChange={(e) => setData('rentMax', e.target.value)}
+                              placeholder="2500"
+                              className="w-full border rounded-lg focus:ring-2 transition-all"
+                              style={{ 
+                                borderColor: errors.rentMax ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)',
+                                paddingLeft: 'clamp(2.25rem, 8vw, 2.5rem)',
+                                paddingRight: 'clamp(0.75rem, 3vw, 1rem)',
+                                paddingTop: 'clamp(0.625rem, 2vw, 0.75rem)',
+                                paddingBottom: 'clamp(0.625rem, 2vw, 0.75rem)',
+                                fontSize: 'clamp(0.875rem, 2.5vw, 1rem)'
+                              }}
+                            />
+                          </div>
+                          {errors.rentMax && (
+                            <p className="mt-1 flex items-center gap-1" style={{ 
+                              color: 'hsl(0 72% 51%)',
+                              fontSize: 'clamp(0.75rem, 2vw, 0.875rem)'
+                            }}>
+                              <AlertCircle style={{ height: '1rem', width: '1rem' }} /> {errors.rentMax}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block font-medium mb-2" style={{ 
+                          color: 'hsl(200 25% 15%)',
+                          fontSize: 'clamp(0.8125rem, 2.5vw, 0.875rem)'
+                        }}>
+                          Advance Duration *
+                        </label>
+                        <div className="relative">
+                          <Calendar className="absolute top-1/2 -translate-y-1/2" style={{ 
+                            left: 'clamp(0.625rem, 2vw, 0.75rem)',
+                            height: 'clamp(1.125rem, 3vw, 1.25rem)',
+                            width: 'clamp(1.125rem, 3vw, 1.25rem)',
+                            color: 'hsl(200 15% 45%)'
+                          }} />
+                          <select
+                            value={data.advanceDuration}
+                            onChange={(e) => setData('advanceDuration', e.target.value)}
+                            className="w-full border rounded-lg focus:ring-2 transition-all appearance-none"
+                            style={{ 
+                              borderColor: 'hsl(40 20% 88%)',
+                              paddingLeft: 'clamp(2.25rem, 8vw, 2.5rem)',
+                              paddingRight: 'clamp(0.75rem, 3vw, 1rem)',
+                              paddingTop: 'clamp(0.625rem, 2vw, 0.75rem)',
+                              paddingBottom: 'clamp(0.625rem, 2vw, 0.75rem)',
+                              fontSize: 'clamp(0.875rem, 2.5vw, 1rem)'
+                            }}
+                          >
+                            <option value="1">1 Year</option>
+                            <option value="2">2 Years</option>
+                            <option value="3">3 Years</option>
+                            <option value="4">4 Years</option>
+                            <option value="5">5 Years</option>
+                          </select>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
                     <div>
                       <label className="block font-medium mb-2" style={{ 
                         color: 'hsl(200 25% 15%)',
                         fontSize: 'clamp(0.8125rem, 2.5vw, 0.875rem)'
                       }}>
-                        Rent Minimum (GH₵) *
+                        Sale Price (GH₵) *
                       </label>
                       <div className="relative">
                         <DollarSign className="absolute top-1/2 -translate-y-1/2" style={{ 
@@ -609,12 +770,12 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData }) => {
                         }} />
                         <input
                           type="number"
-                          value={data.rentMin}
-                          onChange={(e) => setData('rentMin', e.target.value)}
-                          placeholder="1500"
+                          value={data.salePrice}
+                          onChange={(e) => setData('salePrice', e.target.value)}
+                          placeholder="250000"
                           className="w-full border rounded-lg focus:ring-2 transition-all"
                           style={{ 
-                            borderColor: errors.rentMin ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)',
+                            borderColor: errors.salePrice ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)',
                             paddingLeft: 'clamp(2.25rem, 8vw, 2.5rem)',
                             paddingRight: 'clamp(0.75rem, 3vw, 1rem)',
                             paddingTop: 'clamp(0.625rem, 2vw, 0.75rem)',
@@ -623,92 +784,16 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData }) => {
                           }}
                         />
                       </div>
-                      {errors.rentMin && (
+                      {errors.salePrice && (
                         <p className="mt-1 flex items-center gap-1" style={{ 
                           color: 'hsl(0 72% 51%)',
                           fontSize: 'clamp(0.75rem, 2vw, 0.875rem)'
                         }}>
-                          <AlertCircle style={{ height: '1rem', width: '1rem' }} /> {errors.rentMin}
+                          <AlertCircle style={{ height: '1rem', width: '1rem' }} /> {errors.salePrice}
                         </p>
                       )}
                     </div>
-
-                    <div>
-                      <label className="block font-medium mb-2" style={{ 
-                        color: 'hsl(200 25% 15%)',
-                        fontSize: 'clamp(0.8125rem, 2.5vw, 0.875rem)'
-                      }}>
-                        Rent Maximum (GH₵) *
-                      </label>
-                      <div className="relative">
-                        <DollarSign className="absolute top-1/2 -translate-y-1/2" style={{ 
-                          left: 'clamp(0.625rem, 2vw, 0.75rem)',
-                          height: 'clamp(1.125rem, 3vw, 1.25rem)',
-                          width: 'clamp(1.125rem, 3vw, 1.25rem)',
-                          color: 'hsl(200 15% 45%)'
-                        }} />
-                        <input
-                          type="number"
-                          value={data.rentMax}
-                          onChange={(e) => setData('rentMax', e.target.value)}
-                          placeholder="2500"
-                          className="w-full border rounded-lg focus:ring-2 transition-all"
-                          style={{ 
-                            borderColor: errors.rentMax ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)',
-                            paddingLeft: 'clamp(2.25rem, 8vw, 2.5rem)',
-                            paddingRight: 'clamp(0.75rem, 3vw, 1rem)',
-                            paddingTop: 'clamp(0.625rem, 2vw, 0.75rem)',
-                            paddingBottom: 'clamp(0.625rem, 2vw, 0.75rem)',
-                            fontSize: 'clamp(0.875rem, 2.5vw, 1rem)'
-                          }}
-                        />
-                      </div>
-                      {errors.rentMax && (
-                        <p className="mt-1 flex items-center gap-1" style={{ 
-                          color: 'hsl(0 72% 51%)',
-                          fontSize: 'clamp(0.75rem, 2vw, 0.875rem)'
-                        }}>
-                          <AlertCircle style={{ height: '1rem', width: '1rem' }} /> {errors.rentMax}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block font-medium mb-2" style={{ 
-                      color: 'hsl(200 25% 15%)',
-                      fontSize: 'clamp(0.8125rem, 2.5vw, 0.875rem)'
-                    }}>
-                      Advance Duration *
-                    </label>
-                    <div className="relative">
-                      <Calendar className="absolute top-1/2 -translate-y-1/2" style={{ 
-                        left: 'clamp(0.625rem, 2vw, 0.75rem)',
-                        height: 'clamp(1.125rem, 3vw, 1.25rem)',
-                        width: 'clamp(1.125rem, 3vw, 1.25rem)',
-                        color: 'hsl(200 15% 45%)'
-                      }} />
-                      <select
-                        value={data.advanceDuration}
-                        onChange={(e) => setData('advanceDuration', e.target.value)}
-                        className="w-full border rounded-lg focus:ring-2 transition-all appearance-none"
-                        style={{ 
-                          borderColor: 'hsl(40 20% 88%)',
-                          paddingLeft: 'clamp(2.25rem, 8vw, 2.5rem)',
-                          paddingRight: 'clamp(0.75rem, 3vw, 1rem)',
-                          paddingTop: 'clamp(0.625rem, 2vw, 0.75rem)',
-                          paddingBottom: 'clamp(0.625rem, 2vw, 0.75rem)',
-                          fontSize: 'clamp(0.875rem, 2.5vw, 1rem)'
-                        }}
-                      >
-                        <option value="1">1 Year</option>
-                        <option value="2">2 Years</option>
-                        <option value="3">3 Years</option>
-                        <option value="4">4 Years</option>
-                        <option value="5">5 Years</option>
-                      </select>
-                    </div>
-                  </div>
+                  )}
 
                   <div className="grid form-grid" style={{ 
                     gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',

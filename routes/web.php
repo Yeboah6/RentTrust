@@ -31,6 +31,8 @@ Route::prefix('buy')->group(function () {
     Route::get('/', [SaleSearchController::class, 'index'])->name('buy.index');
     Route::get('/areas', [SaleSearchController::class, 'areas'])->name('buy.areas');
     Route::get('/api/more', [SaleSearchController::class, 'getMore'])->name('buy.more');
+    // individual sale listing
+    Route::get('/{rental}', [SaleSearchController::class, 'show'])->name('buy.show');
 });
 
 // ── Legacy Listings Routes (for backward compatibility) ────────────────────────
