@@ -79,6 +79,18 @@ class User extends Authenticatable
         return $this->hasOne(Subscription::class)->latestOfMany();
     }
 
+    /**
+     * Historical subscriptions for the user.
+     *
+     * Used by services that need to query all records instead of the
+     * current active subscription. This complements the `subscription`
+     * helper above which returns the most recent subscription.
+     */
+    public function subscriptions(): HasMany
+    {
+        return $this->hasMany(Subscription::class);
+    }
+
     public function payments(): HasMany
     {
         return $this->hasMany(Payment::class);

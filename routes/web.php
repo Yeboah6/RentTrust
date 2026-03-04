@@ -15,32 +15,36 @@ use App\Http\Controllers\WebhookController;
 use App\Http\Controllers\VerificationsController;
 use App\Http\Controllers\AgentAnalyticsController;
 
-Route::resource('rent', RentController::class) -> except('index');
+// resource routes for individual rental records. we constrain the
+// `{rent}` parameter to numeric ids so that literal paths like
+// `/rent/listings` don't get mistakenly interpreted as a resource key and
+// trigger a 404 via model binding.
+Route::resource('rent', RentController::class)
+    ->except('index')
+    ->where(['rent' => '[0-9]+']);
 
 Route::get('/', [RentController::class, 'index']);
 
 // ── Rental Search Routes ──────────────────────────────────────────────────────
 Route::prefix('rent')->group(function () {
-    Route::get('/', [RentalSearchController::class, 'index'])->name('rent.index');
     Route::get('/areas', [RentalSearchController::class, 'areas'])->name('rent.areas');
+    Route::get('/areas/{city}/{area}', [RentalSearchController::class, 'showArea'])->name('areas.show');
     Route::get('/api/more', [RentalSearchController::class, 'getMore'])->name('rent.more');
+    Route::get('/listings', [RentalSearchController::class, 'listings']);
 });
 
 // ── Sale Search Routes ────────────────────────────────────────────────────────
 Route::prefix('buy')->group(function () {
-    Route::get('/', [SaleSearchController::class, 'index'])->name('buy.index');
+    Route::get('/listings', [SaleSearchController::class, 'index'])->name('buy.index');
     Route::get('/areas', [SaleSearchController::class, 'areas'])->name('buy.areas');
     Route::get('/api/more', [SaleSearchController::class, 'getMore'])->name('buy.more');
-    // individual sale listing
-    Route::get('/{rental}', [SaleSearchController::class, 'show'])->name('buy.show');
 });
 
 // ── Legacy Listings Routes (for backward compatibility) ────────────────────────
-Route::get('/listings', [RentController::class, 'listings']);
-Route::get('/api/listings/more', [RentController::class, 'getMoreListings'])->name('listings.more');
+// Route::get('/api/listings/more', [RentController::class, 'getMoreListings'])->name('listings.more');
 
-Route::get('/areas', [RentController::class, 'areas']);
-Route::get('/areas/{city}/{area}', [RentController::class, 'showArea'])->name('areas.show');
+// Route::get('/areas', [RentController::class, 'areas']);
+// Route::get('/areas/{city}/{area}', [RentController::class, 'showArea'])->name('areas.show');
 
 // tracking endpoints
 Route::post('/api/listings/{rent}/track-view', [RentController::class, 'trackView'])->name('listings.trackView');

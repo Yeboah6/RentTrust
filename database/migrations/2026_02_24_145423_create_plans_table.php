@@ -26,6 +26,8 @@ return new class extends Migration
             $table->string('flutterwave_plan_id')->nullable();
             $table->boolean('is_active')->default(true);
             $table->integer('sort_order')->default(0);
+            // $table->integer('rental_limit')->nullable();
+            // $table->integer('sale_limit')->nullable()->default(0)->after('listing_limit');
             $table->timestamps();
         });
 

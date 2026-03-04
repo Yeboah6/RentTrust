@@ -1,12 +1,20 @@
 import React, { useState } from 'react';
 import { Link, usePage, useForm } from "@inertiajs/react";
 import { Menu, X, Search, User, LogOut, LayoutDashboard } from 'lucide-react';
+import { RentDesktop, RentMobile } from "./RentLinks";
+import { BuyDesktop, BuyMobile } from "./BuyLinks";
+import { AuthDesktop, AuthMobile } from "./AuthActions";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeLink, setActiveLink] = useState(null);
-  const { auth } = usePage().props;
+  const { auth, url } = usePage().props;
+  const currentUrl = usePage().url || url || '/';
   const { post } = useForm();
+
+  // Determine if on rent or buy section
+  const isOnRentPage = currentUrl.startsWith('/rent');
+  const isOnBuyPage = currentUrl.startsWith('/buy');
 
   // Convert to proper booleans
   const isAgentLoggedIn = !!auth?.agent;
@@ -19,14 +27,14 @@ const Header = () => {
   const tenantData = auth?.tenant;
   const superAdminData = auth?.super;
 
-  console.log('Auth state:', {
-    isAgentLoggedIn,
-    isTenantLoggedIn,
-    isSuperAdminLoggedIn,
-    isAnyUserLoggedIn,
-    tenantData,
-    agentData
-  });
+  // console.log('Auth state:', {
+  //   isAgentLoggedIn,
+  //   isTenantLoggedIn,
+  //   isSuperAdminLoggedIn,
+  //   isAnyUserLoggedIn,
+  //   tenantData,
+  //   agentData
+  // });
 
   const handleLogout = (e) => {
     e.preventDefault();
@@ -150,32 +158,18 @@ const Header = () => {
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center" style={{ gap: 'clamp(0.125rem, 1vw, 0.25rem)' }}>
             <>
-              <Link
-                href="/listings"
-                onMouseEnter={() => setActiveLink('listings')}
-                onMouseLeave={() => setActiveLink(null)}
-                className="desktop-nav-link px-4 py-2 font-medium transition-all rounded-lg"
-                style={{
-                  color: activeLink === 'listings' ? 'hsl(200 25% 15%)' : 'hsl(200 15% 45%)',
-                  backgroundColor: activeLink === 'listings' ? 'hsl(40 30% 94%)' : 'transparent',
-                  fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)'
-                }}
-              >
-                Find Rentals
-              </Link>
-              <Link
-                href="/areas"
-                onMouseEnter={() => setActiveLink('areas')}
-                onMouseLeave={() => setActiveLink(null)}
-                className="desktop-nav-link px-4 py-2 font-medium transition-all rounded-lg"
-                style={{
-                  color: activeLink === 'areas' ? 'hsl(200 25% 15%)' : 'hsl(200 15% 45%)',
-                  backgroundColor: activeLink === 'areas' ? 'hsl(40 30% 94%)' : 'transparent',
-                  fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)'
-                }}
-              >
-                Areas
-              </Link>
+              <RentDesktop
+                activeLink={activeLink}
+                setActiveLink={setActiveLink}
+                isOnRentPage={isOnRentPage}
+              />
+
+              <BuyDesktop
+                activeLink={activeLink}
+                setActiveLink={setActiveLink}
+                isOnBuyPage={isOnBuyPage}
+              />
+
               <Link
                 href="/agents"
                 onMouseEnter={() => setActiveLink('agents')}
@@ -189,19 +183,7 @@ const Header = () => {
               >
                 Agents
               </Link>
-              <Link
-                href="/calculator"
-                onMouseEnter={() => setActiveLink('calculator')}
-                onMouseLeave={() => setActiveLink(null)}
-                className="desktop-nav-link px-4 py-2 font-medium transition-all rounded-lg"
-                style={{
-                  color: activeLink === 'calculator' ? 'hsl(200 25% 15%)' : 'hsl(200 15% 45%)',
-                  backgroundColor: activeLink === 'calculator' ? 'hsl(40 30% 94%)' : 'transparent',
-                  fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)'
-                }}
-              >
-                Calculator
-              </Link>
+
               <Link
                 href="/reviews-reports"
                 onMouseEnter={() => setActiveLink('reviews')}
@@ -233,181 +215,21 @@ const Header = () => {
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center" style={{ gap: 'clamp(0.5rem, 2vw, 0.75rem)' }}>
-            {!isAnyUserLoggedIn && (
-              <>
-                <button
-                  className="p-2 rounded-lg transition-colors"
-                  style={{
-                    color: 'hsl(200 15% 45%)',
-                    backgroundColor: 'transparent'
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(40 30% 94%)'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                  aria-label="Search"
-                >
-                  <Search style={{ 
-                    height: 'clamp(1.125rem, 3vw, 1.25rem)', 
-                    width: 'clamp(1.125rem, 3vw, 1.25rem)' 
-                  }} />
-                </button>
-                <Link
-                  href="/sign-up"
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(40 30% 94%)'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
-                  className="inline-flex items-center rounded-lg border transition-colors"
-                  style={{
-                    borderColor: 'hsl(40 20% 88%)',
-                    color: 'hsl(200 25% 15%)',
-                    backgroundColor: 'white',
-                    padding: 'clamp(0.5rem, 2vw, 0.625rem) clamp(0.75rem, 3vw, 1rem)',
-                    fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)',
-                    fontWeight: '500'
-                  }}
-                >
-                  <User style={{ 
-                    height: 'clamp(0.875rem, 2.5vw, 1rem)', 
-                    width: 'clamp(0.875rem, 2.5vw, 1rem)',
-                    marginRight: '0.5rem'
-                  }} />
-                  Sign In
-                </Link>
-              </>
-            )}
-
-            {/* Agent Logged In */}
-            {isAgentLoggedIn && (
-              <>
-                <Link href={agentData?.package === 'free' || agentData?.package === null ? '/agent/dashboard' : '/agent-dashboard'}
-                  // href="/agent-dashboard"
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(40 30% 94%)'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
-                  className="inline-flex items-center rounded-lg border transition-colors"
-                  style={{
-                    borderColor: 'hsl(40 20% 88%)',
-                    color: 'hsl(200 25% 15%)',
-                    backgroundColor: 'white',
-                    padding: 'clamp(0.5rem, 2vw, 0.625rem) clamp(0.75rem, 3vw, 1rem)',
-                    fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)',
-                    fontWeight: '500'
-                  }}
-                >
-                  <LayoutDashboard style={{ 
-                    height: 'clamp(0.875rem, 2.5vw, 1rem)', 
-                    width: 'clamp(0.875rem, 2.5vw, 1rem)',
-                    marginRight: '0.5rem'
-                  }} />
-                  Dashboard
-                </Link>
-                <button
-                  type="button"
-                  className="inline-flex items-center rounded-lg border transition-colors"
-                  style={{
-                    borderColor: 'hsl(0 70% 50%)',
-                    color: 'hsl(0 70% 50%)',
-                    backgroundColor: 'white',
-                    padding: 'clamp(0.5rem, 2vw, 0.625rem) clamp(0.75rem, 3vw, 1rem)',
-                    fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)',
-                    fontWeight: '500'
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(0 70% 50% / 0.1)'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
-                  onClick={handleLogout}
-                >
-                  <LogOut style={{ 
-                    height: 'clamp(0.875rem, 2.5vw, 1rem)', 
-                    width: 'clamp(0.875rem, 2.5vw, 1rem)',
-                    marginRight: '0.5rem'
-                  }} />
-                  Logout
-                </button>
-              </>
-            )}
-
-            {/* Super Admin Logged In */}
-            {isSuperAdminLoggedIn && (
-              <>
-                <Link
-                  href="/admin"
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(40 30% 94%)'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
-                  className="inline-flex items-center rounded-lg border transition-colors"
-                  style={{
-                    borderColor: 'hsl(40 20% 88%)',
-                    color: 'hsl(200 25% 15%)',
-                    backgroundColor: 'white',
-                    padding: 'clamp(0.5rem, 2vw, 0.625rem) clamp(0.75rem, 3vw, 1rem)',
-                    fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)',
-                    fontWeight: '500'
-                  }}
-                >
-                  <LayoutDashboard style={{ 
-                    height: 'clamp(0.875rem, 2.5vw, 1rem)', 
-                    width: 'clamp(0.875rem, 2.5vw, 1rem)',
-                    marginRight: '0.5rem'
-                  }} />
-                  Dashboard
-                </Link>
-                <button
-                  type="button"
-                  className="inline-flex items-center rounded-lg border transition-colors"
-                  style={{
-                    borderColor: 'hsl(0 70% 50%)',
-                    color: 'hsl(0 70% 50%)',
-                    backgroundColor: 'white',
-                    padding: 'clamp(0.5rem, 2vw, 0.625rem) clamp(0.75rem, 3vw, 1rem)',
-                    fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)',
-                    fontWeight: '500'
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(0 70% 50% / 0.1)'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
-                  onClick={handleLogout}
-                >
-                  <LogOut style={{ 
-                    height: 'clamp(0.875rem, 2.5vw, 1rem)', 
-                    width: 'clamp(0.875rem, 2.5vw, 1rem)',
-                    marginRight: '0.5rem'
-                  }} />
-                  Logout
-                </button>
-              </>
-            )}
-
-            {/* Tenant Logged In */}
-            {isTenantLoggedIn && !isAgentLoggedIn && !isSuperAdminLoggedIn && (
-              <>
-                <p style={{
-                  fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)',
-                  fontWeight: '500',
-                  color: 'hsl(200 25% 15%)'
-                }}>
-                  {tenantData?.name || 'Tenant'}
-                </p>
-                <button
-                  type="button"
-                  className="inline-flex items-center rounded-lg border transition-colors"
-                  style={{
-                    borderColor: 'hsl(0 70% 50%)',
-                    color: 'hsl(0 70% 50%)',
-                    backgroundColor: 'white',
-                    padding: 'clamp(0.5rem, 2vw, 0.625rem) clamp(0.75rem, 3vw, 1rem)',
-                    fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)',
-                    fontWeight: '500'
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(0 70% 50% / 0.1)'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
-                  onClick={handleLogout}
-                >
-                  <LogOut style={{ 
-                    height: 'clamp(0.875rem, 2.5vw, 1rem)', 
-                    width: 'clamp(0.875rem, 2.5vw, 1rem)',
-                    marginRight: '0.5rem'
-                  }} />
-                  Logout
-                </button>
-              </>
-            )}
+            <AuthDesktop
+              isAnyUserLoggedIn={isAnyUserLoggedIn}
+              isAgentLoggedIn={isAgentLoggedIn}
+              isTenantLoggedIn={isTenantLoggedIn}
+              isSuperAdminLoggedIn={isSuperAdminLoggedIn}
+              agentData={agentData}
+              tenantData={tenantData}
+              superAdminData={superAdminData}
+              handleLogout={handleLogout}
+              isOnBuyPage={isOnBuyPage}
+              isOnRentPage={isOnRentPage}
+              activeLink={activeLink}
+              setActiveLink={setActiveLink}
+            />
           </div>
-
           {/* Mobile Menu Button */}
           <button
             onClick={() => {
@@ -456,32 +278,11 @@ const Header = () => {
             flexDirection: 'column',
             gap: '0.25rem'
           }}>
-                <Link
-                  href="/listings"
-                  onClick={handleMobileLinkClick}
-                  className="mobile-menu-link block px-4 py-3 font-medium rounded-lg transition-colors"
-                  style={{ 
-                    color: 'hsl(200 25% 15%)',
-                    fontSize: 'clamp(0.875rem, 3vw, 1rem)'
-                  }}
-                  onTouchStart={(e) => e.currentTarget.style.backgroundColor = 'hsl(40 30% 94%)'}
-                  onTouchEnd={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                >
-                  Find Rentals
-                </Link>
-                <Link
-                  href="/areas"
-                  onClick={handleMobileLinkClick}
-                  className="mobile-menu-link block px-4 py-3 font-medium rounded-lg transition-colors"
-                  style={{ 
-                    color: 'hsl(200 25% 15%)',
-                    fontSize: 'clamp(0.875rem, 3vw, 1rem)'
-                  }}
-                  onTouchStart={(e) => e.currentTarget.style.backgroundColor = 'hsl(40 30% 94%)'}
-                  onTouchEnd={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                >
-                  Areas
-                </Link>
+                {/* Show "Find Rentals" only when not on rent page */}
+                <RentMobile isOnRentPage={isOnRentPage} handleMobileLinkClick={handleMobileLinkClick} />
+                
+                <BuyMobile isOnBuyPage={isOnBuyPage} handleMobileLinkClick={handleMobileLinkClick} />
+                
                 <Link
                   href="/agents"
                   onClick={handleMobileLinkClick}
@@ -495,19 +296,7 @@ const Header = () => {
                 >
                   Agents
                 </Link>
-                <Link
-                  href="/calculator"
-                  onClick={handleMobileLinkClick}
-                  className="mobile-menu-link block px-4 py-3 font-medium rounded-lg transition-colors"
-                  style={{ 
-                    color: 'hsl(200 25% 15%)',
-                    fontSize: 'clamp(0.875rem, 3vw, 1rem)'
-                  }}
-                  onTouchStart={(e) => e.currentTarget.style.backgroundColor = 'hsl(40 30% 94%)'}
-                  onTouchEnd={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                >
-                  Calculator
-                </Link>
+
                 <Link
                   href="/reviews-reports"
                   onClick={handleMobileLinkClick}
@@ -543,194 +332,18 @@ const Header = () => {
               gap: 'clamp(0.5rem, 2vw, 0.75rem)',
               borderTop: '1px solid hsl(40 20% 88%)'
             }}>
-              {/* Not Logged In */}
-              {!isAnyUserLoggedIn && (
-                <>
-                  <Link
-                    href="/sign-up"
-                    onClick={handleMobileLinkClick}
-                    className="w-full inline-flex items-center justify-start rounded-lg border transition-colors"
-                    style={{
-                      borderColor: 'hsl(40 20% 88%)',
-                      color: 'hsl(200 25% 15%)',
-                      backgroundColor: 'white',
-                      padding: 'clamp(0.75rem, 3vw, 1rem)',
-                      fontSize: 'clamp(0.875rem, 3vw, 1rem)',
-                      fontWeight: '500',
-                      minHeight: '44px',
-                      touchAction: 'manipulation'
-                    }}
-                  >
-                    <User style={{ 
-                      height: 'clamp(1rem, 3vw, 1.125rem)', 
-                      width: 'clamp(1rem, 3vw, 1.125rem)',
-                      marginRight: '0.5rem'
-                    }} />
-                    Sign In
-                  </Link>
-                  <Link
-                    href="/become-agent"
-                    onClick={handleMobileLinkClick}
-                    className="w-full rounded-lg text-white transition-colors"
-                    style={{ 
-                      backgroundColor: 'hsl(174 62% 32%)',
-                      padding: 'clamp(0.75rem, 3vw, 1rem)',
-                      fontSize: 'clamp(0.875rem, 3vw, 1rem)',
-                      fontWeight: '600',
-                      minHeight: '44px',
-                      touchAction: 'manipulation',
-                      textAlign: 'center'
-                    }}
-                  >
-                    List Property
-                  </Link>
-                </>
-              )}
-
-              {/* Agent Logged In */}
-              {isAgentLoggedIn && (
-                <>
-                  <Link
-                    href="/agent-dashboard"
-                    onClick={handleMobileLinkClick}
-                    className="w-full inline-flex items-center justify-start rounded-lg border transition-colors"
-                    style={{
-                      borderColor: 'hsl(40 20% 88%)',
-                      color: 'hsl(200 25% 15%)',
-                      backgroundColor: 'white',
-                      padding: 'clamp(0.75rem, 3vw, 1rem)',
-                      fontSize: 'clamp(0.875rem, 3vw, 1rem)',
-                      fontWeight: '500',
-                      minHeight: '44px',
-                      touchAction: 'manipulation'
-                    }}
-                  >
-                    <LayoutDashboard style={{ 
-                      height: 'clamp(1rem, 3vw, 1.125rem)', 
-                      width: 'clamp(1rem, 3vw, 1.125rem)',
-                      marginRight: '0.5rem'
-                    }} />
-                    Dashboard
-                  </Link>
-                  <button
-                    type="button"
-                    className="w-full inline-flex items-center justify-start rounded-lg border transition-colors"
-                    style={{
-                      borderColor: 'hsl(0 70% 50%)',
-                      color: 'hsl(0 70% 50%)',
-                      backgroundColor: 'white',
-                      padding: 'clamp(0.75rem, 3vw, 1rem)',
-                      fontSize: 'clamp(0.875rem, 3vw, 1rem)',
-                      fontWeight: '500',
-                      minHeight: '44px',
-                      touchAction: 'manipulation'
-                    }}
-                    onClick={(e) => {
-                      handleLogout(e);
-                      handleMobileLinkClick();
-                    }}
-                  >
-                    <LogOut style={{ 
-                      height: 'clamp(1rem, 3vw, 1.125rem)', 
-                      width: 'clamp(1rem, 3vw, 1.125rem)',
-                      marginRight: '0.5rem'
-                    }} />
-                    Logout
-                  </button>
-                </>
-              )}
-
-              {/* Super Admin Logged In */}
-              {isSuperAdminLoggedIn && (
-                <>
-                  <Link
-                    href="/admin"
-                    onClick={handleMobileLinkClick}
-                    className="w-full inline-flex items-center justify-start rounded-lg border transition-colors"
-                    style={{
-                      borderColor: 'hsl(40 20% 88%)',
-                      color: 'hsl(200 25% 15%)',
-                      backgroundColor: 'white',
-                      padding: 'clamp(0.75rem, 3vw, 1rem)',
-                      fontSize: 'clamp(0.875rem, 3vw, 1rem)',
-                      fontWeight: '500',
-                      minHeight: '44px',
-                      touchAction: 'manipulation'
-                    }}
-                  >
-                    <LayoutDashboard style={{ 
-                      height: 'clamp(1rem, 3vw, 1.125rem)', 
-                      width: 'clamp(1rem, 3vw, 1.125rem)',
-                      marginRight: '0.5rem'
-                    }} />
-                    Dashboard
-                  </Link>
-                  <button
-                    type="button"
-                    className="w-full inline-flex items-center justify-start rounded-lg border transition-colors"
-                    style={{
-                      borderColor: 'hsl(0 70% 50%)',
-                      color: 'hsl(0 70% 50%)',
-                      backgroundColor: 'white',
-                      padding: 'clamp(0.75rem, 3vw, 1rem)',
-                      fontSize: 'clamp(0.875rem, 3vw, 1rem)',
-                      fontWeight: '500',
-                      minHeight: '44px',
-                      touchAction: 'manipulation'
-                    }}
-                    onClick={(e) => {
-                      handleLogout(e);
-                      handleMobileLinkClick();
-                    }}
-                  >
-                    <LogOut style={{ 
-                      height: 'clamp(1rem, 3vw, 1.125rem)', 
-                      width: 'clamp(1rem, 3vw, 1.125rem)',
-                      marginRight: '0.5rem'
-                    }} />
-                    Logout
-                  </button>
-                </>
-              )}
-
-              {/* Tenant Logged In */}
-              {isTenantLoggedIn && !isAgentLoggedIn && !isSuperAdminLoggedIn && (
-                <>
-                  <div style={{ 
-                    padding: 'clamp(0.5rem, 2vw, 0.75rem) clamp(0.75rem, 3vw, 1rem)',
-                    fontSize: 'clamp(0.875rem, 3vw, 1rem)',
-                    fontWeight: '500',
-                    color: 'hsl(200 25% 15%)'
-                  }}>
-                    {tenantData?.name || 'Tenant'}
-                  </div>
-                  <button
-                    type="button"
-                    className="w-full inline-flex items-center justify-start rounded-lg border transition-colors"
-                    style={{
-                      borderColor: 'hsl(0 70% 50%)',
-                      color: 'hsl(0 70% 50%)',
-                      backgroundColor: 'white',
-                      padding: 'clamp(0.75rem, 3vw, 1rem)',
-                      fontSize: 'clamp(0.875rem, 3vw, 1rem)',
-                      fontWeight: '500',
-                      minHeight: '44px',
-                      touchAction: 'manipulation'
-                    }}
-                    onClick={(e) => {
-                      handleLogout(e);
-                      handleMobileLinkClick();
-                    }}
-                  >
-                    <LogOut style={{ 
-                      height: 'clamp(1rem, 3vw, 1.125rem)', 
-                      width: 'clamp(1rem, 3vw, 1.125rem)',
-                      marginRight: '0.5rem'
-                    }} />
-                    Logout
-                  </button>
-                </>
-              )}
+              <AuthMobile
+                isAnyUserLoggedIn={isAnyUserLoggedIn}
+                isAgentLoggedIn={isAgentLoggedIn}
+                isTenantLoggedIn={isTenantLoggedIn}
+                isSuperAdminLoggedIn={isSuperAdminLoggedIn}
+                agentData={agentData}
+                tenantData={tenantData}
+                superAdminData={superAdminData}
+                handleLogout={handleLogout}
+                handleMobileLinkClick={handleMobileLinkClick}
+                isOnBuyPage={isOnBuyPage}
+              />
             </div>
           </nav>
         </div>

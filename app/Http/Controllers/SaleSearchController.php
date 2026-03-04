@@ -11,31 +11,19 @@ class SaleSearchController extends Controller
     /**
      * Display sale listings
      */
-    public function index(Request $request)
+    public function index()
     {
-        // Base query for sale listings
-        $query = Rental::where('purpose', 'sale')
-            ->where('status', 'approved')
-            ->where('is_sold', false);
-
-        // apply optional filters from query string
-        if ($request->filled('city')) {
-            $query->where('city', 'like', $request->query('city'));
-        }
-        if ($request->filled('area')) {
-            // area may be hyphenated in URL
-            $area = str_replace('-', ' ', $request->query('area'));
-            $query->where('area', 'like', $area);
-        }
-
         // Initial load: show 8 sale listings
-        $listings = $query->latest()->paginate(8);
+        $listings = Rental::where('purpose', 'sale')
+            ->where('status', 'approved')
+            ->where('is_sold', false)
+            ->latest()
+            ->paginate(8);
 
         return inertia('SaleListingsPage', [
             'listings' => $listings,
-            'filters' => $request->only(['city','area']),
-            'page_title' => 'Properties for Sale',
-            'page_description' => 'Find the perfect property to buy'
+            // 'page_title' => 'Properties for Sale',
+            // 'page_description' => 'Find the perfect property to buy'
         ]);
     }
 
@@ -90,29 +78,41 @@ class SaleSearchController extends Controller
      */
     public function areas()
     {
-        $areas = Rental::where('purpose', 'sale')
-            ->where('status', 'approved')
-            ->where('is_sold', false)
-            ->select('city', 'area', 'sale_price', 'created_at')
-            ->get()
-            ->groupBy('city')
-            ->map(function ($cityAreas, $cityName) {
-                return $cityAreas->groupBy('area')->map(function ($areaSales) {
-                    $avgPrice = $areaSales->avg('sale_price');
-                    $minPrice = $areaSales->min('sale_price');
-                    $maxPrice = $areaSales->max('sale_price');
+        try {
+            $areas = Rental::where('purpose', 'sale')
+                ->where('status', 'approved')
+                ->where('is_sold', false)
+                ->select('city', 'area', 'sale_price', 'created_at')
+                ->get()
+                ->groupBy('city')
+                ->map(function ($cityAreas, $cityName) {
+                    return $cityAreas->groupBy('area')->map(function ($areaSales) {
+                        $avgPrice = $areaSales->avg('sale_price');
+                        $minPrice = $areaSales->min('sale_price');
+                        $maxPrice = $areaSales->max('sale_price');
 
-                    return [
-                        'name' => $areaSales->first()->area,
-                        'listingCount' => $areaSales->count(),
-                        'avgPrice' => round($avgPrice),
-                        'minPrice' => $minPrice,
-                        'maxPrice' => $maxPrice,
-                    ];
+                        return [
+                            'name' => $areaSales->first()->area,
+                            'listingCount' => $areaSales->count(),
+                            'avgPrice' => round($avgPrice),
+                            'minPrice' => $minPrice,
+                            'maxPrice' => $maxPrice,
+                        ];
+                    });
                 });
-            });
 
-        return inertia('SaleAreasPage', ['areas' => $areas]);
+            return inertia('SaleAreasPage', ['areas' => $areas]);
+        } catch (\Exception $e) {
+            Log::error('Failed to fetch sale areas', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'error' => 'Failed to fetch sale areas',
+                'message' => config('app.debug') ? $e->getMessage() : 'Server error',
+            ], 500);
+        }
     }
 
     /**

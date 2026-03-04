@@ -11,18 +11,14 @@ class RentalSearchController extends Controller
     /**
      * Display rental listings
      */
-    public function index()
+    public function listings()
     {
-        // Initial load: show 8 rental listings
-        $listings = Rental::where('purpose', 'rent')
-            ->where('status', 'approved')
-            ->latest()
+        // Initial load: show 8 listings
+        $listings = Rental::latest()
             ->paginate(8);
 
         return inertia('RentalListingsPage', [
-            'listings' => $listings,
-            'page_title' => 'Rentals',
-            'page_description' => 'Find the perfect rental property'
+            'listings' => $listings
         ]);
     }
 
@@ -100,7 +96,44 @@ class RentalSearchController extends Controller
                 });
             });
 
-        return inertia('RentalAreasPage', ['areas' => $areas]);
+        return inertia('AreasPage', ['areas' => $areas]);
+    }
+
+    public function showArea($city, $area)
+    {
+        // Decode the area name from URL (replace hyphens with spaces)
+        $areaName = str_replace('-', ' ', $area);
+        $cityName = str_replace('-', ' ', $city);
+
+        // Get all rentals for this specific area
+        $properties = Rental::where('city', 'like', $cityName)
+            ->where('area', 'like', $areaName)
+            ->latest()
+            ->get();
+
+        if ($properties->isEmpty()) {
+            abort(404, 'Area not found');
+        }
+
+        // Calculate area statistics
+        $avgRent = $properties->avg(function ($rental) {
+            return ($rental->rent_min + $rental->rent_max) / 2;
+        });
+
+        $areaData = [
+            'name' => $properties->first()->area,
+            'listingCount' => $properties->count(),
+            'avgRent' => round($avgRent),
+            'minRent' => $properties->min('rent_min'),
+            'maxRent' => $properties->max('rent_max'),
+            'trend' => $this->calculateTrend($properties),
+        ];
+
+        return inertia('AreaDetailPage', [
+            'area' => $areaData,
+            'city' => $cityName,
+            'properties' => $properties,
+        ]);
     }
 
     /**

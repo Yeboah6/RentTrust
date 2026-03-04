@@ -459,7 +459,7 @@ const PropertyCard = ({ listing }) => {
   );
 };
 
-const ListingsPage = ({ listings: initialListingsData = {} }) => {
+const RentalListingsPage = ({ listings: initialListingsData = {} }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
   const [sortBy, setSortBy] = useState("recent");
@@ -521,8 +521,8 @@ const ListingsPage = ({ listings: initialListingsData = {} }) => {
     try {
       // Use cursor-based pagination with last_id
       const url = lastId 
-        ? `/api/listings/more?last_id=${lastId}`
-        : `/api/listings/more`;
+        ? `/rent/api/more?last_id=${lastId}`
+        : `/rent/api/more`;
         
       const response = await fetch(url);
       
@@ -777,4 +777,4 @@ const ListingsPage = ({ listings: initialListingsData = {} }) => {
   );
 };
 
-export default ListingsPage;
+export default RentalListingsPage;

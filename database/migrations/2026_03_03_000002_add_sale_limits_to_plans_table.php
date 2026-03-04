@@ -14,7 +14,7 @@ return new class extends Migration
     {
         Schema::table('plans', function (Blueprint $table) {
             // Separate limits for rental and sale listings
-            $table->integer('rental_limit')->nullable()->change();
+            $table->integer('rental_limit')->nullable();
             $table->integer('sale_limit')->nullable()->default(0)->after('listing_limit');
         });
 

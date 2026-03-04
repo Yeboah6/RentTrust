@@ -608,81 +608,81 @@ class RentController extends Controller
         }
     }
 
-    public function listings()
-    {
-        // Initial load: show 8 listings
-        $listings = Rental::latest()
-            ->paginate(8);
+    // public function listings()
+    // {
+    //     // Initial load: show 8 listings
+    //     $listings = Rental::latest()
+    //         ->paginate(8);
 
-        return inertia('ListingsPage', [
-            'listings' => $listings
-        ]);
-    }
+    //     return inertia('ListingsPage', [
+    //         'listings' => $listings
+    //     ]);
+    // }
 
-    public function getMoreListings(Request $request)
-    {
-        $page = $request->query('page', 2);
-        $perPage = 8; // MUST match the perPage in listings() method
+    // public function getMoreListings(Request $request)
+    // {
+    //     $page = $request->query('page', 2);
+    //     $perPage = 8; // MUST match the perPage in listings() method
         
-        if (!is_numeric($page) || $page < 2) {
-            return response()->json([
-                'error' => 'Invalid page number',
-                'listings' => [],
-                'has_more' => false,
-            ], 400);
-        }
+    //     if (!is_numeric($page) || $page < 2) {
+    //         return response()->json([
+    //             'error' => 'Invalid page number',
+    //             'listings' => [],
+    //             'has_more' => false,
+    //         ], 400);
+    //     }
 
-        try {
-            // Same perPage as initial load - Laravel handles offset correctly
-            $listings = Rental::latest()->paginate($perPage, ['*'], 'page', $page);
+    //     try {
+    //         // Same perPage as initial load - Laravel handles offset correctly
+    //         $listings = Rental::latest()->paginate($perPage, ['*'], 'page', $page);
 
-            return response()->json([
-                'listings' => $listings->items(),
-                'has_more' => $listings->hasMorePages(),
-                'current_page' => $listings->currentPage(),
-                'total' => $listings->total(),
-                'per_page' => $listings->perPage(),
-            ]);
+    //         return response()->json([
+    //             'listings' => $listings->items(),
+    //             'has_more' => $listings->hasMorePages(),
+    //             'current_page' => $listings->currentPage(),
+    //             'total' => $listings->total(),
+    //             'per_page' => $listings->perPage(),
+    //         ]);
 
-        } catch (\Exception $e) {
-            Log::error('Failed to fetch more listings', [
-                'error' => $e->getMessage(),
-                'page' => $page,
-            ]);
+    //     } catch (\Exception $e) {
+    //         Log::error('Failed to fetch more listings', [
+    //             'error' => $e->getMessage(),
+    //             'page' => $page,
+    //         ]);
 
-            return response()->json([
-                'error' => 'Failed to fetch listings',
-                'message' => config('app.debug') ? $e->getMessage() : 'Server error',
-                'listings' => [],
-                'has_more' => false,
-            ], 500);
-        }
-    }
+    //         return response()->json([
+    //             'error' => 'Failed to fetch listings',
+    //             'message' => config('app.debug') ? $e->getMessage() : 'Server error',
+    //             'listings' => [],
+    //             'has_more' => false,
+    //         ], 500);
+    //     }
+    // }
 
-    public function getAllListings(Request $request)
-    {
-        $page = $request->query('page', 1);
-        $perPage = $page == 1 ? 8 : 4; // 8 items on first page, 4 on subsequent pages
+    // public function getAllListings(Request $request)
+    // {
+    //     $page = $request->query('page', 1);
+    //     $perPage = $page == 1 ? 8 : 4; // 8 items on first page, 4 on subsequent pages
 
-        $listings = Rental::latest()
-            ->paginate($perPage);
+    //     $listings = Rental::latest()
+    //         ->paginate($perPage);
 
-        // If this is an AJAX request (for "Load More"), return JSON
-        if ($request->wantsJson() || $request->ajax()) {
-            return response()->json([
-                'listings' => $listings->items(),
-                'has_more' => $listings->hasMorePages(),
-                'next_page' => $listings->hasMorePages() ? $listings->currentPage() + 1 : null,
-                'current_page' => $listings->currentPage(),
-                'total' => $listings->total(),
-            ]);
-        }
+    //     // If this is an AJAX request (for "Load More"), return JSON
+    //     if ($request->wantsJson() || $request->ajax()) {
+    //         return response()->json([
+    //             'listings' => $listings->items(),
+    //             'has_more' => $listings->hasMorePages(),
+    //             'next_page' => $listings->hasMorePages() ? $listings->currentPage() + 1 : null,
+    //             'current_page' => $listings->currentPage(),
+    //             'total' => $listings->total(),
+    //         ]);
+    //     }
 
-        // Otherwise return Inertia page (for initial page load)
-        return inertia('ListingsPage', [
-            'listings' => $listings
-        ]);
-    }
+    //     // Otherwise return Inertia page (for initial page load)
+    //     return inertia('ListingsPage', [
+    //         'listings' => $listings
+    //     ]);
+    // }
 
     public function areas()
     {
@@ -973,42 +973,42 @@ class RentController extends Controller
         return redirect()->back()->with('success', 'Your inquiry has been sent to the agent successfully!');
     }
 
-    public function showArea($city, $area)
-    {
-        // Decode the area name from URL (replace hyphens with spaces)
-        $areaName = str_replace('-', ' ', $area);
-        $cityName = str_replace('-', ' ', $city);
+    // public function showArea($city, $area)
+    // {
+    //     // Decode the area name from URL (replace hyphens with spaces)
+    //     $areaName = str_replace('-', ' ', $area);
+    //     $cityName = str_replace('-', ' ', $city);
 
-        // Get all rentals for this specific area
-        $properties = Rental::where('city', 'like', $cityName)
-            ->where('area', 'like', $areaName)
-            ->latest()
-            ->get();
+    //     // Get all rentals for this specific area
+    //     $properties = Rental::where('city', 'like', $cityName)
+    //         ->where('area', 'like', $areaName)
+    //         ->latest()
+    //         ->get();
 
-        if ($properties->isEmpty()) {
-            abort(404, 'Area not found');
-        }
+    //     if ($properties->isEmpty()) {
+    //         abort(404, 'Area not found');
+    //     }
 
-        // Calculate area statistics
-        $avgRent = $properties->avg(function ($rental) {
-            return ($rental->rent_min + $rental->rent_max) / 2;
-        });
+    //     // Calculate area statistics
+    //     $avgRent = $properties->avg(function ($rental) {
+    //         return ($rental->rent_min + $rental->rent_max) / 2;
+    //     });
 
-        $areaData = [
-            'name' => $properties->first()->area,
-            'listingCount' => $properties->count(),
-            'avgRent' => round($avgRent),
-            'minRent' => $properties->min('rent_min'),
-            'maxRent' => $properties->max('rent_max'),
-            'trend' => $this->calculateTrend($properties),
-        ];
+    //     $areaData = [
+    //         'name' => $properties->first()->area,
+    //         'listingCount' => $properties->count(),
+    //         'avgRent' => round($avgRent),
+    //         'minRent' => $properties->min('rent_min'),
+    //         'maxRent' => $properties->max('rent_max'),
+    //         'trend' => $this->calculateTrend($properties),
+    //     ];
 
-        return inertia('AreaDetailPage', [
-            'area' => $areaData,
-            'city' => $cityName,
-            'properties' => $properties,
-        ]);
-    }
+    //     return inertia('AreaDetailPage', [
+    //         'area' => $areaData,
+    //         'city' => $cityName,
+    //         'properties' => $properties,
+    //     ]);
+    // }
 
     /**
      * Search areas by name or city
