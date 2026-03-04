@@ -17,7 +17,7 @@ export function AuthDesktop({
   activeLink,
   setActiveLink
 }) {
-  if (!isAnyUserLoggedIn) {
+  if (isAnyUserLoggedIn) {
     return (
       <>
         {isOnBuyPage && (
@@ -53,34 +53,34 @@ export function AuthDesktop({
         )}
 
         {!isOnRentPage && !isOnBuyPage && (
-            <>
+          <>
             <Link
-            href="/rent/listings"
-            onMouseEnter={() => setActiveLink('rent')}
-            onMouseLeave={() => setActiveLink(null)}
-            className="desktop-nav-link px-4 py-2 font-medium transition-all rounded-lg"
-            style={{
-              color: activeLink === 'rent' ? 'hsl(200 25% 15%)' : 'hsl(200 15% 45%)',
-              backgroundColor: activeLink === 'rent' ? 'hsl(40 30% 94%)' : 'transparent',
-              fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)'
-            }}
-          >
-            Find Rentals
-          </Link>
+              href="/rent/listings"
+              onMouseEnter={() => setActiveLink('rent')}
+              onMouseLeave={() => setActiveLink(null)}
+              className="desktop-nav-link px-4 py-2 font-medium transition-all rounded-lg"
+              style={{
+                color: activeLink === 'rent' ? 'hsl(200 25% 15%)' : 'hsl(200 15% 45%)',
+                backgroundColor: activeLink === 'rent' ? 'hsl(40 30% 94%)' : 'transparent',
+                fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)'
+              }}
+            >
+              Find Rentals
+            </Link>
 
-          <Link
-            href="/buy/listings"
-            onMouseEnter={() => setActiveLink('buy')}
-            onMouseLeave={() => setActiveLink(null)}
-            className="desktop-nav-link px-4 py-2 font-medium transition-all rounded-lg"
-            style={{
-              color: activeLink === 'buy' ? 'hsl(200 25% 15%)' : 'hsl(200 15% 45%)',
-              backgroundColor: activeLink === 'buy' ? 'hsl(40 30% 94%)' : 'transparent',
-              fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)'
-            }}
-          >
-            Buy Properties
-          </Link>
+            <Link
+              href="/buy/listings"
+              onMouseEnter={() => setActiveLink('buy')}
+              onMouseLeave={() => setActiveLink(null)}
+              className="desktop-nav-link px-4 py-2 font-medium transition-all rounded-lg"
+              style={{
+                color: activeLink === 'buy' ? 'hsl(200 25% 15%)' : 'hsl(200 15% 45%)',
+                backgroundColor: activeLink === 'buy' ? 'hsl(40 30% 94%)' : 'transparent',
+                fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)'
+              }}
+            >
+              Buy Properties
+            </Link>
           </>
         )}
 
@@ -115,6 +115,70 @@ export function AuthDesktop({
   if (isAgentLoggedIn) {
     return (
       <>
+        {/* {isOnBuyPage && (
+          <Link
+            href="/rent/listings"
+            onMouseEnter={() => setActiveLink('rent')}
+            onMouseLeave={() => setActiveLink(null)}
+            className="desktop-nav-link px-4 py-2 font-medium transition-all rounded-lg"
+            style={{
+              color: activeLink === 'rent' ? 'hsl(200 25% 15%)' : 'hsl(200 15% 45%)',
+              backgroundColor: activeLink === 'rent' ? 'hsl(40 30% 94%)' : 'transparent',
+              fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)'
+            }}
+          >
+            Find Rentals
+          </Link>
+        )} */}
+
+        {/* {isOnRentPage && (
+          <Link
+            href="/buy/listings"
+            onMouseEnter={() => setActiveLink('buy')}
+            onMouseLeave={() => setActiveLink(null)}
+            className="desktop-nav-link px-4 py-2 font-medium transition-all rounded-lg"
+            style={{
+              color: activeLink === 'buy' ? 'hsl(200 25% 15%)' : 'hsl(200 15% 45%)',
+              backgroundColor: activeLink === 'buy' ? 'hsl(40 30% 94%)' : 'transparent',
+              fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)'
+            }}
+          >
+            Buy Properties
+          </Link>
+        )} */}
+
+        {/* {!isOnRentPage && !isOnBuyPage && (
+          <>
+            <Link
+              href="/rent/listings"
+              onMouseEnter={() => setActiveLink('rent')}
+              onMouseLeave={() => setActiveLink(null)}
+              className="desktop-nav-link px-4 py-2 font-medium transition-all rounded-lg"
+              style={{
+                color: activeLink === 'rent' ? 'hsl(200 25% 15%)' : 'hsl(200 15% 45%)',
+                backgroundColor: activeLink === 'rent' ? 'hsl(40 30% 94%)' : 'transparent',
+                fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)'
+              }}
+            >
+              Find Rentals
+            </Link>
+
+            <Link
+              href="/buy/listings"
+              onMouseEnter={() => setActiveLink('buy')}
+              onMouseLeave={() => setActiveLink(null)}
+              className="desktop-nav-link px-4 py-2 font-medium transition-all rounded-lg"
+              style={{
+                color: activeLink === 'buy' ? 'hsl(200 25% 15%)' : 'hsl(200 15% 45%)',
+                backgroundColor: activeLink === 'buy' ? 'hsl(40 30% 94%)' : 'transparent',
+                fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)'
+              }}
+            >
+              Buy Properties
+            </Link>
+          </>
+        )} */}
+
         <Link
           href={
             agentData?.package === 'free' || agentData?.package === null

@@ -116,7 +116,7 @@ class RentController extends Controller
             'city'            => 'required|string|max:100',
             'area'            => 'required|string|max:255',
             'address'         => 'nullable|string|max:500',
-            'advanceDuration' => 'required|in:1,2,3,4,5',
+            // advanceDuration is validated only for rental listings below
             'bedrooms'        => 'required|integer|min:0',
             'bathrooms'       => 'nullable|integer|min:0',
             'description'     => 'nullable|string',
@@ -131,11 +131,13 @@ class RentController extends Controller
         if ($purpose === 'rent') {
             $rules['rentMin'] = 'required|numeric|min:0';
             $rules['rentMax'] = 'required|numeric|min:0|gte:rentMin';
+            $rules['advanceDuration'] = 'required|in:1,2,3,4,5';
             $rules['salePrice'] = 'prohibited';
         } else {
             $rules['salePrice'] = 'required|numeric|min:0';
             $rules['rentMin'] = 'prohibited';
             $rules['rentMax'] = 'prohibited';
+            $rules['advanceDuration'] = 'prohibited';
         }
 
         // Custom error messages
@@ -194,7 +196,6 @@ class RentController extends Controller
                 'city'                => $request->city,
                 'area'                => $request->area,
                 'address'             => $request->address,
-                'advance_duration'    => $request->advanceDuration,
                 'bedrooms'            => $request->bedrooms,
                 'bathrooms'           => $request->bathrooms ?? 0,
                 'amenities'           => $amenities,
@@ -211,11 +212,13 @@ class RentController extends Controller
             if ($purpose === 'rent') {
                 $listingData['rent_min'] = $request->rentMin;
                 $listingData['rent_max'] = $request->rentMax;
+                $listingData['advance_duration']  = $request->advanceDuration;
                 $listingData['sale_price'] = null;
             } else {
                 $listingData['sale_price'] = $request->salePrice;
                 $listingData['rent_min'] = null;
                 $listingData['rent_max'] = null;
+                $listingData['advance_duration']  = null;
             }
 
             // Create listing
@@ -333,16 +336,13 @@ class RentController extends Controller
 
         $request->merge(['amenities' => $amenities]);
 
-        // Validation rules
-        $validator = Validator::make($request->all(), [
+        // Validation rules - conditional based on listing purpose
+        $rules = [
             'title' => 'required|string|max:255',
             'propertyType' => 'required|string',
             'area' => 'required|string|max:255',
             'city' => 'required|string|max:255',
             'address' => 'nullable|string',
-            'rentMin' => 'required|numeric|min:0',
-            'rentMax' => 'required|numeric|min:0|gte:rentMin',
-            'advanceDuration' => 'required|integer|min:1|max:5',
             'bedrooms' => 'required|integer|min:0',
             'bathrooms' => 'nullable|integer|min:0',
             'description' => 'nullable|string',
@@ -354,7 +354,22 @@ class RentController extends Controller
             'existingImages.*' => 'string',
             'removedImages' => 'nullable|array',
             'removedImages.*' => 'string',
-        ], [
+        ];
+
+        $purpose = $request->input('purpose', $rent->purpose);
+        if ($purpose === 'rent') {
+            $rules['rentMin'] = 'required|numeric|min:0';
+            $rules['rentMax'] = 'required|numeric|min:0|gte:rentMin';
+            $rules['advanceDuration'] = 'required|integer|min:1|max:5';
+            $rules['salePrice'] = 'prohibited';
+        } else {
+            $rules['salePrice'] = 'required|numeric|min:0';
+            $rules['rentMin'] = 'prohibited';
+            $rules['rentMax'] = 'prohibited';
+            $rules['advanceDuration'] = 'prohibited';
+        }
+
+        $validator = Validator::make($request->all(), $rules, [
             'rentMax.gte' => 'Maximum rent must be greater than or equal to minimum rent',
             'newImages.*.max' => 'Each image must not exceed 5MB',
             'newImages.*.mimes' => 'Images must be jpeg, png, jpg, or gif format',

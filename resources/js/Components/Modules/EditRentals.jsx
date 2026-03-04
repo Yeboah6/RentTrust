@@ -262,10 +262,10 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental }) => {
       formData.append('advanceDuration', data.advanceDuration);
     } else {
       formData.append('salePrice', data.salePrice);
-      // ensure old rent values are cleared server‑side
+      // ensure previous rental-only values are removed by sending empty values
       formData.append('rentMin', '');
       formData.append('rentMax', '');
-      formData.append('advanceDuration', '');
+      // do NOT append advanceDuration when editing a sale listing – it should be omitted
     }
     formData.append('bedrooms', data.bedrooms);
     formData.append('bathrooms', data.bathrooms || '0');

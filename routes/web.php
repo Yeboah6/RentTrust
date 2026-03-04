@@ -31,6 +31,7 @@ Route::prefix('rent')->group(function () {
     Route::get('/areas/{city}/{area}', [RentalSearchController::class, 'showArea'])->name('areas.show');
     Route::get('/api/more', [RentalSearchController::class, 'getMore'])->name('rent.more');
     Route::get('/listings', [RentalSearchController::class, 'listings']);
+    Route::get('/calculator', [RentController::class, 'calculate']);
 });
 
 // ── Sale Search Routes ────────────────────────────────────────────────────────
@@ -57,12 +58,11 @@ Route::get('/api/areas/search', [RentController::class, 'searchAreas'])->name('a
 Route::get('/api/areas/city/{city}', [RentController::class, 'getAreasByCity'])->name('areas.by-city');
 
 
-Route::get('/calculator', [RentController::class, 'calculate']);
-Route::get('/claim-listings', [RentController::class, 'claimListings']);
+// Route::get('/calculator', [RentController::class, 'calculate']);
+// Route::get('/claim-listings', [RentController::class, 'claimListings']);
 
-Route::get('/calculator', [RentController::class, 'calculate']);
+
 Route::get('/reviews-reports', [RentController::class, 'reviews']);
-
 Route::post('/report-listing', [RentController::class, 'reportListing'])->name('report.listing');
 
 Route::post('/review-forms', [RentController::class, 'storeReviewForms']);
@@ -70,9 +70,6 @@ Route::post('/reviews/app', [RentController::class, 'storeReviewApp'])->name('re
 
 // ── Pricing page (public) ────────────────────────────────────────────────────
 Route::get('pricing', [RentController::class, 'pricing'])->name('pricing.page');
-// Route::get('/select-plan', function () {
-//     return inertia('SelectPlan');
-// })->name('agent.plan.select')->middleware('auth');
 
 Route::post('/agent/select-plan', [AgentController::class, 'selectPlan'])
     ->middleware('auth');

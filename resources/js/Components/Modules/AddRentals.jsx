@@ -126,18 +126,35 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData }) => {
       return;
     }
 
-    // Convert amenities array to JSON string before sending and clear unused price fields
-    transform((d) => ({
-      ...d,
-      amenities: JSON.stringify(d.amenities ?? []),
-      rentMin: d.purpose === 'rent' ? d.rentMin : null,
-      rentMax: d.purpose === 'rent' ? d.rentMax : null,
-      advanceDuration: d.purpose === 'rent' ? d.advanceDuration : null,
-      salePrice: d.purpose === 'sale' ? d.salePrice : null,
-    }));
+    // Convert amenities array to JSON string before sending and strip out fields
+    // that aren't relevant to the chosen purpose.  In particular we don't want
+    // `advanceDuration` to be submitted when the user is creating a sale listing
+    // because the backend now enforces it only for rentals (see controller).
+    transform((d) => {
+      const payload = {
+        ...d,
+        amenities: JSON.stringify(d.amenities ?? []),
+      };
 
-    // choose endpoint based on purpose
-    const endpoint = data.purpose === 'rent' ? '/rent' : '/sale';
+      if (d.purpose === 'rent') {
+        payload.rentMin = d.rentMin;
+        payload.rentMax = d.rentMax;
+        payload.advanceDuration = d.advanceDuration;
+        payload.salePrice = null;
+      } else {
+        // sale
+        payload.salePrice = d.salePrice;
+        // make sure rental-specific values are omitted entirely
+        delete payload.rentMin;
+        delete payload.rentMax;
+        delete payload.advanceDuration;
+      }
+
+      return payload;
+    });
+
+    // choose endpoint based on purpose (same for now but kept for clarity)
+    const endpoint = "/rent"; // future might become "/sale" when route added
     post(endpoint, {
       forceFormData: true,
       onSuccess: () => {
@@ -999,11 +1016,8 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData }) => {
                     }}>
                       Contact Information
                     </h2>
-                    <p style={{ 
-                      color: 'hsl(200 15% 45%)',
-                      fontSize: 'clamp(0.8125rem, 2.5vw, 0.875rem)'
-                    }}>
-                      How should tenants reach you?
+                    <p style={{ color: 'hsl(200 15% 45%)', fontSize: 'clamp(0.8125rem, 2.5vw, 0.875rem)' }}>
+                      {data.purpose === 'rent' ? 'How should tenants reach you?' : 'How should buyers reach you?'}
                     </p>
                   </div>
 
@@ -1175,17 +1189,30 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData }) => {
                         gap: 'clamp(0.5rem, 2vw, 0.75rem)',
                         fontSize: 'clamp(0.8125rem, 2.5vw, 0.875rem)'
                       }}>
-                        <div className="flex justify-between gap-2">
-                          <span style={{ color: 'hsl(200 15% 45%)' }}>Monthly Rent:</span>
-                          <span className="font-semibold" style={{ color: 'hsl(174 62% 32%)', textAlign: 'right' }}>
-                            GH₵{data.rentMin ? Number(data.rentMin).toLocaleString() : '0'} - 
-                             GH₵{data.rentMax ? Number(data.rentMax).toLocaleString() : '0'}
-                          </span>
-                        </div>
-                        <div className="flex justify-between gap-2">
-                          <span style={{ color: 'hsl(200 15% 45%)' }}>Advance Duration:</span>
-                          <span style={{ color: 'hsl(200 25% 15%)', textAlign: 'right' }}>{data.advanceDuration} {data.advanceDuration === '1' ? 'Year' : 'Years'}</span>
-                        </div>
+                        {data.purpose === 'rent' ? (
+                          <>
+                            <div className="flex justify-between gap-2">
+                              <span style={{ color: 'hsl(200 15% 45%)' }}>Monthly Rent:</span>
+                              <span className="font-semibold" style={{ color: 'hsl(174 62% 32%)', textAlign: 'right' }}>
+                                GH₵{data.rentMin ? Number(data.rentMin).toLocaleString() : '0'} - 
+                                 GH₵{data.rentMax ? Number(data.rentMax).toLocaleString() : '0'}
+                              </span>
+                            </div>
+                            <div className="flex justify-between gap-2">
+                              <span style={{ color: 'hsl(200 15% 45%)' }}>Advance Duration:</span>
+                              <span style={{ color: 'hsl(200 25% 15%)', textAlign: 'right' }}>
+                                {data.advanceDuration} {data.advanceDuration === '1' ? 'Year' : 'Years'}
+                              </span>
+                            </div>
+                          </>
+                        ) : (
+                          <div className="flex justify-between gap-2">
+                            <span style={{ color: 'hsl(200 15% 45%)' }}>Sale Price:</span>
+                            <span className="font-semibold" style={{ color: 'hsl(174 62% 32%)', textAlign: 'right' }}>
+                              GH₵{data.salePrice ? Number(data.salePrice).toLocaleString() : '0'}
+                            </span>
+                          </div>
+                        )}
                         <div className="flex justify-between gap-2">
                           <span style={{ color: 'hsl(200 15% 45%)' }}>Bedrooms:</span>
                           <span style={{ color: 'hsl(200 25% 15%)', textAlign: 'right' }}>{data.bedrooms || '0'}</span>
