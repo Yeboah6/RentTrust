@@ -15,7 +15,7 @@ class SaleSearchController extends Controller
     {
         // Initial load: show 8 sale listings
         $listings = Rental::where('purpose', 'sale')
-            ->where('status', 'approved')
+            // ->where('status', 'approved')
             ->where('is_sold', false)
             ->latest()
             ->paginate(8);

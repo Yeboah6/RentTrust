@@ -183,7 +183,39 @@ const ViewRentals = ({ rental, setShowViewModal }) => {
             gap: 'clamp(0.5rem, 2vw, 1rem)',
             zIndex: 10
           }}>
-            <div style={{ flex: 1, minWidth: 0 }}>
+            <h2 style={{ 
+                color: 'hsl(200 25% 15%)',
+                fontSize: 'clamp(1.25rem, 4vw, 1.5rem)',
+                fontWeight: '700',
+                lineHeight: '1.2',
+                marginBottom: 'clamp(0.25rem, 1vw, 0.5rem)'
+              }}>
+                {rental.title}
+              </h2>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.5rem, 2vw, 0.75rem)', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.25rem, 1vw, 0.375rem)' }}>
+                <MapPin style={{
+                  height: 'clamp(0.875rem, 2.5vw, 1rem)',
+                  width: 'clamp(0.875rem, 2.5vw, 1rem)',
+                  color: 'hsl(200 15% 45%)'
+                }} />
+                <span style={{ fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)', color: 'hsl(200 15% 45%)' }}>
+                  {rental.area}, {rental.city}
+                </span>
+              </div>
+              <span style={{
+                padding: '0.2rem 0.6rem',
+                borderRadius: '9999px',
+                fontSize: '0.75rem',
+                fontWeight: '600',
+                backgroundColor: rental.purpose === 'sale' ? 'hsl(38 92% 50% / 0.15)' : 'hsl(174 62% 32% / 0.12)',
+                color: rental.purpose === 'sale' ? 'hsl(38 85% 40%)' : 'hsl(174 62% 32%)',
+                border: `1px solid ${rental.purpose === 'sale' ? 'hsl(38 92% 50% / 0.3)' : 'hsl(174 62% 32% / 0.25)'}`,
+              }}>
+                {rental.purpose === 'sale' ? '🏷️ For Sale' : '🏠 For Rent'}
+              </span>
+            </div>
+            {/* <div style={{ flex: 1, minWidth: 0 }}>
               <h2 style={{ 
                 color: 'hsl(200 25% 15%)',
                 fontSize: 'clamp(1.25rem, 4vw, 1.5rem)',
@@ -210,7 +242,7 @@ const ViewRentals = ({ rental, setShowViewModal }) => {
                   {rental.area}, {rental.city}
                 </span>
               </div>
-            </div>
+            </div> */}
             <button
               className="close-button action-button"
               onClick={() => setShowViewModal && setShowViewModal(false)}
@@ -421,80 +453,108 @@ const ViewRentals = ({ rental, setShowViewModal }) => {
 
             {/* Pricing Section */}
             <div className="section-padding" style={{
-              backgroundColor: 'hsl(174 62% 32% / 0.1)',
-              border: '2px solid hsl(174 62% 32% / 0.3)',
+              backgroundColor: rental.purpose === 'sale' ? 'hsl(38 92% 50% / 0.08)' : 'hsl(174 62% 32% / 0.1)',
+              border: `2px solid ${rental.purpose === 'sale' ? 'hsl(38 92% 50% / 0.3)' : 'hsl(174 62% 32% / 0.3)'}`,
               borderRadius: 'clamp(0.5rem, 2vw, 0.75rem)',
               padding: 'clamp(1rem, 3vw, 1.25rem)'
             }}>
-              <div style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: 'clamp(0.5rem, 2vw, 0.75rem)', 
-                marginBottom: 'clamp(0.75rem, 2vw, 1rem)' 
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 'clamp(0.5rem, 2vw, 0.75rem)',
+                marginBottom: 'clamp(0.75rem, 2vw, 1rem)'
               }}>
-                <DollarSign style={{ 
-                  height: 'clamp(1rem, 3vw, 1.25rem)', 
-                  width: 'clamp(1rem, 3vw, 1.25rem)', 
-                  color: 'hsl(174 62% 32%)' 
+                <DollarSign style={{
+                  height: 'clamp(1rem, 3vw, 1.25rem)',
+                  width: 'clamp(1rem, 3vw, 1.25rem)',
+                  color: rental.purpose === 'sale' ? 'hsl(38 92% 50%)' : 'hsl(174 62% 32%)'
                 }} />
-                <h3 style={{ 
+                <h3 style={{
                   color: 'hsl(200 25% 15%)',
                   fontSize: 'clamp(1rem, 3vw, 1.125rem)',
                   fontWeight: '600'
                 }}>
                   Pricing Information
                 </h3>
+                {/* Purpose badge */}
+                <span style={{
+                  marginLeft: 'auto',
+                  padding: '0.25rem 0.75rem',
+                  borderRadius: '9999px',
+                  fontSize: '0.75rem',
+                  fontWeight: '600',
+                  backgroundColor: rental.purpose === 'sale' ? 'hsl(38 92% 50%)' : 'hsl(174 62% 32%)',
+                  color: 'white'
+                }}>
+                  {rental.purpose === 'sale' ? '🏷️ For Sale' : '🏠 For Rent'}
+                </span>
               </div>
               
-              <div style={{
-                display: 'grid',
-                gap: 'clamp(0.75rem, 2vw, 1rem)'
-              }}>
+              {rental.purpose === 'sale' ? (
                 <div>
-                  <span style={{ 
-                    fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                  <span style={{
+                    fontSize: 'clamp(0.75rem, 2vw, 0.875rem)',
                     fontWeight: '500',
                     color: 'hsl(200 15% 45%)',
                     display: 'block',
                     marginBottom: 'clamp(0.25rem, 1vw, 0.375rem)'
                   }}>
-                    Monthly Rent Range
+                    Sale Price
                   </span>
-                  <span style={{ 
-                    fontSize: 'clamp(1.25rem, 4vw, 1.5rem)', 
+                  <span style={{
+                    fontSize: 'clamp(1.25rem, 4vw, 1.5rem)',
                     fontWeight: '700',
-                    color: 'hsl(174 62% 32%)' 
+                    color: 'hsl(38 92% 50%)'
                   }}>
-                    GH₵{Number(rental.rent_min || rental.rentMin || 0).toLocaleString()} - 
-                    GH₵{Number(rental.rent_max || rental.rentMax || 0).toLocaleString()}
+                    GH₵{Number(rental.sale_price || 0).toLocaleString()}
                   </span>
                 </div>
-
-                <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.5rem, 2vw, 0.75rem)' }}>
-                  <Calendar style={{ 
-                    height: 'clamp(1rem, 3vw, 1.25rem)', 
-                    width: 'clamp(1rem, 3vw, 1.25rem)', 
-                    color: 'hsl(174 62% 32%)' 
-                  }} />
+              ) : (
+                <div style={{ display: 'grid', gap: 'clamp(0.75rem, 2vw, 1rem)' }}>
                   <div>
-                    <span style={{ 
-                      fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                    <span style={{
+                      fontSize: 'clamp(0.75rem, 2vw, 0.875rem)',
                       fontWeight: '500',
                       color: 'hsl(200 15% 45%)',
-                      display: 'block'
+                      display: 'block',
+                      marginBottom: 'clamp(0.25rem, 1vw, 0.375rem)'
                     }}>
-                      Advance Payment
+                      Annual Rent Range
                     </span>
-                    <span style={{ 
-                      fontSize: 'clamp(0.875rem, 2.5vw, 1rem)', 
-                      fontWeight: '600',
-                      color: 'hsl(200 25% 15%)' 
+                    <span style={{
+                      fontSize: 'clamp(1.25rem, 4vw, 1.5rem)',
+                      fontWeight: '700',
+                      color: 'hsl(174 62% 32%)'
                     }}>
-                      {rental.advance_duration || rental.advanceDuration} {(rental.advance_duration || rental.advanceDuration) === '1' ? 'Year' : 'Years'}
+                      GH₵{Number(rental.rent_min || 0).toLocaleString()} – GH₵{Number(rental.rent_max || 0).toLocaleString()}
                     </span>
                   </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.5rem, 2vw, 0.75rem)' }}>
+                    <Calendar style={{
+                      height: 'clamp(1rem, 3vw, 1.25rem)',
+                      width: 'clamp(1rem, 3vw, 1.25rem)',
+                      color: 'hsl(174 62% 32%)'
+                    }} />
+                    <div>
+                      <span style={{
+                        fontSize: 'clamp(0.75rem, 2vw, 0.875rem)',
+                        fontWeight: '500',
+                        color: 'hsl(200 15% 45%)',
+                        display: 'block'
+                      }}>
+                        Advance Payment
+                      </span>
+                      <span style={{
+                        fontSize: 'clamp(0.875rem, 2.5vw, 1rem)',
+                        fontWeight: '600',
+                        color: 'hsl(200 25% 15%)'
+                      }}>
+                        {rental.advance_duration} {Number(rental.advance_duration) === 1 ? 'Year' : 'Years'}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
             {/* Amenities Section */}

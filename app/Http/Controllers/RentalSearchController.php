@@ -14,7 +14,8 @@ class RentalSearchController extends Controller
     public function listings()
     {
         // Initial load: show 8 listings
-        $listings = Rental::latest()
+        $listings = Rental::where('purpose', 'rent')
+            ->latest()
             ->paginate(8);
 
         return inertia('RentalListingsPage', [
@@ -141,24 +142,24 @@ class RentalSearchController extends Controller
      */
     public function show(Request $request, Rental $rental)
     {
-        // Verify it's a rental listing
-        if (!$rental->isRental() || $rental->status !== 'approved') {
-            abort(404, 'Rental not found');
+        // Only block unapproved listings, allow both rent and sale
+        if ($rental->status !== 'approved') {
+            abort(404, 'Listing not found');
         }
-
+    
         // Track view
         $this->trackView($request, $rental);
-
+    
         $rental->load('user');
-        
+    
         $reviews = $rental->reviews()
             ->orderBy('created_at', 'desc')
             ->get();
-
+    
         return inertia('RentalDetailsPage', [
-            'rental' => $rental,
-            'reviews' => $reviews,
-            'price_label' => 'Monthly Rent',
+            'rental'      => $rental,
+            'reviews'     => $reviews,
+            'price_label' => $rental->purpose === 'sale' ? 'Sale Price' : 'Annual Rent Range',
         ]);
     }
 

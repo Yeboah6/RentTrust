@@ -83,6 +83,14 @@ class Rental extends Model
     /**
      * Check if this is a rental listing
      */
+    public function scopeRentals($query) {
+        return $query->where('purpose', 'rent');
+    }
+    
+    public function scopeSales($query) {
+        return $query->where('purpose', 'sale');
+    }
+
     public function isRental(): bool
     {
         return $this->purpose === 'rent';
