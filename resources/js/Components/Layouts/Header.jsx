@@ -198,6 +198,19 @@ const Header = () => {
                 Reports & Reviews
               </Link>
               <Link
+                  href="/contact"
+                  onMouseEnter={() => setActiveLink('contact')}
+                  onMouseLeave={() => setActiveLink(null)}
+                  className="desktop-nav-link px-4 py-2 font-medium transition-all rounded-lg"
+                  style={{
+                    color: activeLink === 'contact' ? 'hsl(200 25% 15%)' : 'hsl(200 15% 45%)',
+                    backgroundColor: activeLink === 'contact' ? 'hsl(40 30% 94%)' : 'transparent',
+                    fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)'
+                  }}
+                >
+                  Contact
+                </Link>
+                <Link
                   href="/pricing"
                   onMouseEnter={() => setActiveLink('pricing')}
                   onMouseLeave={() => setActiveLink(null)}
@@ -309,6 +322,19 @@ const Header = () => {
                   onTouchEnd={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                 >
                   Reports & Reviews
+                </Link>
+                <Link
+                  href="/contact"
+                  onClick={handleMobileLinkClick}
+                  className="mobile-menu-link block px-4 py-3 font-medium rounded-lg transition-colors"
+                  style={{ 
+                    color: 'hsl(200 25% 15%)',
+                    fontSize: 'clamp(0.875rem, 3vw, 1rem)'
+                  }}
+                  onTouchStart={(e) => e.currentTarget.style.backgroundColor = 'hsl(40 30% 94%)'}
+                  onTouchEnd={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                >
+                  Contact
                 </Link>
                 <Link
                   href="/pricing"

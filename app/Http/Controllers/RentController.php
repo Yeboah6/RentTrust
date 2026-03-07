@@ -23,16 +23,23 @@ class RentController extends Controller
      */
     public function index()
     {
-        // Show recent rental listings by default (rental-first positioning)
-        $recentListings = Rental::where('purpose', 'rent')
-            ->where('status', 'approved')
+        // Show recent rental listings
+        $recentRentals = Rental::where('purpose', 'rent')
+            // ->where('status', 'approved')
+            ->latest()
+            ->limit(4)
+            ->get();
+
+        // Show recent sale listings
+        $recentSales = Rental::where('purpose', 'sale')
+            ->where('is_sold', false)
             ->latest()
             ->limit(4)
             ->get();
 
         // Get rental areas grouped by city
-        $areas = Rental::where('purpose', 'rent')
-            ->where('status', 'approved')
+        $rentalAreas = Rental::where('purpose', 'rent')
+            // ->where('status', 'approved')
             ->select('city', 'area', 'rent_min', 'rent_max', 'created_at')
             ->get()
             ->groupBy('city')
@@ -53,9 +60,29 @@ class RentController extends Controller
                 });
             });
 
+        // Get sale areas grouped by city
+        $saleAreas = Rental::where('purpose', 'sale')
+            ->where('is_sold', false)
+            ->select('city', 'area', 'sale_price', 'created_at')
+            ->get()
+            ->groupBy('city')
+            ->map(function ($cityAreas, $cityName) {
+                return $cityAreas->groupBy('area')->map(function ($areaSales) {
+                    $avgPrice = $areaSales->avg('sale_price');
+
+                    return [
+                        'name' => $areaSales->first()->area,
+                        'listingCount' => $areaSales->count(),
+                        'avgPrice' => round($avgPrice),
+                    ];
+                });
+            });
+
         return inertia('Home', [
-            'recentListings' => $recentListings,
-            'areas' => $areas,
+            'recentRentals' => $recentRentals,
+            'recentSales' => $recentSales,
+            'rentalAreas' => $rentalAreas,
+            'saleAreas' => $saleAreas,
             'pageTitle' => 'RentTrust - Rent Smarter. Sell Confidently.',
             'pageDescription' => 'Find the best rental properties or sell with confidence on RentTrust marketplace.',
         ]);
@@ -84,21 +111,45 @@ class RentController extends Controller
 
         // Check subscription limits
         $limitService = new ListingLimitService();
-        if ($purpose === 'rent') {
-            if (!$limitService->canCreateRental($user)) {
-                $status = $limitService->getLimitStatus($user);
-                return redirect()->back()
-                    ->with('error', "You've reached your rental listing limit for your {$status['plan']} plan. Please upgrade to create more.")
-                    ->withInput();
-            }
-        } else {
-            if (!$limitService->canCreateSale($user)) {
-                $status = $limitService->getLimitStatus($user);
-                return redirect()->back()
-                    ->with('error', "You've reached your sale listing limit for your {$status['plan']} plan. Please upgrade to create more.")
-                    ->withInput();
-            }
+
+        if ($purpose === 'rent' && !$limitService->canCreateRental($user)) {
+            $status = $limitService->getLimitStatus($user);
+            $remaining = $status['rentals']['limit'] ?? 0;
+            return redirect()->back()
+                ->with('toast', [
+                    'type'    => 'error',
+                    'title'   => 'Rental Limit Reached',
+                    'message' => "Your {$status['plan']} plan allows {$remaining} rental listing(s). Upgrade to add more.",
+                ])
+                ->withInput();
         }
+
+        if ($purpose === 'sale' && !$limitService->canCreateSale($user)) {
+            $status = $limitService->getLimitStatus($user);
+            $remaining = $status['sales']['limit'] ?? 0;
+            return redirect()->back()
+                ->with('toast', [
+                    'type'    => 'error',
+                    'title'   => 'Sale Limit Reached',
+                    'message' => "Your {$status['plan']} plan allows {$remaining} sale listing(s). Upgrade to add more.",
+                ])
+                ->withInput();
+        }
+        // if ($purpose === 'rent') {
+        //     if (!$limitService->canCreateRental($user)) {
+        //         $status = $limitService->getLimitStatus($user);
+        //         return redirect()->back()
+        //             ->with('error', "You've reached your rental listing limit for your {$status['plan']} plan. Please upgrade to create more.")
+        //             ->withInput();
+        //     }
+        // } else {
+        //     if (!$limitService->canCreateSale($user)) {
+        //         $status = $limitService->getLimitStatus($user);
+        //         return redirect()->back()
+        //             ->with('error', "You've reached your sale listing limit for your {$status['plan']} plan. Please upgrade to create more.")
+        //             ->withInput();
+        //     }
+        // }
 
         // Decode amenities — frontend sends a JSON string
         $amenities = $request->amenities;
@@ -291,7 +342,7 @@ class RentController extends Controller
         // record view if not already counted in past 24h
         try {
             $ip = $request->ip();
-            if (! ListingView::hasViewInWindow($rent->id, $ip)) {
+            if (!ListingView::hasViewInWindow($rent->id, $ip)) {
                 ListingView::create([
                     'rental_id'  => $rent->id,
                     'user_id'    => Auth::id(),
@@ -623,82 +674,6 @@ class RentController extends Controller
         }
     }
 
-    // public function listings()
-    // {
-    //     // Initial load: show 8 listings
-    //     $listings = Rental::latest()
-    //         ->paginate(8);
-
-    //     return inertia('ListingsPage', [
-    //         'listings' => $listings
-    //     ]);
-    // }
-
-    // public function getMoreListings(Request $request)
-    // {
-    //     $page = $request->query('page', 2);
-    //     $perPage = 8; // MUST match the perPage in listings() method
-        
-    //     if (!is_numeric($page) || $page < 2) {
-    //         return response()->json([
-    //             'error' => 'Invalid page number',
-    //             'listings' => [],
-    //             'has_more' => false,
-    //         ], 400);
-    //     }
-
-    //     try {
-    //         // Same perPage as initial load - Laravel handles offset correctly
-    //         $listings = Rental::latest()->paginate($perPage, ['*'], 'page', $page);
-
-    //         return response()->json([
-    //             'listings' => $listings->items(),
-    //             'has_more' => $listings->hasMorePages(),
-    //             'current_page' => $listings->currentPage(),
-    //             'total' => $listings->total(),
-    //             'per_page' => $listings->perPage(),
-    //         ]);
-
-    //     } catch (\Exception $e) {
-    //         Log::error('Failed to fetch more listings', [
-    //             'error' => $e->getMessage(),
-    //             'page' => $page,
-    //         ]);
-
-    //         return response()->json([
-    //             'error' => 'Failed to fetch listings',
-    //             'message' => config('app.debug') ? $e->getMessage() : 'Server error',
-    //             'listings' => [],
-    //             'has_more' => false,
-    //         ], 500);
-    //     }
-    // }
-
-    // public function getAllListings(Request $request)
-    // {
-    //     $page = $request->query('page', 1);
-    //     $perPage = $page == 1 ? 8 : 4; // 8 items on first page, 4 on subsequent pages
-
-    //     $listings = Rental::latest()
-    //         ->paginate($perPage);
-
-    //     // If this is an AJAX request (for "Load More"), return JSON
-    //     if ($request->wantsJson() || $request->ajax()) {
-    //         return response()->json([
-    //             'listings' => $listings->items(),
-    //             'has_more' => $listings->hasMorePages(),
-    //             'next_page' => $listings->hasMorePages() ? $listings->currentPage() + 1 : null,
-    //             'current_page' => $listings->currentPage(),
-    //             'total' => $listings->total(),
-    //         ]);
-    //     }
-
-    //     // Otherwise return Inertia page (for initial page load)
-    //     return inertia('ListingsPage', [
-    //         'listings' => $listings
-    //     ]);
-    // }
-
     public function areas()
     {
         // Get areas grouped by city with proper structure
@@ -988,76 +963,6 @@ class RentController extends Controller
         return redirect()->back()->with('success', 'Your inquiry has been sent to the agent successfully!');
     }
 
-    // public function showArea($city, $area)
-    // {
-    //     // Decode the area name from URL (replace hyphens with spaces)
-    //     $areaName = str_replace('-', ' ', $area);
-    //     $cityName = str_replace('-', ' ', $city);
-
-    //     // Get all rentals for this specific area
-    //     $properties = Rental::where('city', 'like', $cityName)
-    //         ->where('area', 'like', $areaName)
-    //         ->latest()
-    //         ->get();
-
-    //     if ($properties->isEmpty()) {
-    //         abort(404, 'Area not found');
-    //     }
-
-    //     // Calculate area statistics
-    //     $avgRent = $properties->avg(function ($rental) {
-    //         return ($rental->rent_min + $rental->rent_max) / 2;
-    //     });
-
-    //     $areaData = [
-    //         'name' => $properties->first()->area,
-    //         'listingCount' => $properties->count(),
-    //         'avgRent' => round($avgRent),
-    //         'minRent' => $properties->min('rent_min'),
-    //         'maxRent' => $properties->max('rent_max'),
-    //         'trend' => $this->calculateTrend($properties),
-    //     ];
-
-    //     return inertia('AreaDetailPage', [
-    //         'area' => $areaData,
-    //         'city' => $cityName,
-    //         'properties' => $properties,
-    //     ]);
-    // }
-
-    /**
-     * Search areas by name or city
-     */
-    public function searchAreas(Request $request)
-    {
-        $query = $request->input('q', '');
-
-        $areas = Rental::select('city', 'area', 'rent_min', 'rent_max')
-            ->when($query, function ($q) use ($query) {
-                $q->where('area', 'like', "%{$query}%")
-                    ->orWhere('city', 'like', "%{$query}%");
-            })
-            ->get()
-            ->groupBy('city')
-            ->map(function ($cityAreas, $cityName) {
-                return $cityAreas->groupBy('area')->map(function ($areaRentals) {
-                    $avgRent = $areaRentals->avg(function ($rental) {
-                        return ($rental->rent_min + $rental->rent_max) / 2;
-                    });
-
-                    return [
-                        'name' => $areaRentals->first()->area,
-                        'city' => $areaRentals->first()->city,
-                        'listingCount' => $areaRentals->count(),
-                        'avgRent' => round($avgRent),
-                        'trend' => $this->calculateTrend($areaRentals),
-                    ];
-                })->values();
-            });
-
-        return response()->json($areas);
-    }
-
     /**
      * Get areas by city
      */
@@ -1136,61 +1041,10 @@ class RentController extends Controller
     }
 
     public function pricing() {
-        return inertia('PricingPage');
+        // supply plan definitions so the PricingPage can render the same cards as the modal
+        $plans = app(\App\Http\Controllers\CheckoutController::class)->plansForModal();
+        return inertia('PricingPage', [
+            'plans' => $plans,
+        ]);
     }
-
-    // public function checkout($plan)
-    // {
-    //     $plans = [
-    //         'verified' => [
-    //             'productName' => 'Verified Plan',
-    //             'description' => 'Build trust and stand out',
-    //             'type' => 'subscription',
-    //             'subtotal' => 149.00,
-    //             'discount' => 0,
-    //             'tax' => 0,
-    //             'total' => 149.00,
-    //             'isRecurring' => true,
-    //             'billingCycle' => 'monthly',
-    //             'features' => [
-    //                 'Verified landlord badge',
-    //                 'Higher ranking in search results',
-    //                 'Ability to respond to reviews',
-    //                 'Priority customer support'
-    //             ]
-    //         ],
-    //         'pro' => [
-    //             'productName' => 'Pro Plan',
-    //             'description' => 'Advanced tools for professionals',
-    //             'type' => 'subscription',
-    //             'subtotal' => 349.00,
-    //             'discount' => 0,
-    //             'tax' => 0,
-    //             'total' => 349.00,
-    //             'isRecurring' => true,
-    //             'billingCycle' => 'monthly',
-    //             'features' => [
-    //                 'Unlimited property listings',
-    //                 'Lead unlock credits (50/month)',
-    //                 'Featured listing placement',
-    //                 'Dedicated account manager'
-    //             ]
-    //         ]
-    //     ];
-    
-    //     if (!isset($plans[$plan])) {
-    //         return redirect('/agent/dashboard');
-    //     }
-    
-    //     return inertia('CheckoutPage', [
-    //         'plan' => $plan,
-    //         'orderType' => 'subscription',
-    //         'productId' => $plan,
-    //         'product' => $plans[$plan],
-    //         'providers' => [
-    //             'primary' => 'paystack',
-    //             'available' => ['mtn', 'vodafone', 'airteltigo']
-    //         ]
-    //     ]);
-    // }
 }

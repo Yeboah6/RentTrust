@@ -14,6 +14,7 @@ use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\WebhookController;
 use App\Http\Controllers\VerificationsController;
 use App\Http\Controllers\AgentAnalyticsController;
+use App\Http\Controllers\ContactController;
 
 // resource routes for individual rental records. we constrain the
 // `{rent}` parameter to numeric ids so that literal paths like
@@ -38,7 +39,8 @@ Route::prefix('rent')->group(function () {
 Route::prefix('buy')->group(function () {
     Route::get('/listings', [SaleSearchController::class, 'index'])->name('buy.index');
     Route::get('/areas', [SaleSearchController::class, 'areas'])->name('buy.areas');
-    Route::get('/{id}', [SaleSearchController::class, 'show'])->name('buy.show');
+    Route::get('/areas/{city}/{area}', [SaleSearchController::class, 'showArea'])->name('buy.areas.show');
+    Route::get('/{rent}', [SaleSearchController::class, 'show'])->where(['rent' => '[0-9]+']);
     Route::get('/api/more', [SaleSearchController::class, 'getMore'])->name('buy.more');
 });
 
@@ -58,8 +60,6 @@ Route::get('/api/listings/{rent}/analytics', [AgentAnalyticsController::class, '
 Route::get('/api/areas/search', [RentController::class, 'searchAreas'])->name('areas.search');
 Route::get('/api/areas/city/{city}', [RentController::class, 'getAreasByCity'])->name('areas.by-city');
 
-
-// Route::get('/calculator', [RentController::class, 'calculate']);
 // Route::get('/claim-listings', [RentController::class, 'claimListings']);
 
 
@@ -71,6 +71,12 @@ Route::post('/reviews/app', [RentController::class, 'storeReviewApp'])->name('re
 
 // ── Pricing page (public) ────────────────────────────────────────────────────
 Route::get('pricing', [RentController::class, 'pricing'])->name('pricing.page');
+
+// ── Contact page
+Route::get('contact', [ContactController::class, 'show'])->name('contact.page');
+Route::post('/contact', [ContactController::class, 'send'])
+    ->name('contact.send')
+    ->middleware('throttle:5,1');
 
 Route::post('/agent/select-plan', [AgentController::class, 'selectPlan'])
     ->middleware('auth');

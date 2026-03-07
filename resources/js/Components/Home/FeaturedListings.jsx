@@ -9,6 +9,8 @@ const PropertyCard = ({
   city, 
   rent_min, 
   rent_max, 
+  sale_price,
+  purpose,
   advance_duration, 
   agent_name, 
   is_verified, 
@@ -38,9 +40,11 @@ const PropertyCard = ({
   // Get the first image or null
   const firstImage = imagesArray.length > 0 ? imagesArray[0] : null;
 
+  const linkHref = purpose === 'sale' ? `/buy/${id}` : `/rent/${id}`;
+
   return (
     <Link
-      href={`/rent/${id}`}
+      href={linkHref}
       className="border rounded-xl bg-white overflow-hidden transition-all duration-300 cursor-pointer"
       style={{ 
         borderColor: 'hsl(40 20% 88%)',
@@ -121,14 +125,19 @@ const PropertyCard = ({
         {/* Price Range */}
         <div className="mb-3">
           <div className="text-sm mb-1" style={{ color: 'hsl(200 15% 45%)' }}>
-            Monthly Rent
+            {purpose === 'sale' ? 'Sale Price' : 'Monthly Rent'}
           </div>
           <div className="text-xl font-bold" style={{ color: 'hsl(174 62% 32%)' }}>
-            {formatPrice(rent_min)} - {formatPrice(rent_max)}
+            {purpose === 'sale' 
+              ? formatPrice(sale_price)
+              : `${formatPrice(rent_min)} - ${formatPrice(rent_max)}`
+            }
           </div>
-          <div className="text-xs" style={{ color: 'hsl(200 15% 45%)' }}>
-            {advance_duration} {advance_duration === 1 ? 'year' : 'years'} advance
-          </div>
+          {purpose === 'rent' && (
+            <div className="text-xs" style={{ color: 'hsl(200 15% 45%)' }}>
+              {advance_duration} {advance_duration === 1 ? 'year' : 'years'} advance
+            </div>
+          )}
         </div>
 
         {/* Agent Info */}
@@ -174,9 +183,12 @@ const PropertyCard = ({
   );
 };
 
-const FeaturedListings = ({ recentListings = [] }) => {
+const FeaturedListings = ({ recentRentals = [], recentSales = [] }) => {
+  const hasRentals = recentRentals && recentRentals.length > 0;
+  const hasSales = recentSales && recentSales.length > 0;
+
   // Show message if no listings available
-  if (!recentListings || recentListings.length === 0) {
+  if (!hasRentals && !hasSales) {
     return (
       <>
         <style>{`
@@ -215,35 +227,75 @@ const FeaturedListings = ({ recentListings = [] }) => {
 
       <section className="py-16" style={{ backgroundColor: 'hsl(40 33% 98%)' }}>
         <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
-            <div>
-              <h2 className="text-2xl md:text-3xl font-bold mb-2 tracking-tight" style={{ color: 'hsl(200 25% 15%)' }}>
-                Featured Listings
-              </h2>
-              <p style={{ color: 'hsl(200 15% 45%)' }}>
-                Browse the latest properties with transparent rent information
-              </p>
-            </div>
-            <Link
-              href="/listings"
-              className="self-start md:self-auto inline-flex items-center px-4 py-2 rounded-lg font-medium transition-colors"
-              style={{ 
-                color: 'hsl(174 62% 32%)',
-                backgroundColor: 'transparent'
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(174 62% 32% / 0.1)'}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-            >
-              View All Listings
-              <ArrowRight className="h-4 w-4 ml-2" />
-            </Link>
-          </div>
+          {/* Rentals Section */}
+          {hasRentals && (
+            <>
+              <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+                <div>
+                  <h2 className="text-2xl md:text-3xl font-bold mb-2 tracking-tight" style={{ color: 'hsl(200 25% 15%)' }}>
+                    Featured Rentals
+                  </h2>
+                  <p style={{ color: 'hsl(200 15% 45%)' }}>
+                    Browse the latest rental properties with transparent pricing
+                  </p>
+                </div>
+                <Link
+                  href="/rent/listings"
+                  className="self-start md:self-auto inline-flex items-center px-4 py-2 rounded-lg font-medium transition-colors"
+                  style={{ 
+                    color: 'hsl(174 62% 32%)',
+                    backgroundColor: 'transparent'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(174 62% 32% / 0.1)'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                >
+                  View All Rentals
+                  <ArrowRight className="h-4 w-4 ml-2" />
+                </Link>
+              </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {recentListings.map((listing) => (
-              <PropertyCard key={listing.id} {...listing} />
-            ))}
-          </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+                {recentRentals.map((listing) => (
+                  <PropertyCard key={`rental-${listing.id}`} {...listing} purpose="rent" />
+                ))}
+              </div>
+            </>
+          )}
+
+          {/* Sales Section */}
+          {hasSales && (
+            <>
+              <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+                <div>
+                  <h2 className="text-2xl md:text-3xl font-bold mb-2 tracking-tight" style={{ color: 'hsl(200 25% 15%)' }}>
+                    Featured Properties for Sale
+                  </h2>
+                  <p style={{ color: 'hsl(200 15% 45%)' }}>
+                    Discover homes for sale with competitive pricing
+                  </p>
+                </div>
+                <Link
+                  href="/buy/listings"
+                  className="self-start md:self-auto inline-flex items-center px-4 py-2 rounded-lg font-medium transition-colors"
+                  style={{ 
+                    color: 'hsl(174 62% 32%)',
+                    backgroundColor: 'transparent'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(174 62% 32% / 0.1)'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                >
+                  View All Sales
+                  <ArrowRight className="h-4 w-4 ml-2" />
+                </Link>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {recentSales.map((listing) => (
+                  <PropertyCard key={`sale-${listing.id}`} {...listing} purpose="sale" />
+                ))}
+              </div>
+            </>
+          )}
         </div>
       </section>
     </>

@@ -71,11 +71,11 @@ class RentalSearchController extends Controller
     /**
      * Get rental areas
      */
+
     public function areas()
     {
-        $areas = Rental::where('purpose', 'rent')
-            ->where('status', 'approved')
-            ->select('city', 'area', 'rent_min', 'rent_max', 'created_at')
+        // Get areas grouped by city with proper structure
+        $areas = Rental::select('city', 'area', 'rent_min', 'rent_max', 'created_at')
             ->get()
             ->groupBy('city')
             ->map(function ($cityAreas, $cityName) {
@@ -93,12 +93,113 @@ class RentalSearchController extends Controller
                         'avgRent' => round($avgRent),
                         'minRent' => $minRent,
                         'maxRent' => $maxRent,
+                        'trend' => $this->calculateTrend($areaRentals),
                     ];
                 });
             });
 
         return inertia('AreasPage', ['areas' => $areas]);
     }
+
+    public function getAreasByCity($city)
+    {
+        $cityName = str_replace('-', ' ', $city);
+
+        $areas = Rental::select('area', 'rent_min', 'rent_max', 'created_at')
+            ->where('city', 'like', $cityName)
+            ->get()
+            ->groupBy('area')
+            ->map(function ($areaRentals) {
+                $avgRent = $areaRentals->avg(function ($rental) {
+                    return ($rental->rent_min + $rental->rent_max) / 2;
+                });
+
+                return [
+                    'name' => $areaRentals->first()->area,
+                    'listingCount' => $areaRentals->count(),
+                    'avgRent' => round($avgRent),
+                    'minRent' => $areaRentals->min('rent_min'),
+                    'maxRent' => $areaRentals->max('rent_max'),
+                    'trend' => $this->calculateTrend($areaRentals),
+                ];
+            })
+            ->values();
+
+        return response()->json($areas);
+    }
+
+    private function calculateTrend($areaRentals)
+    {
+        if ($areaRentals->count() < 2) {
+            return '+0%';
+        }
+
+        $thirtyDaysAgo = now()->subDays(30);
+
+        $recentRentals = $areaRentals->filter(function ($rental) use ($thirtyDaysAgo) {
+            return $rental->created_at >= $thirtyDaysAgo;
+        });
+
+        $olderRentals = $areaRentals->filter(function ($rental) use ($thirtyDaysAgo) {
+            return $rental->created_at < $thirtyDaysAgo;
+        });
+
+        if ($recentRentals->isEmpty() || $olderRentals->isEmpty()) {
+            return '+0%';
+        }
+
+        $recentAvg = $recentRentals->avg(function ($rental) {
+            return ($rental->rent_min + $rental->rent_max) / 2;
+        });
+
+        $olderAvg = $olderRentals->avg(function ($rental) {
+            return ($rental->rent_min + $rental->rent_max) / 2;
+        });
+
+        if ($olderAvg == 0) {
+            return '+0%';
+        }
+
+        $percentageChange = (($recentAvg - $olderAvg) / $olderAvg) * 100;
+        $percentageChange = round($percentageChange);
+
+        if ($percentageChange > 0) {
+            return "+{$percentageChange}%";
+        } elseif ($percentageChange < 0) {
+            return "{$percentageChange}%";
+        } else {
+            return '+0%';
+        }
+    }
+
+    // public function areas()
+    // {
+    //     $areas = Rental::where('purpose', 'rent')
+    //         // ->where('status', 'approved')
+    //         ->select('city', 'area', 'rent_min', 'rent_max', 'created_at')
+    //         ->get()
+    //         ->groupBy('city')
+    //         ->map(function ($cityAreas, $cityName) {
+    //             return $cityAreas->groupBy('area')->map(function ($areaRentals) {
+    //                 $avgRent = $areaRentals->avg(function ($rental) {
+    //                     return ($rental->rent_min + $rental->rent_max) / 2;
+    //                 });
+
+    //                 $minRent = $areaRentals->min('rent_min');
+    //                 $maxRent = $areaRentals->max('rent_max');
+
+    //                 return [
+    //                     'name' => $areaRentals->first()->area,
+    //                     'listingCount' => $areaRentals->count(),
+    //                     'avgRent' => round($avgRent),
+    //                     'minRent' => $minRent,
+    //                     'maxRent' => $maxRent,
+    //                 ];
+    //             });
+    //         });
+
+    //     return inertia('AreasPage', ['areas' => $areas]);
+    // }
 
     public function showArea($city, $area)
     {
@@ -140,28 +241,28 @@ class RentalSearchController extends Controller
     /**
      * Show individual rental listing
      */
-    public function show(Request $request, Rental $rental)
-    {
-        // Only block unapproved listings, allow both rent and sale
-        if ($rental->status !== 'approved') {
-            abort(404, 'Listing not found');
-        }
+    // public function show(Request $request, Rental $rental)
+    // {
+    //     // Only block unapproved listings, allow both rent and sale
+    //     if ($rental->status !== 'approved') {
+    //         abort(404, 'Listing not found');
+    //     }
     
-        // Track view
-        $this->trackView($request, $rental);
+    //     // Track view
+    //     $this->trackView($request, $rental);
     
-        $rental->load('user');
+    //     $rental->load('user');
     
-        $reviews = $rental->reviews()
-            ->orderBy('created_at', 'desc')
-            ->get();
+    //     $reviews = $rental->reviews()
+    //         ->orderBy('created_at', 'desc')
+    //         ->get();
     
-        return inertia('RentalDetailsPage', [
-            'rental'      => $rental,
-            'reviews'     => $reviews,
-            'price_label' => $rental->purpose === 'sale' ? 'Sale Price' : 'Annual Rent Range',
-        ]);
-    }
+    //     return inertia('RentalDetailsPage', [
+    //         'rental'      => $rental,
+    //         'reviews'     => $reviews,
+    //         'price_label' => $rental->purpose === 'sale' ? 'Sale Price' : 'Annual Rent Range',
+    //     ]);
+    // }
 
     /**
      * Track listing view

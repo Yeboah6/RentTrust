@@ -84,7 +84,7 @@ const Users = ({ style }) => (
   </svg>
 );
 
-const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views = [] }) => {
+const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views = [], limitStatus }) => {
   const { billing, plans } = usePage().props;
 
   const [activeTab, setActiveTab] = useState("overview");
@@ -176,9 +176,11 @@ const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views
       id: rental.id,
       title: rental.title || "Unknown",
       address: rental.address || "Unknown Address",
+      purpose: rental.purpose || "rent", 
       city: rental.city || "Unknown City",
       rent_min: rental.rent_min || 0,
       rent_max: rental.rent_max || 0,
+      sale_price: rental.sale_price || 0,
       listing_status: rental.status || "unverified",
       total_reviews: rental.reviews_count || 0,
       views: rental.views_count || 0,
@@ -253,11 +255,37 @@ const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views
           .profile-header-container { flex-direction: column !important; align-items: flex-start !important; }
           .profile-avatar { margin-bottom: clamp(1rem, 3vw, 1rem) !important; }
           .settings-link { align-self: stretch !important; margin-top: 1rem !important; width: 100% !important; }
-          .tabs-grid { grid-template-columns: 1fr 1fr !important; }
+          .tabs-grid { grid-template-columns: 1fr 1fr !important; gap: 0.5rem !important; }
+          .tabs-grid button { min-height: 44px !important; padding: 0.75rem !important; font-size: 0.875rem !important; }
           .listing-grid { grid-template-columns: 1fr !important; }
           .review-grid { grid-template-columns: 1fr !important; }
-          .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
-          .modal-content { max-width: 95% !important; margin: 0.5rem; }
+          .stats-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 0.75rem !important; }
+          .stats-grid > div { padding: 1rem !important; }
+          .modal-content { max-width: 95% !important; margin: 0.5rem; padding: 1rem !important; }
+          .action-button { min-height: 44px !important; padding: 0.75rem 1rem !important; font-size: 0.875rem !important; }
+          .listing-card { padding: 1rem !important; }
+          .listing-card button { min-height: 40px !important; margin-bottom: 0.5rem !important; }
+          .review-card { padding: 1rem !important; }
+          .inquiry-card { padding: 1rem !important; }
+          .mobile-stack { flex-direction: column !important; gap: 0.75rem !important; }
+          .mobile-full-width { width: 100% !important; }
+          .mobile-text-center { text-align: center !important; }
+          .mobile-justify-center { justify-content: center !important; }
+          .mobile-hide { display: none !important; }
+          .mobile-compact { margin-bottom: 0.5rem !important; }
+          .mobile-touch-target { min-height: 44px !important; min-width: 44px !important; }
+          .mobile-form-spacing { gap: 1rem !important; }
+          .mobile-button-group { flex-direction: column !important; width: 100% !important; }
+          .mobile-button-group button { width: 100% !important; margin-bottom: 0.5rem !important; }
+          .mobile-button-group button:last-child { margin-bottom: 0 !important; }
+        }
+        @media (max-width: 480px) {
+          .tabs-grid { grid-template-columns: 1fr !important; }
+          .stats-grid { grid-template-columns: 1fr !important; }
+          .profile-header-container { text-align: center !important; }
+          .modal-content { max-width: 98% !important; margin: 0.25rem; padding: 0.75rem !important; }
+          .action-button { font-size: 0.8125rem !important; }
+          .mobile-extra-compact { padding: 0.5rem !important; margin-bottom: 0.25rem !important; }
         }
         @media (min-width: 769px) and (max-width: 1023px) {
           .profile-header-container { flex-direction: row !important; }
@@ -302,6 +330,11 @@ const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views
                       <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.25rem, 1vw, 0.375rem)', color: 'hsl(200 15% 45%)' }}>
                         <Home style={{ height: 'clamp(0.875rem, 2.5vw, 1rem)', width: 'clamp(0.875rem, 2.5vw, 1rem)' }} />
                         {properties.length} {properties.length === 1 ? 'Listing' : 'Listings'}
+                        {properties.filter(p => p.purpose === 'rent').length > 0 && properties.filter(p => p.purpose === 'sale').length > 0 && (
+                          <span style={{ fontSize: '0.75rem', color: 'hsl(200 15% 55%)' }}>
+                            ({properties.filter(p => p.purpose === 'rent').length} rent · {properties.filter(p => p.purpose === 'sale').length} sale)
+                          </span>
+                        )}
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.25rem, 1vw, 0.375rem)', color: 'hsl(200 15% 45%)' }}>
                         <Star style={{ height: 'clamp(0.875rem, 2.5vw, 1rem)', width: 'clamp(0.875rem, 2.5vw, 1rem)' }} />
@@ -342,9 +375,9 @@ const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views
                   <div className="stats-grid" style={{ display: 'grid', gap: 'clamp(0.75rem, 2vw, 1.25rem)' }}>
                     {[
                       { icon: <Home style={{ width: '1.125rem', height: '1.125rem', color: 'hsl(174 62% 32%)' }} />, value: properties.length, label: 'Active Listings', trend: null },
-                      { icon: <Eye style={{ width: '1.125rem', height: '1.125rem', color: 'hsl(174 62% 32%)' }} />, value: totalViews, label: 'Total Views', trend: '+12% this month' },
-                      { icon: <Users style={{ width: '1.125rem', height: '1.125rem', color: 'hsl(174 62% 32%)' }} />, value: totalInquiries, label: 'Total Inquiries', trend: '+8% this month' },
-                      { icon: <TrendingUp style={{ width: '1.125rem', height: '1.125rem', color: 'hsl(174 62% 32%)' }} />, value: `${conversionRate}%`, label: 'Conversion Rate', trend: '+2% this month' },
+                      { icon: <Eye style={{ width: '1.125rem', height: '1.125rem', color: 'hsl(174 62% 32%)' }} />, value: totalViews, label: 'Total Views', trend: null },
+                      { icon: <Users style={{ width: '1.125rem', height: '1.125rem', color: 'hsl(174 62% 32%)' }} />, value: totalInquiries, label: 'Total Inquiries', trend: null },
+                      { icon: <TrendingUp style={{ width: '1.125rem', height: '1.125rem', color: 'hsl(174 62% 32%)' }} />, value: `${conversionRate}%`, label: 'Conversion Rate', trend: null },
                     ].map(({ icon, value, label, trend }) => (
                       <div key={label} style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.75rem', padding: 'clamp(1rem, 3vw, 1.25rem)', boxShadow: '0 2px 8px -2px hsl(200 25% 15% / 0.08)' }}>
                         <div style={{ width: '2.25rem', height: '2.25rem', borderRadius: '0.5rem', background: 'hsl(174 62% 32% / 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '0.75rem' }}>{icon}</div>
@@ -353,6 +386,62 @@ const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views
                         {trend && <p style={{ fontSize: '0.75rem', color: 'hsl(152 60% 40%)', marginTop: '0.25rem', fontWeight: 600 }}>{trend}</p>}
                       </div>
                     ))}
+                  </div>
+
+                  {/* Plan Limits Section */}
+                  <div style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.75rem', padding: 'clamp(1rem, 3vw, 1.5rem)', boxShadow: '0 2px 8px -2px hsl(200 25% 15% / 0.08)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+                      <h2 style={{ fontSize: 'clamp(1rem, 3vw, 1.125rem)', fontWeight: '600', color: 'hsl(200 25% 15%)', margin: 0 }}>Plan Limits</h2>
+                      <span style={{ fontSize: '0.875rem', color: 'hsl(200 15% 45%)', backgroundColor: 'hsl(40 30% 94%)', padding: '0.25rem 0.5rem', borderRadius: '0.375rem' }}>{limitStatus?.plan?.name ?? limitStatus?.plan ?? 'Free'}</span>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+                      {/* Rental Limits */}
+                      <div style={{ padding: '1rem', backgroundColor: 'hsl(40 33% 98%)', borderRadius: '0.5rem', border: '1px solid hsl(40 20% 88%)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                          <Home style={{ width: '1rem', height: '1rem', color: 'hsl(174 62% 32%)' }} />
+                          <span style={{ fontSize: '0.875rem', fontWeight: '600', color: 'hsl(200 25% 15%)' }}>Rental Listings</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ fontSize: '1.25rem', fontWeight: '700', color: 'hsl(200 25% 15%)' }}>
+                            {limitStatus?.rentals?.active || 0}
+                            {limitStatus?.rentals?.limit ? ` / ${limitStatus.rentals.limit}` : ''}
+                          </span>
+                          {limitStatus?.rentals?.limit && (
+                            <span style={{ fontSize: '0.75rem', color: limitStatus.rentals.can_create ? 'hsl(152 60% 40%)' : 'hsl(0 84% 60%)', fontWeight: '500' }}>
+                              {limitStatus.rentals.remaining === null ? 'Unlimited' : `${limitStatus.rentals.remaining} left`}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Sale Limits */}
+                      <div style={{ padding: '1rem', backgroundColor: 'hsl(40 33% 98%)', borderRadius: '0.5rem', border: '1px solid hsl(40 20% 88%)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                          <svg style={{ width: '1rem', height: '1rem', color: 'hsl(38 92% 50%)' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                          </svg>
+                          <span style={{ fontSize: '0.875rem', fontWeight: '600', color: 'hsl(200 25% 15%)' }}>Sale Listings</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ fontSize: '1.25rem', fontWeight: '700', color: 'hsl(200 25% 15%)' }}>
+                            {limitStatus?.sales?.active || 0}
+                            {limitStatus?.sales?.limit ? ` / ${limitStatus.sales.limit}` : ''}
+                          </span>
+                          {limitStatus?.sales?.limit && (
+                            <span style={{ fontSize: '0.75rem', color: limitStatus.sales.can_create ? 'hsl(152 60% 40%)' : 'hsl(0 84% 60%)', fontWeight: '500' }}>
+                              {limitStatus.sales.remaining === null ? 'Unlimited' : `${limitStatus.sales.remaining} left`}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    {(!limitStatus?.rentals?.can_create || !limitStatus?.sales?.can_create) && (
+                      <div style={{ marginTop: '1rem', padding: '0.75rem', backgroundColor: 'hsl(45 100% 95%)', border: '1px solid hsl(45 86% 83%)', borderRadius: '0.5rem' }}>
+                        <p style={{ margin: 0, fontSize: '0.875rem', color: 'hsl(25 95% 53%)', fontWeight: '500' }}>
+                          You've reached your plan limits. Upgrade your plan to add more listings.
+                        </p>
+                      </div>
+                    )}
                   </div>
 
                   <div style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.75rem', padding: 'clamp(1rem, 3vw, 1.5rem)', boxShadow: '0 2px 8px -2px hsl(200 25% 15% / 0.08)' }}>
@@ -385,36 +474,89 @@ const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(1rem, 3vw, 1.5rem)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 'clamp(0.75rem, 2vw, 1rem)' }}>
                     <h2 style={{ color: 'hsl(200 25% 15%)', fontSize: 'clamp(1rem, 3vw, 1.125rem)', fontWeight: '600' }}>Your Listings</h2>
-                    <button onClick={() => setShowAddListingModal(true)} className="action-button" style={{ padding: 'clamp(0.5rem, 2vw, 0.5rem) clamp(0.75rem, 3vw, 1rem)', background: 'linear-gradient(135deg, hsl(174 62% 32%) 0%, hsl(174 50% 25%) 100%)', color: 'white', border: 'none', borderRadius: 'clamp(0.375rem, 2vw, 0.5rem)', fontWeight: '500', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 'clamp(0.25rem, 1vw, 0.5rem)', fontSize: 'clamp(0.875rem, 2vw, 0.875rem)', whiteSpace: 'nowrap' }}>
+                    <button onClick={() => setShowAddListingModal(true)} className="action-button mobile-full-width" style={{ padding: 'clamp(0.5rem, 2vw, 0.5rem) clamp(0.75rem, 3vw, 1rem)', background: 'linear-gradient(135deg, hsl(174 62% 32%) 0%, hsl(174 50% 25%) 100%)', color: 'white', border: 'none', borderRadius: 'clamp(0.375rem, 2vw, 0.5rem)', fontWeight: '500', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 'clamp(0.25rem, 1vw, 0.5rem)', fontSize: 'clamp(0.875rem, 2vw, 0.875rem)', whiteSpace: 'nowrap' }}>
                       <Home style={{ height: 'clamp(0.875rem, 2.5vw, 1rem)', width: 'clamp(0.875rem, 2.5vw, 1rem)' }} />
                       Add Listing
                     </button>
                   </div>
-                  <div className="listing-grid" style={{ display: 'grid', gap: 'clamp(0.75rem, 2vw, 1rem)' }}>
-                    {properties.length > 0 ? properties.map((property) => (
-                      <div key={property.id} style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.5rem, 2vw, 0.75rem)', padding: 'clamp(0.75rem, 2vw, 1rem)', display: 'flex', flexDirection: 'column', gap: 'clamp(0.75rem, 2vw, 1rem)' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: 'clamp(0.5rem, 2vw, 1rem)' }}>
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <h3 style={{ color: 'hsl(200 25% 15%)', marginBottom: 'clamp(0.125rem, 1vw, 0.25rem)', fontSize: 'clamp(0.875rem, 2.5vw, 1rem)', fontWeight: '600', wordBreak: 'break-word' }}>{property.title}</h3>
-                            <p style={{ fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', color: 'hsl(200 15% 45%)', marginBottom: 'clamp(0.25rem, 1vw, 0.5rem)', wordBreak: 'break-word' }}>{property.address}, {property.city}</p>
-                            <p style={{ fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', color: 'hsl(174 62% 32%)', fontWeight: '500' }}>GH₵{Math.round(property.rent_min).toLocaleString()} - GH₵{Math.round(property.rent_max).toLocaleString()}</p>
+
+                  {/* Rental Listings */}
+                  {properties.filter(p => p.purpose === 'rent').length > 0 && (
+                    <div>
+                      <h3 style={{ color: 'hsl(200 25% 15%)', fontSize: '0.9375rem', fontWeight: '600', marginBottom: '0.75rem' }}>
+                        🏠 Rental Listings ({properties.filter(p => p.purpose === 'rent').length})
+                      </h3>
+                      <div className="listing-grid" style={{ display: 'grid', gap: 'clamp(0.75rem, 2vw, 1rem)' }}>
+                        {properties.filter(p => p.purpose === 'rent').map((property) => (
+                          <div key={property.id} className="listing-card" style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.5rem, 2vw, 0.75rem)', padding: 'clamp(0.75rem, 2vw, 1rem)', display: 'flex', flexDirection: 'column', gap: 'clamp(0.75rem, 2vw, 1rem)' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: 'clamp(0.5rem, 2vw, 1rem)' }}>
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <h3 style={{ color: 'hsl(200 25% 15%)', marginBottom: 'clamp(0.125rem, 1vw, 0.25rem)', fontSize: 'clamp(0.875rem, 2.5vw, 1rem)', fontWeight: '600', wordBreak: 'break-word' }}>{property.title}</h3>
+                                <p style={{ margin: '0 0 0.5rem', fontSize: '0.75rem', color: 'hsl(200 15% 45%)' }}>
+                                  {property.address}, {property.city}
+                                </p>
+                                <p style={{ margin: '0 0 0.5rem', fontSize: '0.75rem', fontWeight: '500', color: property.purpose === 'sale' ? 'hsl(38 92% 50%)' : 'hsl(174 62% 32%)' }}>
+                                  {property.purpose === 'sale'
+                                    ? `GH₵${Math.round(property.sale_price).toLocaleString()}`
+                                    : `GH₵${Math.round(property.rent_min).toLocaleString()} – GH₵${Math.round(property.rent_max).toLocaleString()} / yr`
+                                  }
+                                </p>
+                              </div>
+                              {getStatusBadge(property.listing_status)}
+                            </div>
+                            <div className="mobile-button-group" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'clamp(0.375rem, 1.5vw, 0.5rem)', marginBottom: 'clamp(0.375rem, 1.5vw, 0.5rem)' }}>
+                              <button onClick={() => handleViewClick(property)} className="action-button" style={{ padding: 'clamp(0.375rem, 2vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem)', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.25rem, 1.5vw, 0.375rem)', backgroundColor: 'white', color: 'hsl(174 62% 32%)', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', fontWeight: '500', cursor: 'pointer', textAlign: 'center' }}>View</button>
+                              <button onClick={() => handleEditClick(property)} className="action-button" style={{ padding: 'clamp(0.375rem, 2vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem)', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.25rem, 1.5vw, 0.375rem)', backgroundColor: 'white', color: 'hsl(174 62% 32%)', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', fontWeight: '500', cursor: 'pointer', textAlign: 'center' }}>Edit</button>
+                            </div>
+                            <button onClick={() => { setSelectedRentalForVerification(property); setShowVerificationModal(true); }} className="action-button mobile-full-width" style={{ width: '100%', padding: 'clamp(0.375rem, 2vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem)', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.25rem, 1.5vw, 0.375rem)', backgroundColor: 'white', color: 'hsl(174 62% 32%)', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', fontWeight: '500', cursor: 'pointer' }}>
+                              Request Verification
+                            </button>
                           </div>
-                          {getStatusBadge(property.listing_status)}
-                        </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'clamp(0.375rem, 1.5vw, 0.5rem)', marginBottom: 'clamp(0.375rem, 1.5vw, 0.5rem)' }}>
-                          <button onClick={() => handleViewClick(property)} className="action-button" style={{ padding: 'clamp(0.375rem, 2vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem)', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.25rem, 1.5vw, 0.375rem)', backgroundColor: 'white', color: 'hsl(174 62% 32%)', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', fontWeight: '500', cursor: 'pointer', textAlign: 'center' }}>View</button>
-                          <button onClick={() => handleEditClick(property)} className="action-button" style={{ padding: 'clamp(0.375rem, 2vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem)', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.25rem, 1.5vw, 0.375rem)', backgroundColor: 'white', color: 'hsl(174 62% 32%)', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', fontWeight: '500', cursor: 'pointer', textAlign: 'center' }}>Edit</button>
-                        </div>
-                        <button onClick={() => { setSelectedRentalForVerification(property); setShowVerificationModal(true); }} className="action-button" style={{ width: '100%', padding: 'clamp(0.375rem, 2vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem)', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.25rem, 1.5vw, 0.375rem)', backgroundColor: 'white', color: 'hsl(174 62% 32%)', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', fontWeight: '500', cursor: 'pointer' }}>
-                          Request Verification
-                        </button>
+                        ))}
                       </div>
-                    )) : (
-                      <div style={{ gridColumn: '1 / -1', padding: 'clamp(1.5rem, 4vw, 2rem)', textAlign: 'center', backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.5rem, 2vw, 0.75rem)' }}>
-                        <p style={{ color: 'hsl(200 15% 45%)', marginBottom: 'clamp(0.75rem, 2vw, 1rem)', fontSize: 'clamp(0.875rem, 2vw, 1rem)' }}>No listings yet. Add your first property to get started!</p>
+                    </div>
+                  )}
+
+                  {/* Sale Listings */}
+                  {properties.filter(p => p.purpose === 'sale').length > 0 && (
+                    <div style={{ marginTop: properties.filter(p => p.purpose === 'rent').length > 0 ? 'clamp(0.5rem, 2vw, 0.75rem)' : 0 }}>
+                      <h3 style={{ color: 'hsl(200 25% 15%)', fontSize: '0.9375rem', fontWeight: '600', marginBottom: '0.75rem' }}>
+                        🏷️ Sale Listings ({properties.filter(p => p.purpose === 'sale').length})
+                      </h3>
+                      <div className="listing-grid" style={{ display: 'grid', gap: 'clamp(0.75rem, 2vw, 1rem)' }}>
+                        {properties.filter(p => p.purpose === 'sale').map((property) => (
+                          <div key={property.id} style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.5rem, 2vw, 0.75rem)', padding: 'clamp(0.75rem, 2vw, 1rem)', display: 'flex', flexDirection: 'column', gap: 'clamp(0.75rem, 2vw, 1rem)' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: 'clamp(0.5rem, 2vw, 1rem)' }}>
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <h3 style={{ color: 'hsl(200 25% 15%)', marginBottom: 'clamp(0.125rem, 1vw, 0.25rem)', fontSize: 'clamp(0.875rem, 2.5vw, 1rem)', fontWeight: '600', wordBreak: 'break-word' }}>{property.title}</h3>
+                                <p style={{ fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', color: 'hsl(200 15% 45%)', marginBottom: 'clamp(0.25rem, 1vw, 0.5rem)', wordBreak: 'break-word' }}>{property.address}, {property.city}</p>
+                                <p style={{ fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', color: 'hsl(38 92% 50%)', fontWeight: '500' }}>
+                                  GH₵{Math.round(property.sale_price).toLocaleString()}
+                                </p>
+                              </div>
+                              {getStatusBadge(property.listing_status)}
+                            </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'clamp(0.375rem, 1.5vw, 0.5rem)', marginBottom: 'clamp(0.375rem, 1.5vw, 0.5rem)' }}>
+                              <button onClick={() => handleViewClick(property)} className="action-button" style={{ padding: 'clamp(0.375rem, 2vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem)', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.25rem, 1.5vw, 0.375rem)', backgroundColor: 'white', color: 'hsl(174 62% 32%)', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', fontWeight: '500', cursor: 'pointer', textAlign: 'center' }}>View</button>
+                              <button onClick={() => handleEditClick(property)} className="action-button" style={{ padding: 'clamp(0.375rem, 2vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem)', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.25rem, 1.5vw, 0.375rem)', backgroundColor: 'white', color: 'hsl(174 62% 32%)', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', fontWeight: '500', cursor: 'pointer', textAlign: 'center' }}>Edit</button>
+                            </div>
+                            <button onClick={() => { setSelectedRentalForVerification(property); setShowVerificationModal(true); }} className="action-button" style={{ width: '100%', padding: 'clamp(0.375rem, 2vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem)', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.25rem, 1.5vw, 0.375rem)', backgroundColor: 'white', color: 'hsl(38 92% 50%)', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', fontWeight: '500', cursor: 'pointer' }}>
+                              Request Verification
+                            </button>
+                          </div>
+                        ))}
                       </div>
-                    )}
-                  </div>
+                    </div>
+                  )}
+
+                  {/* Empty state */}
+                  {properties.length === 0 && (
+                    <div style={{ gridColumn: '1 / -1', padding: 'clamp(1.5rem, 4vw, 2rem)', textAlign: 'center', backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.5rem, 2vw, 0.75rem)' }}>
+                      <p style={{ color: 'hsl(200 15% 45%)', marginBottom: 'clamp(0.75rem, 2vw, 1rem)', fontSize: 'clamp(0.875rem, 2vw, 1rem)' }}>
+                        No listings yet. Add your first property to get started!
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -551,56 +693,44 @@ const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views
               {/* Views Tab */}
               {activeTab === 'views' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(1rem, 3vw, 1.5rem)' }}>
-                  <h2 style={{ color: 'hsl(200 25% 15%)', fontSize: 'clamp(1rem, 3vw, 1.125rem)', fontWeight: '600' }}>Property Views ({views.length})</h2>
-                  {views.length > 0 ? (
-                    <div className="review-grid" style={{ display: 'grid', gap: 'clamp(0.75rem, 2vw, 1rem)' }}>
-                      {views.map((view) => {
-                        const propertyTitle = rentals?.find(r => r.id === view.rental_id)?.title || `Property #${view.rental_id}`;
-                        const propertyAddress = rentals?.find(r => r.id === view.rental_id)?.address || 'Unknown';
-                        const propertyCity = rentals?.find(r => r.id === view.rental_id)?.city || 'Unknown';
-                        
-                        return (
-                          <div key={view.id} style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.5rem, 2vw, 0.75rem)', padding: 'clamp(0.75rem, 2vw, 1rem)' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 'clamp(0.75rem, 2vw, 1rem)', gap: 'clamp(0.5rem, 2vw, 1rem)', flexWrap: 'wrap' }}>
-                              <div style={{ flex: 1, minWidth: 0 }}>
-                                <h3 style={{ color: 'hsl(200 25% 15%)', fontSize: 'clamp(0.875rem, 2.5vw, 1rem)', fontWeight: '600', marginBottom: 'clamp(0.25rem, 1vw, 0.5rem)', wordBreak: 'break-word' }}>{propertyTitle}</h3>
-                                <p style={{ fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', color: 'hsl(200 15% 45%)', marginBottom: 'clamp(0.5rem, 2vw, 0.75rem)', wordBreak: 'break-word' }}>{propertyAddress}, {propertyCity}</p>
-                              </div>
-                              <span style={{ padding: 'clamp(0.25rem, 1vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem)', fontSize: 'clamp(0.6875rem, 2vw, 0.75rem)', fontWeight: '500', backgroundColor: 'hsl(152 60% 40% / 0.1)', color: 'hsl(152 60% 40%)', borderRadius: '9999px', whiteSpace: 'nowrap' }}>
-                                👁️ Viewed
-                              </span>
+                  <h2 style={{ color: 'hsl(200 25% 15%)', fontSize: 'clamp(1rem, 3vw, 1.125rem)', fontWeight: '600' }}>Property Views</h2>
+                  {properties.length > 0 ? (
+                    <div className="listing-grid" style={{ display: 'grid', gap: 'clamp(0.75rem, 2vw, 1rem)' }}>
+                      {properties.map((property) => (
+                        <div key={property.id} style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.5rem, 2vw, 0.75rem)', padding: 'clamp(0.75rem, 2vw, 1rem)', display: 'flex', flexDirection: 'column', gap: 'clamp(0.75rem, 2vw, 1rem)' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: 'clamp(0.5rem, 2vw, 1rem)' }}>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <h3 style={{ color: 'hsl(200 25% 15%)', marginBottom: 'clamp(0.125rem, 1vw, 0.25rem)', fontSize: 'clamp(0.875rem, 2.5vw, 1rem)', fontWeight: '600', wordBreak: 'break-word' }}>{property.title}</h3>
+                              <p style={{ margin: '0 0 0.5rem', fontSize: '0.75rem', color: 'hsl(200 15% 45%)' }}>
+                                {property.address}, {property.city}
+                              </p>
+                              <p style={{ margin: '0 0 0.5rem', fontSize: '0.75rem', fontWeight: '500', color: property.purpose === 'sale' ? 'hsl(38 92% 50%)' : 'hsl(174 62% 32%)' }}>
+                                {property.purpose === 'sale'
+                                  ? `GH₵${Math.round(property.sale_price).toLocaleString()}`
+                                  : `GH₵${Math.round(property.rent_min).toLocaleString()} – GH₵${Math.round(property.rent_max).toLocaleString()} / yr`
+                                }
+                              </p>
                             </div>
-
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.75rem, 2vw, 1rem)', marginBottom: 'clamp(0.75rem, 2vw, 1rem)', paddingBottom: 'clamp(0.75rem, 2vw, 1rem)', borderBottom: '1px solid hsl(40 20% 88%)' }}>
-                              <div style={{ width: 'clamp(2rem, 8vw, 2.5rem)', height: 'clamp(2rem, 8vw, 2.5rem)', borderRadius: '50%', backgroundColor: 'hsl(174 62% 32% / 0.1)', color: 'hsl(174 62% 32%)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 'clamp(0.875rem, 2.5vw, 1rem)', fontWeight: '600', flexShrink: 0 }}>
-                                {view.user?.name?.[0] || 'V'}
-                              </div>
-                              <div style={{ flex: 1, minWidth: 0 }}>
-                                <p style={{ fontSize: 'clamp(0.875rem, 2.5vw, 1rem)', fontWeight: '500', color: 'hsl(200 25% 15%)', margin: 0, wordBreak: 'break-word' }}>
-                                  {view.user?.name || 'Anonymous Viewer'}
-                                </p>
-                                <p style={{ fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', color: 'hsl(200 15% 45%)', margin: '0.25rem 0 0', wordBreak: 'break-word' }}>
-                                  {view.user?.email || 'Not logged in'}
-                                </p>
-                              </div>
-                              <span style={{ fontSize: 'clamp(0.75rem, 2vw, 0.75rem)', color: 'hsl(200 15% 45%)', whiteSpace: 'nowrap' }}>
-                                {new Date(view.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
-                              </span>
-                            </div>
-
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(0.5rem, 2vw, 0.75rem)', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', color: 'hsl(200 15% 45%)' }}>
-                              <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', wordBreak: 'break-all' }}>📍 <span>IP: {view.ip || 'Not recorded'}</span></span>
-                              {view.referrer && <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', wordBreak: 'break-all' }}>🔗 <span>From: {view.referrer}</span></span>}
-                            </div>
+                            {getStatusBadge(property.listing_status)}
                           </div>
-                        );
-                      })}
+
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 'clamp(0.75rem, 2vw, 1rem)', borderTop: '1px solid hsl(40 20% 88%)' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.5rem, 2vw, 0.75rem)', fontSize: 'clamp(0.875rem, 2vw, 0.875rem)', color: 'hsl(200 15% 45%)' }}>
+                              <Eye style={{ height: 'clamp(1rem, 2.5vw, 1.125rem)', width: 'clamp(1rem, 2.5vw, 1.125rem)', color: 'hsl(174 62% 32%)' }} />
+                              <span>{property.views || 0} views</span>
+                            </div>
+                            <button onClick={() => handleViewClick(property)} className="action-button" style={{ padding: 'clamp(0.375rem, 2vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem)', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.25rem, 1.5vw, 0.375rem)', backgroundColor: 'white', color: 'hsl(174 62% 32%)', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', fontWeight: '500', cursor: 'pointer', textAlign: 'center' }}>
+                              View Details
+                            </button>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   ) : (
                     <div style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.5rem, 2vw, 0.75rem)', padding: 'clamp(1.5rem, 4vw, 2rem)', textAlign: 'center' }}>
                       <Eye style={{ height: 'clamp(2.5rem, 10vw, 3rem)', width: 'clamp(2.5rem, 10vw, 3rem)', color: 'hsl(200 15% 45%)', margin: '0 auto clamp(0.75rem, 2vw, 1rem) auto' }} />
-                      <h3 style={{ fontSize: 'clamp(1rem, 3vw, 1.125rem)', fontWeight: '600', color: 'hsl(200 25% 15%)', marginBottom: 'clamp(0.375rem, 1.5vw, 0.5rem)' }}>No Views Yet</h3>
-                      <p style={{ color: 'hsl(200 15% 45%)', fontSize: 'clamp(0.875rem, 2vw, 0.875rem)' }}>Your properties haven't been viewed yet.</p>
+                      <h3 style={{ fontSize: 'clamp(1rem, 3vw, 1.125rem)', fontWeight: '600', color: 'hsl(200 25% 15%)', marginBottom: 'clamp(0.375rem, 1.5vw, 0.5rem)' }}>No Properties Yet</h3>
+                      <p style={{ color: 'hsl(200 15% 45%)', fontSize: 'clamp(0.875rem, 2vw, 0.875rem)' }}>Add your first property to start tracking views.</p>
                     </div>
                   )}
                 </div>

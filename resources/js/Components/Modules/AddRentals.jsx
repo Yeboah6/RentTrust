@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useForm } from '@inertiajs/react';
+import React, { useState, useEffect } from 'react';
+import { useForm, usePage } from '@inertiajs/react';
 import { Home, MapPin, DollarSign, Calendar, Image, FileText, CheckCircle2, AlertCircle, Upload, X } from 'lucide-react';
 
 const AddRentalPage = ({ agentData, setShowAddListingModal, adminData }) => {
@@ -24,6 +24,14 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData }) => {
     agentPhone: agentData?.phone || adminData?.phone || '',
     agentEmail: agentData?.email || adminData?.email || '',
   });
+
+  const { flash } = usePage().props;
+
+  useEffect(() => {
+      if (flash?.toast) {
+          showToast(flash.toast.type, flash.toast.title, flash.toast.message);
+      }
+  }, [flash?.toast]);
 
   const [images, setImages] = useState([]);
   const [currentStep, setCurrentStep] = useState(1);
@@ -164,7 +172,7 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData }) => {
         setCurrentStep(1);
         setTimeout(() => {
           if (setShowAddListingModal) setShowAddListingModal(false);
-        }, 1500);
+        }, 5500);
       },
       onError: (errors) => {
         console.error('Submission errors:', errors);

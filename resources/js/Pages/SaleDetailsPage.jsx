@@ -474,22 +474,31 @@ const SaleDetailsPage = ({ rental, reviews }) => {
 
                 {/* Price & Features */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 'clamp(0.75rem, 2vw, 1rem)' }}>
-                  <div>
-                    <span style={{ 
-                      color: 'hsl(174 62% 32%)',
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+                    <span style={{
+                      color: 'hsl(38 92% 50%)',
                       fontSize: 'clamp(1.25rem, 5vw, 2rem)',
-                      fontWeight: '700'
-                    }}>
-                      {formatCurrency(rental.rent_min)} - {formatCurrency(rental.rent_max)}
+                      fontWeight: '700' }}>
+                      {formatCurrency(rental.sale_price)}
                     </span>
-                    <span style={{ fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', color: 'hsl(200 15% 45%)', marginLeft: '0.5rem' }}>/month</span>
+                    <span style={{
+                      padding: '0.25rem 0.75rem',
+                      borderRadius: '9999px',
+                      fontSize: '0.75rem',
+                      fontWeight: '600',
+                      backgroundColor: 'hsl(38 92% 50% / 0.12)',
+                      color: 'hsl(38 85% 40%)',
+                      border: '1px solid hsl(38 92% 50% / 0.3)'
+                    }}>
+                      🏷️ For Sale
+                    </span>
                   </div>
-                  <div className="feature-grid" style={{ 
-                    display: 'grid', 
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', 
-                    gap: 'clamp(0.75rem, 2vw, 1rem)', 
-                    fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)', 
-                    color: 'hsl(200 15% 45%)' 
+                  <div className="feature-grid" style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
+                    gap: 'clamp(0.75rem, 2vw, 1rem)',
+                    fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)',
+                    color: 'hsl(200 15% 45%)'
                   }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
                       <Bed style={{ height: 'clamp(0.875rem, 2.5vw, 1rem)', width: 'clamp(0.875rem, 2.5vw, 1rem)', flexShrink: 0 }} />
@@ -517,7 +526,7 @@ const SaleDetailsPage = ({ rental, reviews }) => {
                 }}>
                   <AlertTriangle style={{ height: 'clamp(1rem, 3vw, 1.25rem)', width: 'clamp(1rem, 3vw, 1.25rem)', color: 'hsl(38 92% 50%)', flexShrink: 0 }} />
                   <p style={{ fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)', color: 'hsl(200 25% 15%)', fontWeight: '500', lineHeight: '1.5' }}>
-                    Always inspect the property in person before making any payment.
+                    Always inspect the property in person and engage a licensed solicitor before making any payment or signing documents.
                   </p>
                 </div>
 
@@ -691,23 +700,49 @@ const SaleDetailsPage = ({ rental, reviews }) => {
               {/* Sidebar */}
               <div className="sidebar" style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(1rem, 3vw, 1.5rem)' }}>
                 {/* Sale Information */}
+                {/* Replace the Sale Details sidebar card content */}
                 <div style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.75rem' }}>
                   <div style={{ padding: 'clamp(1rem, 3vw, 1.5rem)', borderBottom: '1px solid hsl(40 20% 88%)' }}>
-                    <h3 style={{ 
+                    <h3 style={{
                       color: 'hsl(200 25% 15%)',
                       fontSize: 'clamp(1rem, 3vw, 1.125rem)',
                       fontWeight: '600'
                     }}>Sale Details</h3>
                   </div>
                   <div style={{ padding: 'clamp(1rem, 3vw, 1.5rem)', display: 'flex', flexDirection: 'column', gap: 'clamp(0.75rem, 2vw, 1rem)' }}>
+                    {/* Big price display */}
+                    <div style={{
+                      padding: 'clamp(0.75rem, 2vw, 1rem)',
+                      backgroundColor: 'hsl(38 92% 50% / 0.08)',
+                      border: '1px solid hsl(38 92% 50% / 0.2)',
+                      borderRadius: '0.625rem',
+                      textAlign: 'center'
+                    }}>
+                      <p style={{ fontSize: 'clamp(0.75rem, 2vw, 0.8125rem)', color: 'hsl(200 15% 45%)', marginBottom: '0.25rem' }}>Sale Price</p>
+                      <p style={{ fontSize: 'clamp(1.25rem, 4vw, 1.5rem)', fontWeight: '700', color: 'hsl(38 85% 40%)' }}>
+                        {formatCurrency(rental.sale_price)}
+                      </p>
+                    </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span style={{ color: 'hsl(200 15% 45%)' }}>Sale Price</span>
-                        <span>{formatCurrency(rental.sale_price)}</span>
+                        <span style={{ color: 'hsl(200 15% 45%)' }}>Property Type</span>
+                        <span style={{ fontWeight: '500', color: 'hsl(200 25% 15%)' }}>{rental.property_type}</span>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span style={{ color: 'hsl(200 15% 45%)' }}>Days on market</span>
-                        <span>{days_on_market}</span>
+                        <span style={{ color: 'hsl(200 15% 45%)' }}>Bedrooms</span>
+                        <span style={{ fontWeight: '500', color: 'hsl(200 25% 15%)' }}>{rental.bedrooms}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: 'hsl(200 15% 45%)' }}>Bathrooms</span>
+                        <span style={{ fontWeight: '500', color: 'hsl(200 25% 15%)' }}>{rental.bathrooms}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: 'hsl(200 15% 45%)' }}>Days on Market</span>
+                        <span style={{ fontWeight: '500', color: 'hsl(200 25% 15%)' }}>{days_on_market}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: 'hsl(200 15% 45%)' }}>Location</span>
+                        <span style={{ fontWeight: '500', color: 'hsl(200 25% 15%)', textAlign: 'right' }}>{rental.area}, {rental.city}</span>
                       </div>
                     </div>
                   </div>

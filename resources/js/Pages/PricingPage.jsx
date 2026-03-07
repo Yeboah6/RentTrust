@@ -284,97 +284,94 @@ const Pricing = () => {
   console.log('Auth object:', user);
   console.log('Role candidate:', user ? (user.role || user.type || user.role_name || user.roles) : 'No user');
 
-  const pricingPlans = [
-    {
-      name: "Free",
-      price: 0,
-      description: "Perfect for getting started",
-      icon: (
-        <div
-          style={{
-            width: 'clamp(2.5rem, 8vw, 3rem)',
-            height: 'clamp(2.5rem, 8vw, 3rem)',
-            borderRadius: '50%',
-            background: 'hsl(200 15% 45% / 0.1)',
-            color: 'hsl(200 15% 45%)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}
-        >
-          <Zap style={{ height: '1.5rem', width: '1.5rem' }} />
-        </div>
-      ),
-      features: [
-        "Limited listings to the platform",
-        "Limited visibility in search results",
-        "Basic listing management",
-        "Standard support"
-      ],
-      ctaText: "Get Started Free",
-      isPopular: false
-    },
-    {
-      name: "Pro",
-      price: 149,
-      description: "Build trust and stand out",
-      icon: (
-        <div
-          style={{
-            width: 'clamp(2.5rem, 8vw, 3rem)',
-            height: 'clamp(2.5rem, 8vw, 3rem)',
-            borderRadius: '50%',
-            background: 'hsl(174 62% 32% / 0.1)',
-            color: 'hsl(174 62% 32%)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}
-        >
-          <CheckCircle2 style={{ height: '1.5rem', width: '1.5rem' }} />
-        </div>
-      ),
-      features: [
-        "Everything in Free, plus:",
-        "Verified landlord badge",
-        "Higher ranking in search results",
-        "Respond to reviews",
-        "Access to tenant inquiries"
-      ],
-      ctaText: "Go Pro",
-      isPopular: true
-    },
-    {
-      name: "Elite",
-      price: 249,
-      description: "Advanced tools for Elites",
-      icon: (
-        <div
-          style={{
-            width: 'clamp(2.5rem, 8vw, 3rem)',
-            height: 'clamp(2.5rem, 8vw, 3rem)',
-            borderRadius: '50%',
-            background: 'linear-gradient(135deg, hsl(174 62% 32% / 0.15), hsl(152 60% 40% / 0.15))',
-            color: 'hsl(174 62% 32%)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}
-        >
-          <Crown style={{ height: '1.5rem', width: '1.5rem' }} />
-        </div>
-      ),
-      features: [
-        "Everything in Pro, plus:",
-        "Unlimited property listings",
-        "Lead unlock credits (50/month)",
-        "Featured listing placement",
-        "Priority customer support",
-      ],
-      ctaText: "Elite",
-      isPopular: false
+  // pull plan data from server so the page mirrors the pricing modal exactly
+  const plansFromServer = props.plans || [];
+  const pricingPlans = plansFromServer.map((p) => {
+    // choose an icon based on slug or name
+    let iconElement;
+    switch ((p.slug || p.name || '').toLowerCase()) {
+      case 'free':
+        iconElement = (
+          <div
+            style={{
+              width: 'clamp(2.5rem, 8vw, 3rem)',
+              height: 'clamp(2.5rem, 8vw, 3rem)',
+              borderRadius: '50%',
+              background: 'hsl(200 15% 45% / 0.1)',
+              color: 'hsl(200 15% 45%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
+            <Zap style={{ height: '1.5rem', width: '1.5rem' }} />
+          </div>
+        );
+        break;
+      case 'pro':
+      case 'verified':
+        iconElement = (
+          <div
+            style={{
+              width: 'clamp(2.5rem, 8vw, 3rem)',
+              height: 'clamp(2.5rem, 8vw, 3rem)',
+              borderRadius: '50%',
+              background: 'hsl(174 62% 32% / 0.1)',
+              color: 'hsl(174 62% 32%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
+            <CheckCircle2 style={{ height: '1.5rem', width: '1.5rem' }} />
+          </div>
+        );
+        break;
+      case 'elite':
+      case 'pro-plus':
+        iconElement = (
+          <div
+            style={{
+              width: 'clamp(2.5rem, 8vw, 3rem)',
+              height: 'clamp(2.5rem, 8vw, 3rem)',
+              borderRadius: '50%',
+              background: 'linear-gradient(135deg, hsl(174 62% 32% / 0.15), hsl(152 60% 40% / 0.15))',
+              color: 'hsl(174 62% 32%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
+            <Crown style={{ height: '1.5rem', width: '1.5rem' }} />
+          </div>
+        );
+        break;
+      default:
+        iconElement = (
+          <div
+            style={{
+              width: 'clamp(2.5rem, 8vw, 3rem)',
+              height: 'clamp(2.5rem, 8vw, 3rem)',
+              borderRadius: '50%',
+              background: 'hsl(200 15% 45% / 0.1)',
+              color: 'hsl(200 15% 45%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
+            <Zap style={{ height: '1.5rem', width: '1.5rem' }} />
+          </div>
+        );
     }
-  ];
+
+    return {
+      ...p,
+      icon: iconElement,
+      ctaText: p.cta_text || (p.is_free ? 'Get Started Free' : `Choose ${p.name}`),
+      isPopular: p.is_popular,
+    };
+  });
 
   const faqs = [
     {
@@ -400,7 +397,8 @@ const Pricing = () => {
   ];
 
   const handleSelect = (plan) => {
-    const planSlug = String(plan.name || '').toLowerCase();
+    // prefer explicit slug from server metadata when available
+    const planSlug = String(plan.slug || plan.name || '').toLowerCase();
 
     // Not logged in -> redirect to login, then back to checkout with plan
     if (!auth || !auth.user) {
@@ -709,7 +707,7 @@ const Pricing = () => {
                   Get Started Free
                 </Link>
                 <Link
-                  href="/contact"
+                  href={route('contact.page')}
                   className="font-semibold rounded-lg transition-all duration-200 active:scale-95"
                   style={{ 
                     backgroundColor: 'white',

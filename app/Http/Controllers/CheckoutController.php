@@ -206,6 +206,10 @@ class CheckoutController extends Controller
 
     private function buildFeaturesList(Plan $plan): array
     {
+        // use explicit rental and sale limits when available to make offerings crystal clear
+        $rentalDesc = $plan->rental_limit === null ? 'Unlimited rental listings' : "{$plan->rental_limit} rental listings";
+        $saleDesc   = $plan->sale_limit   === null ? 'Unlimited sale listings'   : "{$plan->sale_limit} sale listings";
+
         return match ($plan->slug) {
             'free' => [
                 'Submit listings to the platform',
@@ -213,10 +217,13 @@ class CheckoutController extends Controller
                 'Basic listing management',
                 'Access to tenant inquiries',
                 'Standard support',
+                $rentalDesc,
+                $saleDesc,
             ],
             'pro' => [
                 'Everything in Free, plus:',
-                "{$plan->listing_limit} property listings",
+                $rentalDesc,
+                $saleDesc,
                 'Verified landlord badge',
                 'Higher ranking in search results',
                 'Respond to reviews',

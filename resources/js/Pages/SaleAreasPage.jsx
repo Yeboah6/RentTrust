@@ -22,7 +22,7 @@ const AreaCard = ({ area, cityName }) => {
       onClick={() => {
         const city = cityName.toLowerCase().replace(/\s+/g,'-');
         const areaPath = area.name.toLowerCase().replace(/\s+/g, '-');
-        window.location.href = `/buy?city=${encodeURIComponent(city)}&area=${encodeURIComponent(areaPath)}`;
+        window.location.href = `/buy/areas/${city}/${areaPath}`;
       }}
     >
       <div 

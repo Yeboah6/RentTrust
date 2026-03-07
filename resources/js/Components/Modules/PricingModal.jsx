@@ -30,12 +30,12 @@ const PlanIcon = ({ slug }) => {
         <Zap style={{ height: '1.5rem', width: '1.5rem' }} />
       </div>
     ),
-    verified: (
+    pro: (
       <div style={{ width: '3rem', height: '3rem', borderRadius: '50%', background: 'hsl(174 62% 32% / 0.1)', color: 'hsl(174 62% 32%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <CheckCircle2 style={{ height: '1.5rem', width: '1.5rem' }} />
       </div>
     ),
-    pro: (
+    elite: (
       <div style={{ width: '3rem', height: '3rem', borderRadius: '50%', background: 'linear-gradient(135deg, hsl(174 62% 32% / 0.15), hsl(152 60% 40% / 0.15))', color: 'hsl(174 62% 32%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <Crown style={{ height: '1.5rem', width: '1.5rem' }} />
       </div>

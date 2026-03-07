@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link } from "@inertiajs/react";
 import { ArrowRight, MapPin, Home, TrendingUp, TrendingDown } from 'lucide-react';
 
-const AreaCard = ({ area }) => {
+const AreaCard = ({ area, type = 'rent' }) => {
   const [isHovered, setIsHovered] = useState(false);
   
   const getGradientColor = (color) => {
@@ -14,21 +14,25 @@ const AreaCard = ({ area }) => {
     return gradients[color];
   };
 
-  const isPositiveTrend = area.trend.startsWith('+');
+  const isPositiveTrend = area.trend && area.trend.startsWith('+');
+  const linkHref = type === 'sale' 
+    ? `/buy/areas/${area.city.toLowerCase()}/${area.name.toLowerCase().replace(/\s+/g, '-')}`
+    : `/rent/areas/${area.city.toLowerCase()}/${area.name.toLowerCase().replace(/\s+/g, '-')}`;
 
   return (
-    <div
-      className="overflow-hidden cursor-pointer border rounded-xl bg-white transition-all duration-300"
+    <Link
+      href={linkHref}
+      className="block overflow-hidden border rounded-xl bg-white transition-all duration-300"
       style={{
         borderColor: 'hsl(40 20% 88%)',
         transform: isHovered ? 'translateY(-4px)' : 'translateY(0)',
         boxShadow: isHovered 
           ? '0 8px 20px -4px hsl(200 25% 15% / 0.12), 0 4px 8px -2px hsl(200 25% 15% / 0.08)'
-          : '0 2px 8px -2px hsl(200 25% 15% / 0.1), 0 1px 3px -1px hsl(200 25% 15% / 0.06)'
+          : '0 2px 8px -2px hsl(200 25% 15% / 0.1), 0 1px 3px -1px hsl(200 25% 15% / 0.06)',
+        textDecoration: 'none'
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      onClick={() => window.location.href = `/areas/${area.city.toLowerCase()}/${area.name.toLowerCase().replace(/\s+/g, '-')}`}
     >
       <div 
         className="h-24 flex items-center justify-center"
@@ -52,36 +56,41 @@ const AreaCard = ({ area }) => {
               {area.city}
             </p>
           </div>
-          <div 
-            className="flex items-center gap-1 text-sm font-medium"
-            style={{ color: isPositiveTrend ? 'hsl(152 60% 40%)' : 'hsl(0 72% 51%)' }}
-          >
-            {isPositiveTrend ? (
-              <TrendingUp className="h-3.5 w-3.5" />
-            ) : (
-              <TrendingDown className="h-3.5 w-3.5" />
-            )}
-            {area.trend}
-          </div>
+          {area.trend && type === 'rent' && (
+            <div 
+              className="flex items-center gap-1 text-sm font-medium"
+              style={{ color: isPositiveTrend ? 'hsl(152 60% 40%)' : 'hsl(0 72% 51%)' }}
+            >
+              {isPositiveTrend ? (
+                <TrendingUp className="h-3.5 w-3.5" />
+              ) : (
+                <TrendingDown className="h-3.5 w-3.5" />
+              )}
+              {area.trend}
+            </div>
+          )}
         </div>
         <div className="flex items-center justify-between text-sm">
           <div className="flex items-center gap-1" style={{ color: 'hsl(200 15% 45%)' }}>
             <Home className="h-4 w-4" />
-            <span>{area.listingCount} listings</span>
+            <span>{area.listingCount} {type === 'sale' ? 'for sale' : 'listings'}</span>
           </div>
           <div className="font-semibold" style={{ color: 'hsl(174 62% 32%)' }}>
-            ~GH₵{area.avgRent.toLocaleString()}/mo
+            {type === 'sale' 
+              ? `~GH₵${area.avgPrice?.toLocaleString()}`
+              : `~GH₵${area.avgRent?.toLocaleString()}/mo`
+            }
           </div>
         </div>
       </div>
-    </div>
+    </Link>
   );
 };
 
-const PopularAreas = ({ areas: areasByCity }) => {
-  // Flatten grouped areas and add city name, then sort by listingCount and get top 6
-  const flattenedAreas = areasByCity ? 
-    Object.entries(areasByCity).flatMap(([city, cityAreas]) => 
+const PopularAreas = ({ rentalAreas: rentalAreasByCity, saleAreas: saleAreasByCity }) => {
+  // Flatten rental areas and add city name, then sort by listingCount and get top 6
+  const flattenedRentalAreas = rentalAreasByCity ? 
+    Object.entries(rentalAreasByCity).flatMap(([city, cityAreas]) => 
       Object.values(cityAreas).map(area => ({
         ...area,
         city: city.charAt(0).toUpperCase() + city.slice(1),
@@ -90,6 +99,25 @@ const PopularAreas = ({ areas: areasByCity }) => {
     ).sort((a, b) => b.listingCount - a.listingCount)
     .slice(0, 6)
   : [];
+
+  // Flatten sale areas and add city name, then sort by listingCount and get top 6
+  const flattenedSaleAreas = saleAreasByCity ? 
+    Object.entries(saleAreasByCity).flatMap(([city, cityAreas]) => 
+      Object.values(cityAreas).map(area => ({
+        ...area,
+        city: city.charAt(0).toUpperCase() + city.slice(1),
+        color: ['primary', 'accent', 'success'][Math.floor(Math.random() * 3)]
+      }))
+    ).sort((a, b) => b.listingCount - a.listingCount)
+    .slice(0, 6)
+  : [];
+
+  const hasRentals = flattenedRentalAreas.length > 0;
+  const hasSales = flattenedSaleAreas.length > 0;
+
+  if (!hasRentals && !hasSales) {
+    return null;
+  }
 
   return (
     <>
@@ -103,35 +131,75 @@ const PopularAreas = ({ areas: areasByCity }) => {
 
       <section className="py-16" style={{ backgroundColor: 'hsl(40 33% 98%)' }}>
         <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
-            <div>
-              <h2 className="text-2xl md:text-3xl font-bold mb-2 tracking-tight" style={{ color: 'hsl(200 25% 15%)' }}>
-                Popular Areas
-              </h2>
-              <p style={{ color: 'hsl(200 15% 45%)' }}>
-                Explore rent prices and reviews in these popular neighborhoods
-              </p>
-            </div>
-            <Link
-              href="/areas"
-              className="self-start md:self-auto inline-flex items-center px-4 py-2 rounded-lg font-medium transition-colors"
-              style={{ 
-                color: 'hsl(174 62% 32%)',
-                backgroundColor: 'transparent'
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(174 62% 32% / 0.1)'}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-            >
-              View All Areas
-              <ArrowRight className="h-4 w-4 ml-2" />
-            </Link>
-          </div>
+          {/* Rental Areas */}
+          {hasRentals && (
+            <>
+              <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+                <div>
+                  <h2 className="text-2xl md:text-3xl font-bold mb-2 tracking-tight" style={{ color: 'hsl(200 25% 15%)' }}>
+                    Popular Rental Areas
+                  </h2>
+                  <p style={{ color: 'hsl(200 15% 45%)' }}>
+                    Explore rent prices and reviews in these popular neighborhoods
+                  </p>
+                </div>
+                <Link
+                  href="/rent/areas"
+                  className="self-start md:self-auto inline-flex items-center px-4 py-2 rounded-lg font-medium transition-colors"
+                  style={{ 
+                    color: 'hsl(174 62% 32%)',
+                    backgroundColor: 'transparent'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(174 62% 32% / 0.1)'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                >
+                  View All Rental Areas
+                  <ArrowRight className="h-4 w-4 ml-2" />
+                </Link>
+              </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {flattenedAreas.map((area, idx) => (
-              <AreaCard key={`${area.city}-${area.name}-${idx}`} area={area} />
-            ))}
-          </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-16">
+                {flattenedRentalAreas.map((area, idx) => (
+                  <AreaCard key={`rental-${area.city}-${area.name}-${idx}`} area={area} type="rent" />
+                ))}
+              </div>
+            </>
+          )}
+
+          {/* Sale Areas */}
+          {hasSales && (
+            <>
+              <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+                <div>
+                  <h2 className="text-2xl md:text-3xl font-bold mb-2 tracking-tight" style={{ color: 'hsl(200 25% 15%)' }}>
+                    Popular Sale Areas
+                  </h2>
+                  <p style={{ color: 'hsl(200 15% 45%)' }}>
+                    Discover property prices in these popular neighborhoods
+                  </p>
+                </div>
+                <Link
+                  href="/buy/areas"
+                  className="self-start md:self-auto inline-flex items-center px-4 py-2 rounded-lg font-medium transition-colors"
+                  style={{ 
+                    color: 'hsl(174 62% 32%)',
+                    backgroundColor: 'transparent'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(174 62% 32% / 0.1)'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                >
+                  View All Sale Areas
+                  <ArrowRight className="h-4 w-4 ml-2" />
+                </Link>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {flattenedSaleAreas.map((area, idx) => (
+                  <AreaCard key={`sale-${area.city}-${area.name}-${idx}`} area={area} type="sale" />
+                ))}
+              </div>
+            </>
+          )}
         </div>
       </section>
     </>

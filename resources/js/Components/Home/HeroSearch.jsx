@@ -7,7 +7,7 @@ const HeroSection = () => {
   const stats = [
     { icon: MapPin, value: "50+", label: "Areas Covered" },
     { icon: Shield, value: "200+", label: "Verified Agents" },
-    { icon: TrendingUp, value: "5,000+", label: "Rent Prices Shared" },
+    { icon: TrendingUp, value: "10,000+", label: "Properties Listed" },
   ];
 
   const popularAreas = ["East Legon", "Spintex", "Osu", "Tema", "Achimota"];
@@ -81,15 +81,15 @@ const HeroSection = () => {
               className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4 leading-tight tracking-tight animate-fadeInUp"
               style={{ animationDelay: '0.1s', textWrap: 'balance' }}
             >
-              Know the Real Rent Before You Pay
+              Rent Smarter. Sell Confidently.
             </h1>
 
             <p 
               className="text-lg md:text-xl text-white/80 mb-8 max-w-2xl mx-auto animate-fadeInUp"
               style={{ animationDelay: '0.2s' }}
             >
-              See real rent prices, verified agents, and honest tenant reviews across Ghana. 
-              Make informed decisions before you commit.
+              Find the best rental properties or sell your home with confidence. 
+              See real prices, verified agents, and honest reviews across Ghana.
             </p>
 
             {/* Search Bar */}

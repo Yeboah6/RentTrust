@@ -27,12 +27,12 @@ const PropertyCard = ({ property }) => {
 
   return (
     <Link
-      href={`/rent/${property.id}`}
+      href={`/buy/${property.id}`}
       className="block overflow-hidden border rounded-xl bg-white transition-all duration-300"
       style={{
         borderColor: 'hsl(40 20% 88%)',
         transform: isHovered ? 'translateY(-4px)' : 'translateY(0)',
-        boxShadow: isHovered 
+        boxShadow: isHovered
           ? '0 8px 20px -4px hsl(200 25% 15% / 0.12), 0 4px 8px -2px hsl(200 25% 15% / 0.08)'
           : '0 2px 8px -2px hsl(200 25% 15% / 0.1), 0 1px 3px -1px hsl(200 25% 15% / 0.06)',
         textDecoration: 'none'
@@ -41,7 +41,7 @@ const PropertyCard = ({ property }) => {
       onMouseLeave={() => setIsHovered(false)}
     >
       {/* Property Image */}
-      <div 
+      <div
         style={{
           width: '100%',
           height: '200px',
@@ -51,7 +51,7 @@ const PropertyCard = ({ property }) => {
         }}
       >
         {firstImage && !imageError ? (
-          <img 
+          <img
             src={`/storage/rental_images/${firstImage}`}
             alt={`${property.property_type || 'Property'} image`}
             style={{
@@ -79,7 +79,7 @@ const PropertyCard = ({ property }) => {
             </div>
           </div>
         )}
-        
+
         {/* Image count badge */}
         {imagesArray.length > 1 && !imageError && (
           <div style={{
@@ -103,7 +103,7 @@ const PropertyCard = ({ property }) => {
         <h3 className="font-semibold tracking-tight mb-2" style={{ color: 'hsl(200 25% 15%)' }}>
           {property.property_type || 'Property'}
         </h3>
-        
+
         <div className="space-y-2 text-sm mb-3">
           <div className="flex items-center gap-2" style={{ color: 'hsl(200 15% 45%)' }}>
             <MapPin className="h-4 w-4" />
@@ -117,9 +117,9 @@ const PropertyCard = ({ property }) => {
 
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs mb-1" style={{ color: 'hsl(200 15% 45%)' }}>Rent Range</p>
+            <p className="text-xs mb-1" style={{ color: 'hsl(200 15% 45%)' }}>Sale Price</p>
             <p className="font-bold" style={{ color: 'hsl(174 62% 32%)' }}>
-              GH₵{property.rent_min.toLocaleString()} - GH₵{property.rent_max.toLocaleString()}
+              GH₵{property.sale_price?.toLocaleString() || 'N/A'}
             </p>
           </div>
           {property.created_at && (
@@ -134,15 +134,15 @@ const PropertyCard = ({ property }) => {
   );
 };
 
-const AreaDetailPage = ({ area, city, properties }) => {
-  const isPositiveTrend = area.trend.startsWith('+');
+const SalesDetailPage = ({ area, city, properties }) => {
+  const isPositiveTrend = area.trend?.startsWith('+') || false;
   const cityLabel = city.charAt(0).toUpperCase() + city.slice(1);
 
   return (
     <>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-        
+
         * {
           font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
         }
@@ -157,11 +157,11 @@ const AreaDetailPage = ({ area, city, properties }) => {
             <div className="container mx-auto px-4">
               {/* Breadcrumb */}
               <div className="flex items-center gap-2 mb-4 text-sm" style={{ color: 'hsl(200 15% 45%)' }}>
-                <Link href="/rent/listings" className="hover:underline">Home</Link>
+                <Link href="/buy/listings" className="hover:underline">Home</Link>
                 <span>/</span>
-                <Link href="/rent/areas" className="hover:underline">Areas</Link>
+                <Link href="/buy/areas" className="hover:underline">Areas</Link>
                 <span>/</span>
-                <Link href={`/rent/areas?city=${city}`} className="hover:underline">{cityLabel}</Link>
+                <Link href={`/buy/areas`} className="hover:underline">{cityLabel}</Link>
                 <span>/</span>
                 <span style={{ color: 'hsl(200 25% 15%)' }}>{area.name}</span>
               </div>
@@ -179,9 +179,9 @@ const AreaDetailPage = ({ area, city, properties }) => {
                 </div>
 
                 <Link
-                  href="/rent/areas"
+                  href="/buy/areas"
                   className="self-start md:self-auto inline-flex items-center px-4 py-2 rounded-lg font-medium border transition-colors"
-                  style={{ 
+                  style={{
                     color: 'hsl(174 62% 32%)',
                     borderColor: 'hsl(40 20% 88%)',
                     backgroundColor: 'white'
@@ -199,16 +199,16 @@ const AreaDetailPage = ({ area, city, properties }) => {
           {/* Stats Section */}
           <div className="container mx-auto px-4 py-8">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-              {/* Average Rent */}
+              {/* Average Sale Price */}
               <div className="bg-white rounded-lg p-6 border" style={{ borderColor: 'hsl(40 20% 88%)' }}>
                 <div className="flex items-center gap-2 mb-2" style={{ color: 'hsl(200 15% 45%)' }}>
                   <DollarSign className="h-4 w-4" />
-                  <span className="text-sm">Average Rent</span>
+                  <span className="text-sm">Average Sale Price</span>
                 </div>
                 <p className="text-2xl font-bold" style={{ color: 'hsl(174 62% 32%)' }}>
-                  GH₵{area.avgRent.toLocaleString()}
+                  GH₵{area.avgPrice?.toLocaleString() || 'N/A'}
                 </p>
-                <p className="text-xs mt-1" style={{ color: 'hsl(200 15% 45%)' }}>per month</p>
+                <p className="text-xs mt-1" style={{ color: 'hsl(200 15% 45%)' }}>per property</p>
               </div>
 
               {/* Total Listings */}
@@ -218,7 +218,7 @@ const AreaDetailPage = ({ area, city, properties }) => {
                   <span className="text-sm">Total Listings</span>
                 </div>
                 <p className="text-2xl font-bold" style={{ color: 'hsl(200 25% 15%)' }}>
-                  {area.listingCount}
+                  {area.listingCount || 0}
                 </p>
                 <p className="text-xs mt-1" style={{ color: 'hsl(200 15% 45%)' }}>available properties</p>
               </div>
@@ -233,11 +233,11 @@ const AreaDetailPage = ({ area, city, properties }) => {
                   )}
                   <span className="text-sm">Price Trend</span>
                 </div>
-                <p 
+                <p
                   className="text-2xl font-bold"
                   style={{ color: isPositiveTrend ? 'hsl(152 60% 40%)' : 'hsl(0 72% 51%)' }}
                 >
-                  {area.trend}
+                  {area.trend || 'N/A'}
                 </p>
                 <p className="text-xs mt-1" style={{ color: 'hsl(200 15% 45%)' }}>last 30 days</p>
               </div>
@@ -249,7 +249,7 @@ const AreaDetailPage = ({ area, city, properties }) => {
                   <span className="text-sm">Price Range</span>
                 </div>
                 <p className="text-lg font-bold" style={{ color: 'hsl(200 25% 15%)' }}>
-                  GH₵{area.minRent?.toLocaleString() || 0} - {area.maxRent?.toLocaleString() || 0}
+                  GH₵{area.minPrice?.toLocaleString() || 0} - GH₵{area.maxPrice?.toLocaleString() || 0}
                 </p>
                 <p className="text-xs mt-1" style={{ color: 'hsl(200 15% 45%)' }}>min - max</p>
               </div>
@@ -258,7 +258,7 @@ const AreaDetailPage = ({ area, city, properties }) => {
             {/* Properties Section */}
             <div className="mb-6">
               <h2 className="text-2xl font-bold mb-4 tracking-tight" style={{ color: 'hsl(200 25% 15%)' }}>
-                Available Properties in {area.name}
+                Available Properties for Sale in {area.name}
               </h2>
             </div>
 
@@ -288,4 +288,4 @@ const AreaDetailPage = ({ area, city, properties }) => {
   );
 };
 
-export default AreaDetailPage;
+export default SalesDetailPage;

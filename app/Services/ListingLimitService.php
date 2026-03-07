@@ -43,7 +43,7 @@ class ListingLimitService
     {
         return Rental::where('user_id', $user->id)
             ->where('purpose', 'rent')
-            ->where('status', 'approved')
+            ->whereIn('status', ['approved', 'pending'])
             ->where('is_sold', false)
             ->count();
     }
@@ -55,7 +55,7 @@ class ListingLimitService
     {
         return Rental::where('user_id', $user->id)
             ->where('purpose', 'sale')
-            ->where('status', 'approved')
+            ->whereIn('status', ['approved', 'pending'])
             ->where('is_sold', false)
             ->count();
     }
@@ -143,20 +143,34 @@ class ListingLimitService
     {
         $plan = $this->getUserPlan($user);
 
+        $rentalLimit = $this->getRentalLimit($user);
+        $saleLimit   = $this->getSaleLimit($user);
+
+        $activeRentals = Rental::where('user_id', $user->id)
+        ->where('purpose', 'rent')
+        ->whereIn('status', ['pending', 'approved'])
+        ->count();
+
+        $activeSales = Rental::where('user_id', $user->id)
+            ->where('purpose', 'sale')
+            ->whereIn('status', ['pending', 'approved'])
+            ->count();
+
         return [
-            'plan' => $plan->name,
-            'plan_slug' => $plan->slug,
+            'plan' => $plan ?? 'free',
+
             'rentals' => [
-                'limit' => $plan->rental_limit,
-                'active' => $this->countActiveRentals($user),
-                'remaining' => $this->getRemainingRentals($user),
-                'can_create' => $this->canCreateRental($user),
+                'active'     => $activeRentals,
+                'limit'      => $rentalLimit,  // null = unlimited
+                'remaining'  => $rentalLimit !== null ? max(0, $rentalLimit - $activeRentals) : null,
+                'can_create' => $rentalLimit === null || $activeRentals < $rentalLimit,
             ],
+
             'sales' => [
-                'limit' => $plan->sale_limit,
-                'active' => $this->countActiveSales($user),
-                'remaining' => $this->getRemainingSales($user),
-                'can_create' => $this->canCreateSale($user),
+                'active'     => $activeSales,
+                'limit'      => $saleLimit,
+                'remaining'  => $saleLimit !== null ? max(0, $saleLimit - $activeSales) : null,
+                'can_create' => $saleLimit === null || $activeSales < $saleLimit,
             ],
         ];
     }

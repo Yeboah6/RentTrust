@@ -45,6 +45,10 @@ class DashboardController extends Controller
         
         $plans = app(\App\Http\Controllers\CheckoutController::class)->plansForModal();
         $sub  = $agentData->subscription()->with('plan')->first();
+        
+        // Get limit status for the agent
+        $limitService = new \App\Services\ListingLimitService();
+        $limitStatus = $limitService->getLimitStatus($agentData);
 
         return inertia('Dashboards/AgentDashboard', 
         [
@@ -54,6 +58,7 @@ class DashboardController extends Controller
             'inquiries' => $inquiries,
             'views' => $views,
             'plans' => $plans,
+            'limitStatus' => $limitStatus,
             'open_plan_modal' => is_null($agentData->package)
             || session()->pull('show_plan_modal', false),
 

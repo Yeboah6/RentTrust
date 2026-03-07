@@ -4,33 +4,33 @@ import { Shield, Eye, Users, AlertTriangle, CheckCircle2, MessageSquare } from '
 const features = [
   {
     icon: Eye,
-    title: "Real Price Ranges",
-    description: "See what tenants actually paid, not inflated asking prices from agents.",
+    title: "Real Price Transparency",
+    description: "See actual prices paid by buyers and renters, not inflated asking prices.",
   },
   {
     icon: Shield,
     title: "Verified Agents",
-    description: "Identify trustworthy agents through verified profiles and tenant reviews.",
+    description: "Identify trustworthy agents through verified profiles and client reviews.",
   },
   {
     icon: MessageSquare,
     title: "Honest Reviews",
-    description: "Read real experiences from tenants who have rented in the area.",
+    description: "Read real experiences from buyers and renters who have transacted in the area.",
   },
   {
     icon: AlertTriangle,
     title: "Report Issues",
-    description: "Flag problematic agents or misleading listings to protect other tenants.",
+    description: "Flag problematic agents or misleading listings to protect other users.",
   },
   {
     icon: CheckCircle2,
     title: "Agent Accountability",
-    description: "Agents respond to reviews, building their reputation.",
+    description: "Agents respond to reviews, building their reputation in the community.",
   },
   {
     icon: Users,
     title: "Community Insights",
-    description: "Learn about areas from people who live there – flooding, noise, amenities.",
+    description: "Learn about areas from people who live there – amenities, safety, and more.",
   },
 ];
 
@@ -71,10 +71,10 @@ const TrustFeatures = () => {
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-2xl md:text-3xl font-bold mb-2 tracking-tight" style={{ color: 'hsl(200 25% 15%)' }}>
-              Why Tenants Trust Us
+              Why People Trust Us
             </h2>
             <p className="max-w-2xl mx-auto" style={{ color: 'hsl(200 15% 45%)' }}>
-              We're building a platform that puts tenants first, with transparency and 
+              We're building a platform that puts buyers and renters first, with transparency and 
               accountability at every step.
             </p>
           </div>

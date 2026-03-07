@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Rental;
+use App\Models\ListingView;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 
 class SaleSearchController extends Controller
 {
@@ -80,7 +82,7 @@ class SaleSearchController extends Controller
     {
         try {
             $areas = Rental::where('purpose', 'sale')
-                ->where('status', 'approved')
+                // ->where('status', 'approved')
                 ->where('is_sold', false)
                 ->select('city', 'area', 'sale_price', 'created_at')
                 ->get()
@@ -116,29 +118,119 @@ class SaleSearchController extends Controller
     }
 
     /**
+     * Show specific sale area
+     */
+    public function showArea($city, $area)
+    {
+        // Decode the area name from URL (replace hyphens with spaces)
+        $areaName = str_replace('-', ' ', $area);
+        $cityName = str_replace('-', ' ', $city);
+
+        // Get all sales for this specific area
+        $properties = Rental::where('purpose', 'sale')
+            ->where('is_sold', false)
+            ->where('city', 'like', $cityName)
+            ->where('area', 'like', $areaName)
+            ->latest()
+            ->get();
+
+        if ($properties->isEmpty()) {
+            abort(404, 'Area not found');
+        }
+
+        // Calculate area statistics
+        $avgPrice = $properties->avg('sale_price');
+
+        $areaData = [
+            'name' => $properties->first()->area,
+            'listingCount' => $properties->count(),
+            'avgPrice' => round($avgPrice),
+            'minPrice' => $properties->min('sale_price'),
+            'maxPrice' => $properties->max('sale_price'),
+            'trend' => $this->calculateTrend($properties),
+        ];
+
+        return inertia('SalesDetailPage', [
+            'area' => $areaData,
+            'city' => $cityName,
+            'properties' => $properties,
+        ]);
+    }
+
+    private function calculateTrend($areaSales)
+    {
+        if ($areaSales->count() < 2) {
+            return '+0%';
+        }
+
+        $thirtyDaysAgo = now()->subDays(30);
+
+        $recentSales = $areaSales->filter(function ($sale) use ($thirtyDaysAgo) {
+            return $sale->created_at >= $thirtyDaysAgo;
+        });
+
+        $olderSales = $areaSales->filter(function ($sale) use ($thirtyDaysAgo) {
+            return $sale->created_at < $thirtyDaysAgo;
+        });
+
+        if ($recentSales->isEmpty() || $olderSales->isEmpty()) {
+            return '+0%';
+        }
+
+        $recentAvg = $recentSales->avg('sale_price');
+        $olderAvg = $olderSales->avg('sale_price');
+
+        if ($olderAvg == 0) {
+            return '+0%';
+        }
+
+        $percentageChange = (($recentAvg - $olderAvg) / $olderAvg) * 100;
+        $percentageChange = round($percentageChange);
+
+        if ($percentageChange > 0) {
+            return "+{$percentageChange}%";
+        } elseif ($percentageChange < 0) {
+            return "{$percentageChange}%";
+        } else {
+            return '+0%';
+        }
+    }
+
+    /**
      * Show individual sale listing
      */
-    public function show(Request $request, Rental $rental)
+    public function show(Request $request, Rental $rent)
     {
-        // Verify it's a sale listing and not sold
-        if (!$rental->isSale() || $rental->status !== 'approved' || $rental->is_sold) {
-            abort(404, 'Property not found');
+
+        try {
+            $ip = $request->ip();
+            if (!ListingView::hasViewInWindow($rent->id, $ip)) {
+                ListingView::create([
+                    'rental_id'  => $rent->id,
+                    'user_id'    => Auth::id(),
+                    'ip'         => $ip,
+                    'user_agent' => $request->userAgent(),
+                    'referrer'   => $request->headers->get('referer'),
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::warning('Failed to track listing view: ' . $e->getMessage());
         }
 
         // Track view
-        $this->trackView($request, $rental);
+        $this->trackView($request, $rent);
 
-        $rental->load('user');
+        $rent->load('user');
         
-        $reviews = $rental->reviews()
+        $reviews = $rent->reviews()
             ->orderBy('created_at', 'desc')
             ->get();
 
         return inertia('SaleDetailsPage', [
-            'rental' => $rental,
+            'rental' => $rent,
             'reviews' => $reviews,
             'price_label' => 'Sale Price',
-            'days_on_market' => $rental->getDaysOnMarket(),
+            'days_on_market' => $rent->getDaysOnMarket(),
         ]);
     }
 
