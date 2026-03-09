@@ -9,8 +9,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Auth\Events\PasswordReset;
-use App\Models\Agent;
-use App\Models\SuperAdmin;
+use App\Models\User;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\ResetPasswordMail;
 use Carbon\Carbon;
@@ -33,19 +32,16 @@ class PasswordResetController extends Controller
     {
         $request->validate([
             'email' => 'required|email',
-            'userType' => 'required|in:agent,admin',
+            'userType' => 'required|in:agent,admin,super_admin',
         ]);
 
         $email = $request->email;
         $userType = $request->userType;
 
-        // Check if user exists based on type
-        $user = null;
-        if ($userType === 'agent') {
-            $user = Agent::where('email', $email)->first();
-        } else {
-            $user = SuperAdmin::where('email', $email)->first();
-        }
+        // lookup user by role (agents and administrators share the users table)
+        $user = User::where('email', $email)
+                     ->where('role', $userType === 'admin' ? 'admin' : $userType)
+                     ->first();
 
         if (!$user) {
             return back()->withErrors([
@@ -112,7 +108,7 @@ class PasswordResetController extends Controller
         $request->validate([
             'token' => 'required',
             'email' => 'required|email',
-            'userType' => 'required|in:agent,admin',
+            'userType' => 'required|in:agent,admin,super_admin',
             'password' => [
                 'required',
                 'confirmed',
@@ -158,12 +154,9 @@ class PasswordResetController extends Controller
         }
 
         // Get user and update password
-        $user = null;
-        if ($request->userType === 'agent') {
-            $user = Agent::where('email', $request->email)->first();
-        } else {
-            $user = SuperAdmin::where('email', $request->email)->first();
-        }
+        $user = User::where('email', $request->email)
+                     ->where('role', $request->userType === 'admin' ? 'admin' : $request->userType)
+                     ->first();
 
         if (!$user) {
             return back()->withErrors([

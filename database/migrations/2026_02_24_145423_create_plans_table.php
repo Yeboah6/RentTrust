@@ -85,6 +85,10 @@ return new class extends Migration
                 'updated_at' => now(),
             ],
         ]);
+
+        DB::table('plans')->where('slug', 'free')->update(['rental_limit' => 2, 'sale_limit' => 1]);
+        DB::table('plans')->where('slug', 'pro')->update(['rental_limit' => 20, 'sale_limit' => 5]);
+        DB::table('plans')->where('slug', 'elite')->update(['rental_limit' => null, 'sale_limit' => 20]);
     }
 
     public function down(): void

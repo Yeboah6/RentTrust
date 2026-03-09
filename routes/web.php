@@ -121,7 +121,7 @@ Route::middleware(['auth','verified'])->group(function () {
 
 // ── Admin Routes ──────────────────────────────────────────────────────────────
 Route::middleware(['auth','verified','throttle:60,1','role:admin'])->group(function () {
-    Route::get('/admin', [DashboardController::class, 'superAdmin'])->name('admin.dashboard');
+    Route::get('/admin', [DashboardController::class, 'adminDashboard'])->name('admin.dashboard');
     Route::put('/admin/reports/{id}/status', [RentController::class, 'updateReportStatus'])
     ->name('admin.reports.status');
     Route::put('/admin/agents/{id}/verify', [VerificationsController::class, 'verifyAgent'])
@@ -164,6 +164,9 @@ Route::middleware(['auth','verified'])->group(function () {
 Route::post('/logout', [AuthController::class, 'logout'])->middleware(['auth','verified'])->name('logout');
 Route::get('/sign-up', [AuthController::class, 'signUp']) -> name('sign-up.page');
 Route::post('/sign-up', [AuthController::class, 'store']);
+
+// load super‑admin-specific routes (separate file for clarity)
+require __DIR__ . '/super_admin.php';
 
 Route::get('/login', function () {
     return inertia('Auth/AuthPage', ['isLogin' => true]);

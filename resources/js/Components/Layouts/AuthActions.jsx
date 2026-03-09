@@ -7,9 +7,11 @@ export function AuthDesktop({
   isAnyUserLoggedIn,
   isAgentLoggedIn,
   isTenantLoggedIn,
+  isAdminLoggedIn,
   isSuperAdminLoggedIn,
   agentData,
   tenantData,
+  adminData,
   superAdminData,
   handleLogout,
   isOnBuyPage,
@@ -234,7 +236,8 @@ export function AuthDesktop({
     );
   }
 
-  if (isSuperAdminLoggedIn) {
+  if (isSuperAdminLoggedIn || isAdminLoggedIn) {
+    // dashboard link logic inside href expressions
     return (
       <>
       {isOnBuyPage && (
@@ -302,7 +305,7 @@ export function AuthDesktop({
         )}
 
         <Link
-          href="/admin"
+          href={isSuperAdminLoggedIn ? '/super-admin/dashboard' : '/admin'}
           onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'hsl(40 30% 94%)')}
           onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'white')}
           className="inline-flex items-center rounded-lg border transition-colors"
@@ -463,9 +466,11 @@ export function AuthMobile({
   isAnyUserLoggedIn,
   isAgentLoggedIn,
   isTenantLoggedIn,
+  isAdminLoggedIn,
   isSuperAdminLoggedIn,
   agentData,
   tenantData,
+  adminData,
   superAdminData,
   handleLogout,
   handleMobileLinkClick,
@@ -690,7 +695,7 @@ export function AuthMobile({
     );
   }
 
-    if (isSuperAdminLoggedIn) {
+    if (isSuperAdminLoggedIn || isAdminLoggedIn) {
     return (
       <>
       {isOnBuyPage && (
@@ -758,7 +763,7 @@ export function AuthMobile({
         )}
 
         <Link
-          href="/admin"
+          href={isSuperAdminLoggedIn ? '/super-admin/dashboard' : '/admin'}
           onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'hsl(40 30% 94%)')}
           onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'white')}
           className="inline-flex items-center rounded-lg border transition-colors"

@@ -19,9 +19,9 @@ class DatabaseSeeder extends Seeder
         User::create([
             'name' => 'Rent Trust',
             'email' => 'rent@trust.com',
-            'role' => 'admin',
+            'role' => 'super_admin',
             'status' => 'verified',
-            'package' => 'admin',
+            'package' => 'super_admin',
             'password' => Hash::make('RentTrust123'),
         ]);
     }

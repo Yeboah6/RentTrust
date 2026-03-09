@@ -77,6 +77,8 @@ class AuthController extends Controller
         } 
         elseif ($user->role === 'admin' && $user->package === 'admin') {
             return redirect('/admin');
+        } elseif ($user->role === 'super_admin' && $user->package === 'super_admin') {
+            return redirect('/super-admin/dashboard');
         }
 
         // Fallback redirect (shouldn't normally reach here)

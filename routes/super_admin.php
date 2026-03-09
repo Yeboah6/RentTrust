@@ -1,0 +1,46 @@
+<?php
+
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\SuperAdmin\DashboardController;
+use App\Http\Controllers\SuperAdmin\PlanController;
+use App\Http\Controllers\SuperAdmin\SubscriptionController;
+use App\Http\Controllers\SuperAdmin\PaymentController;
+use App\Http\Controllers\SuperAdmin\AdminController;
+use App\Http\Controllers\SuperAdmin\PropertyTypeController;
+use App\Http\Controllers\SuperAdmin\LocationController;
+use App\Http\Controllers\SuperAdmin\AmenityController;
+use App\Http\Controllers\SuperAdmin\SettingsController;
+use App\Http\Controllers\SuperAdmin\FeatureFlagController;
+use App\Http\Controllers\SuperAdmin\SystemController;
+
+// all routes are prefixed with super-admin and guarded by role middleware
+Route::prefix('super-admin')->middleware(['auth','verified','role:super_admin'])->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('super-admin.dashboard');
+
+    // SaaS management
+    Route::resource('plans', PlanController::class)->parameters(['plans' => 'plan']);
+    Route::get('subscriptions', [SubscriptionController::class, 'index'])->name('super-admin.subscriptions.index');
+    Route::post('subscriptions/{subscription}/cancel', [SubscriptionController::class, 'cancel'])->name('super-admin.subscriptions.cancel');
+    Route::post('subscriptions/{subscription}/extend', [SubscriptionController::class, 'extend'])->name('super-admin.subscriptions.extend');
+    Route::post('subscriptions/{subscription}/upgrade', [SubscriptionController::class, 'upgrade'])->name('super-admin.subscriptions.upgrade');
+
+    Route::get('payments', [PaymentController::class, 'index'])->name('super-admin.payments.index');
+    Route::post('payments/{payment}/refund', [PaymentController::class, 'refund'])->name('super-admin.payments.refund');
+
+    // admin accounts
+    Route::resource('admins', AdminController::class)->parameters(['admins' => 'user']);
+    Route::post('admins/{user}/reset-password', [AdminController::class, 'resetPassword'])->name('super-admin.admins.reset-password');
+
+    // configuration
+    Route::resource('property-types', PropertyTypeController::class)->only(['index','store','update','destroy']);
+    Route::resource('locations', LocationController::class)->only(['index','store','update','destroy']);
+    Route::resource('amenities', AmenityController::class)->only(['index','store','update','destroy']);
+    Route::get('settings', [SettingsController::class, 'index'])->name('super-admin.settings.index');
+    Route::post('settings', [SettingsController::class, 'update'])->name('super-admin.settings.update');
+    Route::get('features', [FeatureFlagController::class, 'index'])->name('super-admin.features.index');
+    Route::post('features', [FeatureFlagController::class, 'update'])->name('super-admin.features.update');
+
+    // support & system tools
+    Route::get('impersonate/{user}', [SystemController::class, 'impersonate'])->name('super-admin.impersonate');
+    Route::get('logs', [SystemController::class, 'logs'])->name('super-admin.logs');
+});

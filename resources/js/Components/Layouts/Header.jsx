@@ -19,12 +19,17 @@ const Header = () => {
   // Convert to proper booleans
   const isAgentLoggedIn = !!auth?.agent;
   const isTenantLoggedIn = !!auth?.tenant;
-  const isSuperAdminLoggedIn = !!auth?.super;
-  const isAnyUserLoggedIn = isAgentLoggedIn || isTenantLoggedIn || isSuperAdminLoggedIn;
+  const isAdminLoggedIn = !!auth?.admin; // legacy operational admins
+  // `auth.super` now contains both admin and super_admin for backward
+  // compatibility; consider someone a "true" super admin only if they are
+  // *not* an ordinary admin. this keeps the two roles distinct in the UI.
+  const isSuperAdminLoggedIn = !!auth?.super && !isAdminLoggedIn; // SaaS / platform superuser
+  const isAnyUserLoggedIn = isAgentLoggedIn || isTenantLoggedIn || isAdminLoggedIn || isSuperAdminLoggedIn;
 
   // Store user data separately
   const agentData = auth?.agent;
   const tenantData = auth?.tenant;
+  const adminData = auth?.admin;
   const superAdminData = auth?.super;
 
   // console.log('Auth state:', {

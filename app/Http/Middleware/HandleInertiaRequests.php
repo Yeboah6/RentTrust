@@ -26,8 +26,13 @@ class HandleInertiaRequests extends Middleware
                 'agent' => $request->user() && $request->user()->role === 'agent' 
                     ? $request->user() 
                     : null,
-                'super' => $request->user() && $request->user()->role === 'admin' 
-                    ? $request->user() 
+                // keep existing "super" slot for any administrator (admin or super_admin)
+                'super' => $request->user() && in_array($request->user()->role, ['admin','super_admin'])
+                    ? $request->user()
+                    : null,
+                // explicit admin key for fine-grained checks
+                'admin' => $request->user() && $request->user()->role === 'admin'
+                    ? $request->user()
                     : null,
             ],
             'flash' => [

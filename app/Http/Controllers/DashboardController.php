@@ -101,7 +101,8 @@ class DashboardController extends Controller
         ]);
     }
 
-    public function superAdmin() {
+    public function adminDashboard() {
+        // this method supports the existing "admin" role panel (operational tools)
         $adminData = Auth::user();
 
         $sub  = $adminData->subscription()->with('plan')->first();
@@ -112,7 +113,7 @@ class DashboardController extends Controller
         $reviews = Review::with('rental')->get();
         $verifications = VerificationRequest::with(['rental', 'agent'])->orderBy('created_at', 'desc')->get();
         
-        return inertia('Dashboards/SuperAdmin', [
+        return inertia('Dashboards/AdminDashboard', [
             'adminData' => $adminData,
             'rentals' => $rentals,
             'agentData' => $agentData,

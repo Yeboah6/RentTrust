@@ -29,7 +29,11 @@ class RoleMiddleware
             if ($userRole === 'agent') {
                 return redirect()->route('agent.dashboard')->with('error', 'Access denied to that section.');
             } elseif ($userRole === 'admin') {
+                // existing admin panel
                 return redirect()->route('admin.dashboard')->with('error', 'Access denied to that section.');
+            } elseif ($userRole === 'super_admin') {
+                // redirect to super admin dashboard
+                return redirect()->route('super-admin.dashboard')->with('error', 'Access denied to that section.');
             } elseif ($userRole === 'tenant') {
                 return redirect()->route('home')->with('error', 'Access denied to that section.');
             }
