@@ -27,17 +27,27 @@ class PlanController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'name' => 'required|string',
-            'price' => 'required|numeric',
-            'billing_cycle' => 'required|string',
-            'rental_limit' => 'nullable|integer',
-            'sale_limit' => 'nullable|integer',
-            'boost_limit' => 'nullable|integer',
-            'analytics_access' => 'boolean',
+            'name'               => 'required|string|max:255',
+            'slug'               => 'nullable|string|unique:plans,slug',
+            'price'              => 'required|numeric|min:0',
+            'currency'           => 'required|string|max:10',
+            'interval'           => 'required|in:week,month,quarter,year,once',
+            'listing_limit'      => 'nullable|integer|min:0',
+            'rental_limit'       => 'nullable|integer|min:0',
+            'sale_limit'         => 'nullable|integer|min:0',
+            'boost_limit'        => 'nullable|integer|min:0',
+            'lead_limit'         => 'nullable|integer|min:0',
+            'verified_badge'     => 'boolean',
+            'priority_ranking'   => 'boolean',
+            'analytics_access'   => 'boolean',
+            'paystack_plan_code' => 'nullable|string|max:255',
+            'flutterwave_plan_id'=> 'nullable|string|max:255',
+            'is_active'          => 'boolean',
+            'sort_order'         => 'required|integer|min:0',
         ]);
 
         Plan::create($data);
-        return redirect()->route('super-admin.plans.index')->with('success', 'Plan created');
+        return redirect()->back()->with('success', 'Plan created');
     }
 
     public function edit(Plan $plan)
@@ -48,22 +58,32 @@ class PlanController extends Controller
     public function update(Request $request, Plan $plan)
     {
         $data = $request->validate([
-            'name' => 'required|string',
-            'price' => 'required|numeric',
-            'billing_cycle' => 'required|string',
-            'rental_limit' => 'nullable|integer',
-            'sale_limit' => 'nullable|integer',
-            'boost_limit' => 'nullable|integer',
-            'analytics_access' => 'boolean',
+            'name'               => 'required|string|max:255',
+            'slug'               => 'nullable|string|unique:plans,slug,' . $plan->id,
+            'price'              => 'required|numeric|min:0',
+            'currency'           => 'required|string|max:10',
+            'interval'           => 'required|in:week,month,quarter,year,once',
+            'listing_limit'      => 'nullable|integer|min:0',
+            'rental_limit'       => 'nullable|integer|min:0',
+            'sale_limit'         => 'nullable|integer|min:0',
+            'boost_limit'        => 'nullable|integer|min:0',
+            'lead_limit'         => 'nullable|integer|min:0',
+            'verified_badge'     => 'boolean',
+            'priority_ranking'   => 'boolean',
+            'analytics_access'   => 'boolean',
+            'paystack_plan_code' => 'nullable|string|max:255',
+            'flutterwave_plan_id'=> 'nullable|string|max:255',
+            'is_active'          => 'boolean',
+            'sort_order'         => 'required|integer|min:0',
         ]);
 
         $plan->update($data);
-        return redirect()->route('super-admin.plans.index')->with('success', 'Plan updated');
+        return redirect()->back()->with('success', 'Plan updated');
     }
 
     public function destroy(Plan $plan)
     {
         $plan->delete();
-        return redirect()->route('super-admin.plans.index')->with('success', 'Plan deleted');
+        return redirect()->back()->with('success', 'Plan deleted');
     }
 }

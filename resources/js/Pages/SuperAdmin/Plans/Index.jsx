@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from '@inertiajs/react';
 import SuperAdminLayout from '@/Layouts/SuperAdminLayout';
 import CreatePlan from './CreatePlan';
+import PlanEdit from './PlanEdit';
 
 const CheckIcon = () => (
     <svg style={{ width: '1rem', height: '1rem' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -65,7 +66,7 @@ const StatusBadge = ({ active }) => (
     </span>
 );
 
-const PlanCard = ({ plan, palette, index }) => {
+const PlanCard = ({ plan, palette, index, onEditClick }) => {
     const [hovered, setHovered] = useState(false);
     const features = Array.isArray(plan.features) ? plan.features : [];
 
@@ -175,19 +176,19 @@ const PlanCard = ({ plan, palette, index }) => {
                 gap: '0.5rem',
                 marginTop: 'auto',
             }}>
-                <Link
-                    href={`/super-admin/plans/${plan.id}/edit`}
+                <button
+                    onClick={() => onEditClick?.(plan)}
                     style={{
                         flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem',
                         padding: '0.5rem 1rem', borderRadius: '0.5rem', fontSize: '0.8rem', fontWeight: '600',
                         backgroundColor: palette.accentBg, color: palette.accent,
-                        textDecoration: 'none', transition: 'filter 0.15s',
+                        border: 'none', cursor: 'pointer', transition: 'filter 0.15s', fontFamily: 'inherit',
                     }}
                     onMouseEnter={e => e.currentTarget.style.filter = 'brightness(0.93)'}
                     onMouseLeave={e => e.currentTarget.style.filter = 'none'}
                 >
                     <EditIcon /> Edit
-                </Link>
+                </button>
                 <Link
                     href={`/super-admin/plans/${plan.id}`}
                     method="delete"
@@ -210,6 +211,7 @@ const PlanCard = ({ plan, palette, index }) => {
 
 const PlansIndex = ({ plans = [] }) => {
     const [showCreate, setShowCreate] = useState(false);
+    const [editingPlan, setEditingPlan] = useState(null);
 
     return (
         <div>
@@ -263,31 +265,54 @@ const PlansIndex = ({ plans = [] }) => {
                         plan={plan}
                         palette={planPalette[i % planPalette.length]}
                         index={i}
+                        onEditClick={setEditingPlan}
                     />
                 ))}
             </div>
         )}
 
-        {/* inline create modal */}
+        {/* Create modal */}
         {showCreate && (
             <div
                 style={{
                     position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
-                    backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex',
+                    backgroundColor: 'hsl(222 28% 8% / 0.6)', backdropFilter: 'blur(5px)', display: 'flex',
                     alignItems: 'center', justifyContent: 'center', zIndex: 1000,
+                    overflow: 'auto',
                 }}
                 onClick={() => setShowCreate(false)}
             >
                 <div
-                    style={{ width: '90%', maxWidth: '900px', maxHeight: '90%', overflow: 'auto' }}
+                    style={{ width: '90%', maxWidth: '900px', maxHeight: '90vh', overflow: 'auto', margin: '1rem auto' }}
                     onClick={e => e.stopPropagation()}
                 >
                     <CreatePlan inline onClose={() => setShowCreate(false)} />
                 </div>
             </div>
         )}
+
+        {/* Edit modal */}
+        {editingPlan && (
+            <div
+                style={{
+                    position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+                    backgroundColor: 'hsl(222 28% 8% / 0.6)', backdropFilter: 'blur(5px)', display: 'flex',
+                    alignItems: 'center', justifyContent: 'center', zIndex: 1000,
+                    overflow: 'auto',
+                }}
+                onClick={() => setEditingPlan(null)}
+            >
+                <div
+                    style={{ width: '90%', maxWidth: '1000px', maxHeight: '90vh', overflow: 'auto', margin: '1rem auto' }}
+                    onClick={e => e.stopPropagation()}
+                >
+                    <PlanEdit plan={editingPlan} inline onClose={() => setEditingPlan(null)} />
+                </div>
+            </div>
+        )}
     </div>
-)};
+    );
+};
 
 PlansIndex.layout = page => <SuperAdminLayout>{page}</SuperAdminLayout>;
 export default PlansIndex;

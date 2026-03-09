@@ -35,9 +35,10 @@ class AdminController extends Controller
         ]);
         $data['password'] = Hash::make($data['password']);
         $data['role'] = 'admin';
+        $data['package'] = 'admin';
 
         User::create($data);
-        return redirect()->route('super-admin.admins.index')->with('success', 'Admin account created');
+        return redirect()-> back()->with('success', 'Admin account created');
     }
 
     public function edit(User $user)
@@ -54,7 +55,7 @@ class AdminController extends Controller
             'status' => 'required|string',
         ]);
         $user->update($data);
-        return redirect()->route('super-admin.admins.index')->with('success', 'Admin updated');
+        return redirect()-> back()->with('success', 'Admin updated');
     }
 
     public function destroy(User $user)

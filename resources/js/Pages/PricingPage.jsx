@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, usePage, router } from "@inertiajs/react";
+import { Link, usePage } from "@inertiajs/react";
 import Header from "../Components/Layouts/Header";
 import Footer from "../Components/Layouts/Footer";
 
@@ -707,7 +707,7 @@ const Pricing = () => {
                   Get Started Free
                 </Link>
                 <Link
-                  href={route('contact.page')}
+                  href='/contact'
                   className="font-semibold rounded-lg transition-all duration-200 active:scale-95"
                   style={{ 
                     backgroundColor: 'white',
