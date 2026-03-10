@@ -20,9 +20,6 @@ const Header = () => {
   const isAgentLoggedIn = !!auth?.agent;
   const isTenantLoggedIn = !!auth?.tenant;
   const isAdminLoggedIn = !!auth?.admin; // legacy operational admins
-  // `auth.super` now contains both admin and super_admin for backward
-  // compatibility; consider someone a "true" super admin only if they are
-  // *not* an ordinary admin. this keeps the two roles distinct in the UI.
   const isSuperAdminLoggedIn = !!auth?.super && !isAdminLoggedIn; // SaaS / platform superuser
   const isAnyUserLoggedIn = isAgentLoggedIn || isTenantLoggedIn || isAdminLoggedIn || isSuperAdminLoggedIn;
 
@@ -31,15 +28,6 @@ const Header = () => {
   const tenantData = auth?.tenant;
   const adminData = auth?.admin;
   const superAdminData = auth?.super;
-
-  // console.log('Auth state:', {
-  //   isAgentLoggedIn,
-  //   isTenantLoggedIn,
-  //   isSuperAdminLoggedIn,
-  //   isAnyUserLoggedIn,
-  //   tenantData,
-  //   agentData
-  // });
 
   const handleLogout = (e) => {
     e.preventDefault();
@@ -237,9 +225,11 @@ const Header = () => {
               isAnyUserLoggedIn={isAnyUserLoggedIn}
               isAgentLoggedIn={isAgentLoggedIn}
               isTenantLoggedIn={isTenantLoggedIn}
+              isAdminLoggedIn={isAdminLoggedIn}
               isSuperAdminLoggedIn={isSuperAdminLoggedIn}
               agentData={agentData}
               tenantData={tenantData}
+              adminData={adminData}
               superAdminData={superAdminData}
               handleLogout={handleLogout}
               isOnBuyPage={isOnBuyPage}
@@ -367,9 +357,11 @@ const Header = () => {
                 isAnyUserLoggedIn={isAnyUserLoggedIn}
                 isAgentLoggedIn={isAgentLoggedIn}
                 isTenantLoggedIn={isTenantLoggedIn}
+                isAdminLoggedIn={isAdminLoggedIn}
                 isSuperAdminLoggedIn={isSuperAdminLoggedIn}
                 agentData={agentData}
                 tenantData={tenantData}
+                adminData={adminData}
                 superAdminData={superAdminData}
                 handleLogout={handleLogout}
                 handleMobileLinkClick={handleMobileLinkClick}

@@ -21,15 +21,26 @@ class PropertyTypeController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate(['name' => 'required|string']);
-        PropertyType::create($request->only('name'));
+       $data = $request->validate([
+            'name' => 'required|string',
+            'slug' => 'nullable|string',
+            'description' => 'nullable|string',
+            'is_active' => 'boolean',
+            ]);
+        PropertyType::create($data);
         return back()->with('success', 'Property type added');
     }
 
     public function update(Request $request, PropertyType $type)
     {
-        $request->validate(['name' => 'required|string']);
-        $type->update($request->only('name'));
+        $data = $request->validate([
+            'name' => 'required|string',
+            'slug' => 'nullable|string',
+            'description' => 'nullable|string',
+            'is_active' => 'boolean',
+            ]);
+
+        $type->update($data);
         return back()->with('success', 'Property type updated');
     }
 

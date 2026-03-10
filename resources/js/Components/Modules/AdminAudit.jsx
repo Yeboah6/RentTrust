@@ -99,12 +99,12 @@ const AdminAudit = ({ activity }) => {
   const filtered = allLogs.filter(log => {
     const q = searchQuery.toLowerCase();
     const matchesSearch = !searchQuery ||
-      log.admin.toLowerCase().includes(q) ||
+      (log.admin || '').toLowerCase().includes(q) ||
       log.action.toLowerCase().includes(q) ||
       log.affectedUser.toLowerCase().includes(q) ||
       log.notes.toLowerCase().includes(q);
     const matchesAction = !actionFilter || log.type === actionFilter;
-    const matchesAdmin  = !adminFilter  || log.admin === adminFilter;
+    const matchesAdmin  = !adminFilter  || (log.admin || '') === adminFilter;
     return matchesSearch && matchesAction && matchesAdmin;
   });
 
@@ -202,9 +202,9 @@ const AdminAudit = ({ activity }) => {
                   <td style={{ padding: '1rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                       <div style={{ width: '2rem', height: '2rem', backgroundColor: 'hsl(174 62% 32% / 0.1)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.875rem', fontWeight: '600', color: 'hsl(174 62% 32%)', flexShrink: 0 }}>
-                        {log.admin[0]}
+                        {(log.admin || '?')[0]}
                       </div>
-                      <span style={{ fontSize: '0.875rem', fontWeight: '500', color: 'hsl(200 25% 15%)', whiteSpace: 'nowrap' }}>{log.admin}</span>
+                      <span style={{ fontSize: '0.875rem', fontWeight: '500', color: 'hsl(200 25% 15%)', whiteSpace: 'nowrap' }}>{log.admin || 'Unknown'}</span>
                     </div>
                   </td>
                   <td style={{ padding: '1rem' }}>

@@ -16,10 +16,6 @@ use App\Http\Controllers\VerificationsController;
 use App\Http\Controllers\AgentAnalyticsController;
 use App\Http\Controllers\ContactController;
 
-// resource routes for individual rental records. we constrain the
-// `{rent}` parameter to numeric ids so that literal paths like
-// `/rent/listings` don't get mistakenly interpreted as a resource key and
-// trigger a 404 via model binding.
 Route::resource('rent', RentController::class)
     ->except('index')
     ->where(['rent' => '[0-9]+']);

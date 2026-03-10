@@ -52,10 +52,22 @@ class AdminController extends Controller
             'name' => 'required|string',
             'email' => 'required|email|unique:users,email,'.$user->id,
             'role' => 'required|string',
-            'status' => 'required|string',
+            'password' => 'nullable|string|min:8|confirmed',
+            'notify_on_save' => 'boolean',
         ]);
+
+        // Remove fields that shouldn't be updated
+        unset($data['notify_on_save']);
+
+        // Only hash and update password if provided
+        if (!empty($data['password'])) {
+            $data['password'] = Hash::make($data['password']);
+        } else {
+            unset($data['password']);
+        }
+
         $user->update($data);
-        return redirect()-> back()->with('success', 'Admin updated');
+        return redirect()->back()->with('success', 'Admin updated');
     }
 
     public function destroy(User $user)
@@ -68,5 +80,17 @@ class AdminController extends Controller
     {
         // could send reset email or set to default
         return back();
+    }
+
+    public function suspend(User $user)
+    {
+        $user->update(['status' => 'suspended']);
+        return redirect()->back()->with('success', 'Admin suspended');
+    }
+
+    public function reactivate(User $user)
+    {
+        $user->update(['status' => 'active']);
+        return redirect()->back()->with('success', 'Admin reactivated');
     }
 }

@@ -6,6 +6,8 @@ use App\Http\Controllers\SuperAdmin\PlanController;
 use App\Http\Controllers\SuperAdmin\SubscriptionController;
 use App\Http\Controllers\SuperAdmin\PaymentController;
 use App\Http\Controllers\SuperAdmin\AdminController;
+use App\Http\Controllers\SuperAdmin\AgentController;
+use App\Http\Controllers\SuperAdmin\ListingController;
 use App\Http\Controllers\SuperAdmin\PropertyTypeController;
 use App\Http\Controllers\SuperAdmin\LocationController;
 use App\Http\Controllers\SuperAdmin\AmenityController;
@@ -24,12 +26,17 @@ Route::prefix('super-admin')->middleware(['auth','verified','role:super_admin'])
     Route::post('subscriptions/{subscription}/extend', [SubscriptionController::class, 'extend'])->name('super-admin.subscriptions.extend');
     Route::post('subscriptions/{subscription}/upgrade', [SubscriptionController::class, 'upgrade'])->name('super-admin.subscriptions.upgrade');
 
+    Route::resource('agents', AgentController::class);
+    Route::resource('listings', ListingController::class);
+
     Route::get('payments', [PaymentController::class, 'index'])->name('super-admin.payments.index');
     Route::post('payments/{payment}/refund', [PaymentController::class, 'refund'])->name('super-admin.payments.refund');
 
     // admin accounts
     Route::resource('admins', AdminController::class)->parameters(['admins' => 'user']);
     Route::post('admins/{user}/reset-password', [AdminController::class, 'resetPassword'])->name('super-admin.admins.reset-password');
+    Route::post('admins/{user}/suspend', [AdminController::class, 'suspend'])->name('super-admin.admins.suspend');
+    Route::post('admins/{user}/reactivate', [AdminController::class, 'reactivate'])->name('super-admin.admins.reactivate');
 
     // configuration
     Route::resource('property-types', PropertyTypeController::class)->only(['index','store','update','destroy']);

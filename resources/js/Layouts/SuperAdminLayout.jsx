@@ -100,13 +100,16 @@ const NAV = [
             { label: 'Plans',          href: '/super-admin/plans',         icon: PlansIcon },
             { label: 'Subscriptions',  href: '/super-admin/subscriptions', icon: SubscriptionsIcon },
             { label: 'Payments',       href: '/super-admin/payments',      icon: PaymentsIcon },
+            { label: 'Listings',       href: '/super-admin/listings',      icon: PropertyTypesIcon },
+            // { label: 'Payments',       href: '/super-admin/payments',      icon: PaymentsIcon },
         ],
     },
     {
         key: 'admin',
-        label: 'Admin Management',
+        label: 'User Management',
         items: [
             { label: 'Admin Accounts', href: '/super-admin/admins', icon: AdminsIcon },
+            { label: 'Agent Accounts', href: '/super-admin/agents', icon: AdminsIcon },
         ],
     },
     {
@@ -218,8 +221,10 @@ const SectionLabel = ({ label, collapsed }) => {
 // ── Layout ────────────────────────────────────────────────────────────────────
 
 const SuperAdminLayout = ({ children }) => {
+    const { url, auth } = usePage();
+    const superAdminData = auth?.super;
+
     const [collapsed, setCollapsed] = useState(false);
-    const { url } = usePage();
 
     const sidebarWidth = collapsed ? '4rem' : '14rem';
 
@@ -271,7 +276,7 @@ const SuperAdminLayout = ({ children }) => {
                             {!collapsed && (
                                 <div style={{ overflow: 'hidden' }}>
                                     <div style={{ fontSize: '0.8rem', fontWeight: '800', color: 'hsl(0 0% 95%)', letterSpacing: '0.01em', lineHeight: 1, whiteSpace: 'nowrap' }}>
-                                        Super Admin
+                                        {superAdminData?.name || "Super Admin"}
                                     </div>
                                     <div style={{ fontSize: '0.58rem', color: 'hsla(0 0% 100% / 0.28)', letterSpacing: '0.09em', textTransform: 'uppercase', marginTop: '0.15rem', whiteSpace: 'nowrap' }}>
                                         Control Panel

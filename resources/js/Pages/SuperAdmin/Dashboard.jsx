@@ -1,4 +1,5 @@
 import React from 'react';
+import { usePage } from '@inertiajs/react';
 import SuperAdminLayout from '@/Layouts/SuperAdminLayout';
 import AdminKpiCard from '@/Components/Modules/AdminKpiCard';
 
@@ -51,6 +52,21 @@ const RevenueIcon = ({ style }) => (
 );
 
 const Dashboard = ({ platform, saas }) => {
+    const { auth } = usePage().props;
+    const superAdminData = auth?.super;
+    const rentals = platform?.rental_listings || [];
+    const reports = platform?.reports || [];
+
+    const mockSuperAdmin = {
+        name: superAdminData?.name || "Super Admin",
+        role: superAdminData?.role,
+        status: "verified",
+        avatar_url: null,
+        total_agents: platform.total_agents || 0,
+        total_listings: rentals?.length || platform.total_listings || 0,
+        total_reports: reports?.length || 0
+    };
+
     const kpis = [
         {
             icon: HomeIcon,
@@ -121,7 +137,56 @@ const Dashboard = ({ platform, saas }) => {
 
     return (
         <div>
-            <h1 className="text-2xl font-bold mb-6">Super Admin Dashboard</h1>
+            {/* Admin Profile Card */}
+            <div className="bg-white rounded-lg shadow-sm p-6 mb-8 border border-gray-200">
+                <div className="flex items-center space-x-4">
+                    {/* Avatar */}
+                    <div className="flex-shrink-0">
+                        {mockSuperAdmin.avatar_url ? (
+                            <img 
+                                src={mockSuperAdmin.avatar_url} 
+                                alt={mockSuperAdmin.name}
+                                className="h-16 w-16 rounded-full object-cover border-2 border-blue-500"
+                            />
+                        ) : (
+                            <div className="h-16 w-16 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white text-2xl font-bold border-2 border-white shadow-sm">
+                                {mockSuperAdmin.name.charAt(0)}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Admin Info */}
+                    <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                            <h2 className="text-xl font-bold text-gray-900">{mockSuperAdmin.name}</h2>
+                            {mockSuperAdmin.status === 'verified' && (
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    <svg className="mr-1 h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                    </svg>
+                                    Verified
+                                </span>
+                            )}
+                        </div>
+                        <p className="text-sm text-gray-600 mt-1">{mockSuperAdmin.role === "super_admin" ? 'Super Admin' : 'Platform Administrator'}</p>
+                    </div>
+
+                    {/* Quick Actions */}
+                    <div className="flex gap-2">
+                        <button className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
+                            View Profile
+                        </button>
+                        <button className="px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors">
+                            Settings
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {/* Dashboard Title */}
+            {/* <h1 className="text-2xl font-bold mb-6">Super Admin Dashboard</h1> */}
+            
+            {/* KPI Grid */}
             <div
                 style={{
                     display: 'grid',

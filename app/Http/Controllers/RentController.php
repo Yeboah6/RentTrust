@@ -25,7 +25,6 @@ class RentController extends Controller
     {
         // Show recent rental listings
         $recentRentals = Rental::where('purpose', 'rent')
-            // ->where('status', 'approved')
             ->latest()
             ->limit(4)
             ->get();
@@ -39,7 +38,6 @@ class RentController extends Controller
 
         // Get rental areas grouped by city
         $rentalAreas = Rental::where('purpose', 'rent')
-            // ->where('status', 'approved')
             ->select('city', 'area', 'rent_min', 'rent_max', 'created_at')
             ->get()
             ->groupBy('city')

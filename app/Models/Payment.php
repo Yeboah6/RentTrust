@@ -27,4 +27,14 @@ class Payment extends Model
     {
         return $this->belongsTo(Subscription::class);
     }
+
+    /**
+     * Some payments reference a plan directly (e.g. one-off plan purchases).
+     * Controller was eager-loading "plan", so add the relationship here.
+     */
+    public function plan(): BelongsTo
+    {
+        // avoid a circular import if Plan lives elsewhere
+        return $this->belongsTo(\App\Models\Plan::class);
+    }
 }

@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Link, router, useForm } from '@inertiajs/react';
 import SuperAdminLayout from '@/Layouts/SuperAdminLayout';
+import AdminEdit from './AdminEdit';
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 
@@ -182,6 +183,7 @@ const Toggle = ({ value, onChange, label, sub }) => (
 );
 
 const AddAdminModal = ({ onClose, onSuccess }) => {
+    const [adminEdit, setAdminEdit] = useState(false);
     const { data, setData, post, processing, errors, reset } = useForm({
         name:                  '',
         email:                 '',
@@ -431,6 +433,7 @@ const AdminsIndex = ({ admins: initial = [] }) => {
     const [showAdd,      setShowAdd]      = useState(false);
     const [deleteTarget, setDeleteTarget] = useState(null);
     const [deleting,     setDeleting]     = useState(false);
+    const [editingAdmin, setEditingAdmin] = useState(null);
     const [toast,        setToast]        = useState(null);
     const toastTimer = useRef(null);
 
@@ -633,12 +636,13 @@ const AdminsIndex = ({ admins: initial = [] }) => {
                                                         onMouseLeave={e => e.currentTarget.style.filter = 'none'}>
                                                         <Icons.impersonate /> Impersonate
                                                     </Link>
-                                                    <Link href={`/super-admin/admins/${a.id}/edit`}
+                                                    <button 
+                                                    onClick={() => setEditingAdmin(a)}
                                                         style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', padding: '0.4rem 0.65rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: '600', backgroundColor: 'hsl(214 100% 95%)', color: 'hsl(214 80% 42%)', textDecoration: 'none', transition: 'filter 0.12s', whiteSpace: 'nowrap' }}
                                                         onMouseEnter={e => e.currentTarget.style.filter = 'brightness(0.92)'}
                                                         onMouseLeave={e => e.currentTarget.style.filter = 'none'}>
                                                         <Icons.edit /> Edit
-                                                    </Link>
+                                                    </button>
                                                     <button onClick={() => setDeleteTarget(a)}
                                                         style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '0.4rem 0.55rem', borderRadius: '0.5rem', backgroundColor: 'hsl(0 70% 96%)', color: 'hsl(0 65% 48%)', border: 'none', cursor: 'pointer', transition: 'filter 0.12s', fontFamily: 'inherit' }}
                                                         onMouseEnter={e => e.currentTarget.style.filter = 'brightness(0.92)'}
@@ -654,6 +658,25 @@ const AdminsIndex = ({ admins: initial = [] }) => {
                         </div>
                     )}
                 </div>
+
+                {editingAdmin && (
+                    <div
+                        style={{
+                            position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+                            backgroundColor: 'hsl(222 28% 8% / 0.6)', backdropFilter: 'blur(5px)', display: 'flex',
+                            alignItems: 'center', justifyContent: 'center', zIndex: 1000,
+                            overflow: 'auto',
+                        }}
+                        onClick={() => setEditingAdmin(null)}
+                    >
+                        <div
+                            style={{ width: '90%', maxWidth: '900px', maxHeight: '90vh', overflow: 'auto', margin: '1rem auto' }}
+                            onClick={e => e.stopPropagation()}
+                        >
+                            <AdminEdit admin={editingAdmin} inline onClose={() => setEditingAdmin(null)} />
+                        </div>
+                    </div>
+                )}
             </div>
 
             <style>{`

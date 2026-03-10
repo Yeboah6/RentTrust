@@ -11,6 +11,9 @@ return new class extends Migration
         Schema::create('property_types', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->string('slug')->nullable();
+            $table->string('description')->nullable();
+            $table->boolean('is_active');
             $table->timestamps();
         });
     }
