@@ -15,22 +15,33 @@ class LocationController extends Controller
 
     public function index()
     {
-        $locations = Location::all();
+        $locations = Location::latest()->get();
         return inertia('SuperAdmin/Locations/Index', ['locations' => $locations]);
     }
 
     public function store(Request $request)
     {
-        $request->validate(['name' => 'required|string']);
-        Location::create($request->only('name'));
-        return back()->with('success', 'Location added');
+        $location = $request->validate([
+            'name' => 'required|string',
+            'type' => 'required|string',
+            'slug' => 'nullable|string',
+            'is_active' => 'boolean'
+        ]);
+        Location::create($location);
+        return redirect()->back()->with('success', 'Location added');
     }
 
     public function update(Request $request, Location $location)
     {
-        $request->validate(['name' => 'required|string']);
-        $location->update($request->only('name'));
-        return back()->with('success', 'Location updated');
+        $location = $request->validate([
+            'name' => 'required|string',
+            'type' => 'required|string',
+            'slug' => 'nullable|string',
+            'is_active' => 'boolean'
+        ]);
+
+        $location->update($location);
+        return redirect()->back()->with('success', 'Location updated');
     }
 
     public function destroy(Location $location)

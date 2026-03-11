@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
+use App\Models\Subscription;
 use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
@@ -38,52 +39,69 @@ class AuthController extends Controller
         return redirect($redirectUrl);
     }
 
-    public function login(Request $request) 
+    public function login(Request $request)
     {
         $validated = $request->validate([
-            'email' => 'required|email',
-            'password' => 'required|string|min:8'
+            'email'    => 'required|email',
+            'password' => 'required|string|min:8',
         ]);
-
-        $email = $validated['email'];
-        $password = $validated['password'];
-
-        // Find user by email
-        $user = User::where('email', $email)->first();
-
-        // If user doesn't exist or password doesn't match
-        if (!$user || !Hash::check($password, $user->password)) {
+    
+        $user = User::where('email', $validated['email'])->first();
+    
+        if (!$user || !Hash::check($validated['password'], $user->password)) {
             return back()->withErrors([
                 'email' => 'The provided credentials do not match our records.',
             ])->onlyInput('email');
         }
-
-        // Regenerate session to prevent session fixation
+    
         $request->session()->regenerate();
-
-        // Log the user in
         Auth::login($user);
-
-        // Redirect based on role
+    
+        // ── Tenant ────────────────────────────────────────────────────────────────
         if ($user->role === 'tenant') {
             $redirectUrl = $request->session()->pull('signup_referrer', '/');
             return redirect($redirectUrl);
-        } 
-        elseif ($user->role === 'agent' && $user->package === null || $user->package === 'free') {
+        }
+    
+        // ── Agent ─────────────────────────────────────────────────────────────────
+        if ($user->role === 'agent') {
+            /*
+             * Resolve the agent's active or most-recent paid subscription.
+             * We check `ends_at` (or `renews_at`) to determine whether they
+             * still have access — even if the subscription was cancelled, a
+             * pre-paid period may still be valid until that date passes.
+             */
+            $subscription = Subscription::where('user_id', $user->id)
+                ->whereIn('status', ['active', 'cancelled', 'grace'])
+                ->orderByDesc('ends_at')
+                ->first();
+    
+            $hasActiveAccess = $subscription
+                && $subscription->ends_at
+                && now()->lessThanOrEqualTo($subscription->ends_at);
+    
+            if ($hasActiveAccess && in_array($user->package, ['pro', 'elite'])) {
+                // Paid period is still valid — send to the full agent dashboard
+                return redirect()->intended('/agent-dashboard');
+            }
+    
+            // Free plan, expired subscription, or no subscription at all
             return redirect()->intended('/agent/dashboard');
-        } 
-        elseif ($user->role === 'agent' && $user->package === 'pro' && $user->package === 'elite') {
-            return redirect()->intended('/agent-dashboard');
-        } 
-        elseif ($user->role === 'admin' && $user->package === 'admin') {
+        }
+    
+        // ── Admin ─────────────────────────────────────────────────────────────────
+        if ($user->role === 'admin' && $user->package === 'admin') {
             return redirect('/admin');
-        } elseif ($user->role === 'super_admin' && $user->package === 'super_admin') {
+        }
+    
+        // ── Super admin ───────────────────────────────────────────────────────────
+        if ($user->role === 'super_admin' && $user->package === 'super_admin') {
             return redirect('/super-admin/dashboard');
         }
-
-        // Fallback redirect (shouldn't normally reach here)
+    
         return redirect('/');
     }
+
 
     public function logout(Request $request) {
         Auth::logout();

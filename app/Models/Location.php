@@ -9,7 +9,12 @@ class Location extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'parent_id'];
+    protected $fillable = [
+        'name', 
+        'slug',
+        'type',
+        'parent_id'
+    ];
 
     public function parent()
     {

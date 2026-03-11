@@ -102,7 +102,6 @@ class DashboardController extends Controller
     }
 
     public function adminDashboard() {
-        // this method supports the existing "admin" role panel (operational tools)
         $adminData = Auth::user();
 
         $sub  = $adminData->subscription()->with('plan')->first();

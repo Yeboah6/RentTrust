@@ -30,6 +30,8 @@ const Icons = {
     chevU:    () => <Ico d="M5 15l7-7 7 7" size="0.8rem" />,
     chevL:    () => <Ico d="M15 19l-7-7 7-7" size="0.8rem" />,
     chevR:    () => <Ico d="M9 5l7 7-7 7" size="0.8rem" />,
+    key:      () => <Ico d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" size="1.15rem" />,
+    tag:      () => <Ico d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" size="1.15rem" />,
     spinner:  () => (
         <svg style={{ width: '0.95rem', height: '0.95rem', animation: 'lstSpin 0.75s linear infinite', flexShrink: 0 }} fill="none" viewBox="0 0 24 24">
             <circle style={{ opacity: 0.2 }} cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -42,6 +44,7 @@ const Icons = {
 
 const STATUS_CFG = {
     active:    { label: 'Active',    bg: 'hsl(152 60% 93%)', color: 'hsl(152 60% 28%)', dot: 'hsl(152 60% 38%)' },
+    approved:  { label: 'Active',    bg: 'hsl(152 60% 93%)', color: 'hsl(152 60% 28%)', dot: 'hsl(152 60% 38%)' },
     pending:   { label: 'Pending',   bg: 'hsl(40 90% 93%)',  color: 'hsl(40 80% 30%)',  dot: 'hsl(40 80% 44%)' },
     sold:      { label: 'Sold',      bg: 'hsl(214 100% 95%)',color: 'hsl(214 80% 38%)', dot: 'hsl(214 80% 50%)' },
     rented:    { label: 'Rented',    bg: 'hsl(270 60% 95%)', color: 'hsl(270 55% 38%)', dot: 'hsl(270 55% 50%)' },
@@ -58,8 +61,6 @@ const TYPE_CFG = {
     short:  { label: 'Short Let', bg: 'hsl(270 60% 95%)', color: 'hsl(270 55% 40%)', dot: 'hsl(270 55% 52%)' },
     lease:  { label: 'Lease',     bg: 'hsl(40 90% 93%)',  color: 'hsl(40 80% 32%)',  dot: 'hsl(40 80% 46%)' },
 };
-
-const PROPERTY_TYPES = ['apartment','house','land','commercial','office','shop','warehouse','villa','studio'];
 
 const SORT_COLS = ['title', 'price', 'created_at', 'views'];
 const PAGE_SIZE = 12;
@@ -88,22 +89,28 @@ const normalise = (l) => ({
     ...l,
     _id:           l.id,
     title:         l.title         ?? l.name          ?? 'Untitled Listing',
-    status_key:    (l.status       ?? 'pending').toLowerCase(),
-    listing_type:  (l.listing_type ?? l.type          ?? 'sale').toLowerCase(),
+    // Map 'approved' → 'active' for display, preserve 'pending', etc.
+    status_key:    (() => {
+        const raw = (l.status ?? 'pending').toLowerCase();
+        if (raw === 'approved') return 'active';
+        return raw;
+    })(),
+    listing_type:  (l.purpose      ?? l.listing_type  ?? l.type ?? 'sale').toLowerCase(),
     property_type: (l.property_type ?? l.category     ?? '').toLowerCase(),
-    price:         l.price         ?? l.amount        ?? 0,
+    price:         l.sale_price    ?? l.rent_min      ?? l.price ?? 0,
     currency:      l.currency      ?? 'GH₵',
-    location:      l.location      ?? l.city          ?? l.area ?? '—',
-    agent_name:    l.agent?.name   ?? l.agent_name    ?? '—',
-    agent_id:      l.agent?.id     ?? l.agent_id      ?? null,
-    views:         l.views         ?? l.views_count   ?? 0,
-    inquiries:     l.inquiries     ?? l.inquiries_count ?? 0,
+    location:      l.city          ?? l.area          ?? l.location ?? '—',
+    agent_name:    l.agent_name    ?? '—',
+    agent_id:      l.agent_id      ?? null,
+    views:         l.views_count   ?? l.views         ?? 0,
+    inquiries:     l.inquiries_count ?? l.inquiries   ?? 0,
     images:        l.images        ?? l.media         ?? [],
-    bedrooms:      l.bedrooms      ?? l.beds          ?? null,
-    bathrooms:     l.bathrooms     ?? l.baths         ?? null,
+    bedrooms:      l.bedrooms      ?? null,
+    bathrooms:     l.bathrooms     ?? null,
     area_sqft:     l.area_sqft     ?? l.floor_area    ?? null,
     is_featured:   l.is_featured   ?? l.featured      ?? false,
     is_verified:   l.is_verified   ?? l.verified      ?? false,
+    is_sold:       l.is_sold       ?? false,
     created_at:    l.created_at    ?? '',
     flagged_count: l.flagged_count ?? l.reports_count ?? 0,
 });
@@ -130,6 +137,8 @@ const TypeBadge = ({ lt }) => {
     );
 };
 
+// ─── KPI Cards ────────────────────────────────────────────────────────────────
+
 const Kpi = ({ label, value, sub, accent, iconBg, iconColor, icon }) => (
     <div style={{ backgroundColor: 'white', border: '1px solid hsl(220 15% 91%)', borderRadius: '0.875rem', padding: '1.1rem 1.25rem', display: 'flex', alignItems: 'center', gap: '0.875rem', boxShadow: '0 1px 3px hsl(220 20% 15% / 0.04)' }}>
         <div style={{ width: '2.6rem', height: '2.6rem', borderRadius: '0.65rem', backgroundColor: iconBg, color: iconColor, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{icon}</div>
@@ -137,6 +146,27 @@ const Kpi = ({ label, value, sub, accent, iconBg, iconColor, icon }) => (
             <div style={{ fontSize: '1.5rem', fontWeight: '900', color: accent, lineHeight: 1, letterSpacing: '-0.02em' }}>{value}</div>
             <div style={{ fontSize: '0.78rem', fontWeight: '700', color: 'hsl(220 25% 22%)', marginTop: '0.1rem' }}>{label}</div>
             {sub && <div style={{ fontSize: '0.7rem', color: 'hsl(220 15% 55%)', marginTop: '0.05rem' }}>{sub}</div>}
+        </div>
+    </div>
+);
+
+// Split KPI: sale + rent breakdown in one card
+const SplitKpi = ({ label, saleVal, rentVal, icon }) => (
+    <div style={{ backgroundColor: 'white', border: '1px solid hsl(220 15% 91%)', borderRadius: '0.875rem', padding: '1.1rem 1.25rem', display: 'flex', alignItems: 'center', gap: '0.875rem', boxShadow: '0 1px 3px hsl(220 20% 15% / 0.04)' }}>
+        <div style={{ width: '2.6rem', height: '2.6rem', borderRadius: '0.65rem', backgroundColor: 'hsl(220 15% 94%)', color: 'hsl(220 25% 30%)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{icon}</div>
+        <div style={{ flex: 1 }}>
+            <div style={{ fontSize: '0.78rem', fontWeight: '700', color: 'hsl(220 25% 22%)', marginBottom: '0.45rem' }}>{label}</div>
+            <div style={{ display: 'flex', gap: '1rem' }}>
+                <div>
+                    <div style={{ fontSize: '1.15rem', fontWeight: '900', color: 'hsl(152 55% 33%)', lineHeight: 1 }}>{saleVal}</div>
+                    <div style={{ fontSize: '0.65rem', color: 'hsl(152 55% 40%)', fontWeight: '700', marginTop: '0.1rem' }}>FOR SALE</div>
+                </div>
+                <div style={{ width: '1px', backgroundColor: 'hsl(220 15% 91%)' }} />
+                <div>
+                    <div style={{ fontSize: '1.15rem', fontWeight: '900', color: 'hsl(214 80% 42%)', lineHeight: 1 }}>{rentVal}</div>
+                    <div style={{ fontSize: '0.65rem', color: 'hsl(214 80% 46%)', fontWeight: '700', marginTop: '0.1rem' }}>FOR RENT</div>
+                </div>
+            </div>
         </div>
     </div>
 );
@@ -179,10 +209,6 @@ const Pagination = ({ page, total, onChange }) => {
 
 const ActionModal = ({ listing, action, onConfirm, onClose, processing }) => {
     const isDelete   = action === 'delete';
-    const isFeatured = action === 'feature';
-    const isApprove  = action === 'approve';
-    const isReject   = action === 'reject';
-    const isSuspend  = action === 'suspend';
 
     const meta = {
         delete:  { label: 'Delete Listing',      accent: 'hsl(0 65% 50%)',   accentBg: 'hsl(0 70% 95%)',   icon: Icons.trash,   confirmBg: 'hsl(0 65% 50%)',   confirmLabel: 'Delete' },
@@ -207,7 +233,6 @@ const ActionModal = ({ listing, action, onConfirm, onClose, processing }) => {
                         </div>
                     </div>
 
-                    {/* Listing preview */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 0.875rem', borderRadius: '0.65rem', backgroundColor: 'hsl(220 15% 97%)', border: '1px solid hsl(220 15% 91%)', marginBottom: '1.1rem' }}>
                         <div style={{ width: '2.75rem', height: '2.75rem', borderRadius: '0.55rem', backgroundColor: 'hsl(220 15% 90%)', flexShrink: 0, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'hsl(220 15% 55%)' }}>
                             {listing?.images?.[0] ? <img src={listing.images[0]} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Icons.home />}
@@ -245,12 +270,10 @@ const ActionModal = ({ listing, action, onConfirm, onClose, processing }) => {
 
 const ListingRow = ({ listing: l, index, onAction }) => {
     const [hov, setHov] = useState(false);
-    const cfg     = STATUS_CFG[l.status_key] ?? STATUS_CFG.draft;
-    const typeCfg = TYPE_CFG[(l.listing_type ?? '').toLowerCase()] ?? TYPE_CFG.sale;
 
     return (
         <div onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
-            style={{ display: 'grid', gridTemplateColumns: '2.5rem minmax(0,1fr) 10rem 9rem 8rem 8rem 7rem auto', alignItems: 'center', gap: '0.75rem', padding: '0.85rem 1.25rem', borderBottom: '1px solid hsl(220 15% 95%)', backgroundColor: hov ? 'hsl(220 20% 98.5%)' : 'white', transition: 'background-color 0.12s', animation: `lstRowIn 0.3s ease ${Math.min(index, 15) * 0.025}s both` }}>
+            style={{ position: 'relative', display: 'grid', gridTemplateColumns: '2.5rem minmax(0,1fr) 10rem 9rem 8rem 8rem 7rem', alignItems: 'center', gap: '0.75rem', padding: '0.85rem 1.25rem', borderBottom: '1px solid hsl(220 15% 95%)', backgroundColor: hov ? 'hsl(220 20% 98.5%)' : 'white', transition: 'background-color 0.12s', animation: `lstRowIn 0.3s ease ${Math.min(index, 15) * 0.025}s both` }}>
 
             {/* Thumbnail */}
             <div style={{ width: '2.5rem', height: '2.5rem', borderRadius: '0.5rem', backgroundColor: 'hsl(220 15% 91%)', flexShrink: 0, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'hsl(220 15% 55%)' }}>
@@ -266,6 +289,7 @@ const ListingRow = ({ listing: l, index, onAction }) => {
                     {l.is_featured && <span style={{ fontSize: '0.6rem', fontWeight: '800', backgroundColor: 'hsl(40 90% 93%)', color: 'hsl(40 80% 30%)', padding: '0.08rem 0.35rem', borderRadius: '0.25rem', letterSpacing: '0.05em' }}>⭐ FEAT</span>}
                     {l.is_verified && <span style={{ fontSize: '0.6rem', fontWeight: '800', backgroundColor: 'hsl(214 100% 95%)', color: 'hsl(214 80% 38%)', padding: '0.08rem 0.35rem', borderRadius: '0.25rem', letterSpacing: '0.05em' }}>✓ VER</span>}
                     {l.flagged_count > 0 && <span style={{ fontSize: '0.6rem', fontWeight: '800', backgroundColor: 'hsl(0 80% 95%)', color: 'hsl(0 70% 40%)', padding: '0.08rem 0.35rem', borderRadius: '0.25rem', letterSpacing: '0.05em' }}>🚩 {l.flagged_count}</span>}
+                    {l.is_sold && <span style={{ fontSize: '0.6rem', fontWeight: '800', backgroundColor: 'hsl(214 100% 95%)', color: 'hsl(214 80% 38%)', padding: '0.08rem 0.35rem', borderRadius: '0.25rem', letterSpacing: '0.05em' }}>SOLD</span>}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexWrap: 'wrap' }}>
                     <span style={{ fontSize: '0.7rem', color: 'hsl(220 15% 50%)' }}>📍 {l.location}</span>
@@ -277,8 +301,8 @@ const ListingRow = ({ listing: l, index, onAction }) => {
 
             {/* Agent */}
             <div style={{ minWidth: 0 }}>
-                {l.agent_id ? (
-                    <Link href={`/super-admin/agents/${l.agent_id}`}
+                {l.agent_name && l.agent_name !== '—' ? (
+                    <Link href={`/super-admin/agents/${l.user_id}`}
                         style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', textDecoration: 'none' }}>
                         <div style={{ width: '1.65rem', height: '1.65rem', borderRadius: '50%', backgroundColor: `hsl(${avatarHue(l.agent_name)} 50% 88%)`, color: `hsl(${avatarHue(l.agent_name)} 50% 32%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6rem', fontWeight: '800', flexShrink: 0 }}>
                             {l.agent_name.split(' ').map(w => w[0]).slice(0, 2).join('')}
@@ -310,8 +334,15 @@ const ListingRow = ({ listing: l, index, onAction }) => {
             {/* Date */}
             <div style={{ fontSize: '0.73rem', color: 'hsl(220 15% 52%)' }}>{fmtDate(l.created_at)}</div>
 
-            {/* Actions */}
-            <div style={{ display: 'flex', gap: '0.3rem', alignItems: 'center' }}>
+            {/* Actions — absolutely positioned, takes no grid space */}
+            <div style={{
+                position: 'absolute', right: '1.25rem', top: '50%',
+                transform: hov ? 'translateY(-50%)' : 'translateY(-50%) translateX(4px)',
+                display: 'flex', gap: '0.3rem', alignItems: 'center',
+                opacity: hov ? 1 : 0,
+                transition: 'opacity 0.15s ease, transform 0.15s ease',
+                pointerEvents: hov ? 'auto' : 'none',
+            }}>
                 <Link href={`/super-admin/listings/${l._id}`}
                     style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.38rem 0.5rem', borderRadius: '0.45rem', border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white', color: 'hsl(220 25% 35%)', textDecoration: 'none', transition: 'all 0.15s' }}
                     onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'hsl(220 15% 95%)'; }}
@@ -324,7 +355,6 @@ const ListingRow = ({ listing: l, index, onAction }) => {
                     onMouseLeave={e => e.currentTarget.style.filter = 'none'}>
                     <Icons.edit />
                 </Link>
-                {/* Contextual action */}
                 {l.status_key === 'pending' && (
                     <button onClick={() => onAction(l, 'approve')}
                         style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.38rem 0.5rem', borderRadius: '0.45rem', border: 'none', backgroundColor: 'hsl(152 55% 92%)', color: 'hsl(152 55% 30%)', cursor: 'pointer', transition: 'filter 0.15s', fontFamily: 'inherit' }}
@@ -354,8 +384,8 @@ const ListingRow = ({ listing: l, index, onAction }) => {
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 
-const ListingsIndex = ({ listings: rawListings = [], property_types: propTypes = [] }) => {
-    const listings    = useMemo(() => rawListings.map(normalise), [rawListings]);
+const ListingsIndex = ({ listings: rawListings = [], metrics: serverMetrics = {}, property_types: propTypes = [] }) => {
+    const listings = useMemo(() => rawListings.map(normalise), [rawListings]);
 
     const [search,      setSearch]      = useState('');
     const [status,      setStatus]      = useState('all');
@@ -364,7 +394,7 @@ const ListingsIndex = ({ listings: rawListings = [], property_types: propTypes =
     const [sortCol,     setSortCol]     = useState('created_at');
     const [sortDir,     setSortDir]     = useState('desc');
     const [page,        setPage]        = useState(1);
-    const [modal,       setModal]       = useState(null); // { listing, action }
+    const [modal,       setModal]       = useState(null);
     const [processing,  setProcessing]  = useState(false);
     const [toast,       setToast]       = useState(null);
     const toastTimer = useRef(null);
@@ -390,10 +420,10 @@ const ListingsIndex = ({ listings: rawListings = [], property_types: propTypes =
         const q = search.toLowerCase();
         return listings
             .filter(l => {
-                const okQ    = !q || l.title.toLowerCase().includes(q) || l.location.toLowerCase().includes(q) || l.agent_name.toLowerCase().includes(q);
-                const okSt   = status   === 'all' || l.status_key    === status;
-                const okLt   = lstType  === 'all' || l.listing_type  === lstType;
-                const okPt   = propType === 'all' || l.property_type === propType;
+                const okQ  = !q || l.title.toLowerCase().includes(q) || l.location.toLowerCase().includes(q) || l.agent_name.toLowerCase().includes(q);
+                const okSt = status   === 'all' || l.status_key    === status;
+                const okLt = lstType  === 'all' || l.listing_type  === lstType;
+                const okPt = propType === 'all' || l.property_type === propType;
                 return okQ && okSt && okLt && okPt;
             })
             .sort((a, b) => {
@@ -409,38 +439,39 @@ const ListingsIndex = ({ listings: rawListings = [], property_types: propTypes =
     const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
     const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
+    // KPIs — prefer server-side metrics, fall back to client-side
+    const activeCount  = serverMetrics.active   ?? listings.filter(l => l.status_key === 'active').length;
+    const pendingCount = serverMetrics.pending   ?? listings.filter(l => l.status_key === 'pending').length;
+    const flaggedCount = serverMetrics.flagged   ?? listings.filter(l => l.flagged_count > 0).length;
+    const saleTotal    = serverMetrics.sale_total  ?? listings.filter(l => l.listing_type === 'sale').length;
+    const saleActive   = serverMetrics.sale_active ?? listings.filter(l => l.listing_type === 'sale' && l.status_key === 'active').length;
+    const saleSold     = serverMetrics.sale_sold   ?? listings.filter(l => l.is_sold).length;
+    const rentTotal    = serverMetrics.rent_total  ?? listings.filter(l => l.listing_type === 'rent').length;
+    const rentActive   = serverMetrics.rent_active ?? listings.filter(l => l.listing_type === 'rent' && l.status_key === 'active').length;
+
     const handleAction = (listing, action) => setModal({ listing, action });
 
     const confirmAction = () => {
         const { listing, action } = modal;
         setProcessing(true);
-
         const routeMap = {
             approve: `/super-admin/listings/${listing._id}/approve`,
             reject:  `/super-admin/listings/${listing._id}/reject`,
             suspend: `/super-admin/listings/${listing._id}/suspend`,
             delete:  `/super-admin/listings/${listing._id}`,
         };
-
         const method = action === 'delete' ? 'delete' : 'post';
-
         router[method](routeMap[action], {}, {
             preserveScroll: true,
             onSuccess: () => {
                 showToast(`Listing "${listing.title}" ${action}d successfully.`);
                 setModal(null);
-                router.reload({ only: ['listings'] });
+                router.reload({ only: ['listings', 'metrics'] });
             },
             onError: () => showToast('Action failed. Please try again.', 'error'),
             onFinish: () => setProcessing(false),
         });
     };
-
-    // KPIs
-    const activeCount  = listings.filter(l => l.status_key === 'active').length;
-    const pendingCount = listings.filter(l => l.status_key === 'pending').length;
-    const flaggedCount = listings.filter(l => l.flagged_count > 0).length;
-    const totalRevenue = listings.filter(l => l.status_key === 'sold' || l.status_key === 'rented').length;
 
     const SortTh = ({ col, label }) => {
         const active = sortCol === col;
@@ -484,12 +515,38 @@ const ListingsIndex = ({ listings: rawListings = [], property_types: propTypes =
                     </Link>
                 </div>
 
-                {/* ── KPI strip ── */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.75rem', marginBottom: '1.25rem' }}>
+                {/* ── KPI strip — row 1: overview ── */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.75rem', marginBottom: '0.75rem' }}>
                     <Kpi label="Total Listings"  value={listings.length.toLocaleString()} sub="All records"        accent="hsl(220 25% 15%)"  iconBg="hsl(220 20% 93%)"   iconColor="hsl(220 25% 30%)" icon={<Icons.building />} />
                     <Kpi label="Active"          value={activeCount.toLocaleString()}      sub="Live on platform"  accent="hsl(152 55% 33%)"  iconBg="hsl(152 55% 92%)"  iconColor="hsl(152 55% 35%)" icon={<Icons.check />} />
                     <Kpi label="Pending Review"  value={pendingCount.toLocaleString()}     sub="Awaiting approval" accent="hsl(40 80% 36%)"   iconBg="hsl(40 90% 93%)"   iconColor="hsl(40 80% 36%)"  icon={<Icons.alert />} />
                     <Kpi label="Flagged"         value={flaggedCount.toLocaleString()}     sub="Need attention"    accent="hsl(0 65% 44%)"    iconBg="hsl(0 70% 95%)"    iconColor="hsl(0 65% 44%)"   icon={<Icons.flag />} />
+                </div>
+
+                {/* ── KPI strip — row 2: sale vs rent breakdown ── */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem', marginBottom: '1.25rem' }}>
+                    <SplitKpi
+                        label="Total Listings by Purpose"
+                        saleVal={saleTotal.toLocaleString()}
+                        rentVal={rentTotal.toLocaleString()}
+                        icon={<Icons.building />}
+                    />
+                    <SplitKpi
+                        label="Active Listings by Purpose"
+                        saleVal={saleActive.toLocaleString()}
+                        rentVal={rentActive.toLocaleString()}
+                        icon={<Icons.check />}
+                    />
+                    {/* Sale-specific: sold count */}
+                    <Kpi
+                        label="Properties Sold"
+                        value={saleSold.toLocaleString()}
+                        sub="Completed sales"
+                        accent="hsl(214 80% 40%)"
+                        iconBg="hsl(214 100% 95%)"
+                        iconColor="hsl(214 80% 42%)"
+                        icon={<Icons.tag />}
+                    />
                 </div>
 
                 {/* ── Toolbar ── */}
@@ -504,7 +561,6 @@ const ListingsIndex = ({ listings: rawListings = [], property_types: propTypes =
                                 onBlur={e => e.target.style.borderColor = 'hsl(220 15% 88%)'} />
                         </div>
 
-                        {/* Property type dropdown */}
                         {allPropTypes.length > 0 && (
                             <select value={propType} onChange={e => { setPropType(e.target.value); setPage(1); }}
                                 style={{ padding: '0.52rem 0.875rem', border: '1px solid hsl(220 15% 88%)', borderRadius: '0.55rem', fontSize: '0.82rem', color: 'hsl(220 25% 22%)', backgroundColor: 'white', outline: 'none', fontFamily: 'inherit', cursor: 'pointer' }}>
@@ -523,7 +579,7 @@ const ListingsIndex = ({ listings: rawListings = [], property_types: propTypes =
                         <span style={{ marginLeft: 'auto', fontSize: '0.75rem', color: 'hsl(220 15% 52%)', whiteSpace: 'nowrap' }}>{filtered.length.toLocaleString()} result{filtered.length !== 1 ? 's' : ''}</span>
                     </div>
 
-                    {/* Pill filters — status */}
+                    {/* Status pills */}
                     <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap', alignItems: 'center' }}>
                         <span style={{ fontSize: '0.7rem', fontWeight: '700', color: 'hsl(220 15% 52%)', marginRight: '0.2rem' }}>Status:</span>
                         {STATUSES.map(s => {
@@ -536,7 +592,7 @@ const ListingsIndex = ({ listings: rawListings = [], property_types: propTypes =
                         })}
                     </div>
 
-                    {/* Pill filters — listing type */}
+                    {/* Type pills */}
                     <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap', alignItems: 'center' }}>
                         <span style={{ fontSize: '0.7rem', fontWeight: '700', color: 'hsl(220 15% 52%)', marginRight: '0.2rem' }}>Type:</span>
                         {LISTING_TYPES.map(t => {
@@ -560,15 +616,14 @@ const ListingsIndex = ({ listings: rawListings = [], property_types: propTypes =
                 ) : (
                     <div style={{ backgroundColor: 'white', border: '1px solid hsl(220 15% 91%)', borderRadius: '1rem', overflow: 'hidden', boxShadow: '0 1px 4px hsl(220 20% 15% / 0.05)' }}>
                         {/* Header */}
-                        <div style={{ display: 'grid', gridTemplateColumns: '2.5rem minmax(0,1fr) 10rem 9rem 8rem 8rem 7rem auto', alignItems: 'center', gap: '0.75rem', padding: '0.65rem 1.25rem', backgroundColor: 'hsl(220 15% 97.5%)', borderBottom: '1px solid hsl(220 15% 92%)' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '2.5rem minmax(0,1fr) 10rem 9rem 8rem 8rem 7rem', alignItems: 'center', gap: '0.75rem', padding: '0.65rem 1.25rem', backgroundColor: 'hsl(220 15% 97.5%)', borderBottom: '1px solid hsl(220 15% 92%)' }}>
                             <div />
-                            <div style={{ fontSize: '0.68rem', fontWeight: '800', letterSpacing: '0.07em', textTransform: 'uppercase', color: 'hsl(220 15% 48%)' }}><SortTh col="title" label="Listing" /></div>
+                            <div><SortTh col="title" label="Listing" /></div>
                             <div style={{ fontSize: '0.68rem', fontWeight: '800', letterSpacing: '0.07em', textTransform: 'uppercase', color: 'hsl(220 15% 48%)' }}>Agent</div>
-                            <div style={{ fontSize: '0.68rem', fontWeight: '800', letterSpacing: '0.07em', textTransform: 'uppercase', color: 'hsl(220 15% 48%)' }}><SortTh col="price" label="Price" /></div>
+                            <div><SortTh col="price" label="Price" /></div>
                             <div style={{ fontSize: '0.68rem', fontWeight: '800', letterSpacing: '0.07em', textTransform: 'uppercase', color: 'hsl(220 15% 48%)' }}>Status</div>
-                            <div style={{ fontSize: '0.68rem', fontWeight: '800', letterSpacing: '0.07em', textTransform: 'uppercase', color: 'hsl(220 15% 48%)' }}><SortTh col="views" label="Engagement" /></div>
-                            <div style={{ fontSize: '0.68rem', fontWeight: '800', letterSpacing: '0.07em', textTransform: 'uppercase', color: 'hsl(220 15% 48%)' }}><SortTh col="created_at" label="Added" /></div>
-                            <div style={{ fontSize: '0.68rem', fontWeight: '800', letterSpacing: '0.07em', textTransform: 'uppercase', color: 'hsl(220 15% 48%)' }}>Actions</div>
+                            <div><SortTh col="views" label="Engagement" /></div>
+                            <div><SortTh col="created_at" label="Added" /></div>
                         </div>
 
                         {/* Rows */}

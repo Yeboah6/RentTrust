@@ -120,12 +120,11 @@ const CYCLES = [
 ];
 
 const CURRENCIES = [
+    { value: 'GH₵', label: 'GH₵ GHS' },
     { value: '$',   label: '$ USD' },
     { value: '£',   label: '£ GBP' },
     { value: '€',   label: '€ EUR' },
     { value: '₦',   label: '₦ NGN' },
-    { value: 'GH₵', label: 'GH₵ GHS' },
-    { value: 'KSh', label: 'KSh KES' },
 ];
 
 // ─── Live preview card ────────────────────────────────────────────────────────
@@ -234,9 +233,10 @@ const PreviewCard = ({ data }) => {
 const PlanCreate = ({ inline = false, onClose } = {}) => {
     const { data, setData, post, processing, errors } = useForm({
         name:               '',
+        description:        '',
         slug:               '',
         price:              '',
-        currency:           '$',
+        currency:           'GHS',
         interval:           'month',
         listing_limit:      '',
         rental_limit:       '',
@@ -250,6 +250,7 @@ const PlanCreate = ({ inline = false, onClose } = {}) => {
         flutterwave_plan_id: '',
         is_active:          true,
         sort_order:         0,
+        features: [],
     });
 
 
@@ -327,6 +328,15 @@ const PlanCreate = ({ inline = false, onClose } = {}) => {
                                     </FField>
                                 </div>
 
+                                <FField label="Description" hint="Shown to users on the pricing page">
+                                    <PlanTextarea
+                                        value={data.description}
+                                        onChange={e => setData('description', e.target.value)}
+                                        placeholder="e.g. Perfect for getting started…"
+                                        rows={2}
+                                    />
+                                </FField>
+
                                 <FField label="URL Slug" hint="Auto-generated from name if empty">
                                     <PlanInput value={data.slug} onChange={e => setData('slug', e.target.value)} placeholder="professional, starter…" />
                                 </FField>
@@ -399,6 +409,30 @@ const PlanCreate = ({ inline = false, onClose } = {}) => {
                                     <Toggle value={data.analytics_access}   onChange={v => setData('analytics_access', v)}   label="Analytics Access"   sub="View detailed listing analytics" />
                                 </div>
                             </div>
+
+                            <FField label="Feature Bullet Points" hint="Shown as a checklist on the pricing page">
+                                {data.features.map((f, i) => (
+                                    <div key={i} style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.4rem' }}>
+                                        <PlanInput
+                                            value={f}
+                                            onChange={e => {
+                                                const updated = [...data.features];
+                                                updated[i] = e.target.value;
+                                                setData('features', updated);
+                                            }}
+                                            placeholder={`Feature ${i + 1}`}
+                                        />
+                                        <button type="button" onClick={() => setData('features', data.features.filter((_, j) => j !== i))}
+                                            style={{ padding: '0 0.65rem', borderRadius: '0.55rem', border: '1px solid hsl(0 65% 88%)', backgroundColor: 'hsl(0 65% 96%)', color: 'hsl(0 65% 48%)', cursor: 'pointer' }}>
+                                            <Icons.x />
+                                        </button>
+                                    </div>
+                                ))}
+                                <button type="button" onClick={() => setData('features', [...data.features, ''])}
+                                    style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.45rem 0.875rem', borderRadius: '0.55rem', border: '1px dashed hsl(220 15% 82%)', backgroundColor: 'transparent', color: 'hsl(220 15% 48%)', fontSize: '0.78rem', fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit' }}>
+                                    <Icons.plus /> Add Feature
+                                </button>
+                            </FField>
 
                             {/* ── Payment Gateway Codes ── */}
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>

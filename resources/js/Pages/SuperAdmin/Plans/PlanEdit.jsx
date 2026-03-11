@@ -308,7 +308,7 @@ const PlanEdit = ({ plan, inline = false, onClose } = {}) => {
     // Normalise incoming plan — map old field names to new ones
     const normalisedPlan = {
         ...plan,
-        currency:      plan.currency      ?? '$',
+        currency:      plan.currency      ?? 'GHS',
         interval:      plan.interval      ?? plan.billing_cycle ?? 'month',
         is_active:     plan.is_active     ?? true,
         slug:          plan.slug          ?? '',

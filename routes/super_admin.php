@@ -22,9 +22,20 @@ Route::prefix('super-admin')->middleware(['auth','verified','role:super_admin'])
     // SaaS management
     Route::resource('plans', PlanController::class)->parameters(['plans' => 'plan']);
     Route::get('subscriptions', [SubscriptionController::class, 'index'])->name('super-admin.subscriptions.index');
-    Route::post('subscriptions/{subscription}/cancel', [SubscriptionController::class, 'cancel'])->name('super-admin.subscriptions.cancel');
-    Route::post('subscriptions/{subscription}/extend', [SubscriptionController::class, 'extend'])->name('super-admin.subscriptions.extend');
-    Route::post('subscriptions/{subscription}/upgrade', [SubscriptionController::class, 'upgrade'])->name('super-admin.subscriptions.upgrade');
+    Route::get ('/{id}', SubscriptionController::class . '@show')->name('show');
+
+    // Route::post('subscriptions/{subscription}/cancel', [SubscriptionController::class, 'cancel'])->name('super-admin.subscriptions.cancel');
+    // Route::post('subscriptions/{subscription}/extend', [SubscriptionController::class, 'extend'])->name('super-admin.subscriptions.extend');
+    // Route::post('subscriptions/{subscription}/upgrade', [SubscriptionController::class, 'upgrade'])->name('super-admin.subscriptions.upgrade');
+
+    // Actions
+    Route::post('/{id}/cancel',     SubscriptionController::class . '@cancel')  ->name('cancel');
+    Route::post('/{id}/suspend',    SubscriptionController::class . '@suspend') ->name('suspend');
+    Route::post('/{id}/extend',     SubscriptionController::class . '@extend')  ->name('extend');
+    Route::post('/{id}/upgrade',    SubscriptionController::class . '@upgrade') ->name('upgrade');
+
+    // Admin-issued free subscription (grant)
+    Route::post('/grant',           SubscriptionController::class . '@grant')   ->name('grant');
 
     Route::resource('agents', AgentController::class);
     Route::resource('listings', ListingController::class);
@@ -49,5 +60,9 @@ Route::prefix('super-admin')->middleware(['auth','verified','role:super_admin'])
 
     // support & system tools
     Route::get('impersonate/{user}', [SystemController::class, 'impersonate'])->name('super-admin.impersonate');
-    Route::get('logs', [SystemController::class, 'logs'])->name('super-admin.logs');
+    // Route::get('logs', [SystemController::class, 'logs'])->name('super-admin.logs');
+
+    Route::get ('audit-log',          [SystemController::class, 'index'])  ->name('audit-log.index');
+    Route::get ('audit-log/{id}',     [SystemController::class, 'show'])   ->name('audit-log.show');
+    Route::get ('audit-log/export',   [SystemController::class, 'export']) ->name('audit-log.export');
 });

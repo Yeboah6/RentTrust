@@ -11,6 +11,9 @@ return new class extends Migration
         Schema::create('amenities', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->string('description')->nullable();
+            $table->string('category');
+            $table->boolean('is_active');
             $table->timestamps();
         });
     }

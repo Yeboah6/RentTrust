@@ -375,7 +375,7 @@ const AgentRow = ({ agent: a, index, onAction }) => {
 
     return (
         <div onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
-            style={{ display: 'grid', gridTemplateColumns: '3rem minmax(0,1fr) 11rem 8rem 9rem 9rem 7rem auto', alignItems: 'center', gap: '0.75rem', padding: '0.875rem 1.25rem', borderBottom: '1px solid hsl(220 15% 95%)', backgroundColor: hov ? 'hsl(220 20% 98.5%)' : 'white', transition: 'background-color 0.12s', animation: `agRowIn 0.3s ease ${Math.min(index, 15) * 0.025}s both` }}>
+            style={{ position: 'relative', display: 'grid', gridTemplateColumns: '3rem minmax(0,1fr) 11rem 8rem 9rem 9rem 7rem', alignItems: 'center', gap: '0.75rem', padding: '0.875rem 1.25rem', borderBottom: '1px solid hsl(220 15% 95%)', backgroundColor: hov ? 'hsl(220 20% 98.5%)' : 'white', transition: 'background-color 0.12s', animation: `agRowIn 0.3s ease ${Math.min(index, 15) * 0.025}s both` }}>
 
             {/* Avatar */}
             <div style={{ position: 'relative', flexShrink: 0 }}>
@@ -438,8 +438,15 @@ const AgentRow = ({ agent: a, index, onAction }) => {
                 {a.last_active && <div style={{ fontSize: '0.65rem', color: 'hsl(220 15% 55%)' }}>Active {fmtRelative(a.last_active)}</div>}
             </div>
 
-            {/* Actions */}
-            <div style={{ display: 'flex', gap: '0.3rem' }}>
+            {/* Actions — absolutely positioned, takes no grid space */}
+            <div style={{
+                position: 'absolute', right: '1.25rem', top: '50%',
+                transform: hov ? 'translateY(-50%)' : 'translateY(-50%) translateX(4px)',
+                display: 'flex', gap: '0.3rem', alignItems: 'center',
+                opacity: hov ? 1 : 0,
+                transition: 'opacity 0.15s ease, transform 0.15s ease',
+                pointerEvents: hov ? 'auto' : 'none',
+            }}>
                 <Link href={`/super-admin/agents/${a._id}`}
                     style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.38rem 0.5rem', borderRadius: '0.45rem', border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white', color: 'hsl(220 25% 35%)', textDecoration: 'none', transition: 'all 0.15s' }}
                     onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'hsl(220 15% 95%)'; }}
@@ -489,7 +496,7 @@ const AgentRow = ({ agent: a, index, onAction }) => {
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 
-const AgentsIndex = ({ agents: rawAgents = [] }) => {
+const AgentsIndex = ({ agents: rawAgents = [], listings_count }) => {
     const agents = useMemo(() => rawAgents.map(normalise), [rawAgents]);
 
     const [search,     setSearch]     = useState('');
@@ -562,7 +569,7 @@ const AgentsIndex = ({ agents: rawAgents = [] }) => {
     const activeCount   = agents.filter(a => a.status_key === 'active' || a.status_key === 'verified').length;
     const pendingCount  = agents.filter(a => a.status_key === 'pending').length;
     const verifiedCount = agents.filter(a => a.is_verified).length;
-    const totalListings = agents.reduce((s, a) => s + (a.listings_count ?? 0), 0);
+    const totalListings = listings_count;
 
     const SortBtn = ({ col, label }) => {
         const active = sortCol === col;

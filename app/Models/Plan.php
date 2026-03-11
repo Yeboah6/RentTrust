@@ -8,9 +8,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Plan extends Model
 {
     protected $fillable = [
-        'name', 'slug', 'price', 'currency', 'interval',
+        'name', 'description', 'slug', 'price', 'currency', 'interval',
         'listing_limit', 'rental_limit', 'sale_limit', 'boost_limit', 'lead_limit',
-        'verified_badge', 'priority_ranking', 'analytics_access',
+        'verified_badge', 'priority_ranking', 'analytics_access', 'features',
         'paystack_plan_code', 'flutterwave_plan_id',
         'is_active', 'sort_order',
     ];
@@ -26,6 +26,7 @@ class Plan extends Model
         'sale_limit'       => 'integer',
         'boost_limit'      => 'integer',
         'lead_limit'       => 'integer',
+        'features' => 'array',
     ];
 
     public function subscriptions(): HasMany

@@ -41,7 +41,7 @@ class RentalSearchController extends Controller
 
         try {
             $listings = Rental::where('purpose', 'rent')
-                ->where('status', 'approved')
+                // ->where('status', 'approved')
                 ->latest()
                 ->paginate($perPage, ['*'], 'page', $page);
 

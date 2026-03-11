@@ -17,15 +17,12 @@ class SaleSearchController extends Controller
     {
         // Initial load: show 8 sale listings
         $listings = Rental::where('purpose', 'sale')
-            // ->where('status', 'approved')
             ->where('is_sold', false)
             ->latest()
             ->paginate(8);
 
         return inertia('SaleListingsPage', [
             'listings' => $listings,
-            // 'page_title' => 'Properties for Sale',
-            // 'page_description' => 'Find the perfect property to buy'
         ]);
     }
 
@@ -82,7 +79,6 @@ class SaleSearchController extends Controller
     {
         try {
             $areas = Rental::where('purpose', 'sale')
-                // ->where('status', 'approved')
                 ->where('is_sold', false)
                 ->select('city', 'area', 'sale_price', 'created_at')
                 ->get()

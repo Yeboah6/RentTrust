@@ -12,6 +12,7 @@ return new class extends Migration
         Schema::create('plans', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->text('description');
             $table->string('slug')->unique();
             $table->decimal('price', 10, 2)->default(0);
             $table->string('currency')->default('GHS');
@@ -22,6 +23,7 @@ return new class extends Migration
             $table->boolean('verified_badge')->default(false);
             $table->boolean('priority_ranking')->default(false);
             $table->boolean('analytics_access')->default(false);
+            $table->json('features');
             $table->string('paystack_plan_code')->nullable();
             $table->string('flutterwave_plan_id')->nullable();
             $table->boolean('is_active')->default(true);
@@ -35,6 +37,13 @@ return new class extends Migration
         DB::table('plans')->insert([
             [
                 'name' => 'Free',
+                'description' => 'Perfect for getting started',  // ← add
+                'features'    => json_encode([                    // ← add
+                    'Submit listings to the platform',
+                    'Limited visibility in search results',
+                    'Basic listing management',
+                    'Standard support',
+                ]),
                 'slug' => 'free',
                 'price' => 0,
                 'currency' => 'GHS',
@@ -52,6 +61,15 @@ return new class extends Migration
             ],
             [
                 'name' => 'Pro',
+                'description' => 'Build trust and stand out',
+                'features'    => json_encode([
+                    'Everything in Free, plus:',
+                    'Access to tenant inquiries',
+                    'Verified landlord badge',
+                    'Higher ranking in search results',
+                    'Respond to reviews',
+                    'Dedicated account manager',
+                ]),
                 'slug' => 'pro',
                 'price' => 149.00,
                 'currency' => 'GHS',
@@ -69,6 +87,12 @@ return new class extends Migration
             ],
             [
                 'name' => 'Elite',
+                'description' => 'Advanced tools for professionals',
+                'features'    => json_encode([
+                    'Everything in Pro, plus:',
+                    'Lead unlock credits (200/month)',
+                    'Featured listing placement',
+                ]),
                 'slug' => 'elite',
                 'price' => 249.00,
                 'currency' => 'GHS',
