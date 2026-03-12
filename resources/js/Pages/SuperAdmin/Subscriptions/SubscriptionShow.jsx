@@ -276,14 +276,14 @@ const SubscriptionShow = ({ subscription: sub, audit_logs = [], plans = [] }) =>
 
     const handleConfirm = () => {
         const id = sub.id;
-        if (modal === 'cancel')     postAction(`/admin/subscriptions/${id}/cancel`,  {},           'Subscription cancelled.');
-        if (modal === 'suspend')    postAction(`/admin/subscriptions/${id}/suspend`, {},           'Account suspended.');
-        if (modal === 'free_month') postAction(`/admin/subscriptions/${id}/extend`,  { days: 30 }, 'Free month granted.');
+        if (modal === 'cancel')     postAction(`/super-admin/subscriptions/${id}/cancel`,  {},           'Subscription cancelled.');
+        if (modal === 'suspend')    postAction(`/super-admin/subscriptions/${id}/suspend`, {},           'Account suspended.');
+        if (modal === 'free_month') postAction(`/super-admin/subscriptions/${id}/extend`,  { days: 30 }, 'Free month granted.');
     };
 
     const handleUpgrade = (planId) => {
         setProcessing(true);
-        router.post(`/admin/subscriptions/${sub.id}/upgrade`, { plan_id: planId }, {
+        router.post(`/super-admin/subscriptions/${sub.id}/upgrade`, { plan_id: planId }, {
             preserveScroll: true,
             onSuccess: () => { showToast('Plan upgraded successfully.'); setModal(null); },
             onError:   () => showToast('Upgrade failed. Please try again.', 'error'),

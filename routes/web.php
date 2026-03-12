@@ -40,12 +40,6 @@ Route::prefix('buy')->group(function () {
     Route::get('/api/more', [SaleSearchController::class, 'getMore'])->name('buy.more');
 });
 
-// ── Legacy Listings Routes (for backward compatibility) ────────────────────────
-// Route::get('/api/listings/more', [RentController::class, 'getMoreListings'])->name('listings.more');
-
-// Route::get('/areas', [RentController::class, 'areas']);
-// Route::get('/areas/{city}/{area}', [RentController::class, 'showArea'])->name('areas.show');
-
 // tracking endpoints
 Route::post('/api/listings/{rent}/track-view', [RentController::class, 'trackView'])->name('listings.trackView');
 Route::post('/api/listings/{rent}/track-inquiry', [RentController::class, 'trackInquiry'])->name('listings.trackInquiry');
@@ -55,8 +49,6 @@ Route::get('/api/listings/analytics', [AgentAnalyticsController::class, 'index']
 Route::get('/api/listings/{rent}/analytics', [AgentAnalyticsController::class, 'summary'])->name('listings.analytics.summary');
 Route::get('/api/areas/search', [RentController::class, 'searchAreas'])->name('areas.search');
 Route::get('/api/areas/city/{city}', [RentController::class, 'getAreasByCity'])->name('areas.by-city');
-
-// Route::get('/claim-listings', [RentController::class, 'claimListings']);
 
 
 Route::get('/reviews-reports', [RentController::class, 'reviews']);
@@ -92,7 +84,7 @@ Route::middleware(['auth', 'verified', 'throttle:60,1', 'role:agent'])->group(fu
         ->name('verification.destroy');
 });
 
-Route::get('/agent/dashboard', [DashboardController::class, 'freeTier'])->middleware(['auth','verified','throttle:60,1'])->name('free.agent.dashboard');
+Route::get('/agent/dashboard', [DashboardController::class, 'freeTier'])->middleware(['auth','role:agent','throttle:60,1'])->name('free.agent.dashboard');
 
 Route::prefix('webhooks')->group(function () {
     Route::post('/paystack', [WebhookController::class, 'paystack'])->name('webhook.paystack');

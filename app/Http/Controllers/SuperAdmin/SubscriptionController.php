@@ -11,6 +11,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Models\AdminAuditLog;
 
 class SubscriptionController extends Controller
 {
@@ -18,12 +19,6 @@ class SubscriptionController extends Controller
     {
         $this->middleware(['auth', 'verified', 'role:super_admin']);
     }
-
-    // public function index()
-    // {
-    //     $subscriptions = Subscription::with('user', 'plan')->get();
-    //     return inertia('SuperAdmin/Subscriptions/Index', ['subscriptions' => $subscriptions]);
-    // }
 
     public function index()
     {
@@ -37,11 +32,11 @@ class SubscriptionController extends Controller
         ]);
     }
 
-    public function show(int $id)
+    public function show($id)
     {
         $sub = Subscription::with(['user', 'plan'])->findOrFail($id);
 
-        $auditLogs = Log::with('admin')
+        $auditLogs = AdminAuditLog::with('admin')
             ->where('subscription_id', $id)
             ->latest()
             ->get()
@@ -54,14 +49,14 @@ class SubscriptionController extends Controller
                 'created_at' => $log->created_at,
             ]);
 
-        return inertia('SuperAdmin/Subscriptions/Show', [
+        return inertia('SuperAdmin/Subscriptions/SubscriptionShow', [
             'subscription' => $this->formatSubscription($sub),
             'audit_logs'   => $auditLogs,
             'plans'        => Plan::orderBy('price')->get(['id', 'name', 'slug', 'price', 'billing_cycle']),
         ]);
     }
 
-    public function cancel(int $id)
+    public function cancel($id)
     {
         $sub = Subscription::with('plan')->findOrFail($id);
 
@@ -93,7 +88,7 @@ class SubscriptionController extends Controller
         return back()->with('success', 'Subscription cancelled and user downgraded to Free.');
     }
 
-    public function suspend(int $id)
+    public function suspend($id)
     {
         $sub = Subscription::with('plan')->findOrFail($id);
 
@@ -122,7 +117,7 @@ class SubscriptionController extends Controller
         return back()->with('success', 'Account suspended. User has lost access to paid features.');
     }
 
-    public function extend(Request $request, int $id)
+    public function extend(Request $request, $id)
     {
         $request->validate(['days' => 'required|integer|min:1|max:365']);
 
@@ -163,49 +158,52 @@ class SubscriptionController extends Controller
     public function upgrade(Request $request, int $id)
     {
         $request->validate(['plan_id' => 'required|exists:plans,id']);
-
+    
         $sub  = Subscription::with(['plan', 'user'])->findOrFail($id);
         $plan = Plan::findOrFail($request->plan_id);
-
+    
         abort_if($sub->plan_id === $plan->id, 422, 'User is already on this plan.');
-
+    
         DB::transaction(function () use ($sub, $plan) {
             $previousPlan = $sub->plan?->name;
-
+    
             // 1. Cancel the current subscription
             $sub->update(['status' => 'cancelled']);
-
+    
             // 2. Create new active subscription for the user
             $newSub = Subscription::create([
-                'user_id'    => $sub->user_id,
-                'plan_id'    => $plan->id,
-                'status'     => 'active',
-                'starts_at'  => now(),
-                'renews_at'  => now()->addMonth(),
-                'created_at' => now(),
+                'user_id'   => $sub->user_id,
+                'plan_id'   => $plan->id,
+                'status'    => 'active',
+                'provider' => 'super_admin_grant',
+                'starts_at' => now(),
+                'grace_ends_at' => now()->addMonth()->addDays(3),
+                'ends_at' => now()->addMonth(),
+                'renews_at' => now()->addMonth(),
             ]);
-
+    
             // 3. Update user package
             User::where('id', $sub->user_id)->update(['package' => $plan->slug]);
-
-            // 4. Audit the old subscription
+    
+            // 4. Audit old subscription
             $this->auditLog($sub->id, 'upgrade', [
-                'previous_plan_id'   => $sub->plan_id,
-                'previous_plan_name' => $previousPlan,
-                'new_plan_id'        => $plan->id,
-                'new_plan_name'      => $plan->name,
-                'new_subscription_id'=> $newSub->id,
-                'user_id'            => $sub->user_id,
+                'previous_plan_id'    => $sub->plan_id,
+                'previous_plan_name'  => $previousPlan,
+                'new_plan_id'         => $plan->id,
+                'new_plan_name'       => $plan->name,
+                'new_subscription_id' => $newSub->id,
+                'user_id'             => $sub->user_id,
             ], "Plan changed from '{$previousPlan}' to '{$plan->name}'. New subscription #{$newSub->id} created.");
-
-            // Also audit the new subscription
+    
+            // 5. Audit new subscription
             $this->auditLog($newSub->id, 'created_via_upgrade', [
                 'previous_subscription_id' => $sub->id,
                 'previous_plan_name'       => $previousPlan,
                 'plan_name'                => $plan->name,
                 'user_id'                  => $sub->user_id,
             ], "Subscription created by admin upgrade from '{$previousPlan}'.");
-
+    
+            // 6. System log — Log::info(), NOT AdminAuditLog::info() (that method does not exist)
             Log::info('SuperAdmin upgraded subscription', [
                 'old_subscription_id' => $sub->id,
                 'new_subscription_id' => $newSub->id,
@@ -216,10 +214,8 @@ class SubscriptionController extends Controller
                 'admin_id'            => Auth::id(),
             ]);
         });
-
-        return redirect()
-            ->route('super-admin.subscriptions.index')
-            ->with('success', "User upgraded to {$plan->name} successfully.");
+    
+        return back()->with('success', "User upgraded to {$plan->name} successfully.");
     }
 
     private function formatSubscription(Subscription $s): array

@@ -21,15 +21,25 @@ class AmenityController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate(['name' => 'required|string']);
-        Amenity::create($request->only('name'));
+        $data = $request->validate([
+            'name' => 'required|string',
+            'category' => 'required|string',
+            'description' => 'nullable|string',
+            'is_active' => 'boolean'
+        ]);
+        Amenity::create($data);
         return back()->with('success', 'Amenity added');
     }
 
     public function update(Request $request, Amenity $amenity)
     {
-        $request->validate(['name' => 'required|string']);
-        $amenity->update($request->only('name'));
+        $data = $request->validate([
+            'name' => 'required|string',
+            'category' => 'required|string',
+            'description' => 'nullable|string',
+            'is_active' => 'boolean'
+        ]);
+        $amenity->update($data);
         return back()->with('success', 'Amenity updated');
     }
 

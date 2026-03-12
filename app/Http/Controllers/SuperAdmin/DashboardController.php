@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Rental;
 use App\Models\User;
 use App\Models\ListingInquiry;
+use App\Models\ListingView;
 
 class DashboardController extends Controller
 {
@@ -26,6 +27,7 @@ class DashboardController extends Controller
         $totalAdmins     = User::where('role', 'admin')->count();
         $totalUsers      = User::where('role', 'tenant')->count();
         $totalInquiries  = ListingInquiry::count();
+        $totalView  = ListingView::count();
 
         // SaaS metrics - reuse existing models
         $activeSubs      = User::whereHas('subscription', function ($q) {
@@ -43,6 +45,7 @@ class DashboardController extends Controller
                 'total_admins'    => $totalAdmins,
                 'total_users'     => $totalUsers,
                 'total_inquiries' => $totalInquiries,
+                'total_views' => $totalView,
             ],
             'saas' => [
                 'active_subscriptions' => $activeSubs,

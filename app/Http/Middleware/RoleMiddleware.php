@@ -35,7 +35,7 @@ class RoleMiddleware
                 // redirect to super admin dashboard
                 return redirect()->route('super-admin.dashboard')->with('error', 'Access denied to that section.');
             } elseif ($userRole === 'tenant') {
-                return redirect()->route('/')->with('error', 'Access denied to that section.');
+                return redirect('/')->with('error', 'Access denied to that section.');
             }
             
             // Fallback for unknown roles

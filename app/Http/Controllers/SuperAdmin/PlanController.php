@@ -28,6 +28,7 @@ class PlanController extends Controller
     {
         $data = $request->validate([
             'name'               => 'required|string|max:255',
+            'description'        => 'required|string',
             'slug'               => 'nullable|string|unique:plans,slug',
             'price'              => 'required|numeric|min:0',
             'currency'           => 'required|string|max:10',
@@ -44,6 +45,7 @@ class PlanController extends Controller
             'flutterwave_plan_id'=> 'nullable|string|max:255',
             'is_active'          => 'boolean',
             'sort_order'         => 'required|integer|min:0',
+            'features'           => 'required'
         ]);
 
         Plan::create($data);

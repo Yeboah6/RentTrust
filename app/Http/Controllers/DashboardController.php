@@ -23,6 +23,11 @@ class DashboardController extends Controller
 
     public function agentDashboard() {
         $agentData = Auth::user();
+ 
+        // Guard: must be authenticated and an agent
+        if (!$agentData || $agentData->role !== 'agent') {
+            abort(403, 'Unauthorized. Agent access only.');
+        }
 
         // include view/inquiry/review counts for each rental
         $rentals = Rental::where('user_id', $agentData->id)

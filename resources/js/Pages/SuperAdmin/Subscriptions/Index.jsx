@@ -303,29 +303,33 @@ const SubscriptionsIndex = ({ subscriptions: raw = [] }) => {
         if (!actionTarget) return;
         const { sub, type } = actionTarget;
         setProcessing(true);
-
-        const endpoint = {
-            cancel:     `/admin/subscriptions/${sub._id}/cancel`,
-            suspend:    `/admin/subscriptions/${sub._id}/suspend`,
-            free_month: `/admin/subscriptions/${sub._id}/extend`,
-        }[type];
-
+        
         if (type === 'upgrade') {
-            router.visit(`/super-admin/subscriptions/${sub._id}/upgrade`);
-            setProcessing(false); setActionTarget(null); return;
+            // Upgrade is handled entirely inside the UpgradeModal on the Show page.
+            // From the Index page, just navigate to the Show page where the modal lives.
+            router.visit(`/super-admin/subscriptions/${sub._id}`);
+            setProcessing(false);
+            setActionTarget(null);
+            return;
         }
-
-        const body = type === 'free_month' ? { days: 30 } : {};
-        const newStatus = { cancel:'cancelled', suspend:'suspended' }[type];
-
-        router.post(endpoint, body, {
+    
+        const endpoints = {
+            cancel:     `/super-admin/subscriptions/${sub._id}/cancel`,
+            suspend:    `/super-admin/subscriptions/${sub._id}/suspend`,
+            free_month: `/super-admin/subscriptions/${sub._id}/extend`,
+        };
+    
+        const body      = type === 'free_month' ? { days: 30 } : {};
+        const newStatus = { cancel: 'cancelled', suspend: 'suspended' }[type];
+    
+        router.post(endpoints[type], body, {
             preserveScroll: true,
             onSuccess: () => {
                 if (newStatus) setSubs(prev => prev.map(s => s._id === sub._id ? { ...s, status_key: newStatus } : s));
                 showToast(`${ACTION_CFG[type].label} applied successfully.`);
                 setActionTarget(null);
             },
-            onError: () => showToast(`Action failed. Please try again.`, 'error'),
+            onError:  () => showToast('Action failed. Please try again.', 'error'),
             onFinish: () => setProcessing(false),
         });
     };

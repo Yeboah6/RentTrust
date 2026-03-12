@@ -13,6 +13,7 @@ class Location extends Model
         'name', 
         'slug',
         'type',
+        'is_active',
         'parent_id'
     ];
 
