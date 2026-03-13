@@ -73,7 +73,7 @@ class SystemController extends Controller
         // Fetch up to 500 most recent entries (frontend paginates client-side)
         $logs = $query->limit(500)->get()->map(fn ($l) => $this->formatLog($l));
 
-        return Inertia::render('SuperAdmin/Support/Logs', [
+        return inertia('SuperAdmin/Support/Logs', [
             'logs' => $logs,
         ]);
     }

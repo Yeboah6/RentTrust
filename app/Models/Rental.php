@@ -50,8 +50,6 @@ class Rental extends Model
         'sold_at' => 'datetime',
     ];
 
-    // protected $with = ['agent'];
-
     public function user()
     {
         return $this->belongsTo(User::class);
@@ -72,12 +70,9 @@ class Rental extends Model
         return $this->hasMany(ListingInquiry::class);
     }
 
-    protected function amenities(): Attribute
+    public function reports()
     {
-        return Attribute::make(
-            get: fn ($value) => json_decode($value, true) ?? [],
-            set: fn ($value) => is_array($value) ? json_encode($value) : $value,
-        );
+        return $this->hasMany(Report::class);
     }
 
     /**
