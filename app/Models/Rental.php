@@ -30,7 +30,7 @@ class Rental extends Model
         'agent_email',
         'status',
         'is_verified',
-        'is_claimed',
+        'is_featured',
         'is_sold',
         'sold_at',
     ];
@@ -45,7 +45,7 @@ class Rental extends Model
         'bathrooms' => 'integer',
         'advance_duration' => 'integer',
         'is_verified' => 'boolean',
-        'is_claimed' => 'boolean',
+        'is_featured' => 'boolean',
         'is_sold' => 'boolean',
         'sold_at' => 'datetime',
     ];

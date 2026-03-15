@@ -76,8 +76,7 @@ const fmtPrice = (listing) => {
         return `${cur}${n}`;
     };
 
-    const isSale = (listing.purpose ?? '').toLowerCase() === 'sale'
-                || (listing.listing_type ?? '').toLowerCase() === 'sale';
+    const isSale = (listing.purpose ?? '').toLowerCase() === 'sale';
 
     if (isSale) {
         return fmt(listing.sale_price) ?? '—';
@@ -94,6 +93,7 @@ const avatarHue = (s = '') => [...s].reduce((a, c) => a + c.charCodeAt(0), 0) % 
 
 const normalise = (l) => {
     const isSale = l.purpose === 'sale';
+
     return {
         ...l,
     purpose:          l.purpose ?? l.listing_type ?? 'rent',
@@ -438,7 +438,7 @@ const ListingShow = ({ listing: rawListing }) => {
                         <Card>
                             <CardHead title="Property Details" />
                             <div style={{ padding: '0.25rem 1.125rem 0.75rem' }}>
-                                <InfoRow label="Listing Type"   value={TYPE_LABEL[listing.listing_type] ?? listing.listing_type} />
+                                <InfoRow label="Listing Type"   value={TYPE_LABEL[listing.purpose] ?? listing.listing_type} />
                                 <InfoRow label="Property Type"  value={listing.property_type ? listing.property_type.charAt(0).toUpperCase() + listing.property_type.slice(1) : null} />
                                 {listing.purpose === 'sale' ? (
                                     <InfoRow label="Sale Price" value={fmtPrice(listing)} />

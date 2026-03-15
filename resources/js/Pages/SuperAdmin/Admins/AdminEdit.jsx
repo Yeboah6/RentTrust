@@ -38,8 +38,8 @@ const Icons = {
 // ─── Config ───────────────────────────────────────────────────────────────────
 
 const ROLES = [
-    { value: 'Admin',       tag: 'ADMIN',   tagBg: 'hsl(214 80% 93%)', tagColor: 'hsl(214 80% 42%)', desc: 'Standard platform access',   activeBorder: 'hsl(220 60% 55%)', activeBg: 'hsl(214 100% 98%)', glow: 'hsl(220 60% 55% / 0.11)' },
-    { value: 'Super Admin', tag: '★ SUPER', tagBg: 'hsl(270 60% 93%)', tagColor: 'hsl(270 60% 42%)', desc: 'Full unrestricted access',    activeBorder: 'hsl(270 60% 55%)', activeBg: 'hsl(270 60% 98%)', glow: 'hsl(270 60% 55% / 0.11)' },
+    { value: 'admin',       name:"Admin", tag: 'ADMIN',   tagBg: 'hsl(214 80% 93%)', tagColor: 'hsl(214 80% 42%)', desc: 'Standard platform access',   activeBorder: 'hsl(220 60% 55%)', activeBg: 'hsl(214 100% 98%)', glow: 'hsl(220 60% 55% / 0.11)' },
+    { value: 'super_admin', name:"Super Admin", tag: '★ SUPER', tagBg: 'hsl(270 60% 93%)', tagColor: 'hsl(270 60% 42%)', desc: 'Full unrestricted access',    activeBorder: 'hsl(270 60% 55%)', activeBg: 'hsl(270 60% 98%)', glow: 'hsl(270 60% 55% / 0.11)' },
 ];
 
 const STATUS_CFG = {
@@ -401,7 +401,7 @@ const AdminEdit = ({ admin }) => {
                                                         </span>
                                                         {active && <span style={{ color: r.tagColor, display: 'flex' }}><Icons.check /></span>}
                                                     </div>
-                                                    <div style={{ fontSize: '0.82rem', fontWeight: '700', color: 'hsl(220 25% 18%)', marginBottom: '0.1rem' }}>{r.value}</div>
+                                                    <div style={{ fontSize: '0.82rem', fontWeight: '700', color: 'hsl(220 25% 18%)', marginBottom: '0.1rem' }}>{r.name}</div>
                                                     <div style={{ fontSize: '0.7rem', color: 'hsl(220 15% 55%)' }}>{r.desc}</div>
                                                 </button>
                                             );

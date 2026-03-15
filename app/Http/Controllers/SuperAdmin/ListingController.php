@@ -8,8 +8,10 @@ use App\Models\Rental;
 use App\Models\PropertyType;
 use App\Models\Amenity;
 use App\Models\User;
+use App\Models\AdminAuditLog;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
@@ -78,44 +80,143 @@ class ListingController extends Controller
  
     public function update(Request $request, Rental $listing)
     {
-        $validated = $request->validate([
-            'title'         => ['required', 'string', 'max:255'],
-            'description'   => ['nullable', 'string', 'max:5000'],
-            'listing_type'  => ['required', Rule::in(['sale', 'rent', 'short', 'lease'])],
-            'property_type' => ['nullable', 'string', 'max:100'],
-            'sale_price'       => ['required_if:purpose,sale',  'nullable', 'numeric', 'min:0'],
-            'rent_min'         => ['required_if:purpose,rent',  'nullable', 'numeric', 'min:0'],
-            'rent_max'         => ['nullable', 'numeric', 'min:0', 'gte:rent_min'],
-            'advance_duration' => ['nullable', 'integer', 'min:1'],
-            'currency'      => ['required', 'string', 'max:10'],
-            'location'      => ['required', 'string', 'max:255'],
-            'address'       => ['nullable', 'string', 'max:500'],
-            'bedrooms'      => ['nullable', 'integer', 'min:0'],
-            'bathrooms'     => ['nullable', 'integer', 'min:0'],
-            'toilets'       => ['nullable', 'integer', 'min:0'],
-            'area_sqft'     => ['nullable', 'numeric', 'min:0'],
-            'is_featured'   => ['boolean'],
-            'is_verified'   => ['boolean'],
-            'status'        => ['required', Rule::in(['active', 'pending', 'sold', 'rented', 'rejected', 'draft', 'expired', 'flagged', 'suspended'])],
-            'agent_id'      => ['nullable', 'exists:agents,id'],
-            'amenity_ids'   => ['nullable', 'array'],
-            'amenity_ids.*' => ['exists:amenities,id'],
+        $purpose = $request->input('purpose', $listing->purpose ?? 'rent');
+        $isSale  = in_array($purpose, ['sale', 'lease']);
+    
+        // ── Validation ────────────────────────────────────────────────────────────
+        $rules = [
+            'title'           => ['required', 'string', 'max:255'],
+            'description'     => ['nullable', 'string', 'max:5000'],
+            'listing_type'    => ['required', Rule::in(['sale', 'rent', 'short', 'lease'])],
+            'property_type'   => ['nullable', 'string', 'max:100'],
+            'currency'        => ['required', 'string', 'max:10'],
+            'location'        => ['required', 'string', 'max:255'],
+            'address'         => ['nullable', 'string', 'max:500'],
+            'bedrooms'        => ['nullable', 'integer', 'min:0'],
+            'bathrooms'       => ['nullable', 'integer', 'min:0'],
+            'area'            => ['required', 'string', 'max:255'],
+            // 'is_featured'     => ['nullable', 'boolean'],
+            'is_verified'     => ['nullable', 'boolean'],
+            'status'          => ['required', Rule::in(['active','pending','sold','rented','rejected','draft','expired','flagged','suspended'])],
+            'agent_id'        => ['nullable', 'exists:users,id'],
+            'amenity_ids'     => ['nullable', 'array'],
+            'amenity_ids.*'   => ['exists:amenities,id'],
+            // Image rules
+            'newImages'       => ['nullable', 'array', 'max:6'],
+            'newImages.*'     => ['image', 'mimes:jpeg,png,jpg,gif,webp', 'max:5120'],
+            'existingImages'  => ['nullable', 'array'],
+            'existingImages.*'=> ['string'],
+            'removedImages'   => ['nullable', 'array'],
+            'removedImages.*' => ['string'],
+        ];
+    
+        // Conditional price rules
+        if ($isSale) {
+            $rules['sale_price']       = ['required', 'numeric', 'min:0'];
+            $rules['rent_min']         = ['prohibited'];
+            $rules['rent_max']         = ['prohibited'];
+            $rules['advance_duration'] = ['prohibited'];
+        } else {
+            $rules['rent_min']         = ['required', 'numeric', 'min:0'];
+            $rules['rent_max']         = ['nullable', 'numeric', 'min:0', 'gte:rent_min'];
+            $rules['advance_duration'] = ['nullable', 'integer', 'min:1'];
+            $rules['sale_price']       = ['prohibited'];
+        }
+    
+        $validated = $request->validate($rules, [
+            'rent_max.gte'           => 'Max rent must be ≥ min rent.',
+            'newImages.*.max'        => 'Each image must not exceed 5 MB.',
+            'newImages.*.mimes'      => 'Images must be jpeg, png, jpg, gif, or webp.',
         ]);
- 
-        DB::transaction(function () use ($listing, $validated) {
+    
+        DB::transaction(function () use ($request, $listing, $validated, $isSale) {
+    
+            // ── Images ────────────────────────────────────────────────────────────
+    
+            $currentImages   = $this->parseImages($listing->images);
+            $existingImages  = $request->input('existingImages', []);
+            $removedImages   = $request->input('removedImages',  []);
+    
+            // Delete removed images from storage
+            foreach ($removedImages as $path) {
+                if (in_array($path, $currentImages, true)) {
+                    Storage::disk('public')->delete("rental_images/{$path}");
+                }
+            }
+    
+            // Upload new images
+            $newImagePaths = [];
+            if ($request->hasFile('newImages')) {
+                foreach ($request->file('newImages') as $file) {
+                    if (!$file->isValid()) continue;
+                    $fileName        = 'listing_' . time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+                    $file->storeAs('rental_images', $fileName, 'public');
+                    $newImagePaths[] = $fileName;
+                }
+            }
+    
+            // Merge and cap at 6
+            $finalImages = array_slice(array_merge($existingImages, $newImagePaths), 0, 6);
+    
+            // ── Core fields ───────────────────────────────────────────────────────
+    
             $amenityIds = $validated['amenity_ids'] ?? [];
-            unset($validated['amenity_ids']);
- 
-            $listing->update($validated);
- 
-            if (isset($listing->amenities)) {
+    
+            $listing->update([
+                'title'           => $validated['title'],
+                'description'     => $validated['description']     ?? null,
+                'listing_type'    => $validated['listing_type'],
+                'purpose'         => $isSale ? 'sale' : 'rent',
+                'property_type'   => $validated['property_type']   ?? null,
+                'currency'        => $validated['currency'],
+                'location'        => $validated['location'],
+                'address'         => $validated['address']         ?? null,
+                'bedrooms'        => $validated['bedrooms']        ?? null,
+                'bathrooms'       => $validated['bathrooms']       ?? null,
+                'area'            => ['required', 'string', 'max:255'],
+                // 'is_featured'     => filter_var($request->input('is_featured', false), FILTER_VALIDATE_BOOLEAN),
+                'is_verified'     => filter_var($request->input('is_verified', false), FILTER_VALIDATE_BOOLEAN),
+                'status'          => $validated['status'],
+                'agent_id'        => $validated['agent_id']        ?? null,
+                'images'          => $finalImages,
+                // Pricing — null out whichever side is not in use
+                'sale_price'      => $isSale  ? ($validated['sale_price'] ?? null) : null,
+                'rent_min'        => !$isSale ? ($validated['rent_min']   ?? null) : null,
+                'rent_max'        => !$isSale ? ($validated['rent_max']   ?? null) : null,
+                'advance_duration'=> !$isSale ? ($validated['advance_duration'] ?? null) : null,
+            ]);
+    
+            // ── Amenities ─────────────────────────────────────────────────────────
+            if (method_exists($listing, 'amenities')) {
                 $listing->amenities()->sync($amenityIds);
             }
+    
+            // ── Audit log ─────────────────────────────────────────────────────────
+            AdminAuditLog::record('listing', 'Listing updated', [
+                'affected_user' => $listing->agent?->name ?? '—',
+                'affected_id'   => $listing->id,
+                'notes'         => "Listing #{$listing->id} '{$listing->title}' updated by admin.",
+                'properties'    => [
+                    'status'          => $listing->status,
+                    'images_final'    => count($finalImages),
+                    'images_added'    => count($newImagePaths),
+                    'images_removed'  => count($removedImages),
+                ],
+            ]);
+    
+            Log::info('SuperAdmin updated listing', [
+                'listing_id'     => $listing->id,
+                'title'          => $listing->title,
+                'images_added'   => count($newImagePaths),
+                'images_removed' => count($removedImages),
+                'admin_id'       => Auth::id(),
+            ]);
         });
- 
-        return redirect()
-            ->route('super-admin.listings.show', $listing)
-            ->with('success', 'Listing updated successfully.');
+    
+        return response()->json([
+            'message' => 'Listing updated successfully.',
+            'listing' => $listing->fresh(),
+        ]);
     }
 
     // ─── Approve ──────────────────────────────────────────────────────────────
@@ -258,13 +359,13 @@ class ListingController extends Controller
             'advance_duration' => $listing->advance_duration,                   
             'currency'      => $listing->currency ?? 'GH₵',
             'status'        => $listing->status,
-            'location'      => $listing->location ?? $listing->city ?? $listing->area,
+            'location'      => $listing->city,
+            'area'          => $listing->area,
             'address'       => $listing->address,
             'bedrooms'      => $listing->bedrooms,
             'bathrooms'     => $listing->bathrooms,
-            'toilets'       => $listing->toilets,
-            'area_sqft'     => $listing->area_sqft ?? $listing->floor_area,
-            'is_featured'   => (bool) $listing->is_featured,
+            // 'toilets'       => $listing->toilets,
+            // 'is_featured'   => (bool) $listing->is_featured,
             'is_verified'   => (bool) $listing->is_verified,
             'views'         => $listing->views ?? $listing->views_count ?? 0,
             'inquiries'     => $listing->inquiries_count ?? 0,
@@ -304,5 +405,19 @@ class ListingController extends Controller
             $path = is_array($img) ? ($img['path'] ?? $img['url'] ?? '') : $img;
             return $path ? asset('storage/' . ltrim($path, '/')) : null;
         })->filter()->values()->toArray();
+    }
+
+    // ─── Helper ───────────────────────────────────────────────────────────────────
+ 
+    private function parseImages(mixed $raw): array
+    {
+        if (!$raw) return [];
+        if (is_array($raw)) return $raw;
+        try {
+            $decoded = json_decode($raw, true);
+            return is_array($decoded) ? $decoded : [];
+        } catch (\Throwable) {
+            return [];
+        }
     }
 }

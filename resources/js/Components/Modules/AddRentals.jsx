@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useForm, usePage } from '@inertiajs/react';
 import { Home, MapPin, DollarSign, Calendar, Image, FileText, CheckCircle2, AlertCircle, Upload, X } from 'lucide-react';
 
-const AddRentalPage = ({ agentData, setShowAddListingModal, adminData }) => {
+const AddRentalPage = ({ agentData, setShowAddListingModal, adminData, locations, propertyTypes, amenities }) => {
 
   const { data, setData, post, transform, processing, errors, reset } = useForm({
     purpose: 'rent', // rent or sale
@@ -27,6 +27,10 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData }) => {
 
   const { flash } = usePage().props;
 
+  const names = locations.map(l => l?.name)
+  const PropertyNames = propertyTypes.map(p => p?.name)
+  const AmenityNames = amenities.map(a => a?.name)
+
   useEffect(() => {
       if (flash?.toast) {
           showToast(flash.toast.type, flash.toast.title, flash.toast.message);
@@ -36,10 +40,6 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData }) => {
   const [images, setImages] = useState([]);
   const [currentStep, setCurrentStep] = useState(1);
   const [toast, setToast] = useState(null);
-
-  const propertyTypes = ['Apartment', 'House', 'Studio', 'Chamber and Hall', 'Self-Contained', 'Condo', 'Townhouse'];
-  const cities = ['Accra', 'Kumasi', 'Tema', 'Takoradi', 'Cape Coast', 'Tamale'];
-  const amenitiesList = ['Wi-Fi', 'Parking', 'Security', 'Water Supply', 'Backup Generator', 'Air Conditioning', 'Furnished', 'Gym', 'Swimming Pool', 'Garden'];
 
   const handleAmenityToggle = (amenity) => {
     const updatedAmenities = data.amenities.includes(amenity)
@@ -172,7 +172,7 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData }) => {
         setCurrentStep(1);
         setTimeout(() => {
           if (setShowAddListingModal) setShowAddListingModal(false);
-        }, 5500);
+        }, 1500);
       },
       onError: (errors) => {
         console.error('Submission errors:', errors);
@@ -527,7 +527,8 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData }) => {
                         }}
                       >
                         <option value="">Select type</option>
-                        {propertyTypes.map(type => (
+                        {/* <option value={PropertyNames}>{PropertyNames}</option> */}
+                        {PropertyNames.map(type => (
                           <option key={type} value={type}>{type}</option>
                         ))}
                       </select>
@@ -546,7 +547,7 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData }) => {
                         color: 'hsl(200 25% 15%)',
                         fontSize: 'clamp(0.8125rem, 2.5vw, 0.875rem)'
                       }}>
-                        City *
+                        Region *
                       </label>
                       <select
                         value={data.city}
@@ -559,8 +560,11 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData }) => {
                         }}
                       >
                         <option value="">Select city</option>
-                        {cities.map(city => (
-                          <option key={city} value={city}>{city}</option>
+                        {/* <option value={names}>{names}</option> */}
+                        {names.map(city => (
+                          <option key={city} value={city}>
+                              {city}
+                          </option>
                         ))}
                       </select>
                       {errors.city && (
@@ -887,7 +891,7 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData }) => {
                     <div className="grid amenities-grid" style={{
                       gap: 'clamp(0.5rem, 2vw, 0.75rem)'
                     }}>
-                      {amenitiesList.map(amenity => (
+                      {AmenityNames.map(amenity => (
                         <button
                           key={amenity}
                           type="button"

@@ -91,7 +91,7 @@ const CTASection = () => {
                   For Agents & Landlords
                 </h3>
                 <p className="mb-6" style={{ color: 'hsl(200 15% 45%)' }}>
-                  Claim your listings, build your reputation with verified reviews, 
+                  Build your reputation with verified reviews, 
                   and connect with serious tenants.
                 </p>
                 <Link

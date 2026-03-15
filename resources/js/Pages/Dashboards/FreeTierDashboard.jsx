@@ -82,7 +82,7 @@ const BarChart = ({ style }) => (
   </svg>
 );
 
-const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [] }) => {
+const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, propertyTypes, amenities }) => {
   const [activeTab, setActiveTab] = useState("overview");
   const [showAddListingModal, setShowAddListingModal] = useState(false);
   const [selectedRental, setSelectedRental] = useState(null);
@@ -1069,7 +1069,7 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [] }) => {
               >
                 ✕
               </button>
-              <AddRentalPage agentData={agentData} setShowAddListingModal={setShowAddListingModal} />
+              <AddRentalPage agentData={agentData} setShowAddListingModal={setShowAddListingModal} propertyTypes={propertyTypes} locations={locations} amenities={amenities} />
             </div>
           </div>
         )}

@@ -8,6 +8,9 @@ use App\Models\Rental;
 use App\Models\Review;
 use App\Models\Payment;
 use App\Models\Plan;
+use App\Models\Location;
+use App\Models\PropertyType;
+use App\Models\Amenity;
 use App\Models\Report;
 use App\Models\VerificationRequest;
 use App\Models\ListingInquiry;
@@ -50,6 +53,10 @@ class DashboardController extends Controller
         
         $plans = app(\App\Http\Controllers\CheckoutController::class)->plansForModal();
         $sub  = $agentData->subscription()->with('plan')->first();
+
+        $locations = Location::all();
+        $propertyTypes = PropertyType::all();
+        $amenities = Amenity::all();
         
         // Get limit status for the agent
         $limitService = new \App\Services\ListingLimitService();
@@ -64,6 +71,9 @@ class DashboardController extends Controller
             'views' => $views,
             'plans' => $plans,
             'limitStatus' => $limitStatus,
+            'locations' => $locations,
+            'propertyTypes' => $propertyTypes,
+            'amenities' => $amenities,
             'open_plan_modal' => is_null($agentData->package)
             || session()->pull('show_plan_modal', false),
 
@@ -108,6 +118,11 @@ class DashboardController extends Controller
 
     public function adminDashboard() {
         $adminData = Auth::user();
+
+        // Guard: must be authenticated and an agent
+        if ($adminData->status === 'suspended') {
+            abort(403, 'Unauthorized. Account has been Suspended.');
+        }
 
         $sub  = $adminData->subscription()->with('plan')->first();
         
@@ -179,6 +194,10 @@ class DashboardController extends Controller
             ->get();
         $rentalIds = $rentals->pluck('id');
         $reviews = Review::whereIn('rental_id', $rentalIds)->latest()->get();
+        $locations = Location::all();
+        $propertyTypes = PropertyType::all();
+        $amenities = Amenity::all();
+
         $plans = app(\App\Http\Controllers\CheckoutController::class)->plansForModal();
 
         return inertia('Dashboards/FreeTierDashboard', 
@@ -187,6 +206,9 @@ class DashboardController extends Controller
             'rentals' => $rentals, 
             'reviews' => $reviews,
             'plans' => $plans,
+            'locations' => $locations,
+            'propertyTypes' => $propertyTypes,
+            'amenities' => $amenities,
             'open_plan_modal' => is_null($agentData->package)
             || session()->pull('show_plan_modal', false),
         ]);

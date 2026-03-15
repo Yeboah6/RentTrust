@@ -84,7 +84,7 @@ const Users = ({ style }) => (
   </svg>
 );
 
-const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views = [], limitStatus }) => {
+const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views = [], limitStatus, locations, propertyTypes, amenities }) => {
   const { billing, plans } = usePage().props;
 
   const [activeTab, setActiveTab] = useState("overview");
@@ -781,7 +781,7 @@ const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views
           <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: 'clamp(0.5rem, 2vw, 1rem)' }}>
             <div className="modal-content" style={{ backgroundColor: 'white', borderRadius: 'clamp(0.75rem, 2vw, 1rem)', maxHeight: '90vh', overflow: 'auto', maxWidth: 'clamp(90%, 95vw, 60%)', width: '100%', position: 'relative' }}>
               <button onClick={() => setShowAddListingModal(false)} className="action-button" style={{ position: 'sticky', top: 0, right: 0, padding: 'clamp(0.75rem, 2vw, 1rem)', border: 'none', background: 'transparent', fontSize: 'clamp(1.25rem, 4vw, 1.5rem)', cursor: 'pointer', color: 'hsl(200 15% 45%)', float: 'right', zIndex: 10 }}>✕</button>
-              <AddRentalPage agentData={agentData} setShowAddListingModal={setShowAddListingModal} />
+              <AddRentalPage agentData={agentData} setShowAddListingModal={setShowAddListingModal} locations={locations} propertyTypes={propertyTypes} amenities={amenities} />
             </div>
           </div>
         )}

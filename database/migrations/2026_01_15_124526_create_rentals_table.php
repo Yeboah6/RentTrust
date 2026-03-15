@@ -32,12 +32,12 @@ return new class extends Migration
             $table->string('agent_email');
             $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
             $table->boolean('is_verified')->default(false);
-            $table->boolean('is_claimed')->default(false);
+            $table->boolean('is_featured')->default(false);
             $table->enum('purpose', ['rent', 'sale'])->default('rent')->after('property_type');
             $table->decimal('sale_price', 15, 2)->nullable()->after('rent_max');
             
             // Track when sale was completed
-            $table->boolean('is_sold')->default(false)->after('is_claimed');
+            $table->boolean('is_sold')->default(false)->after('is_featured');
             $table->timestamp('sold_at')->nullable()->after('is_sold');
             $table->timestamps();
 

@@ -211,6 +211,124 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, verif
     );
   };
 
+  {/* ─── AdminListingSection ─────────────────────────────────────────────────── */}
+ 
+  const AdminListingSection = ({ title, emoji, count, accentColor, accentBg, borderColor, children }) => (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+      
+          {/* Section heading strip */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', padding: '0.5rem 0.875rem', borderRadius: '0.5rem', backgroundColor: accentBg, border: `1px solid ${borderColor}` }}>
+              <span style={{ fontSize: '1rem', lineHeight: 1 }}>{emoji}</span>
+              <h3 style={{ margin: 0, fontSize: '0.9rem', fontWeight: '700', color: accentColor }}>
+                  {title}
+              </h3>
+              <span style={{ marginLeft: 'auto', fontSize: '0.72rem', fontWeight: '700', color: accentColor, backgroundColor: 'white', border: `1px solid ${borderColor}`, padding: '0.1rem 0.5rem', borderRadius: '999px' }}>
+                  {count}
+              </span>
+          </div>
+  
+          {/* Card grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
+              {children}
+          </div>
+      </div>
+  );
+  
+  
+  {/* ─── AdminListingCard ────────────────────────────────────────────────────── */}
+  
+  const AdminListingCard = ({ property, onView, onEdit, onApproveToggle, onDelete, getStatusBadge }) => {
+      const isRent     = property.purpose === 'rent';
+      const isApproved = property.status === 'approved';
+  
+      const priceStr = isRent
+          ? `GH₵${property.rent_min?.toLocaleString() ?? '—'} – GH₵${property.rent_max?.toLocaleString() ?? '—'} / yr`
+          : `GH₵${property.sale_price?.toLocaleString() ?? '—'}`;
+  
+      const priceColor = isRent ? 'hsl(174 55% 28%)' : 'hsl(36 75% 30%)';
+  
+      return (
+          <div style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.75rem', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
+          
+              {/* Property info */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.75rem' }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                      <h3 style={{ margin: '0 0 0.2rem', fontWeight: '600', color: 'hsl(200 25% 15%)', fontSize: '0.9375rem', wordBreak: 'break-word' }}>
+                          {property.title}
+                      </h3>
+                      <p style={{ margin: '0 0 0.15rem', fontSize: '0.8rem', color: 'hsl(200 15% 48%)', wordBreak: 'break-word' }}>
+                          {[property.address, property.city].filter(Boolean).join(', ')}
+                      </p>
+                      <p style={{ margin: '0 0 0.3rem', fontSize: '0.75rem', color: 'hsl(200 15% 52%)' }}>
+                          Agent: <strong style={{ color: 'hsl(200 25% 25%)', fontWeight: '600' }}>{property.agent_name ?? '—'}</strong>
+                      </p>
+                      <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: '600', color: priceColor }}>
+                          {priceStr}
+                      </p>
+                  </div>
+                  <div style={{ flexShrink: 0 }}>
+                      {getStatusBadge(property.status)}
+                  </div>
+              </div>
+      
+              {/* Divider */}
+              <div style={{ height: '1px', backgroundColor: 'hsl(40 20% 92%)' }} />
+      
+              {/* Action buttons */}
+              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  <ActionBtn label="View"   onClick={() => onView(property)}
+                      bg="white" color="hsl(174 55% 28%)" border="1px solid hsl(40 20% 88%)"
+                      hoverBg="hsl(174 62% 32% / 0.07)" />
+  
+                  <ActionBtn label="Edit"   onClick={() => onEdit(property)}
+                      bg="white" color="hsl(200 25% 28%)" border="1px solid hsl(40 20% 88%)"
+                      hoverBg="hsl(220 15% 95%)" />
+  
+                  <ActionBtn
+                      label={isApproved ? 'Revert' : 'Approve'}
+                      onClick={() => onApproveToggle(property)}
+                      bg={isApproved
+                          ? 'linear-gradient(135deg, hsl(300 70% 50%), hsl(300 60% 40%))'
+                          : 'linear-gradient(135deg, hsl(152 60% 40%), hsl(152 50% 35%))'}
+                      color="white" border="none"
+                      hoverFilter="brightness(0.9)" />
+  
+                  <ActionBtn label="Delete" onClick={() => onDelete(property)}
+                      bg="white" color="hsl(0 65% 48%)" border="1px solid hsl(0 65% 82%)"
+                      hoverBg="hsl(0 65% 97%)" />
+              </div>
+          </div>
+      );
+  };
+  
+  
+  {/* ─── ActionBtn (shared button atom) ─────────────────────────────────────── */}
+  
+  const ActionBtn = ({ label, onClick, bg, color, border, hoverBg, hoverFilter }) => {
+    const [hovered, setHovered] = useState(false);
+    return (
+        <button
+            onClick={onClick}
+            onMouseEnter={() => setHovered(true)}
+            onMouseLeave={() => setHovered(false)}
+            style={{
+                padding: '0.375rem 0.75rem',
+                borderRadius: '0.375rem',
+                border: border ?? 'none',
+                background: hovered && hoverBg ? hoverBg : bg,
+                color,
+                fontSize: '0.8125rem',
+                fontWeight: '500',
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+                filter: hovered && hoverFilter ? hoverFilter : 'none',
+                transition: 'background-color 0.15s, filter 0.15s',
+            }}>
+            {label}
+        </button>
+    );
+  };
+
   // Check if agent can be upgraded (not already on Pro)
   const canUpgrade = (agentItem) => (agentItem.package ?? 'free') !== 'pro';
 
@@ -354,38 +472,78 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, verif
 
             {/* ── LISTINGS TAB ─────────────────────────────────────────────── */}
             {activeTab === 'listings' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-                  <h2 style={{ fontSize: '1.125rem', fontWeight: '600', color: 'hsl(200 25% 15%)' }}>All Platform Listings</h2>
-                  <button onClick={() => setShowAddListingModal(true)} style={{ padding: '0.5rem 1rem', background: 'linear-gradient(135deg, hsl(174 62% 32%) 0%, hsl(174 50% 25%) 100%)', color: 'white', border: 'none', borderRadius: '0.5rem', fontWeight: '500', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <Home style={{ height: '1rem', width: '1rem' }} />Add New Listing
-                  </button>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem' }}>
-                  {properties.map(property => (
-                    <div key={property.id} style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.75rem', padding: '1rem' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '1rem' }}>
-                        <div>
-                          <h3 style={{ fontWeight: '500', color: 'hsl(200 25% 15%)', marginBottom: '0.25rem' }}>{property.title}</h3>
-                          <p style={{ fontSize: '0.875rem', color: 'hsl(200 15% 45%)', marginBottom: '0.25rem' }}>{property.address}, {property.city}</p>
-                          <p style={{ fontSize: '0.75rem', color: 'hsl(200 15% 45%)', marginBottom: '0.25rem' }}>Agent: {property.agent_name}</p>
-                          <p style={{ fontSize: '0.875rem', fontWeight: '500', color: 'hsl(174 62% 32%)' }}>GH₵{property.rent_min?.toLocaleString()} – GH₵{property.rent_max?.toLocaleString()}</p>
-                        </div>
-                        {getStatusBadge(property.status)}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              
+                  {/* ── Header ── */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                      <div>
+                          <h2 style={{ fontSize: '1.125rem', fontWeight: '700', color: 'hsl(200 25% 15%)', margin: '0 0 0.15rem' }}>
+                              All Platform Listings
+                          </h2>
+                          <p style={{ margin: 0, fontSize: '0.78rem', color: 'hsl(200 15% 48%)' }}>
+                              {properties.length} listing{properties.length !== 1 ? 's' : ''} total
+                          </p>
                       </div>
-                      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                        <button onClick={() => handleViewClick(property)} style={{ padding: '0.375rem 0.75rem', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.375rem', backgroundColor: 'white', color: 'hsl(174 62% 32%)', fontSize: '0.875rem', fontWeight: '500', cursor: 'pointer' }}>View</button>
-                        <button onClick={() => handleEditClick(property)} style={{ padding: '0.375rem 0.75rem', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.375rem', backgroundColor: 'white', color: 'hsl(174 62% 32%)', fontSize: '0.875rem', fontWeight: '500', cursor: 'pointer' }}>Edit</button>
-                        <button onClick={() => handleApproveToggle(property)} style={{ padding: '0.375rem 0.75rem', background: property.status === 'approved' ? 'linear-gradient(135deg, hsl(300 70% 50%) 0%, hsl(300 60% 40%) 100%)' : 'linear-gradient(135deg, hsl(152 60% 40%) 0%, hsl(152 50% 35%) 100%)', color: 'white', border: 'none', borderRadius: '0.375rem', fontSize: '0.875rem', fontWeight: '500', cursor: 'pointer' }}>
-                          {property.status === 'approved' ? 'Revert' : 'Approve'}
-                        </button>
-                        <button onClick={() => handleDeleteListing(property)} style={{ padding: '0.375rem 0.75rem', border: '1px solid hsl(0 70% 50%)', borderRadius: '0.375rem', backgroundColor: 'white', color: 'hsl(0 70% 50%)', fontSize: '0.875rem', fontWeight: '500', cursor: 'pointer' }}>Delete</button>
+                      <button
+                          onClick={() => setShowAddListingModal(true)}
+                          style={{ padding: '0.5rem 1rem', background: 'linear-gradient(135deg, hsl(174 62% 32%) 0%, hsl(174 50% 25%) 100%)', color: 'white', border: 'none', borderRadius: '0.5rem', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '0.875rem', fontFamily: 'inherit' }}>
+                          <Home style={{ height: '1rem', width: '1rem' }} /> Add New Listing
+                      </button>
+                  </div>
+
+                  {/* ── Empty state ── */}
+                  {properties.length === 0 && (
+                      <div style={{ textAlign: 'center', padding: '3rem 1rem', backgroundColor: 'white', border: '1px dashed hsl(40 20% 82%)', borderRadius: '0.75rem' }}>
+                          <p style={{ fontSize: '2rem', margin: '0 0 0.5rem' }}>🏠</p>
+                          <p style={{ margin: '0 0 0.25rem', fontWeight: '600', color: 'hsl(200 25% 15%)' }}>No listings yet</p>
+                          <p style={{ margin: 0, fontSize: '0.875rem', color: 'hsl(200 15% 48%)' }}>Add the first listing to get started.</p>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                  )}
+
+                  {/* ── Rental listings ── */}
+                  {(() => {
+                      const rentals = properties.filter(p => p.purpose === 'rent');
+                      if (rentals.length === 0) return null;
+                      return (
+                          <AdminListingSection title="Rental Listings" emoji="🏠" count={rentals.length} accentColor="hsl(174 55% 28%)" accentBg="hsl(174 62% 32% / 0.07)" borderColor="hsl(174 50% 80%)">
+                              {rentals.map(property => (
+                                  <AdminListingCard
+                                      key={property.id}
+                                      property={property}
+                                      onView={handleViewClick}
+                                      onEdit={handleEditClick}
+                                      onApproveToggle={handleApproveToggle}
+                                      onDelete={handleDeleteListing}
+                                      getStatusBadge={getStatusBadge}
+                                  />
+                              ))}
+                          </AdminListingSection>
+                      );
+                  })()}
+
+                  {/* ── Sale listings ── */}
+                  {(() => {
+                      const sales = properties.filter(p => p.purpose === 'sale');
+                      if (sales.length === 0) return null;
+                      return (
+                          <AdminListingSection title="Sale Listings" emoji="🏷️" count={sales.length} accentColor="hsl(36 75% 30%)" accentBg="hsl(38 92% 50% / 0.07)" borderColor="hsl(38 80% 78%)">
+                              {sales.map(property => (
+                                  <AdminListingCard
+                                      key={property.id}
+                                      property={property}
+                                      onView={handleViewClick}
+                                      onEdit={handleEditClick}
+                                      onApproveToggle={handleApproveToggle}
+                                      onDelete={handleDeleteListing}
+                                      getStatusBadge={getStatusBadge}
+                                  />
+                              ))}
+                          </AdminListingSection>
+                      );
+                  })()}
+
               </div>
-            )}
+          )}
 
             {/* ── REPORTS TAB ──────────────────────────────────────────────── */}
             {activeTab === 'reports' && (

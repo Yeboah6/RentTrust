@@ -47,7 +47,13 @@ Route::prefix('super-admin')
     Route::post('payments/{payment}/refund', [PaymentController::class, 'refund']) ->name('payments.refund');
 
     // ── Agents ────────────────────────────────────────────────────────────────
-    Route::resource('agents', AgentController::class);
+    Route::resource('agents', AgentController::class)
+        ->only(['index', 'show', 'edit', 'update', 'destroy']);
+
+    // Status action routes
+    Route::post('agents/{agent}/verify',     [AgentController::class, 'verify'])     ->name('agents.verify');
+    Route::post('agents/{agent}/suspend',    [AgentController::class, 'suspend'])    ->name('agents.suspend');
+    Route::post('agents/{agent}/reactivate', [AgentController::class, 'reactivate']) ->name('agents.reactivate');
 
     // ── Listings ──────────────────────────────────────────────────────────────
     Route::resource('listings', ListingController::class)

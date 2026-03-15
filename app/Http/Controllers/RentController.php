@@ -133,21 +133,6 @@ class RentController extends Controller
                 ])
                 ->withInput();
         }
-        // if ($purpose === 'rent') {
-        //     if (!$limitService->canCreateRental($user)) {
-        //         $status = $limitService->getLimitStatus($user);
-        //         return redirect()->back()
-        //             ->with('error', "You've reached your rental listing limit for your {$status['plan']} plan. Please upgrade to create more.")
-        //             ->withInput();
-        //     }
-        // } else {
-        //     if (!$limitService->canCreateSale($user)) {
-        //         $status = $limitService->getLimitStatus($user);
-        //         return redirect()->back()
-        //             ->with('error', "You've reached your sale listing limit for your {$status['plan']} plan. Please upgrade to create more.")
-        //             ->withInput();
-        //     }
-        // }
 
         // Decode amenities — frontend sends a JSON string
         $amenities = $request->amenities;

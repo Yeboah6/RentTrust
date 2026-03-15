@@ -183,7 +183,10 @@ class SubscriptionController extends Controller
             ]);
     
             // 3. Update user package
-            User::where('id', $sub->user_id)->update(['package' => $plan->slug]);
+            User::where('id', $sub->user_id)->update([
+                'package' => $plan->slug,
+                'status' => 'verified'
+                ]);
     
             // 4. Audit old subscription
             $this->auditLog($sub->id, 'upgrade', [

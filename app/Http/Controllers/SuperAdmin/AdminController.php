@@ -20,10 +20,10 @@ class AdminController extends Controller
         return inertia('SuperAdmin/Admins/Index', ['admins' => $admins]);
     }
 
-    public function create()
-    {
-        return inertia('SuperAdmin/Admins/Create');
-    }
+    // public function create()
+    // {
+    //     return inertia('SuperAdmin/Admins/Create');
+    // }
 
     public function store(Request $request)
     {
@@ -41,10 +41,10 @@ class AdminController extends Controller
         return redirect()-> back()->with('success', 'Admin account created');
     }
 
-    public function edit(User $user)
-    {
-        return inertia('SuperAdmin/Admins/Edit', ['admin' => $user]);
-    }
+    // public function edit(User $user)
+    // {
+    //     return inertia('SuperAdmin/Admins/Edit', ['admin' => $user]);
+    // }
 
     public function update(Request $request, User $user)
     {

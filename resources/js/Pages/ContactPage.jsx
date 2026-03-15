@@ -74,7 +74,7 @@ export default function ContactPage() {
                 </svg>
             ),
             label: 'Phone',
-            value: '+233 30 000 0000',
+            value: '+233 57 676 0647',
         },
         {
             icon: (
@@ -83,7 +83,7 @@ export default function ContactPage() {
                 </svg>
             ),
             label: 'Email',
-            value: 'hello@renttrust.com',
+            value: 'renttrust2026@gmail.com',
         },
         {
             icon: (
@@ -504,7 +504,7 @@ export default function ContactPage() {
                                     </p>
                                     <div style={{ display: 'flex', gap: '0.625rem' }}>
                                         {['Twitter / X', 'Facebook', 'Instagram'].map(s => (
-                                            <a key={s} href="#" style={{
+                                            <a key={s} href="https://www.instagram.com/renttrust2026" style={{
                                                 padding: '0.4rem 0.75rem',
                                                 borderRadius: '0.375rem',
                                                 backgroundColor: 'rgba(255,255,255,0.15)',
