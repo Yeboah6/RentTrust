@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, usePage } from "@inertiajs/react";
+import { Link, usePage, router } from "@inertiajs/react";
 import Header from "../Components/Layouts/Header";
 import Footer from "../Components/Layouts/Footer";
 
@@ -275,14 +275,13 @@ const FAQItem = ({ question, answer }) => {
 };
 
 const Pricing = () => {
-  // const { auth } = usePage().props;
   const { props } = usePage();
   const auth = props?.auth;
   const [errorMessage, setErrorMessage] = useState(null);
   const user = auth?.agent || auth?.tenant || auth?.super;
 
-  console.log('Auth object:', user);
-  console.log('Role candidate:', user ? (user.role || user.type || user.role_name || user.roles) : 'No user');
+ // console.log('Auth object:', user);
+ // console.log('Role candidate:', user ? (user.role || user.type || user.role_name || user.roles) : 'No user');
 
   // pull plan data from server so the page mirrors the pricing modal exactly
   const plansFromServer = props.plans || [];
@@ -309,7 +308,7 @@ const Pricing = () => {
         );
         break;
       case 'pro':
-      case 'verified':
+      case 'pro':
         iconElement = (
           <div
             style={{
@@ -328,7 +327,7 @@ const Pricing = () => {
         );
         break;
       case 'elite':
-      case 'pro-plus':
+      case 'elite':
         iconElement = (
           <div
             style={{
@@ -419,7 +418,7 @@ const Pricing = () => {
       isAgent = roleCandidate.map(r => String(r).toLowerCase()).includes('Agent') || roleCandidate.map(r => String(r).toLowerCase()).includes('landlord');
     } else if (typeof roleCandidate === 'string') {
       const rl = roleCandidate.toLowerCase();
-      isAgent = rl === 'Agent' || rl === 'landlord' || rl.includes('Agent') || rl.includes('landlord');
+      isAgent = rl === 'agent' || rl === 'landlord' || rl.includes('agent')
     }
 
     if (!isAgent) {

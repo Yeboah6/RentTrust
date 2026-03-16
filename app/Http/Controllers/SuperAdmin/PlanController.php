@@ -77,6 +77,7 @@ class PlanController extends Controller
             'flutterwave_plan_id'=> 'nullable|string|max:255',
             'is_active'          => 'boolean',
             'sort_order'         => 'required|integer|min:0',
+            'features'           => 'required'
         ]);
 
         $plan->update($data);

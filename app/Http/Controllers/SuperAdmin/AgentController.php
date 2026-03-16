@@ -68,6 +68,81 @@ class AgentController extends Controller
         ]);
     }
 
+    // ─── Create ───────────────────────────────────────────────────────────────
+ 
+    public function create()
+    {
+        return Inertia::render('SuperAdmin/Agents/Create');
+    }
+
+    // ─── Store ────────────────────────────────────────────────────────────────
+ 
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'name'                  => ['required', 'string', 'max:255'],
+            'email'                 => ['required', 'email', 'unique:agents,email'],
+            'phone'                 => ['nullable', 'string', 'max:30'],
+            'agency'                => ['nullable', 'string', 'max:255'],
+            'license'               => ['nullable', 'string', 'max:100'],
+            'location'              => ['nullable', 'string', 'max:255'],
+            'bio'                   => ['nullable', 'string', 'max:2000'],
+            'website'               => ['nullable', 'url', 'max:255'],
+            'status'                => ['required', Rule::in(['active', 'pending', 'verified'])],
+            'tier'                  => ['required', Rule::in(['basic', 'standard', 'pro', 'premium'])],
+            'is_verified'           => ['boolean'],
+            'is_featured'           => ['boolean'],
+            'password'              => ['required', 'string', 'min:8', 'confirmed'],
+        ]);
+ 
+        $agent = DB::transaction(function () use ($validated) {
+ 
+            // Create the agent record — map form field names to model column names
+            $agent = User::create([
+                'name'           => $validated['name'],
+                'email'          => $validated['email'],
+                'phone'          => $validated['phone']    ?? null,
+                'agency_name'    => $validated['agency']   ?? null,
+                'license_number' => $validated['license']  ?? null,
+                'location'       => $validated['location'] ?? null,
+                'bio'            => $validated['bio']      ?? null,
+                'website'        => $validated['website']  ?? null,
+                'status'         => $validated['status'],
+                'tier'           => $validated['tier'],
+                'is_verified'    => $validated['is_verified']  ?? false,
+                'is_featured'    => $validated['is_featured']  ?? false,
+                'password'       => Hash::make($validated['password']),
+                'created_by'     => auth()->id(),
+ 
+                // Auto-set verified_at if created as verified
+                'verified_at'    => $validated['status'] === 'verified' ? now() : null,
+                'verified_by'    => $validated['status'] === 'verified' ? auth()->id() : null,
+            ]);
+ 
+            // Optionally create a linked User account so the agent can log in
+            // Uncomment if your platform uses a shared users table for auth:
+            //
+            // $user = User::create([
+            //     'name'     => $validated['name'],
+            //     'email'    => $validated['email'],
+            //     'password' => Hash::make($validated['password']),
+            //     'role'     => 'agent',
+            // ]);
+            // $agent->update(['user_id' => $user->id]);
+ 
+            return $agent;
+        });
+ 
+        Log::info('SuperAdmin created agent', [
+            'agent_id' => $agent->id,
+            'admin_id' => auth()->id(),
+        ]);
+ 
+        return redirect()
+            ->route('super-admin.agents.show', $agent)
+            ->with('success', "Agent \"{$agent->name}\" created successfully.");
+    }
+
     // ─── Show ─────────────────────────────────────────────────────────────────
  
     public function show(User $agent)

@@ -212,10 +212,7 @@ class CheckoutController extends Controller
 
         return match ($plan->slug) {
             'free' => [
-                // 'Submit listings to the platform',
-                // 'Limited visibility in search results',
                 'Basic listing management',
-                // 'Access to tenant inquiries',
                 'Standard support',
                 $rentalDesc,
                 $saleDesc,
@@ -224,14 +221,11 @@ class CheckoutController extends Controller
                 'Everything in Free, plus:',
                 $rentalDesc,
                 $saleDesc,
-                // 'Verified landlord badge',
                 'Higher ranking in search results',
                 'Respond to reviews',
             ],
             'elite' => [
                 'Everything in Pro, plus:',
-                // 'Unlimited property listings',
-                // "Lead unlock credits ({$plan->lead_limit}/month)",
                 'Featured listing placement',
                 'Dedicated account manager',
             ],

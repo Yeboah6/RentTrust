@@ -6,6 +6,7 @@ use App\Models\Agent;
 use App\Models\Rental;
 use App\Models\Report;
 use App\Models\Review;
+use App\Models\Plan;
 use App\Models\ListingView;
 use App\Models\ListingInquiry;
 use App\Services\ListingLimitService;
@@ -1023,9 +1024,70 @@ class RentController extends Controller
         }
     }
 
-    public function pricing() {
-        // supply plan definitions so the PricingPage can render the same cards as the modal
-        $plans = app(\App\Http\Controllers\CheckoutController::class)->plansForModal();
+    private function buildFeaturesList(Plan $plan): array
+    {
+        $rentalDesc = $plan->rental_limit === null
+        ? 'Unlimited rental listings'
+        : "{$plan->rental_limit} rental listings";
+
+        $saleDesc = $plan->sale_limit === null
+        ? 'Unlimited sale listings'
+        : "{$plan->sale_limit} sale listings";
+
+        // Dynamic features computed from DB column values
+        $computed = array_values(array_filter([
+        $plan->boost_limit > 0  ? "{$plan->boost_limit} listing boosts/month" : null,
+        $plan->lead_limit > 0   ? "{$plan->lead_limit} lead contacts/month"   : null,
+        $plan->verified_badge   ? 'Verified landlord badge'                    : null,
+        $plan->priority_ranking ? 'Priority search ranking'                    : null,
+        $plan->analytics_access ? 'Analytics dashboard access'                 : null,
+        ]));
+    
+        // Features stored in the JSON column — cast to array in the model
+        $fromDb = is_array($plan->features) ? $plan->features : [];
+    
+        // Merge: DB features first, then append any computed ones not already listed
+        $merged = $fromDb;
+        foreach ($computed as $item) {
+        if (!in_array($item, $merged, true)) {
+            $merged[] = $item;
+        }
+        }
+    
+        // Always inject the accurate rental/sale line from DB limits
+        array_unshift($merged, $rentalDesc, $saleDesc);
+    
+        // De-duplicate while preserving order
+        return array_values(array_unique($merged));
+    }
+
+    public function pricing()
+    {
+        $plans = Plan::active()->get()->map(function (Plan $plan) {
+            return [
+                'id'            => $plan->id,
+                'name'          => $plan->name,
+                'slug'          => $plan->slug,
+                'description'   => $plan->description,
+                'price'         => (float) $plan->price,
+                'currency'      => $plan->currency ?? 'GHS',
+                'interval'      => $plan->interval,
+                'features'      => $this->buildFeaturesList($plan), // ← merged list
+                'is_popular'    => $plan->slug === 'pro',           // or add a DB column
+                'is_free'       => $plan->isFree(),
+                'cta_text'      => $plan->isFree() ? 'Get Started Free' : "Choose {$plan->name}",
+                'listing_limit' => $plan->listing_limit,
+                'rental_limit'  => $plan->rental_limit,
+                'sale_limit'    => $plan->sale_limit,
+                'boost_limit'   => $plan->boost_limit,
+                'lead_limit'    => $plan->lead_limit,
+                'verified_badge'   => $plan->verified_badge,
+                'priority_ranking' => $plan->priority_ranking,
+                'analytics_access' => $plan->analytics_access,
+                'sort_order'    => $plan->sort_order,
+            ];
+        });
+
         return inertia('PricingPage', [
             'plans' => $plans,
         ]);

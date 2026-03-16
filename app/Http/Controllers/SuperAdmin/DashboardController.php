@@ -5,6 +5,7 @@ namespace App\Http\Controllers\SuperAdmin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Rental;
+use App\Models\Plan;
 use App\Models\User;
 use App\Models\ListingInquiry;
 use App\Models\ListingView;
@@ -28,6 +29,7 @@ class DashboardController extends Controller
         $totalUsers      = User::where('role', 'tenant')->count();
         $totalInquiries  = ListingInquiry::count();
         $totalView  = ListingView::count();
+        $totalPlans = Plan::count();
 
         // SaaS metrics - reuse existing models
         $activeSubs      = User::whereHas('subscription', function ($q) {
@@ -46,6 +48,7 @@ class DashboardController extends Controller
                 'total_users'     => $totalUsers,
                 'total_inquiries' => $totalInquiries,
                 'total_views' => $totalView,
+                'total_plans' => $totalPlans,
             ],
             'saas' => [
                 'active_subscriptions' => $activeSubs,

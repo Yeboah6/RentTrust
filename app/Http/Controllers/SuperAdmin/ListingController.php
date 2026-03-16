@@ -44,6 +44,73 @@ class ListingController extends Controller
         ]);
     }
 
+    // ─── Create ───────────────────────────────────────────────────────────────
+
+    public function create()
+    {
+        return Inertia::render('SuperAdmin/Listings/ListingCreate', [
+            'agents'         => User::select('id', 'name', 'company as agency')->orderBy('name')->get(),
+            'amenities'      => Amenity::select('id', 'name', 'icon', 'category')->orderBy('category')->orderBy('name')->get(),
+            'property_types' => PropertyType::orderBy('name')->pluck('name'),
+        ]);
+    }
+
+    // ─── Store ────────────────────────────────────────────────────────────────
+ 
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'title'            => ['required', 'string', 'max:255'],
+            'description'      => ['nullable', 'string', 'max:5000'],
+            'purpose'          => ['required', Rule::in(['sale', 'rent', 'short', 'lease'])],
+            'property_type'    => ['nullable', 'string', 'max:100'],
+            'sale_price'       => ['required_if:purpose,sale', 'nullable', 'numeric', 'min:0'],
+            'rent_min'         => ['required_if:purpose,rent,short,lease', 'nullable', 'numeric', 'min:0'],
+            'rent_max'         => ['nullable', 'numeric', 'min:0', 'gte:rent_min'],
+            'advance_duration' => ['nullable', 'integer', 'min:1'],
+            'currency'         => ['required', 'string', 'max:10'],
+            'location'         => ['required', 'string', 'max:255'],
+            'address'          => ['nullable', 'string', 'max:500'],
+            'bedrooms'         => ['nullable', 'integer', 'min:0'],
+            'bathrooms'        => ['nullable', 'integer', 'min:0'],
+            'toilets'          => ['nullable', 'integer', 'min:0'],
+            'area_sqft'        => ['nullable', 'numeric', 'min:0'],
+            'is_featured'      => ['boolean'],
+            'is_verified'      => ['boolean'],
+            'status'           => ['required', Rule::in(['active', 'pending', 'draft'])],
+            'agent_id'         => ['nullable', 'exists:agents,id'],
+            'amenity_ids'      => ['nullable', 'array'],
+            'amenity_ids.*'    => ['exists:amenities,id'],
+        ]);
+ 
+        $listing = DB::transaction(function () use ($validated) {
+            $amenityIds = $validated['amenity_ids'] ?? [];
+            unset($validated['amenity_ids']);
+ 
+            // Map 'purpose' to 'listing_type' if your Rental model uses that column
+            // $validated['listing_type'] = $validated['purpose'];
+ 
+            $listing = Rental::create(array_merge($validated, [
+                'created_by' => auth()->id(),
+            ]));
+ 
+            if (method_exists($listing, 'amenities') && $amenityIds) {
+                $listing->amenities()->sync($amenityIds);
+            }
+ 
+            return $listing;
+        });
+ 
+        Log::info('SuperAdmin created listing', [
+            'listing_id' => $listing->id,
+            'admin_id'   => auth()->id(),
+        ]);
+ 
+        return redirect()
+            ->route('super-admin.listings.show', $listing)
+            ->with('success', "Listing \"{$listing->title}\" created successfully.");
+    }
+
     // ─── Show ─────────────────────────────────────────────────────────────────
  
     public function show(Rental $listing)
@@ -95,7 +162,7 @@ class ListingController extends Controller
             'bedrooms'        => ['nullable', 'integer', 'min:0'],
             'bathrooms'       => ['nullable', 'integer', 'min:0'],
             'area'            => ['required', 'string', 'max:255'],
-            // 'is_featured'     => ['nullable', 'boolean'],
+            'is_featured'     => ['nullable', 'boolean'],
             'is_verified'     => ['nullable', 'boolean'],
             'status'          => ['required', Rule::in(['active','pending','sold','rented','rejected','draft','expired','flagged','suspended'])],
             'agent_id'        => ['nullable', 'exists:users,id'],

@@ -323,6 +323,7 @@ const PlanEdit = ({ plan, inline = false, onClose } = {}) => {
         paystack_plan_code: plan.paystack_plan_code ?? '',
         flutterwave_plan_id: plan.flutterwave_plan_id ?? '',
         sort_order:    plan.sort_order    ?? 0,
+        // features: [],
     };
 
     const { data, setData, put, processing, errors, isDirty, reset } = useForm({ ...normalisedPlan });
@@ -542,6 +543,30 @@ const PlanEdit = ({ plan, inline = false, onClose } = {}) => {
                                         <Toggle value={data.analytics_access}   onChange={v => setData('analytics_access', v)}   label="Analytics Access"   sub="View detailed listing analytics" />
                                     </div>
                                 </div>
+
+                                <FField label="Feature Bullet Points" hint="Shown as a checklist on the pricing page">
+                                    {data.features.map((f, i) => (
+                                        <div key={i} style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.4rem' }}>
+                                            <PlanInput
+                                                value={f}
+                                                onChange={e => {
+                                                    const updated = [...data.features];
+                                                    updated[i] = e.target.value;
+                                                    setData('features', updated);
+                                                }}
+                                                placeholder={`Feature ${i + 1}`}
+                                            />
+                                            <button type="button" onClick={() => setData('features', data.features.filter((_, j) => j !== i))}
+                                                style={{ padding: '0 0.65rem', borderRadius: '0.55rem', border: '1px solid hsl(0 65% 88%)', backgroundColor: 'hsl(0 65% 96%)', color: 'hsl(0 65% 48%)', cursor: 'pointer' }}>
+                                                <Icons.x />
+                                            </button>
+                                        </div>
+                                    ))}
+                                    <button type="button" onClick={() => setData('features', [...data.features, ''])}
+                                        style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.45rem 0.875rem', borderRadius: '0.55rem', border: '1px dashed hsl(220 15% 82%)', backgroundColor: 'transparent', color: 'hsl(220 15% 48%)', fontSize: '0.78rem', fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit' }}>
+                                        <Icons.plus /> Add Feature
+                                    </button>
+                                </FField>
 
                                 {/* ── Payment Gateway Codes ── */}
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>

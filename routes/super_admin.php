@@ -57,7 +57,7 @@ Route::prefix('super-admin')
 
     // ── Listings ──────────────────────────────────────────────────────────────
     Route::resource('listings', ListingController::class)
-        ->only(['index', 'show', 'edit', 'update', 'destroy']);
+        ->only(['index', 'show', 'edit', 'update', 'destroy', 'create', 'store']);
  
     // Status action routes
     Route::post('listings/{listing}/approve', [ListingController::class, 'approve'])

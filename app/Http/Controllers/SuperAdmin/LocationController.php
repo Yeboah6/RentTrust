@@ -40,7 +40,7 @@ class LocationController extends Controller
             'is_active' => 'boolean'
         ]);
 
-        $location->update($location);
+        Location::update($location);
         return redirect()->back()->with('success', 'Location updated');
     }
 
