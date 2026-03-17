@@ -72,7 +72,7 @@ class AgentController extends Controller
  
     public function create()
     {
-        return Inertia::render('SuperAdmin/Agents/Create');
+        return Inertia::render('SuperAdmin/Agents/AgentCreate');
     }
 
     // ─── Store ────────────────────────────────────────────────────────────────
