@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Link, router, usePage } from '@inertiajs/react';
+import { Link, router, usePage, useMemo } from '@inertiajs/react';
 import SuperAdminLayout from '@/Layouts/SuperAdminLayout';
 import { useRefresh } from '@/Hooks/useRefresh';
 
@@ -207,7 +207,8 @@ const Toast = ({ toast }) => {
 
 const PaymentsIndex = ({ payments: raw = [] }) => {
     // const initial = raw.map(normalise);
-    const { payments = [] } = usePage().props;
+    const { payments: rawPayments = [] } = usePage().props;
+    const payments = useMemo(() => rawPayments.map(normalise), [rawPayments]);
 
     // const [payments,       setPayments]       = useState(initial);
     const [search,         setSearch]         = useState('');
@@ -393,7 +394,7 @@ const PaymentsIndex = ({ payments: raw = [] }) => {
                 <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(200px, 1fr))', gap:'0.875rem', marginBottom:'1.5rem' }}>
                     <SummaryCard
                         label="Total Revenue" sub="Successful payments"
-                        value={`${initial[0]?.currency ?? 'GHS'} ${totalRevenue.toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 })}`}
+                        value={`${payments[0]?.currency ?? 'GHS'} ${totalRevenue.toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 })}`}
                         iconEl={<Icons.dollar />} accentBg="hsl(152 55% 92%)" accentColor="hsl(152 55% 33%)"
                     />
                     <SummaryCard
