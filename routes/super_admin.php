@@ -14,6 +14,7 @@ use App\Http\Controllers\SuperAdmin\AmenityController;
 use App\Http\Controllers\SuperAdmin\SettingsController;
 use App\Http\Controllers\SuperAdmin\FeatureFlagController;
 use App\Http\Controllers\SuperAdmin\SystemController;
+use App\Http\Controllers\SuperAdmin\TenantController;
 // use App\Http\Controllers\SuperAdmin\AuditLogController;
 
 Route::prefix('super-admin')
@@ -54,6 +55,13 @@ Route::prefix('super-admin')
     Route::post('agents/{agent}/verify',     [AgentController::class, 'verify'])     ->name('agents.verify');
     Route::post('agents/{agent}/suspend',    [AgentController::class, 'suspend'])    ->name('agents.suspend');
     Route::post('agents/{agent}/reactivate', [AgentController::class, 'reactivate']) ->name('agents.reactivate');
+
+    Route::resource('tenants', TenantController::class)
+        ->only(['index', 'show', 'destroy']);
+ 
+    // Status actions
+    Route::post('tenants/{tenant}/suspend',    [TenantController::class, 'suspend'])    ->name('tenants.suspend');
+    Route::post('tenants/{tenant}/reactivate', [TenantController::class, 'reactivate']) ->name('tenants.reactivate');
 
     // ── Listings ──────────────────────────────────────────────────────────────
     Route::resource('listings', ListingController::class)

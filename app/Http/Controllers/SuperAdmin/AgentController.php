@@ -40,21 +40,17 @@ class AgentController extends Controller
                     'phone'           => $user->phone,
                     'status'          => $user->status ?? 'pending',
                     'agency'          => $user->company,
-                    'bio'             => $user->bio,
-                    // 'avatar'          => null,                          // add profile photo column if needed
+                    'bio'             => $user->bio,                    // add profile photo column if needed
                     'is_verified'     => in_array($user->status, ['verified', 'active']),
                     'is_featured'     => false,                         // add featured flag to users table if needed
                     'tier'            => $user->subscription?->plan?->slug
                                          ?? $user->package
-                                         ?? 'standard',
-                    // 'license'         => null,                          // add rea_number column if needed
-                    // 'location'        => null,                          // add city/area column if needed
+                                         ?? 'standard',             // add city/area column if needed
                     'listings_count'  => $user->listings_count  ?? 0,
                     'active_listings' => $user->active_listings ?? 0,
                     'sold_count'      => $user->sold_count      ?? 0,
                     'rating'          => $user->rating          ? round($user->rating, 1) : null,
-                    'reviews_count'   => $user->reviews_count   ?? 0,
-                    // 'total_revenue'   => null,                          // add if you track commissions
+                    'reviews_count'   => $user->reviews_count   ?? 0,       // add if you track commissions
                     'joined_at'       => $user->created_at,
                     'last_active'     => $user->updated_at,            // swap for last_login_at if tracked
                 ];
@@ -235,7 +231,7 @@ class AgentController extends Controller
 
     // ─── Verify ───────────────────────────────────────────────────────────────
  
-    public function verify(Agent $agent)
+    public function verify(User $agent)
     {
         if ($agent->is_verified) {
             return back()->with('info', 'Agent is already verified.');
