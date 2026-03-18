@@ -1,6 +1,7 @@
 import React, { useState, useRef, useMemo } from 'react';
-import { router } from '@inertiajs/react';
+import { router, usePage } from '@inertiajs/react';
 import SuperAdminLayout from '@/Layouts/SuperAdminLayout';
+import { useRefresh } from '@/Hooks/useRefresh';
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 
@@ -17,6 +18,7 @@ const Icons = {
     trash:   () => <Ico d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" size="0.85rem" />,
     check:   () => <Ico d="M5 13l4 4L19 7" size="0.85rem" />,
     x:       () => <Ico d="M6 18L18 6M6 6l12 12" size="0.85rem" />,
+    refresh:  () => <Ico d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" size="0.9rem" />,
     ban:     () => <Ico d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" size="0.85rem" />,
     unlock:  () => <Ico d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" size="0.85rem" />,
     users:   () => <Ico d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" size="1.15rem" />,
@@ -28,6 +30,9 @@ const Icons = {
     chevU:   () => <Ico d="M5 15l7-7 7 7" size="0.8rem" />,
     chevL:   () => <Ico d="M15 19l-7-7 7-7" size="0.8rem" />,
     chevR:   () => <Ico d="M9 5l7 7-7 7" size="0.8rem" />,
+    plus:  () => <Ico d="M12 4v16m8-8H4" size="0.95rem" />,
+    grid:  () => <Ico d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" size="0.9rem" />,
+    list:  () => <Ico d="M4 6h16M4 10h16M4 14h16M4 18h16" size="0.9rem" />,
     spinner: () => (
         <svg style={{ width: '0.95rem', height: '0.95rem', animation: 'tnSpin 0.75s linear infinite', flexShrink: 0 }} fill="none" viewBox="0 0 24 24">
             <circle style={{ opacity: 0.2 }} cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -379,6 +384,7 @@ const TenantRow = ({ tenant: t, index, onAction }) => {
 
 const TenantsIndex = ({ tenants: rawTenants = [] }) => {
     const tenants = useMemo(() => rawTenants.map(normalise), [rawTenants]);
+    // const { tenants: pageTenants = [] } = usePage().props;
 
     const [search,     setSearch]     = useState('');
     const [status,     setStatus]     = useState('all');
@@ -389,6 +395,7 @@ const TenantsIndex = ({ tenants: rawTenants = [] }) => {
     const [modal,      setModal]      = useState(null);
     const [processing, setProcessing] = useState(false);
     const [toast,      setToast]      = useState(null);
+    const [refreshing,   refresh]   = useRefresh(['tenants']);
     const toastTimer = useRef(null);
 
     const showToast = (msg, type = 'success') => {
@@ -472,11 +479,20 @@ const TenantsIndex = ({ tenants: rawTenants = [] }) => {
 
             <div>
                 {/* ── Header ── */}
-                <div style={{ marginBottom: '1.5rem' }}>
-                    <h1 style={{ fontSize: '1.5rem', fontWeight: '900', color: 'hsl(220 25% 12%)', margin: '0 0 0.22rem', letterSpacing: '-0.02em' }}>Tenants</h1>
-                    <p style={{ fontSize: '0.82rem', color: 'hsl(220 15% 50%)', margin: 0 }}>
-                        {tenants.length.toLocaleString()} registered · {activeCount} active · {suspendedCount} suspended
-                    </p>
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', marginBottom: '1.5rem' }}>
+                    <div>
+                        <h1 style={{ fontSize: '1.5rem', fontWeight: '900', color: 'hsl(220 25% 12%)', margin: '0 0 0.22rem', letterSpacing: '-0.02em' }}>Tenants</h1>
+                        <p style={{ fontSize: '0.82rem', color: 'hsl(220 15% 50%)', margin: 0 }}>
+                            {tenants.length.toLocaleString()} registered · {activeCount} active · {suspendedCount} suspended
+                        </p>
+                    </div>
+
+                    <button onClick={refresh} disabled={refreshing}
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.6rem 1rem', borderRadius: '0.65rem', border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white', color: 'hsl(220 25% 28%)', fontWeight: '600', fontSize: '0.83rem', cursor: refreshing ? 'not-allowed' : 'pointer', fontFamily: 'inherit', transition: 'background-color 0.15s' }}
+                        onMouseEnter={e => { if (!refreshing) e.currentTarget.style.backgroundColor = 'hsl(220 15% 96%)'; }}
+                        onMouseLeave={e => e.currentTarget.style.backgroundColor = 'white'}>
+                        {refreshing ? <><Icons.spinner /> Refreshing…</> : <><Icons.refresh /> Refresh</>}
+                    </button>
                 </div>
 
                 {/* ── KPI strip ── */}

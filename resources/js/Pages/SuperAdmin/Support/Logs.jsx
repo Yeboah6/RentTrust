@@ -57,10 +57,16 @@ const getActionCfg = (type) => ACTION_TYPES[(type ?? '').toLowerCase()] ?? ACTIO
 
 // ─── Normalise incoming data ──────────────────────────────────────────────────
 
-const normalise = (logs = [], activity = []) => {
-    if (logs.length > 0) return logs;
-    if (activity.length > 0) {
-        return activity.map((item, i) => {
+const normalise = (logs, activity) => {
+    const safeLogs     = logs     ?? [];
+    const safeActivity = activity ?? [];
+
+    if (safeLogs.length > 0)     return safeLogs;
+    if (safeActivity.length > 0) return safeActivity.map((item, i) => {
+
+    // if (logs.length > 0) return logs;
+    // if (activity.length > 0) {
+        // return activity.map((item, i) => {
             // AdminAudit shape: { id, title, status, description, time }
             // Also handle richer shapes: { admin, action, affected_user, timestamp, ... }
             const title        = item.title ?? item.action ?? item.event ?? '—';
@@ -86,7 +92,8 @@ const normalise = (logs = [], activity = []) => {
                 ip:            item.ip ?? item.ip_address ?? '',
             };
         });
-    }
+        // );
+    // }
     // Fallback demo data
     return [
         { id: 1,  admin: 'Super Admin',  admin_email: 'super@platform.com',  action: 'Refund processed',         type: 'refund',       affected_user: 'Kwame Mensah',  affected_id: 104, timestamp: '2024-02-14 10:30:45', notes: 'Duplicate charge refund — confirmed by finance.', ip: '102.88.0.1' },
@@ -375,8 +382,11 @@ const LogRow = ({ log, index, onView }) => {
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 
-const AuditLog = ({ logs: rawLogs = [], activity = [] }) => {
-    const allLogs = useMemo(() => normalise(rawLogs, activity), [rawLogs, activity]);
+const AuditLog = ({ logs: rawLogs, activity }) => {
+    const allLogs = useMemo(
+        () => normalise(rawLogs ?? [], activity ?? []),
+        [rawLogs, activity]
+    );
 
     const [search,       setSearch]       = useState('');
     const [typeFilter,   setTypeFilter]   = useState('all');

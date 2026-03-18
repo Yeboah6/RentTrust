@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
-import { router } from '@inertiajs/react';
+import { router, usePage } from '@inertiajs/react';
 import SuperAdminLayout from '@/Layouts/SuperAdminLayout';
+import { useRefresh } from '@/Hooks/useRefresh';
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 
@@ -19,6 +20,7 @@ const Icons = {
     trash:    () => <Ico d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" size="0.85rem" />,
     x:        () => <Ico d="M6 18L18 6M6 6l12 12" size="0.9rem" />,
     check:    () => <Ico d="M5 13l4 4L19 7" size="0.85rem" />,
+    refresh:  () => <Ico d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" size="0.9rem" />,
     alert:    () => <Ico d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" size="1rem" />,
     grid:     () => <Ico d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" size="0.9rem" />,
     list:     () => <Ico d="M4 6h16M4 10h16M4 14h16M4 18h16" size="0.9rem" />,
@@ -442,8 +444,8 @@ const Kpi = ({ label, value, sub, accent = 'hsl(220 25% 15%)', iconBg, iconColor
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 
-const TypesIndex = ({ types: initial = [] }) => {
-    const [types,        setTypes]        = useState(initial);
+const TypesIndex = ({}) => {
+    const { types = [] } = usePage().props;
     const [search,       setSearch]       = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
     const [viewMode,     setViewMode]     = useState('grid');
@@ -451,6 +453,7 @@ const TypesIndex = ({ types: initial = [] }) => {
     const [delTarget,    setDelTarget]    = useState(null);
     const [deleting,     setDeleting]     = useState(false);
     const [toast,        setToast]        = useState(null);
+    const [refreshing,   refresh]   = useRefresh(['types']);
     const toastTimer = useRef(null);
 
     const showToast = (msg, type = 'success') => {
@@ -522,12 +525,20 @@ const TypesIndex = ({ types: initial = [] }) => {
                             {types.length} type{types.length !== 1 ? 's' : ''} · {activeCount} active · {totalListings.toLocaleString()} total listings
                         </p>
                     </div>
-                    <button onClick={() => setModal({ mode: 'create' })}
-                        style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem', padding: '0.625rem 1.2rem', borderRadius: '0.65rem', backgroundColor: 'hsl(220 25% 15%)', color: 'white', fontWeight: '700', fontSize: '0.875rem', border: 'none', cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap', transition: 'background-color 0.15s' }}
-                        onMouseEnter={e => e.currentTarget.style.backgroundColor = 'hsl(220 25% 22%)'}
-                        onMouseLeave={e => e.currentTarget.style.backgroundColor = 'hsl(220 25% 15%)'}>
-                        <Icons.plus /> New Type
-                    </button>
+                    <div style={{ display: 'flex', gap: '0.65rem', flexShrink: 0 }}>
+                        <button onClick={refresh} disabled={refreshing}
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.6rem 1rem', borderRadius: '0.65rem', border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white', color: 'hsl(220 25% 28%)', fontWeight: '600', fontSize: '0.83rem', cursor: refreshing ? 'not-allowed' : 'pointer', fontFamily: 'inherit', transition: 'background-color 0.15s' }}
+                            onMouseEnter={e => { if (!refreshing) e.currentTarget.style.backgroundColor = 'hsl(220 15% 96%)'; }}
+                            onMouseLeave={e => e.currentTarget.style.backgroundColor = 'white'}>
+                            {refreshing ? <><Icons.spinner /> Refreshing…</> : <><Icons.refresh /> Refresh</>}
+                        </button>
+                        <button onClick={() => setModal({ mode: 'create' })}
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem', padding: '0.625rem 1.2rem', borderRadius: '0.65rem', backgroundColor: 'hsl(220 25% 15%)', color: 'white', fontWeight: '700', fontSize: '0.875rem', border: 'none', cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap', transition: 'background-color 0.15s' }}
+                            onMouseEnter={e => e.currentTarget.style.backgroundColor = 'hsl(220 25% 22%)'}
+                            onMouseLeave={e => e.currentTarget.style.backgroundColor = 'hsl(220 25% 15%)'}>
+                            <Icons.plus /> New Type
+                        </button>
+                    </div>
                 </div>
 
                 {/* ── KPI strip ── */}

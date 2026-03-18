@@ -21,19 +21,7 @@ class SystemController extends Controller
         // store original id in session if needed
         Auth::guard()->login($user);
         return inertia('SuperAdmin/Support/Impersonate', ['user' => $user]);
-        // return redirect('/')->with('success', 'Now impersonating ' . $user->name);
     }
-
-    // public function logs()
-    // {
-    //     // simplistic example reading laravel log
-    //     $path = storage_path('logs/laravel.log');
-    //     $lines = [];
-    //     if (file_exists($path)) {
-    //         $lines = array_slice(file($path), -200);
-    //     }
-    //     return inertia('SuperAdmin/Support/Logs', ['logs' => $lines]);
-    // }
 
     public function index(Request $request)
     {
@@ -73,8 +61,9 @@ class SystemController extends Controller
         // Fetch up to 500 most recent entries (frontend paginates client-side)
         $logs = $query->limit(500)->get()->map(fn ($l) => $this->formatLog($l));
 
-        return inertia('SuperAdmin/Support/Logs', [
-            'logs' => $logs,
+        return Inertia::render('SuperAdmin/Support/Logs', [
+            'logs'     => $logs ?? [],
+            'activity' => $activity ?? [],
         ]);
     }
 

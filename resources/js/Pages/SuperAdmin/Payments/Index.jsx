@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
-import { Link, router } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import SuperAdminLayout from '@/Layouts/SuperAdminLayout';
+import { useRefresh } from '@/Hooks/useRefresh';
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 
@@ -25,6 +26,7 @@ const Icons = {
     },
     alert:    () => <Icon d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" size="1.25rem" />,
     x:        () => <Icon d="M6 18L18 6M6 6l12 12" size="1rem" />,
+    refresh:  () => <Icon d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" size="0.9rem" />,
     dollar:   () => <Icon d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" size="1.1rem" />,
     trending: () => <Icon d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" size="1.1rem" />,
     clock:    () => <Icon d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" size="1.1rem" />,
@@ -204,9 +206,10 @@ const Toast = ({ toast }) => {
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 const PaymentsIndex = ({ payments: raw = [] }) => {
-    const initial = raw.map(normalise);
+    // const initial = raw.map(normalise);
+    const { payments = [] } = usePage().props;
 
-    const [payments,       setPayments]       = useState(initial);
+    // const [payments,       setPayments]       = useState(initial);
     const [search,         setSearch]         = useState('');
     const [filterStatus,   setFilterStatus]   = useState('all');
     const [filterType,     setFilterType]     = useState('all');
@@ -219,6 +222,7 @@ const PaymentsIndex = ({ payments: raw = [] }) => {
     const [refundTarget,   setRefundTarget]   = useState(null);
     const [refunding,      setRefunding]      = useState(false);
     const [toast,          setToast]          = useState(null);
+    const [refreshing,   refresh]   = useRefresh(['payments']);
 
     const toastTimer = useRef(null);
     const showToast = (msg, type = 'success') => {
@@ -369,11 +373,20 @@ const PaymentsIndex = ({ payments: raw = [] }) => {
                             {filtered.length.toLocaleString()} of {payments.length.toLocaleString()} transaction{payments.length !== 1 ? 's' : ''}
                         </p>
                     </div>
-                    <button onClick={exportCSV} style={{ display:'inline-flex', alignItems:'center', gap:'0.4rem', padding:'0.55rem 1.1rem', borderRadius:'0.6rem', border:'none', cursor:'pointer', backgroundColor:'hsl(220 25% 15%)', color:'white', fontWeight:'600', fontSize:'0.8rem', transition:'background-color 0.15s' }}
-                        onMouseEnter={e => e.currentTarget.style.backgroundColor = 'hsl(220 25% 22%)'}
-                        onMouseLeave={e => e.currentTarget.style.backgroundColor = 'hsl(220 25% 15%)'}>
-                        <Icons.download /> Export CSV
-                    </button>
+                    <div style={{ display: 'flex', gap: '0.65rem', flexShrink: 0 }}>
+                        <button onClick={refresh} disabled={refreshing}
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.6rem 1rem', borderRadius: '0.65rem', border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white', color: 'hsl(220 25% 28%)', fontWeight: '600', fontSize: '0.83rem', cursor: refreshing ? 'not-allowed' : 'pointer', fontFamily: 'inherit', transition: 'background-color 0.15s' }}
+                            onMouseEnter={e => { if (!refreshing) e.currentTarget.style.backgroundColor = 'hsl(220 15% 96%)'; }}
+                            onMouseLeave={e => e.currentTarget.style.backgroundColor = 'white'}>
+                            {refreshing ? <><Icons.spinner /> Refreshing…</> : <><Icons.refresh /> Refresh</>}
+                        </button>
+                        
+                        <button onClick={exportCSV} style={{ display:'inline-flex', alignItems:'center', gap:'0.4rem', padding:'0.55rem 1.1rem', borderRadius:'0.6rem', border:'none', cursor:'pointer', backgroundColor:'hsl(220 25% 15%)', color:'white', fontWeight:'600', fontSize:'0.8rem', transition:'background-color 0.15s' }}
+                            onMouseEnter={e => e.currentTarget.style.backgroundColor = 'hsl(220 25% 22%)'}
+                            onMouseLeave={e => e.currentTarget.style.backgroundColor = 'hsl(220 25% 15%)'}>
+                            <Icons.download /> Export CSV
+                        </button>
+                    </div>
                 </div>
 
                 {/* ── Summary cards ── */}

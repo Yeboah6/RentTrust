@@ -1,6 +1,7 @@
 import React, { useState, useRef, useMemo } from 'react';
-import { router } from '@inertiajs/react';
+import { router, usePage } from '@inertiajs/react';
 import SuperAdminLayout from '@/Layouts/SuperAdminLayout';
+import { useRefresh } from '@/Hooks/useRefresh';
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 
@@ -24,7 +25,7 @@ const Icons = {
     list:     () => <Ico d="M4 6h16M4 10h16M4 14h16M4 18h16" size="0.9rem" />,
     star:     () => <Ico d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" size="0.85rem" />,
     listings: () => <Ico d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" size="0.85rem" />,
-    // Amenity-specific
+    refresh:  () => <Ico d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" size="0.9rem" />,
     wifi:     () => <Ico d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0" size="1.4rem" sw={1.5} />,
     pool:     () => <Ico d="M3 10h18M3 14h18M5 6l2 2 2-2 2 2 2-2 2 2 2-2M5 18l2 2 2-2 2 2 2-2 2 2 2-2" size="1.4rem" sw={1.5} />,
     parking:  () => <Ico d="M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2zm4 5h3a2 2 0 010 4H9V8zm0 4v4" size="1.4rem" sw={1.5} />,
@@ -463,8 +464,8 @@ const Kpi = ({ label, value, sub, accent, iconBg, iconColor, icon }) => (
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 
-const AmenitiesIndex = ({ amenities: initial = [] }) => {
-    const [amenities,    setAmenities]    = useState(initial);
+const AmenitiesIndex = ({}) => {
+    const { amenities = [] } = usePage().props;
     const [search,       setSearch]       = useState('');
     const [catFilter,    setCatFilter]    = useState('all');
     const [statusFilter, setStatusFilter] = useState('all');
@@ -474,6 +475,7 @@ const AmenitiesIndex = ({ amenities: initial = [] }) => {
     const [deleting,     setDeleting]     = useState(false);
     const [toast,        setToast]        = useState(null);
     const toastTimer = useRef(null);
+    const [refreshing,   refresh]   = useRefresh(['amenities']);
 
     const showToast = (msg, type = 'success') => {
         clearTimeout(toastTimer.current);
@@ -488,7 +490,7 @@ const AmenitiesIndex = ({ amenities: initial = [] }) => {
         router.delete(`/super-admin/amenities/${delTarget.id}`, {
             preserveScroll: true,
             onSuccess: () => {
-                setAmenities(a => a.filter(x => x.id !== delTarget.id));
+                // amenities(a => a.filter(x => x.id !== delTarget.id));
                 showToast(`"${delTarget.name}" deleted.`);
                 setDelTarget(null);
             },
@@ -557,12 +559,20 @@ const AmenitiesIndex = ({ amenities: initial = [] }) => {
                             {amenities.length} amenit{amenities.length !== 1 ? 'ies' : 'y'} · {activeCount} active · {categories.length} categor{categories.length !== 1 ? 'ies' : 'y'}
                         </p>
                     </div>
-                    <button onClick={() => setModal({ mode: 'create' })}
-                        style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem', padding: '0.625rem 1.2rem', borderRadius: '0.65rem', backgroundColor: 'hsl(220 25% 15%)', color: 'white', fontWeight: '700', fontSize: '0.875rem', border: 'none', cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap', transition: 'background-color 0.15s' }}
-                        onMouseEnter={e => e.currentTarget.style.backgroundColor = 'hsl(220 25% 22%)'}
-                        onMouseLeave={e => e.currentTarget.style.backgroundColor = 'hsl(220 25% 15%)'}>
-                        <Icons.plus /> New Amenity
-                    </button>
+                    <div style={{ display: 'flex', gap: '0.65rem', flexShrink: 0 }}>
+                        <button onClick={refresh} disabled={refreshing}
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.6rem 1rem', borderRadius: '0.65rem', border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white', color: 'hsl(220 25% 28%)', fontWeight: '600', fontSize: '0.83rem', cursor: refreshing ? 'not-allowed' : 'pointer', fontFamily: 'inherit', transition: 'background-color 0.15s' }}
+                            onMouseEnter={e => { if (!refreshing) e.currentTarget.style.backgroundColor = 'hsl(220 15% 96%)'; }}
+                            onMouseLeave={e => e.currentTarget.style.backgroundColor = 'white'}>
+                            {refreshing ? <><Icons.spinner /> Refreshing…</> : <><Icons.refresh /> Refresh</>}
+                        </button>
+                        <button onClick={() => setModal({ mode: 'create' })}
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem', padding: '0.625rem 1.2rem', borderRadius: '0.65rem', backgroundColor: 'hsl(220 25% 15%)', color: 'white', fontWeight: '700', fontSize: '0.875rem', border: 'none', cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap', transition: 'background-color 0.15s' }}
+                            onMouseEnter={e => e.currentTarget.style.backgroundColor = 'hsl(220 25% 22%)'}
+                            onMouseLeave={e => e.currentTarget.style.backgroundColor = 'hsl(220 25% 15%)'}>
+                            <Icons.plus /> New Amenity
+                        </button>
+                    </div>
                 </div>
 
                 {/* ── KPI strip ── */}

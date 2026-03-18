@@ -1,6 +1,7 @@
 import React, { useState, useRef, useMemo } from 'react';
-import { Link, router } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import SuperAdminLayout from '@/Layouts/SuperAdminLayout';
+import { useRefresh } from '@/Hooks/useRefresh';
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 
@@ -19,6 +20,7 @@ const Icons = {
     trash:    () => <Ico d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" size="0.85rem" />,
     check:    () => <Ico d="M5 13l4 4L19 7" size="0.85rem" />,
     x:        () => <Ico d="M6 18L18 6M6 6l12 12" size="0.85rem" />,
+    refresh:  () => <Ico d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" size="0.9rem" />,
     ban:      () => <Ico d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" size="0.85rem" />,
     userPlus: () => <Ico d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" size="0.85rem" />,
     users:    () => <Ico d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" size="1.15rem" />,
@@ -509,6 +511,7 @@ const AgentsIndex = ({ agents: rawAgents = [], listings_count }) => {
     const [modal,      setModal]      = useState(null);
     const [processing, setProcessing] = useState(false);
     const [toast,      setToast]      = useState(null);
+    const [refreshing,   refresh]   = useRefresh(['agents', 'listings_count']);
     const toastTimer = useRef(null);
 
     const showToast = (msg, type = 'success') => {
@@ -605,12 +608,20 @@ const AgentsIndex = ({ agents: rawAgents = [], listings_count }) => {
                             {agents.length.toLocaleString()} total · {activeCount} active · {pendingCount} pending verification
                         </p>
                     </div>
-                    <Link href="/super-admin/agents/create"
-                        style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem', padding: '0.625rem 1.2rem', borderRadius: '0.65rem', backgroundColor: 'hsl(220 25% 15%)', color: 'white', fontWeight: '700', fontSize: '0.875rem', textDecoration: 'none', whiteSpace: 'nowrap', transition: 'background-color 0.15s' }}
-                        onMouseEnter={e => e.currentTarget.style.backgroundColor = 'hsl(220 25% 22%)'}
-                        onMouseLeave={e => e.currentTarget.style.backgroundColor = 'hsl(220 25% 15%)'}>
-                        + Add Agent
-                    </Link>
+                    <div style={{ display: 'flex', gap: '0.65rem', flexShrink: 0 }}>
+                        <button onClick={refresh} disabled={refreshing}
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.6rem 1rem', borderRadius: '0.65rem', border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white', color: 'hsl(220 25% 28%)', fontWeight: '600', fontSize: '0.83rem', cursor: refreshing ? 'not-allowed' : 'pointer', fontFamily: 'inherit', transition: 'background-color 0.15s' }}
+                            onMouseEnter={e => { if (!refreshing) e.currentTarget.style.backgroundColor = 'hsl(220 15% 96%)'; }}
+                            onMouseLeave={e => e.currentTarget.style.backgroundColor = 'white'}>
+                            {refreshing ? <><Icons.spinner /> Refreshing…</> : <><Icons.refresh /> Refresh</>}
+                        </button>
+                        <Link href="/super-admin/agents/create"
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem', padding: '0.625rem 1.2rem', borderRadius: '0.65rem', backgroundColor: 'hsl(220 25% 15%)', color: 'white', fontWeight: '700', fontSize: '0.875rem', textDecoration: 'none', whiteSpace: 'nowrap', transition: 'background-color 0.15s' }}
+                            onMouseEnter={e => e.currentTarget.style.backgroundColor = 'hsl(220 25% 22%)'}
+                            onMouseLeave={e => e.currentTarget.style.backgroundColor = 'hsl(220 25% 15%)'}>
+                            + Add Agent
+                        </Link>
+                    </div>
                 </div>
 
                 {/* ── KPI strip ── */}
