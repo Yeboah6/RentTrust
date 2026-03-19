@@ -5,11 +5,6 @@ import { ArrowRight, Building2, Users } from 'lucide-react';
 const CTASection = () => {
   const [hoveredCard, setHoveredCard] = useState(null);
 
-  // const handleTenantClick = () => {
-  //   console.log('Submit a Review clicked');
-  //   alert('Redirecting to review submission form...');
-  // };
-
   return (
     <>
       <style>{`

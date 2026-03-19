@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
@@ -59,56 +60,151 @@ class ListingController extends Controller
  
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'title'            => ['required', 'string', 'max:255'],
-            'description'      => ['nullable', 'string', 'max:5000'],
-            'purpose'          => ['required', Rule::in(['sale', 'rent', 'short', 'lease'])],
-            'property_type'    => ['nullable', 'string', 'max:100'],
-            'sale_price'       => ['required_if:purpose,sale', 'nullable', 'numeric', 'min:0'],
-            'rent_min'         => ['required_if:purpose,rent,short,lease', 'nullable', 'numeric', 'min:0'],
-            'rent_max'         => ['nullable', 'numeric', 'min:0', 'gte:rent_min'],
-            'advance_duration' => ['nullable', 'integer', 'min:1'],
-            'currency'         => ['required', 'string', 'max:10'],
-            'location'         => ['required', 'string', 'max:255'],
-            'address'          => ['nullable', 'string', 'max:500'],
-            'bedrooms'         => ['nullable', 'integer', 'min:0'],
-            'bathrooms'        => ['nullable', 'integer', 'min:0'],
-            'toilets'          => ['nullable', 'integer', 'min:0'],
-            'area_sqft'        => ['nullable', 'numeric', 'min:0'],
-            'is_featured'      => ['boolean'],
-            'is_verified'      => ['boolean'],
-            'status'           => ['required', Rule::in(['active', 'pending', 'draft'])],
-            'agent_id'         => ['nullable', 'exists:agents,id'],
-            'amenity_ids'      => ['nullable', 'array'],
-            'amenity_ids.*'    => ['exists:amenities,id'],
-        ]);
- 
-        $listing = DB::transaction(function () use ($validated) {
-            $amenityIds = $validated['amenity_ids'] ?? [];
-            unset($validated['amenity_ids']);
- 
-            // Map 'purpose' to 'listing_type' if your Rental model uses that column
-            // $validated['listing_type'] = $validated['purpose'];
- 
-            $listing = Rental::create(array_merge($validated, [
-                'created_by' => auth()->id(),
-            ]));
- 
-            if (method_exists($listing, 'amenities') && $amenityIds) {
-                $listing->amenities()->sync($amenityIds);
+        // ── Determine purpose ─────────────────────────────────────────────────────
+        $purpose = $request->input('purpose', 'rent');
+        if (!in_array($purpose, ['rent', 'sale', 'short', 'lease'])) {
+            return redirect()->back()
+                ->with('error', 'Invalid listing purpose.')
+                ->withInput();
+        }
+    
+        // ── Decode amenities — frontend may send a JSON string ────────────────────
+        $amenities = $request->amenities;
+        if (is_string($amenities)) {
+            $decoded   = json_decode($amenities, true);
+            $amenities = is_array($decoded) ? $decoded : [];
+        } elseif (!is_array($amenities)) {
+            $amenities = [];
+        }
+    
+        // ── Validation rules ──────────────────────────────────────────────────────
+        $rules = [
+            'title'         => ['required', 'string', 'max:255'],
+            'description'   => ['nullable', 'string', 'max:5000'],
+            'property_type' => ['nullable', 'string', 'max:100'],
+            // 'location'      => ['required', 'string', 'max:255'],
+            'city'          => ['required', 'string', 'max:255'],
+            'area'          => ['required', 'string', 'max:255'],
+            'address'       => ['nullable', 'string', 'max:500'],
+            'bedrooms'      => ['nullable', 'integer', 'min:0'],
+            'bathrooms'     => ['nullable', 'integer', 'min:0'],
+            'currency'      => ['required', 'string', 'max:10'],
+            'is_featured'   => ['boolean'],
+            'is_verified'   => ['boolean'],
+            'status'        => ['required', Rule::in(['active', 'pending', 'draft'])],
+            'agent_name'    => ['nullable', 'string', 'max:255'],
+            'agent_phone'   => ['nullable', 'string', 'max:30'],
+            'agent_email'   => ['nullable', 'email', 'max:255'],
+            'amenities'     => ['nullable'],
+            'images'        => ['nullable', 'array', 'max:10'],
+            'images.*'      => ['image', 'mimes:jpeg,png,jpg,gif,webp', 'max:5120'],
+        ];
+    
+        // Purpose-specific price rules
+        if ($purpose === 'sale') {
+            $rules['sale_price'] = ['required', 'numeric', 'min:0'];
+            $rules['rent_min']   = ['prohibited'];
+            $rules['rent_max']   = ['prohibited'];
+            $rules['advance_duration'] = ['prohibited'];
+        } else {
+            // rent / short / lease
+            $rules['rent_min']         = ['required', 'numeric', 'min:0'];
+            $rules['rent_max']         = ['nullable', 'numeric', 'min:0', 'gte:rent_min'];
+            $rules['advance_duration'] = ['nullable', 'integer', 'min:1'];
+            $rules['sale_price']       = ['prohibited'];
+        }
+    
+        $messages = [
+            'title.required'       => 'Property title is required.',
+            'city.required'        => 'City is required.',
+            'area.required'        => 'Area is required.',
+            'currency.required'    => 'Currency is required.',
+            'rent_min.required'    => 'Minimum rent is required for rental listings.',
+            'rent_min.numeric'     => 'Minimum rent must be a valid number.',
+            'rent_max.gte'         => 'Maximum rent must be greater than or equal to minimum rent.',
+            'sale_price.required'  => 'Sale price is required for sale listings.',
+            'sale_price.numeric'   => 'Sale price must be a valid number.',
+            'images.*.image'       => 'Each file must be a valid image.',
+            'images.*.mimes'       => 'Images must be JPEG, PNG, JPG, GIF, or WebP.',
+            'images.*.max'         => 'Each image must not exceed 5MB.',
+        ];
+    
+        $validator = Validator::make($request->all(), $rules, $messages);
+    
+        if ($validator->fails()) {
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput();
+        }
+    
+        try {
+            // ── Handle image uploads ──────────────────────────────────────────────
+            $filePaths = [];
+            if ($request->hasFile('images')) {
+                foreach ($request->file('images') as $file) {
+                    if ($file && $file->isValid()) {
+                        $fileName = 'rental_' . time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+                        $file->storeAs('rental_images', $fileName, 'public');
+                        $filePaths[] = $fileName;
+                    }
+                }
             }
- 
-            return $listing;
-        });
- 
-        Log::info('SuperAdmin created listing', [
-            'listing_id' => $listing->id,
-            'admin_id'   => auth()->id(),
-        ]);
- 
-        return redirect()
-            ->route('super-admin.listings.show', $listing)
-            ->with('success', "Listing \"{$listing->title}\" created successfully.");
+    
+            // ── Build listing data ────────────────────────────────────────────────
+            $listingData = [
+                'user_id'       => auth()->id(),
+                'purpose'       => $purpose,
+                'title'         => $request->input('title'),
+                'description'   => $request->input('description'),
+                'property_type' => $request->input('property_type'),
+                // 'location'      => $request->input('location'),
+                'city'          => $request->input('city'), // mirror into city column
+                'area'          => $request->input('area'), // mirror into area column
+                'address'       => $request->input('address'),
+                'bedrooms'      => $request->input('bedrooms'),
+                'bathrooms'     => $request->input('bathrooms', 0),
+                'currency'      => $request->input('currency', 'GHS'),
+                'amenities'     => $amenities,
+                'agent_name'    => $request->input('agent_name'),
+                'agent_phone'   => $request->input('agent_phone'),
+                'agent_email'   => $request->input('agent_email'),
+                'is_featured'   => $request->boolean('is_featured', false),
+                'is_verified'   => $request->boolean('is_verified', false),
+                'status'        => $request->input('status', 'pending'),
+                'images'        => $filePaths,
+            ];
+    
+            // Purpose-specific price fields
+            if ($purpose === 'sale') {
+                $listingData['sale_price']       = $request->input('sale_price');
+                $listingData['rent_min']         = null;
+                $listingData['rent_max']         = null;
+                $listingData['advance_duration'] = null;
+            } else {
+                $listingData['rent_min']         = $request->input('rent_min');
+                $listingData['rent_max']         = $request->input('rent_max');
+                $listingData['advance_duration'] = $request->input('advance_duration');
+                $listingData['sale_price']       = null;
+            }
+    
+            $listing = Rental::create($listingData);
+    
+            Log::info('SuperAdmin created listing', [
+                'listing_id' => $listing->id,
+                'admin_id'   => auth()->id(),
+            ]);
+    
+            return redirect()
+                ->route('super-admin.listings.show', $listing)
+                ->with('success', "Listing \"{$listing->title}\" created successfully.");
+    
+        } catch (\Exception $e) {
+            Log::error('SuperAdmin failed to create listing: ' . $e->getMessage());
+    
+            return redirect()->back()
+                ->with('error', 'Failed to create listing. Please try again.')
+                ->withInput();
+        }
     }
 
     // ─── Show ─────────────────────────────────────────────────────────────────

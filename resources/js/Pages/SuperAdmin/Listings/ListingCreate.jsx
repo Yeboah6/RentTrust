@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { Link, useForm } from '@inertiajs/react';
 import SuperAdminLayout from '@/Layouts/SuperAdminLayout';
 
@@ -21,6 +21,10 @@ const Icons = {
     tag:     () => <Ico d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" />,
     pin:     () => <Ico d={["M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z","M15 11a3 3 0 11-6 0 3 3 0 016 0z"]} />,
     currency:() => <Ico d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" size="1.1rem" />,
+    image:   () => <Ico d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" size="1.5rem" />,
+    upload:  () => <Ico d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" size="1.5rem" />,
+    trash2:  () => <Ico d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" size="0.8rem" />,
+    star:    () => <Ico d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" size="0.75rem" />,
     spinner: () => (
         <svg style={{ width: '1rem', height: '1rem', animation: 'lcSpin 0.75s linear infinite', flexShrink: 0 }} fill="none" viewBox="0 0 24 24">
             <circle style={{ opacity: 0.2 }} cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -38,10 +42,10 @@ const LISTING_TYPES = [
     { value: 'lease', label: 'Lease',     sub: 'Long-term lease' },
 ];
 
-// const PROPERTY_TYPES = [
-//     'Apartment', 'House', 'Land', 'Commercial', 'Office',
-//     'Shop', 'Warehouse', 'Villa', 'Studio', 'Duplex', 'Bungalow', 'Mansion',
-// ];
+const PROPERTY_TYPES = [
+    'Apartment', 'House', 'Land', 'Commercial', 'Office',
+    'Shop', 'Warehouse', 'Villa', 'Studio', 'Duplex', 'Bungalow', 'Mansion',
+];
 
 const CURRENCIES = [
     { value: 'GH₵', label: 'GH₵ GHS' },
@@ -121,6 +125,140 @@ const SectionLabel = ({ children }) => (
     </p>
 );
 
+// ─── Image upload ─────────────────────────────────────────────────────────────
+
+const MAX_IMAGES = 10;
+const ACCEPTED   = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+
+const ImageUpload = ({ images, onChange, error }) => {
+    const inputRef  = useRef(null);
+    const [dragOver, setDragOver] = useState(false);
+
+    const addFiles = useCallback((files) => {
+        const valid = [...files]
+            .filter(f => ACCEPTED.includes(f.type))
+            .slice(0, MAX_IMAGES - images.length);
+        if (!valid.length) return;
+        onChange([...images, ...valid]);
+    }, [images, onChange]);
+
+    const onInputChange = (e) => {
+        addFiles(e.target.files);
+        e.target.value = '';              // reset so same file can be re-added after removal
+    };
+
+    const onDrop = (e) => {
+        e.preventDefault();
+        setDragOver(false);
+        addFiles(e.dataTransfer.files);
+    };
+
+    const remove = (index) => onChange(images.filter((_, i) => i !== index));
+
+    const setPrimary = (index) => {
+        if (index === 0) return;
+        const next = [...images];
+        const [item] = next.splice(index, 1);
+        next.unshift(item);
+        onChange(next);
+    };
+
+    const preview = (file) => URL.createObjectURL(file);
+
+    return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            {/* Drop zone */}
+            <div
+                onClick={() => inputRef.current?.click()}
+                onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+                onDragLeave={() => setDragOver(false)}
+                onDrop={onDrop}
+                style={{
+                    border: `2px dashed ${error ? 'hsl(0 65% 60%)' : dragOver ? 'hsl(220 60% 55%)' : 'hsl(220 15% 82%)'}`,
+                    borderRadius: '0.75rem',
+                    backgroundColor: dragOver ? 'hsl(214 100% 98%)' : error ? 'hsl(0 65% 99%)' : 'hsl(220 15% 98.5%)',
+                    padding: '2rem 1rem',
+                    textAlign: 'center',
+                    cursor: images.length >= MAX_IMAGES ? 'not-allowed' : 'pointer',
+                    transition: 'all 0.2s',
+                    opacity: images.length >= MAX_IMAGES ? 0.55 : 1,
+                }}
+            >
+                <input
+                    ref={inputRef}
+                    type="file"
+                    accept={ACCEPTED.join(',')}
+                    multiple
+                    style={{ display: 'none' }}
+                    onChange={onInputChange}
+                    disabled={images.length >= MAX_IMAGES}
+                />
+                <div style={{ color: dragOver ? 'hsl(220 60% 52%)' : 'hsl(220 15% 55%)', display: 'flex', justifyContent: 'center', marginBottom: '0.65rem' }}>
+                    <Icons.upload />
+                </div>
+                <p style={{ margin: '0 0 0.25rem', fontSize: '0.875rem', fontWeight: '700', color: 'hsl(220 25% 22%)' }}>
+                    {dragOver ? 'Drop images here' : 'Click to upload or drag & drop'}
+                </p>
+                <p style={{ margin: 0, fontSize: '0.72rem', color: 'hsl(220 15% 55%)' }}>
+                    JPG, PNG, WebP or GIF · Max {MAX_IMAGES} images · {images.length}/{MAX_IMAGES} added
+                </p>
+            </div>
+
+            {error && <p style={{ margin: 0, fontSize: '0.7rem', color: 'hsl(0 65% 48%)', fontWeight: '600' }}>{error}</p>}
+
+            {/* Previews */}
+            {images.length > 0 && (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(7rem, 1fr))', gap: '0.65rem' }}>
+                    {images.map((file, i) => (
+                        <div key={i} style={{ position: 'relative', borderRadius: '0.6rem', overflow: 'hidden', aspectRatio: '4/3', backgroundColor: 'hsl(220 15% 92%)', border: i === 0 ? '2px solid hsl(152 55% 42%)' : '1.5px solid hsl(220 15% 88%)', boxShadow: i === 0 ? '0 0 0 3px hsl(152 55% 42% / 0.15)' : 'none' }}>
+                            <img
+                                src={preview(file)}
+                                alt=""
+                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                            />
+
+                            {/* Primary badge */}
+                            {i === 0 && (
+                                <div style={{ position: 'absolute', top: '0.3rem', left: '0.3rem', backgroundColor: 'hsl(152 55% 37%)', color: 'white', fontSize: '0.55rem', fontWeight: '800', letterSpacing: '0.05em', padding: '0.15rem 0.4rem', borderRadius: '0.3rem' }}>
+                                    COVER
+                                </div>
+                            )}
+
+                            {/* Hover overlay */}
+                            <div className="img-overlay" style={{ position: 'absolute', inset: 0, backgroundColor: 'hsl(220 25% 8% / 0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', opacity: 0, transition: 'opacity 0.15s' }}
+                                onMouseEnter={e => e.currentTarget.style.opacity = 1}
+                                onMouseLeave={e => e.currentTarget.style.opacity = 0}>
+                                {i !== 0 && (
+                                    <button
+                                        type="button"
+                                        title="Set as cover"
+                                        onClick={e => { e.stopPropagation(); setPrimary(i); }}
+                                        style={{ width: '1.75rem', height: '1.75rem', borderRadius: '50%', border: 'none', backgroundColor: 'hsl(40 80% 55%)', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                        <Icons.star />
+                                    </button>
+                                )}
+                                <button
+                                    type="button"
+                                    title="Remove"
+                                    onClick={e => { e.stopPropagation(); remove(i); }}
+                                    style={{ width: '1.75rem', height: '1.75rem', borderRadius: '50%', border: 'none', backgroundColor: 'hsl(0 65% 50%)', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                    <Icons.trash2 />
+                                </button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            {images.length > 0 && (
+                <p style={{ margin: 0, fontSize: '0.7rem', color: 'hsl(220 15% 55%)' }}>
+                    Hover an image to set it as cover (⭐) or remove it (🗑). The first image is the cover photo.
+                </p>
+            )}
+        </div>
+    );
+};
+
 // ─── Live preview card ────────────────────────────────────────────────────────
 
 const PreviewCard = ({ data }) => {
@@ -141,8 +279,16 @@ const PreviewCard = ({ data }) => {
             <div style={{ height: '4px', background: `linear-gradient(90deg, hsl(${hue} 55% 48%), hsl(${(hue+40)%360} 55% 55%))` }} />
 
             {/* Thumbnail placeholder */}
-            <div style={{ height: '7rem', backgroundColor: `hsl(${hue} 30% 92%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: `hsl(${hue} 40% 52%)` }}>
-                <Icons.home />
+            <div style={{ height: '7rem', backgroundColor: `hsl(${hue} 30% 92%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: `hsl(${hue} 40% 52%)`, overflow: 'hidden', position: 'relative' }}>
+                {data.images?.[0]
+                    ? <img src={URL.createObjectURL(data.images[0])} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    : <Icons.home />
+                }
+                {data.images?.length > 1 && (
+                    <div style={{ position: 'absolute', bottom: '0.4rem', right: '0.4rem', backgroundColor: 'hsl(220 25% 8% / 0.65)', color: 'white', fontSize: '0.62rem', fontWeight: '700', padding: '0.18rem 0.45rem', borderRadius: '999px', backdropFilter: 'blur(4px)' }}>
+                        +{data.images.length - 1} more
+                    </div>
+                )}
             </div>
 
             <div style={{ padding: '0.875rem' }}>
@@ -152,9 +298,9 @@ const PreviewCard = ({ data }) => {
                 </p>
 
                 {/* Location */}
-                {data.location && (
+                {data.city && (
                     <p style={{ margin: '0 0 0.6rem', fontSize: '0.72rem', color: 'hsl(220 15% 52%)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                        📍 {data.location}
+                        📍 {data.city}
                     </p>
                 )}
 
@@ -227,17 +373,20 @@ const ListingCreate = ({ agents = [], property_types = [], amenities = [] }) => 
         rent_max:         '',
         advance_duration: '',
         currency:         'GH₵',
-        location:         '',
+        city:              '',
         address:          '',
         bedrooms:         '',
         bathrooms:        '',
-        toilets:          '',
-        area_sqft:        '',
+        area:             '',
         is_featured:      false,
         is_verified:      false,
         status:           'pending',
         agent_id:         '',
         amenity_ids:      [],
+        images:           [],
+        agent_name:       '',
+        agent_phone:      '',
+        agent_email:      '',
     });
 
     const isSale = data.purpose === 'sale';
@@ -245,6 +394,7 @@ const ListingCreate = ({ agents = [], property_types = [], amenities = [] }) => 
     const handleSubmit = (e) => {
         e.preventDefault();
         post('/super-admin/listings', {
+            forceFormData: true,                  // required for file uploads
             onError: () => window.scrollTo({ top: 0, behavior: 'smooth' }),
         });
     };
@@ -256,7 +406,7 @@ const ListingCreate = ({ agents = [], property_types = [], amenities = [] }) => 
         );
     };
 
-    const allPropTypes = [...new Set([...(property_types ?? [])])];
+    const allPropTypes = [...new Set([...PROPERTY_TYPES, ...(property_types ?? [])])];
 
     // Live header values
     const hue      = avatarHue(data.title || 'L');
@@ -299,8 +449,8 @@ const ListingCreate = ({ agents = [], property_types = [], amenities = [] }) => 
                                     {data.title || 'New Property Listing'}
                                 </h2>
                                 <p style={{ margin: 0, fontSize: '0.75rem', color: 'hsl(220 20% 62%)' }}>
-                                    {data.location
-                                        ? `📍 ${data.location}`
+                                    {data.city
+                                        ? `📍 ${data.city}`
                                         : LISTING_TYPES.find(t => t.value === data.purpose)?.label ?? 'Set details below'
                                     }
                                 </p>
@@ -406,9 +556,13 @@ const ListingCreate = ({ agents = [], property_types = [], amenities = [] }) => 
 
                             {/* ── Location ── */}
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                                <SectionLabel>Location</SectionLabel>
-                                <FField label="Location / Area" required error={errors.location}>
-                                    <FInput value={data.location} onChange={e => setData('location', e.target.value)} placeholder="e.g. East Legon, Accra" hasError={!!errors.location} />
+                                <SectionLabel>City</SectionLabel>
+                                <FField label="City" required error={errors.city}>
+                                    <FInput value={data.city} onChange={e => setData('city', e.target.value)} placeholder="e.g. East Legon, Accra" hasError={!!errors.city} />
+                                </FField>
+                                <SectionLabel>Area</SectionLabel>
+                                <FField label="Area" required error={errors.area}>
+                                    <FInput value={data.area} onChange={e => setData('area', e.target.value)} placeholder="e.g. East Legon, Accra" hasError={!!errors.area} />
                                 </FField>
                                 <FField label="Full Address" error={errors.address} hint="Optional — shown to verified leads only">
                                     <FInput value={data.address} onChange={e => setData('address', e.target.value)} placeholder="House number, street, area…" />
@@ -418,20 +572,24 @@ const ListingCreate = ({ agents = [], property_types = [], amenities = [] }) => 
                             {/* ── Property specs ── */}
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                                 <SectionLabel>Property Specs</SectionLabel>
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.875rem' }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.875rem' }}>
                                     <FField label="Bedrooms" error={errors.bedrooms}>
                                         <FInput type="number" value={data.bedrooms} onChange={e => setData('bedrooms', e.target.value)} placeholder="—" min="0" />
                                     </FField>
                                     <FField label="Bathrooms" error={errors.bathrooms}>
                                         <FInput type="number" value={data.bathrooms} onChange={e => setData('bathrooms', e.target.value)} placeholder="—" min="0" />
                                     </FField>
-                                    <FField label="Toilets" error={errors.toilets}>
-                                        <FInput type="number" value={data.toilets} onChange={e => setData('toilets', e.target.value)} placeholder="—" min="0" />
-                                    </FField>
-                                    <FField label="Area (sqft)" error={errors.area_sqft}>
-                                        <FInput type="number" value={data.area_sqft} onChange={e => setData('area_sqft', e.target.value)} placeholder="—" min="0" />
-                                    </FField>
                                 </div>
+                            </div>
+
+                            {/* ── Images ── */}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                <SectionLabel>Photos</SectionLabel>
+                                <ImageUpload
+                                    images={data.images}
+                                    onChange={files => setData('images', files)}
+                                    error={errors.images}
+                                />
                             </div>
 
                             {/* ── Visibility ── */}
@@ -463,7 +621,71 @@ const ListingCreate = ({ agents = [], property_types = [], amenities = [] }) => 
                                     <p style={{ margin: 0, fontSize: '0.7rem', color: 'hsl(220 15% 55%)' }}>{data.amenity_ids.length} selected</p>
                                 </div>
                             )}
+
+                                                        {/* ── Contact info ── */}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                <SectionLabel>Contact Information</SectionLabel>
+                                <p style={{ margin: 0, fontSize: '0.75rem', color: 'hsl(220 15% 52%)', lineHeight: 1.55 }}>
+                                    Shown to interested tenants and buyers. Leave blank to use the assigned agent's details.
+                                </p>
+ 
+                                <FField label="Contact Name" error={errors.agent_name} hint="Agent or landlord name shown on the listing">
+                                    <FInput
+                                        value={data.agent_name}
+                                        onChange={e => setData('agent_name', e.target.value)}
+                                        placeholder="e.g. Kwame Mensah"
+                                        hasError={!!errors.agent_name}
+                                    />
+                                </FField>
+ 
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.875rem' }}>
+                                    <FField label="Phone Number" error={errors.agent_phone}>
+                                        <FInput
+                                            type="tel"
+                                            value={data.agent_phone}
+                                            onChange={e => setData('agent_phone', e.target.value)}
+                                            placeholder="+233 xx xxx xxxx"
+                                            hasError={!!errors.agent_phone}
+                                        />
+                                    </FField>
+                                    <FField label="Email Address" error={errors.agent_email}>
+                                        <FInput
+                                            type="email"
+                                            value={data.agent_email}
+                                            onChange={e => setData('agent_email', e.target.value)}
+                                            placeholder="contact@agency.com"
+                                            hasError={!!errors.agent_email}
+                                        />
+                                    </FField>
+                                </div>
+ 
+                                {/* Live contact preview — only shown once at least one field has a value */}
+                                {(data.agent_name || data.agent_phone || data.agent_email) && (
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem', padding: '0.875rem', borderRadius: '0.65rem', backgroundColor: 'hsl(220 15% 97.5%)', border: '1px solid hsl(220 15% 91%)' }}>
+                                        <div style={{ width: '2.5rem', height: '2.5rem', borderRadius: '50%', backgroundColor: `hsl(${avatarHue(data.agent_name || 'A')} 50% 88%)`, color: `hsl(${avatarHue(data.agent_name || 'A')} 50% 28%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.78rem', fontWeight: '800', flexShrink: 0 }}>
+                                            {data.agent_name
+                                                ? data.agent_name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
+                                                : '?'
+                                            }
+                                        </div>
+                                        <div style={{ minWidth: 0 }}>
+                                            {data.agent_name && (
+                                                <div style={{ fontSize: '0.875rem', fontWeight: '700', color: 'hsl(220 25% 14%)', marginBottom: '0.2rem' }}>{data.agent_name}</div>
+                                            )}
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.12rem' }}>
+                                                {data.agent_phone && (
+                                                    <div style={{ fontSize: '0.72rem', color: 'hsl(220 15% 48%)' }}>📞 {data.agent_phone}</div>
+                                                )}
+                                                {data.agent_email && (
+                                                    <div style={{ fontSize: '0.72rem', color: 'hsl(220 15% 48%)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>✉ {data.agent_email}</div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
                         </div>
+                        {/* </div> */}
 
                         {/* ── Footer ── */}
                         <div style={{ padding: '1rem 1.75rem 1.5rem', borderTop: '1px solid hsl(220 15% 93%)', display: 'flex', gap: '0.65rem', alignItems: 'center' }}>
@@ -508,7 +730,11 @@ const ListingCreate = ({ agents = [], property_types = [], amenities = [] }) => 
                 </div>
             </div>
 
-            <style>{`@keyframes lcSpin { to { transform: rotate(360deg); } }`}</style>
+            <style>{`
+                @keyframes lcSpin { to { transform: rotate(360deg); } }
+                .img-overlay { opacity: 0 !important; }
+                .img-overlay:hover { opacity: 1 !important; }
+            `}</style>
         </div>
     );
 };
