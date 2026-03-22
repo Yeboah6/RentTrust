@@ -42,10 +42,10 @@ const LISTING_TYPES = [
     { value: 'lease', label: 'Lease',     sub: 'Long-term lease' },
 ];
 
-const PROPERTY_TYPES = [
-    'Apartment', 'House', 'Land', 'Commercial', 'Office',
-    'Shop', 'Warehouse', 'Villa', 'Studio', 'Duplex', 'Bungalow', 'Mansion',
-];
+// const PROPERTY_TYPES = [
+//     'Apartment', 'House', 'Land', 'Commercial', 'Office',
+//     'Shop', 'Warehouse', 'Villa', 'Studio', 'Duplex', 'Bungalow', 'Mansion',
+// ];
 
 const CURRENCIES = [
     { value: 'GH₵', label: 'GH₵ GHS' },
@@ -55,7 +55,7 @@ const CURRENCIES = [
     { value: '₦',   label: '₦ NGN' },
 ];
 
-const INITIAL_STATUSES = ['active', 'pending', 'draft'];
+const INITIAL_STATUSES = ['approved', 'pending', 'draft'];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -298,9 +298,9 @@ const PreviewCard = ({ data }) => {
                 </p>
 
                 {/* Location */}
-                {data.city && (
-                    <p style={{ margin: '0 0 0.6rem', fontSize: '0.72rem', color: 'hsl(220 15% 52%)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                        📍 {data.city}
+                {(data.city || data.area) && (
+                    <p style={{ margin: '0 0 0.6rem', fontSize: '0.72rem', color: 'hsl(220 15% 52%)' }}>
+                        📍 {[data.area, data.city].filter(Boolean).join(', ')}
                     </p>
                 )}
 
@@ -362,31 +362,31 @@ const PreviewCard = ({ data }) => {
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
-const ListingCreate = ({ agents = [], property_types = [], amenities = [] }) => {
+const ListingCreate = ({ agents = [], property_types = [], amenities: amenityList = [], regions = [] }) => {
+    const AmenityNames = amenityList.map(a => a?.name);
+
     const { data, setData, post, processing, errors } = useForm({
-        title:            '',
-        description:      '',
-        purpose:          'rent',
-        property_type:    '',
-        sale_price:       '',
-        rent_min:         '',
-        rent_max:         '',
-        advance_duration: '',
-        currency:         'GH₵',
-        city:              '',
-        address:          '',
-        bedrooms:         '',
-        bathrooms:        '',
-        area:             '',
-        is_featured:      false,
-        is_verified:      false,
-        status:           'pending',
-        agent_id:         '',
-        amenity_ids:      [],
-        images:           [],
-        agent_name:       '',
-        agent_phone:      '',
-        agent_email:      '',
+        title:           '',
+        description:     '',
+        purpose:         'rent',
+        propertyType:    '',     
+        salePrice:       '',     
+        rentMin:         '',     
+        rentMax:         '',     
+        advanceDuration: '',     
+        city:            '',     
+        area:            '',     
+        address:         '',
+        bedrooms:        '',
+        bathrooms:       '',
+        is_featured:     false,
+        is_verified:     false,
+        status:          'pending',
+        amenities:       [],    
+        images:          [],    
+        agentName:       '',    
+        agentPhone:      '',    
+        agentEmail:      '',    
     });
 
     const isSale = data.purpose === 'sale';
@@ -394,19 +394,17 @@ const ListingCreate = ({ agents = [], property_types = [], amenities = [] }) => 
     const handleSubmit = (e) => {
         e.preventDefault();
         post('/super-admin/listings', {
-            forceFormData: true,                  // required for file uploads
+            forceFormData: true,
             onError: () => window.scrollTo({ top: 0, behavior: 'smooth' }),
         });
     };
 
-    const toggleAmenity = (id) => {
-        setData('amenity_ids', data.amenity_ids.includes(id)
-            ? data.amenity_ids.filter(x => x !== id)
-            : [...data.amenity_ids, id]
+    const handleAmenityToggle = (amenity) => {
+        setData('amenities', data.amenities.includes(amenity)
+            ? data.amenities.filter(a => a !== amenity)
+            : [...data.amenities, amenity]
         );
     };
-
-    const allPropTypes = [...new Set([...PROPERTY_TYPES, ...(property_types ?? [])])];
 
     // Live header values
     const hue      = avatarHue(data.title || 'L');
@@ -449,8 +447,8 @@ const ListingCreate = ({ agents = [], property_types = [], amenities = [] }) => 
                                     {data.title || 'New Property Listing'}
                                 </h2>
                                 <p style={{ margin: 0, fontSize: '0.75rem', color: 'hsl(220 20% 62%)' }}>
-                                    {data.city
-                                        ? `📍 ${data.city}`
+                                    {(data.city || data.area)
+                                        ? `📍 ${[data.area, data.city].filter(Boolean).join(', ')}`
                                         : LISTING_TYPES.find(t => t.value === data.purpose)?.label ?? 'Set details below'
                                     }
                                 </p>
@@ -494,11 +492,43 @@ const ListingCreate = ({ agents = [], property_types = [], amenities = [] }) => 
                                 </FField>
 
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.875rem' }}>
-                                    <FField label="Property Type" error={errors.property_type}>
-                                        <FSelect value={data.property_type} onChange={e => setData('property_type', e.target.value)}>
-                                            <option value="">Select type…</option>
-                                            {allPropTypes.map(pt => <option key={pt} value={pt.toLowerCase()}>{pt}</option>)}
-                                        </FSelect>
+
+                                    <FField label="Property Type" error={errors.propertyType}>
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
+                                            {property_types.map(pt => {
+                                                const selected = data.propertyType === pt.slug;
+                                                return (
+                                                    <button
+                                                        type="button"
+                                                        key={pt.id}
+                                                        onClick={() => setData('propertyType', selected ? '' : pt.slug)}
+                                                        style={{
+                                                            display: 'inline-flex', alignItems: 'center', gap: '0.35rem',
+                                                            padding: '0.32rem 0.7rem', borderRadius: '999px',
+                                                            border: `1.5px solid ${selected ? 'hsl(220 60% 55%)' : 'hsl(220 15% 86%)'}`,
+                                                            backgroundColor: selected ? 'hsl(214 100% 97%)' : 'white',
+                                                            color: selected ? 'hsl(214 80% 44%)' : 'hsl(220 15% 42%)',
+                                                            fontSize: '0.76rem', fontWeight: '600',
+                                                            cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s',
+                                                            boxShadow: selected ? '0 0 0 3px hsl(220 60% 55% / 0.11)' : 'none',
+                                                        }}
+                                                    >
+                                                        {pt.icon && <span>{pt.icon}</span>}
+                                                        {pt.name}
+                                                        {selected && <Icons.check />}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                        {data.propertyType && (
+                                            <p style={{ margin: '0.3rem 0 0', fontSize: '0.7rem', color: 'hsl(220 15% 55%)' }}>
+                                                Selected: <strong>{property_types.find(pt => pt.slug === data.propertyType)?.name}</strong>
+                                                <button type="button" onClick={() => setData('propertyType', '')}
+                                                    style={{ marginLeft: '0.5rem', background: 'none', border: 'none', cursor: 'pointer', color: 'hsl(220 15% 55%)', fontSize: '0.7rem', fontFamily: 'inherit' }}>
+                                                    ✕ clear
+                                                </button>
+                                            </p>
+                                        )}
                                     </FField>
                                     <FField label="Initial Status" error={errors.status}>
                                         <FSelect value={data.status} onChange={e => setData('status', e.target.value)}>
@@ -510,11 +540,19 @@ const ListingCreate = ({ agents = [], property_types = [], amenities = [] }) => 
                                 </div>
 
                                 {agents.length > 0 && (
-                                    <FField label="Assign to Agent" error={errors.agent_id} hint="Optional — can be assigned later">
-                                        <FSelect value={data.agent_id} onChange={e => setData('agent_id', e.target.value)}>
+                                    <FField label="Assign to Agent" hint="Optional — can be assigned later">
+                                        <FSelect value={data.agentName} onChange={e => {
+                                            const agent = agents.find(a => a.name === e.target.value);
+                                            setData({
+                                                ...data,
+                                                agentName:  agent?.name  ?? '',
+                                                agentPhone: agent?.phone ?? '',
+                                                agentEmail: agent?.email ?? '',
+                                            });
+                                        }}>
                                             <option value="">Unassigned</option>
                                             {agents.map(a => (
-                                                <option key={a.id} value={a.id}>
+                                                <option key={a.id} value={a.name}>
                                                     {a.name}{a.agency ? ` — ${a.agency}` : ''}
                                                 </option>
                                             ))}
@@ -527,28 +565,25 @@ const ListingCreate = ({ agents = [], property_types = [], amenities = [] }) => 
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                                 <SectionLabel>Pricing</SectionLabel>
 
-                                <FField label="Currency">
-                                    <FSelect value={data.currency} onChange={e => setData('currency', e.target.value)}>
-                                        {CURRENCIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
-                                    </FSelect>
-                                </FField>
-
                                 {isSale ? (
-                                    <FField label="Sale Price" required error={errors.sale_price}>
-                                        <FInput type="number" value={data.sale_price} onChange={e => setData('sale_price', e.target.value)} placeholder="0.00" min="0" step="0.01" hasError={!!errors.sale_price} />
+                                    <FField label="Sale Price" required error={errors.salePrice}>
+                                        <FInput type="number" value={data.salePrice} onChange={e => setData('salePrice', e.target.value)} placeholder="0.00" min="0" step="0.01" hasError={!!errors.salePrice} />
                                     </FField>
                                 ) : (
                                     <>
                                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.875rem' }}>
-                                            <FField label="Min Rent / month" required error={errors.rent_min}>
-                                                <FInput type="number" value={data.rent_min} onChange={e => setData('rent_min', e.target.value)} placeholder="0.00" min="0" step="0.01" hasError={!!errors.rent_min} />
+                                            <FField label="Min Rent / month" required error={errors.rentMin}>
+                                                <FInput type="number" value={data.rentMin} onChange={e => setData('rentMin', e.target.value)} placeholder="0.00" min="0" step="0.01" hasError={!!errors.rentMin} />
                                             </FField>
-                                            <FField label="Max Rent / month" error={errors.rent_max}>
-                                                <FInput type="number" value={data.rent_max} onChange={e => setData('rent_max', e.target.value)} placeholder="0.00" min="0" step="0.01" />
+                                            <FField label="Max Rent / month" required error={errors.rentMax}>
+                                                <FInput type="number" value={data.rentMax} onChange={e => setData('rentMax', e.target.value)} placeholder="0.00" min="0" step="0.01" hasError={!!errors.rentMax} />
                                             </FField>
                                         </div>
-                                        <FField label="Advance Duration" hint="Number of months required upfront" error={errors.advance_duration}>
-                                            <FInput type="number" value={data.advance_duration} onChange={e => setData('advance_duration', e.target.value)} placeholder="e.g. 6" min="1" />
+                                        <FField label="Advance Duration (months)" hint="How many months rent is required upfront" error={errors.advanceDuration}>
+                                            <FSelect value={data.advanceDuration} onChange={e => setData('advanceDuration', e.target.value)}>
+                                                <option value="">Select…</option>
+                                                {[1,2,3,4,5].map(n => <option key={n} value={n}>{n} month{n > 1 ? 's' : ''}</option>)}
+                                            </FSelect>
                                         </FField>
                                     </>
                                 )}
@@ -556,23 +591,78 @@ const ListingCreate = ({ agents = [], property_types = [], amenities = [] }) => 
 
                             {/* ── Location ── */}
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                                <SectionLabel>City</SectionLabel>
-                                <FField label="City" required error={errors.city}>
-                                    <FInput value={data.city} onChange={e => setData('city', e.target.value)} placeholder="e.g. East Legon, Accra" hasError={!!errors.city} />
+                                <SectionLabel>Location</SectionLabel>
+
+                                {/* Region / City dropdown */}
+                                <FField label="Region" required error={errors.city}>
+                                    <FSelect
+                                        value={data.city}
+                                        onChange={e => setData({ ...data, city: e.target.value, area: '' })}
+                                        hasError={!!errors.city}
+                                    >
+                                        <option value="">Select region…</option>
+                                        {regions.map(r => (
+                                            <option key={r.id} value={r.name}>{r.name}</option>
+                                        ))}
+                                    </FSelect>
                                 </FField>
-                                <SectionLabel>Area</SectionLabel>
-                                <FField label="Area" required error={errors.area}>
-                                    <FInput value={data.area} onChange={e => setData('area', e.target.value)} placeholder="e.g. East Legon, Accra" hasError={!!errors.area} />
-                                </FField>
+                                    
+                                {/* Area — cascades from selected region */}
+                                {data.city && (() => {
+                                    const selectedRegion = regions.find(r => r.name === data.city);
+                                    const areas = selectedRegion?.children ?? [];
+                                    return areas.length > 0 ? (
+                                        <FField label="Area / Neighbourhood" required error={errors.area}>
+                                            <FSelect
+                                                value={data.area}
+                                                onChange={e => setData('area', e.target.value)}
+                                                hasError={!!errors.area}
+                                            >
+                                                <option value="">Select area…</option>
+                                                {areas.map(a => (
+                                                    <option key={a.id} value={a.name}>{a.name}</option>
+                                                ))}
+                                            </FSelect>
+                                        </FField>
+                                    ) : (
+                                        // Region has no children — let them type it manually
+                                        <FField label="Area / Neighbourhood" required error={errors.area}>
+                                            <FInput
+                                                value={data.area}
+                                                onChange={e => setData('area', e.target.value)}
+                                                placeholder="e.g. East Legon"
+                                                hasError={!!errors.area}
+                                            />
+                                        </FField>
+                                    );
+                                })()}
+
+                                {/* Falls back to free-text if no region selected yet */}
+                                {!data.city && (
+                                    <FField label="Area / Neighbourhood" required error={errors.area}>
+                                        <FInput
+                                            value={data.area}
+                                            onChange={e => setData('area', e.target.value)}
+                                            placeholder="Select a region first, or type an area"
+                                            hasError={!!errors.area}
+                                        />
+                                    </FField>
+                                )}
+
+                                {/* Full address */}
                                 <FField label="Full Address" error={errors.address} hint="Optional — shown to verified leads only">
-                                    <FInput value={data.address} onChange={e => setData('address', e.target.value)} placeholder="House number, street, area…" />
+                                    <FInput
+                                        value={data.address}
+                                        onChange={e => setData('address', e.target.value)}
+                                        placeholder="House number, street, area…"
+                                    />
                                 </FField>
                             </div>
 
                             {/* ── Property specs ── */}
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                                 <SectionLabel>Property Specs</SectionLabel>
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.875rem' }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.875rem' }}>
                                     <FField label="Bedrooms" error={errors.bedrooms}>
                                         <FInput type="number" value={data.bedrooms} onChange={e => setData('bedrooms', e.target.value)} placeholder="—" min="0" />
                                     </FField>
@@ -602,90 +692,80 @@ const ListingCreate = ({ agents = [], property_types = [], amenities = [] }) => 
                             </div>
 
                             {/* ── Amenities ── */}
-                            {amenities.length > 0 && (
+                            {AmenityNames.length > 0 && (
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                                     <SectionLabel>Amenities</SectionLabel>
                                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
-                                        {amenities.map(am => {
-                                            const selected = data.amenity_ids.includes(am.id);
+                                        {AmenityNames.map(amenity => {
+                                            const selected = data.amenities.includes(amenity);
                                             return (
-                                                <button type="button" key={am.id} onClick={() => toggleAmenity(am.id)}
+                                                <button type="button" key={amenity} onClick={() => handleAmenityToggle(amenity)}
                                                     style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', padding: '0.32rem 0.7rem', borderRadius: '999px', border: `1.5px solid ${selected ? 'hsl(152 55% 50%)' : 'hsl(220 15% 86%)'}`, backgroundColor: selected ? 'hsl(152 55% 94%)' : 'white', color: selected ? 'hsl(152 55% 28%)' : 'hsl(220 15% 42%)', fontSize: '0.76rem', fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s' }}>
-                                                    {am.icon && <span>{am.icon}</span>}
-                                                    {am.name}
                                                     {selected && <Icons.check />}
+                                                    {amenity}
                                                 </button>
                                             );
+// [746 lines total]
                                         })}
                                     </div>
-                                    <p style={{ margin: 0, fontSize: '0.7rem', color: 'hsl(220 15% 55%)' }}>{data.amenity_ids.length} selected</p>
+                                    <p style={{ margin: 0, fontSize: '0.7rem', color: 'hsl(220 15% 55%)' }}>{data.amenities.length} selected</p>
                                 </div>
                             )}
 
-                                                        {/* ── Contact info ── */}
+                            {/* ── Contact info ── */}
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                                 <SectionLabel>Contact Information</SectionLabel>
                                 <p style={{ margin: 0, fontSize: '0.75rem', color: 'hsl(220 15% 52%)', lineHeight: 1.55 }}>
-                                    Shown to interested tenants and buyers. Leave blank to use the assigned agent's details.
+                                    Shown to interested tenants and buyers.
                                 </p>
- 
-                                <FField label="Contact Name" error={errors.agent_name} hint="Agent or landlord name shown on the listing">
+
+                                <FField label="Contact Name" error={errors.agentName} hint="Agent or landlord name shown on the listing">
                                     <FInput
-                                        value={data.agent_name}
-                                        onChange={e => setData('agent_name', e.target.value)}
+                                        value={data.agentName}
+                                        onChange={e => setData('agentName', e.target.value)}
                                         placeholder="e.g. Kwame Mensah"
-                                        hasError={!!errors.agent_name}
+                                        hasError={!!errors.agentName}
                                     />
                                 </FField>
- 
+
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.875rem' }}>
-                                    <FField label="Phone Number" error={errors.agent_phone}>
+                                    <FField label="Phone Number" error={errors.agentPhone}>
                                         <FInput
                                             type="tel"
-                                            value={data.agent_phone}
-                                            onChange={e => setData('agent_phone', e.target.value)}
+                                            value={data.agentPhone}
+                                            onChange={e => setData('agentPhone', e.target.value)}
                                             placeholder="+233 xx xxx xxxx"
-                                            hasError={!!errors.agent_phone}
+                                            hasError={!!errors.agentPhone}
                                         />
                                     </FField>
-                                    <FField label="Email Address" error={errors.agent_email}>
+                                    <FField label="Email Address" error={errors.agentEmail}>
                                         <FInput
                                             type="email"
-                                            value={data.agent_email}
-                                            onChange={e => setData('agent_email', e.target.value)}
+                                            value={data.agentEmail}
+                                            onChange={e => setData('agentEmail', e.target.value)}
                                             placeholder="contact@agency.com"
-                                            hasError={!!errors.agent_email}
+                                            hasError={!!errors.agentEmail}
                                         />
                                     </FField>
                                 </div>
- 
-                                {/* Live contact preview — only shown once at least one field has a value */}
-                                {(data.agent_name || data.agent_phone || data.agent_email) && (
+
+                                {/* Live contact preview */}
+                                {(data.agentName || data.agentPhone || data.agentEmail) && (
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem', padding: '0.875rem', borderRadius: '0.65rem', backgroundColor: 'hsl(220 15% 97.5%)', border: '1px solid hsl(220 15% 91%)' }}>
-                                        <div style={{ width: '2.5rem', height: '2.5rem', borderRadius: '50%', backgroundColor: `hsl(${avatarHue(data.agent_name || 'A')} 50% 88%)`, color: `hsl(${avatarHue(data.agent_name || 'A')} 50% 28%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.78rem', fontWeight: '800', flexShrink: 0 }}>
-                                            {data.agent_name
-                                                ? data.agent_name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
-                                                : '?'
-                                            }
+                                        <div style={{ width: '2.5rem', height: '2.5rem', borderRadius: '50%', backgroundColor: `hsl(${avatarHue(data.agentName || 'A')} 50% 88%)`, color: `hsl(${avatarHue(data.agentName || 'A')} 50% 28%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.78rem', fontWeight: '800', flexShrink: 0 }}>
+                                            {data.agentName ? data.agentName.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase() : '?'}
                                         </div>
                                         <div style={{ minWidth: 0 }}>
-                                            {data.agent_name && (
-                                                <div style={{ fontSize: '0.875rem', fontWeight: '700', color: 'hsl(220 25% 14%)', marginBottom: '0.2rem' }}>{data.agent_name}</div>
-                                            )}
+                                            {data.agentName && <div style={{ fontSize: '0.875rem', fontWeight: '700', color: 'hsl(220 25% 14%)', marginBottom: '0.2rem' }}>{data.agentName}</div>}
                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.12rem' }}>
-                                                {data.agent_phone && (
-                                                    <div style={{ fontSize: '0.72rem', color: 'hsl(220 15% 48%)' }}>📞 {data.agent_phone}</div>
-                                                )}
-                                                {data.agent_email && (
-                                                    <div style={{ fontSize: '0.72rem', color: 'hsl(220 15% 48%)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>✉ {data.agent_email}</div>
-                                                )}
+                                                {data.agentPhone && <div style={{ fontSize: '0.72rem', color: 'hsl(220 15% 48%)' }}>📞 {data.agentPhone}</div>}
+                                                {data.agentEmail && <div style={{ fontSize: '0.72rem', color: 'hsl(220 15% 48%)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>✉ {data.agentEmail}</div>}
                                             </div>
                                         </div>
                                     </div>
                                 )}
                             </div>
                         </div>
-                        {/* </div> */}
 
                         {/* ── Footer ── */}
                         <div style={{ padding: '1rem 1.75rem 1.5rem', borderTop: '1px solid hsl(220 15% 93%)', display: 'flex', gap: '0.65rem', alignItems: 'center' }}>
@@ -731,7 +811,8 @@ const ListingCreate = ({ agents = [], property_types = [], amenities = [] }) => 
             </div>
 
             <style>{`
-                @keyframes lcSpin { to { transform: rotate(360deg); } }
+                @keyframes lcSpin   { to { transform: rotate(360deg); } }
+                @keyframes lcFadeIn { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
                 .img-overlay { opacity: 0 !important; }
                 .img-overlay:hover { opacity: 1 !important; }
             `}</style>

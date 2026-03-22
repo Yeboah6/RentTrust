@@ -15,7 +15,7 @@ use App\Http\Controllers\SuperAdmin\SettingsController;
 use App\Http\Controllers\SuperAdmin\FeatureFlagController;
 use App\Http\Controllers\SuperAdmin\SystemController;
 use App\Http\Controllers\SuperAdmin\TenantController;
-// use App\Http\Controllers\SuperAdmin\AuditLogController;
+use App\Http\Controllers\SuperAdmin\ProfileController;
 
 Route::prefix('super-admin')
     ->name('super-admin.')
@@ -105,4 +105,8 @@ Route::prefix('super-admin')
     Route::get('audit-log/export', [SystemController::class, 'export']) ->name('audit-log.export');
     Route::get('audit-log/{id}',   [SystemController::class, 'show'])   ->name('audit-log.show');
     Route::get('audit-log',        [SystemController::class, 'index'])  ->name('audit-log.index');
+
+    Route::get ('profile',          [ProfileController::class, 'show'])           ->name('profile');
+    Route::patch('profile',         [ProfileController::class, 'update'])         ->name('profile.update');
+    Route::put  ('profile/password',[ProfileController::class, 'updatePassword']) ->name('profile.password');
 });

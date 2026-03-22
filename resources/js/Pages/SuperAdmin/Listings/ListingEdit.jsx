@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { Link, router } from '@inertiajs/react';
 import axios from 'axios';
 import SuperAdminLayout from '@/Layouts/SuperAdminLayout';
@@ -25,7 +25,6 @@ const Icons = {
     dollar:  () => <Ico d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />,
     image:   () => <Ico d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />,
     upload:  () => <Ico d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />,
-    user:    () => <Ico d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />,
     spinner: () => (
         <svg style={{ width: '1rem', height: '1rem', animation: 'leSpin 0.75s linear infinite', flexShrink: 0 }} fill="none" viewBox="0 0 24 24">
             <circle style={{ opacity: 0.2 }} cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -37,7 +36,7 @@ const Icons = {
 // ─── Config ───────────────────────────────────────────────────────────────────
 
 const STATUS_CFG = {
-    active:    { label: 'Active',    bg: 'hsl(152 60% 93%)', color: 'hsl(152 60% 28%)', dot: 'hsl(152 60% 38%)' },
+    approved:    { label: 'Approved',    bg: 'hsl(152 60% 93%)', color: 'hsl(152 60% 28%)', dot: 'hsl(152 60% 38%)' },
     pending:   { label: 'Pending',   bg: 'hsl(40 90% 93%)',  color: 'hsl(40 80% 30%)',  dot: 'hsl(40 80% 44%)' },
     sold:      { label: 'Sold',      bg: 'hsl(214 100% 95%)',color: 'hsl(214 80% 38%)', dot: 'hsl(214 80% 50%)' },
     rented:    { label: 'Rented',    bg: 'hsl(270 60% 95%)', color: 'hsl(270 55% 38%)', dot: 'hsl(270 55% 50%)' },
@@ -55,11 +54,6 @@ const LISTING_TYPES = [
     { value: 'lease', label: 'Lease' },
 ];
 
-// const PROPERTY_TYPES = [
-//     'Apartment', 'House', 'Land', 'Commercial', 'Office',
-//     'Shop', 'Warehouse', 'Villa', 'Studio', 'Duplex', 'Bungalow', 'Mansion',
-// ];
-
 const CURRENCIES = [
     { value: 'GH₵', label: 'GH₵ GHS' },
     { value: '$',   label: '$ USD' },
@@ -68,13 +62,13 @@ const CURRENCIES = [
     { value: '₦',   label: '₦ NGN' },
 ];
 
-const ALL_STATUSES = ['active','pending','sold','rented','rejected','draft','expired','flagged','suspended'];
+const ALL_STATUSES = ['approved','pending','sold','rented','rejected','draft','expired','flagged','suspended'];
 
 const STEPS = [
-    { number: 1, label: 'Property Info',  icon: Icons.home },
-    { number: 2, label: 'Pricing',        icon: Icons.dollar },
-    { number: 3, label: 'Images',         icon: Icons.image },
-    { number: 4, label: 'Review',         icon: Icons.check },
+    { number: 1, label: 'Property Info', icon: Icons.home },
+    { number: 2, label: 'Pricing',       icon: Icons.dollar },
+    { number: 3, label: 'Images',        icon: Icons.image },
+    { number: 4, label: 'Review',        icon: Icons.check },
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -83,6 +77,23 @@ const fmtDate = (v) => {
     if (!v) return '—';
     try { return new Date(v).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); }
     catch { return v; }
+};
+
+// FIX: resolve image URL — handles bare filename, folder/file, or full URL
+const resolveImagePreview = (img) => {
+    if (!img) return null;
+    const path = typeof img === 'string' ? img : (img?.path ?? img?.url ?? '');
+    if (!path) return null;
+    if (path.startsWith('http://') || path.startsWith('https://')) return path;
+    if (path.includes('/')) return `/storage/${path}`;          // e.g. rental_images/file.jpg
+    return `/storage/rental_images/${path}`;                    // bare filename
+};
+
+// FIX: extract the raw storage path (strip /storage/ prefix if present)
+const toRawPath = (img) => {
+    if (!img) return '';
+    const path = typeof img === 'string' ? img : (img?.path ?? img?.url ?? '');
+    return path.replace(/^\/storage\//, '');
 };
 
 const parseImages = (raw) => {
@@ -162,16 +173,12 @@ const StatusBadge = ({ sk }) => {
     );
 };
 
-// ─── Toast ────────────────────────────────────────────────────────────────────
-
 const Toast = ({ toast }) => toast ? (
     <div style={{ position: 'fixed', top: '1.25rem', right: '1.25rem', zIndex: 200, padding: '0.85rem 1.25rem', borderRadius: '0.75rem', backgroundColor: toast.type === 'error' ? 'hsl(0 65% 50%)' : 'hsl(152 55% 37%)', color: 'white', fontWeight: '600', fontSize: '0.875rem', boxShadow: '0 8px 28px hsl(220 25% 8% / 0.22)', animation: 'leSlideIn 0.2s ease', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
         {toast.type === 'error' ? <Icons.x /> : <Icons.check />}
         {toast.msg}
     </div>
 ) : null;
-
-// ─── Confirm modal ────────────────────────────────────────────────────────────
 
 const ConfirmModal = ({ action, title, onConfirm, onClose, processing }) => {
     const meta = {
@@ -207,8 +214,6 @@ const ConfirmModal = ({ action, title, onConfirm, onClose, processing }) => {
     );
 };
 
-// ─── Step progress bar ────────────────────────────────────────────────────────
-
 const StepBar = ({ current }) => (
     <div style={{ backgroundColor: 'white', borderBottom: '1px solid hsl(220 15% 91%)', padding: '1rem 1.75rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', maxWidth: '640px', margin: '0 auto' }}>
@@ -221,9 +226,6 @@ const StepBar = ({ current }) => (
                             <div style={{ width: '2.25rem', height: '2.25rem', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: done ? 'hsl(152 55% 38%)' : active ? 'hsl(220 25% 15%)' : 'hsl(220 15% 92%)', color: done || active ? 'white' : 'hsl(220 15% 52%)', transition: 'all 0.25s', flexShrink: 0 }}>
                                 {done ? <Icons.check /> : <step.icon />}
                             </div>
-                            <span style={{ fontSize: '0.65rem', fontWeight: '700', color: active ? 'hsl(220 25% 15%)' : done ? 'hsl(152 55% 32%)' : 'hsl(220 15% 52%)', whiteSpace: 'nowrap', display: 'none' /* shown on sm+ via media query */ }}>
-                                {step.label}
-                            </span>
                         </div>
                         {i < STEPS.length - 1 && (
                             <div style={{ flex: 1, height: '2px', backgroundColor: done ? 'hsl(152 55% 38%)' : 'hsl(220 15% 88%)', margin: '0 0.5rem', marginBottom: '0.9rem', transition: 'background-color 0.25s' }} />
@@ -232,14 +234,11 @@ const StepBar = ({ current }) => (
                 );
             })}
         </div>
-        {/* Step label below */}
         <p style={{ margin: '0.5rem 0 0', textAlign: 'center', fontSize: '0.78rem', fontWeight: '600', color: 'hsl(220 25% 22%)' }}>
             Step {current} of {STEPS.length} — <span style={{ color: 'hsl(220 15% 50%)', fontWeight: '500' }}>{STEPS[current - 1].label}</span>
         </p>
     </div>
 );
-
-// ─── Review row ───────────────────────────────────────────────────────────────
 
 const ReviewRow = ({ label, value }) => (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.45rem 0', borderBottom: '1px solid hsl(220 15% 95%)' }}>
@@ -251,46 +250,52 @@ const ReviewRow = ({ label, value }) => (
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 const ListingEdit = ({ listing, agents = [], property_types = [], amenities = [] }) => {
-    const l          = listing ?? {};
-    const statusKey  = (l.status ?? 'pending').toLowerCase();
+    const l         = listing ?? {};
+    // FIX: normalise status — 'approved' maps to 'active'
+    const statusKey = (() => { const s = (l.status ?? 'pending').toLowerCase(); return s === 'approved' ? 'active' : s; })();
 
     // ── Form state ────────────────────────────────────────────────────────────
     const [form, setForm] = useState({
-        title:            l.title         ?? '',
-        description:      l.description   ?? '',
-        listing_type:     (l.listing_type ?? l.type ?? 'sale').toLowerCase(),
-        purpose:          l.purpose       ?? (l.listing_type === 'sale' ? 'sale' : 'rent'),
-        property_type:    l.property_type ?? '',
-        sale_price:       l.sale_price    ?? '',
-        rent_min:         l.rent_min      ?? '',
-        rent_max:         l.rent_max      ?? '',
+        title:            l.title            ?? '',
+        description:      l.description      ?? '',
+        // FIX: purpose is the Rental model column — use it as the source of truth
+        purpose:          l.purpose          ?? (l.listing_type ?? 'rent'),
+        listing_type:     l.purpose          ?? (l.listing_type ?? 'rent'),  // mirrors purpose
+        property_type:    l.property_type    ?? '',
+        sale_price:       l.sale_price       ?? '',
+        rent_min:         l.rent_min         ?? '',
+        rent_max:         l.rent_max         ?? '',
         advance_duration: l.advance_duration ?? '',
-        currency:         l.currency     ?? 'GH₵',
-        location:         l.location     ?? l.city ?? '',
-        address:          l.address      ?? '',
-        bedrooms:         l.bedrooms     ?? '',
-        bathrooms:        l.bathrooms    ?? '',
-        area:             l.area          ?? '',
-        // is_featured:      l.is_featured  ?? false,
-        is_verified:      l.is_verified  ?? false,
+        currency:         l.currency         ?? 'GH₵',
+        location:         l.city             ?? l.location ?? '',
+        area:             l.area             ?? '',
+        address:          l.address          ?? '',
+        bedrooms:         l.bedrooms         ?? '',
+        bathrooms:        l.bathrooms        ?? '',
+        is_featured:      l.is_featured      ?? false,   // FIX: was commented out but Toggle used it
+        is_verified:      l.is_verified      ?? false,
         status:           statusKey,
-        agent_id:         l.agent?.id    ?? l.agent_id ?? '',
-        amenity_ids:      (l.amenities   ?? []).map(a => a.id ?? a).filter(Boolean),
+        agent_id:         l.agent?.id        ?? l.agent_id ?? '',
+        amenities:        (() => {
+            const raw = l.amenities ?? [];
+            return raw.map(a => typeof a === 'string' ? a : (a.name ?? '')).filter(Boolean);
+        })(),
     });
 
     const set = (key, val) => setForm(prev => ({ ...prev, [key]: val }));
-    const toggleAmenity = (id) => set('amenity_ids', form.amenity_ids.includes(id) ? form.amenity_ids.filter(x => x !== id) : [...form.amenity_ids, id]);
+    const toggleAmenity = (name) => set('amenities', form.amenities.includes(name)
+        ? form.amenities.filter(x => x !== name)
+        : [...form.amenities, name]
+    );
+
+    const isSale = form.purpose === 'sale';
 
     // ── Image state ───────────────────────────────────────────────────────────
     const [existingImages, setExistingImages] = useState(() =>
         parseImages(l.images).map((img, i) => {
-            const path = typeof img === 'string' ? img : (img?.path ?? img?.url ?? '');
-            return {
-                id:         `existing-${i}`,
-                path,
-                preview:     `/storage/rental_images/${path}`,
-                isExisting: true,
-            };
+            const raw     = toRawPath(img);            // bare path as stored in DB
+            const preview = resolveImagePreview(img);  // FIX: smart resolver handles all shapes
+            return { id: `existing-${i}`, path: raw, preview, isExisting: true };
         })
     );
     const [newImages,     setNewImages]     = useState([]);
@@ -298,6 +303,7 @@ const ListingEdit = ({ listing, agents = [], property_types = [], amenities = []
 
     const allImages  = [...existingImages, ...newImages];
     const imageCount = allImages.length;
+    const MAX_IMAGES = 6;
 
     const handleImageUpload = (e) => {
         const files = Array.from(e.target.files);
@@ -305,12 +311,12 @@ const ListingEdit = ({ listing, agents = [], property_types = [], amenities = []
             if (f.size > 5 * 1024 * 1024) { showToast(`${f.name} exceeds 5 MB.`, 'error'); return false; }
             return true;
         });
-        if (imageCount + valid.length > 6) { showToast('Maximum 6 images allowed.', 'error'); return; }
+        if (imageCount + valid.length > MAX_IMAGES) { showToast(`Maximum ${MAX_IMAGES} images allowed.`, 'error'); return; }
         setNewImages(prev => [...prev, ...valid.map(f => ({
-            id:      Math.random().toString(36).slice(2),
-            file:    f,
-            preview: URL.createObjectURL(f),
-            name:    f.name,
+            id:         Math.random().toString(36).slice(2),
+            file:       f,
+            preview:    URL.createObjectURL(f),
+            name:       f.name,
             isExisting: false,
         }))]);
         e.target.value = '';
@@ -320,13 +326,18 @@ const ListingEdit = ({ listing, agents = [], property_types = [], amenities = []
         if (isExisting) {
             const img = existingImages.find(i => i.id === id);
             setExistingImages(prev => prev.filter(i => i.id !== id));
-            if (img) setRemovedImages(prev => [...prev, img.path]);
+            // FIX: send the bare filename (without rental_images/ prefix)
+            // backend does: Storage::disk('public')->delete("rental_images/{$path}")
+            if (img) {
+                const bare = img.path.replace(/^rental_images\//, '');
+                setRemovedImages(prev => [...prev, bare]);
+            }
         } else {
             setNewImages(prev => prev.filter(i => i.id !== id));
         }
     };
 
-    // ── Step / errors state ───────────────────────────────────────────────────
+    // ── Step / error state ────────────────────────────────────────────────────
     const [step,       setStep]       = useState(1);
     const [errors,     setErrors]     = useState({});
     const [processing, setProcessing] = useState(false);
@@ -345,17 +356,18 @@ const ListingEdit = ({ listing, agents = [], property_types = [], amenities = []
     const validateStep = (s) => {
         const e = {};
         if (s === 1) {
-            if (!form.title.trim())          e.title         = 'Title is required.';
-            if (!form.listing_type)          e.listing_type  = 'Listing type is required.';
-            if (!form.location.trim())       e.location      = 'Location is required.';
+            if (!form.title.trim())    e.title    = 'Title is required.';
+            if (!form.purpose)         e.purpose  = 'Listing type is required.';
+            if (!form.location.trim()) e.location = 'Region / city is required.';
+            if (!form.area.trim())     e.area     = 'Area is required.';
         }
         if (s === 2) {
-            if (form.purpose === 'sale') {
-                if (!form.sale_price)        e.sale_price    = 'Sale price is required.';
+            if (isSale) {
+                if (!form.sale_price)  e.sale_price = 'Sale price is required.';
             } else {
-                if (!form.rent_min)          e.rent_min      = 'Minimum rent is required.';
+                if (!form.rent_min)    e.rent_min   = 'Minimum rent is required.';
                 if (form.rent_max && parseFloat(form.rent_max) < parseFloat(form.rent_min))
-                                             e.rent_max      = 'Max rent must be ≥ min rent.';
+                    e.rent_max = 'Max rent must be ≥ min rent.';
             }
         }
         setErrors(e);
@@ -373,21 +385,49 @@ const ListingEdit = ({ listing, agents = [], property_types = [], amenities = []
         const fd = new FormData();
         fd.append('_method', 'PUT');
 
-        // Text fields
-        Object.entries(form).forEach(([k, v]) => {
-            if (k === 'amenity_ids') {
-                v.forEach((id, i) => fd.append(`amenity_ids[${i}]`, id));
-            } else {
-                fd.append(k, v === null || v === undefined ? '' : v);
-            }
-        });
+        // ── Core fields — camelCase to match the controller field names ────────
+        fd.append('title',       form.title);
+        fd.append('description', form.description ?? '');
+        fd.append('purpose',     form.purpose);
+        fd.append('status',      form.status);
+        fd.append('propertyType',form.property_type ?? '');
+        fd.append('city',        form.location);   // location field = city in DB
+        fd.append('area',        form.area);
+        fd.append('address',     form.address ?? '');
+        fd.append('bedrooms',    form.bedrooms ?? '');
+        fd.append('bathrooms',   form.bathrooms ?? '');
+        fd.append('is_featured', form.is_featured ? '1' : '0');
+        fd.append('is_verified', form.is_verified ? '1' : '0');
+
+        // Contact info
+        fd.append('agentName',  form.agentName  ?? '');
+        fd.append('agentPhone', form.agentPhone ?? '');
+        fd.append('agentEmail', form.agentEmail ?? '');
+
+        // Pricing — camelCase to match controller
+        const isSale = form.purpose === 'sale';
+        if (isSale) {
+            fd.append('salePrice', form.sale_price ?? '');
+        } else {
+            fd.append('rentMin',         form.rent_min         ?? '');
+            fd.append('rentMax',         form.rent_max         ?? '');
+            fd.append('advanceDuration', form.advance_duration ?? '');
+        }
+
+        // Amenities — send as JSON string, controller decodes it
+        fd.append('amenities', JSON.stringify(Array.isArray(form.amenities) ? form.amenities : []));
 
         // Images
-        existingImages.forEach((img, i) => fd.append(`existingImages[${i}]`, img.path));
-        removedImages.forEach((path, i)  => fd.append(`removedImages[${i}]`, path));
-        newImages.forEach((img, i)        => fd.append(`newImages[${i}]`, img.file));
+        existingImages.forEach((img, i) => {
+            const bare = img.path.replace(/^rental_images\//, '');
+            fd.append(`existingImages[${i}]`, bare);
+        });
+        removedImages.forEach((path, i) => fd.append(`removedImages[${i}]`, path));
+        newImages.forEach((img, i)       => fd.append(`newImages[${i}]`, img.file));
 
-        axios.post(`/super-admin/listings/${l.id}`, fd, { headers: { 'Content-Type': 'multipart/form-data' } })
+        axios.post(`/super-admin/listings/${l.id}`, fd, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        })
             .then(() => {
                 showToast('Listing updated successfully.');
                 setTimeout(() => router.visit(`/super-admin/listings/${l.id}`), 1200);
@@ -396,10 +436,9 @@ const ListingEdit = ({ listing, agents = [], property_types = [], amenities = []
                 const data = err.response?.data;
                 if (data?.errors) {
                     setErrors(data.errors);
-                    // Jump back to the step that has errors
                     const keys = Object.keys(data.errors);
-                    if (keys.some(k => ['title','listing_type','location','property_type','description'].includes(k))) setStep(1);
-                    else if (keys.some(k => ['sale_price','rent_min','rent_max','bedrooms','currency'].includes(k))) setStep(2);
+                    if (keys.some(k => ['title','purpose','city','area','propertyType','description'].includes(k))) setStep(1);
+                    else if (keys.some(k => ['salePrice','rentMin','rentMax','bedrooms'].includes(k))) setStep(2);
                     showToast('Please fix the errors below.', 'error');
                 } else {
                     showToast(data?.message ?? 'Update failed. Please try again.', 'error');
@@ -416,7 +455,7 @@ const ListingEdit = ({ listing, agents = [], property_types = [], amenities = []
             isDelete ? `/super-admin/listings/${l.id}` : `/super-admin/listings/${l.id}/suspend`,
             {},
             {
-                onSuccess: () => { isDelete ? router.visit('/super-admin/listings') : (showToast('Listing suspended.'), setConfirmAct(null)); },
+                onSuccess: () => { if (isDelete) router.visit('/super-admin/listings'); else { showToast('Listing suspended.'); setConfirmAct(null); } },
                 onError:   () => { showToast('Action failed.', 'error'); setActLoading(false); },
                 onFinish:  () => setActLoading(false),
             }
@@ -424,11 +463,14 @@ const ListingEdit = ({ listing, agents = [], property_types = [], amenities = []
     };
 
     // ── Derived ───────────────────────────────────────────────────────────────
-    const allPropTypes = [...new Set([ ...(property_types ?? [])])];
-    const titleStr     = form.title || 'Listing';
-    const hue          = [...titleStr].reduce((a, c) => a + c.charCodeAt(0), 0) % 360;
-    const initials     = titleStr.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
-    const isSale       = form.purpose === 'sale';
+    // FIX: property_types may be objects {id,name,slug} or plain strings — normalise both
+    const allPropTypes = (property_types ?? []).map(pt =>
+        typeof pt === 'string' ? { value: pt.toLowerCase(), label: pt } : { value: pt.slug ?? pt.name?.toLowerCase() ?? '', label: pt.name ?? '' }
+    ).filter(pt => pt.value);
+
+    const titleStr = form.title || 'Listing';
+    const hue      = [...titleStr].reduce((a, c) => a + c.charCodeAt(0), 0) % 360;
+    const initials = titleStr.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
 
     return (
         <>
@@ -477,29 +519,28 @@ const ListingEdit = ({ listing, agents = [], property_types = [], amenities = []
                                     </div>
                                     <div>
                                         <h2 style={{ margin: '0 0 0.15rem', fontSize: '1rem', fontWeight: '800', color: 'white' }}>{form.title || 'Listing Title'}</h2>
-                                        <p style={{ margin: 0, fontSize: '0.73rem', color: 'hsl(220 20% 58%)' }}>{form.location || 'No location set'}</p>
+                                        <p style={{ margin: 0, fontSize: '0.73rem', color: 'hsl(220 20% 58%)' }}>
+                                            {/* FIX: show area + location (city) in header */}
+                                            {[form.area, form.location].filter(Boolean).join(', ') || 'No location set'}
+                                        </p>
                                     </div>
                                 </div>
                                 <span style={{ fontSize: '0.65rem', fontWeight: '700', color: 'hsl(220 20% 55%)', backgroundColor: 'hsl(220 25% 25%)', padding: '0.22rem 0.6rem', borderRadius: '0.4rem' }}>#{l.id}</span>
                             </div>
                         </div>
 
-                        {/* Step bar */}
                         <StepBar current={step} />
 
-                        {/* Step content */}
                         <div style={{ padding: '1.5rem 1.75rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
 
-                            {/* ── STEP 1: Property info ── */}
+                            {/* ── STEP 1 ── */}
                             {step === 1 && (
                                 <>
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                                         <SectionLabel>Basic Information</SectionLabel>
-
                                         <FField label="Listing Title" required error={errors.title}>
                                             <FInput value={form.title} onChange={e => set('title', e.target.value)} placeholder="e.g. Spacious 3-Bed Apartment in East Legon" hasError={!!errors.title} />
                                         </FField>
-
                                         <FField label="Description" error={errors.description}>
                                             <FTextarea value={form.description} onChange={e => set('description', e.target.value)} placeholder="Describe the property…" rows={4} />
                                         </FField>
@@ -508,14 +549,14 @@ const ListingEdit = ({ listing, agents = [], property_types = [], amenities = []
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                                         <SectionLabel>Classification</SectionLabel>
 
-                                        {/* Listing type */}
+                                        {/* FIX: set BOTH purpose and listing_type together */}
                                         <FField label="Listing Type" required error={errors.purpose}>
                                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem' }}>
                                                 {LISTING_TYPES.map(t => {
                                                     const active = form.purpose === t.value;
                                                     return (
                                                         <button type="button" key={t.value}
-                                                            onClick={() => { set('purpose', t.value); set('purpose', t.value === 'sale' ? 'sale' : 'rent'); }}
+                                                            onClick={() => setForm(prev => ({ ...prev, purpose: t.value, listing_type: t.value }))}
                                                             style={{ padding: '0.6rem 0.4rem', borderRadius: '0.65rem', border: `1.5px solid ${active ? 'hsl(220 60% 55%)' : 'hsl(220 15% 88%)'}`, backgroundColor: active ? 'hsl(214 100% 97%)' : 'white', cursor: 'pointer', textAlign: 'center', transition: 'all 0.15s', fontFamily: 'inherit', boxShadow: active ? '0 0 0 3px hsl(220 60% 55% / 0.11)' : 'none' }}>
                                                             <div style={{ fontSize: '0.75rem', fontWeight: '800', color: active ? 'hsl(214 80% 44%)' : 'hsl(220 25% 22%)' }}>{t.label}</div>
                                                             {active && <div style={{ display: 'flex', justifyContent: 'center', marginTop: '0.2rem', color: 'hsl(214 80% 48%)' }}><Icons.check /></div>}
@@ -526,10 +567,13 @@ const ListingEdit = ({ listing, agents = [], property_types = [], amenities = []
                                         </FField>
 
                                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.875rem' }}>
+                                            {/* FIX: property_types normalised — works for both strings and objects */}
                                             <FField label="Property Type" error={errors.property_type}>
                                                 <FSelect value={form.property_type} onChange={e => set('property_type', e.target.value)}>
-                                                    {/* <option value="">Select type…</option> */}
-                                                    {allPropTypes.map(pt => <option key={pt} value={pt.toLowerCase()}>{pt}</option>)}
+                                                    <option value="">Select type…</option>
+                                                    {allPropTypes.map(pt => (
+                                                        <option key={pt.value} value={pt.value}>{pt.label}</option>
+                                                    ))}
                                                 </FSelect>
                                             </FField>
                                             <FField label="Status" error={errors.status}>
@@ -551,12 +595,16 @@ const ListingEdit = ({ listing, agents = [], property_types = [], amenities = []
 
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                                         <SectionLabel>Location</SectionLabel>
-                                        <FField label="Region" required error={errors.location}>
-                                            <FInput value={form.location} onChange={e => set('location', e.target.value)} placeholder="e.g. East Legon, Accra" hasError={!!errors.location} />
-                                        </FField>
-                                        <FField label="Location / Area" required error={errors.location}>
-                                            <FInput value={form.area} onChange={e => set('location', e.target.value)} placeholder="e.g. East Legon, Spintex" hasError={!!errors.location} />
-                                        </FField>
+                                        {/* FIX: two separate fields — location = city/region, area = neighbourhood */}
+                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.875rem' }}>
+                                            <FField label="Region / City" required error={errors.location}>
+                                                <FInput value={form.location} onChange={e => set('location', e.target.value)} placeholder="e.g. Accra" hasError={!!errors.location} />
+                                            </FField>
+                                            {/* FIX: was calling set('location', ...) — now correctly calls set('area', ...) */}
+                                            <FField label="Area / Neighbourhood" required error={errors.area}>
+                                                <FInput value={form.area} onChange={e => set('area', e.target.value)} placeholder="e.g. East Legon" hasError={!!errors.area} />
+                                            </FField>
+                                        </div>
                                         <FField label="Full Address" hint="Optional — shown to verified leads only" error={errors.address}>
                                             <FInput value={form.address} onChange={e => set('address', e.target.value)} placeholder="House number, street, area…" />
                                         </FField>
@@ -564,13 +612,14 @@ const ListingEdit = ({ listing, agents = [], property_types = [], amenities = []
 
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                                         <SectionLabel>Visibility & Trust</SectionLabel>
+                                        {/* FIX: is_featured restored — was commented out but Toggle referenced it */}
                                         <Toggle value={form.is_featured} onChange={v => set('is_featured', v)} label="Featured Listing" sub="Highlighted in search and featured sections" />
                                         <Toggle value={form.is_verified} onChange={v => set('is_verified', v)} label="Verified Listing" sub="Shows the verified badge on the listing" />
                                     </div>
                                 </>
                             )}
 
-                            {/* ── STEP 2: Pricing & specs ── */}
+                            {/* ── STEP 2 ── */}
                             {step === 2 && (
                                 <>
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -581,7 +630,6 @@ const ListingEdit = ({ listing, agents = [], property_types = [], amenities = []
                                                     {CURRENCIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
                                                 </FSelect>
                                             </FField>
-
                                             {isSale ? (
                                                 <FField label="Sale Price" required error={errors.sale_price}>
                                                     <FInput type="number" value={form.sale_price} onChange={e => set('sale_price', e.target.value)} placeholder="0.00" min="0" step="0.01" hasError={!!errors.sale_price} />
@@ -597,10 +645,12 @@ const ListingEdit = ({ listing, agents = [], property_types = [], amenities = []
                                                 </div>
                                             )}
                                         </div>
-
                                         {!isSale && (
-                                            <FField label="Advance Duration" hint="Number of years required upfront" error={errors.advance_duration}>
-                                                <FInput type="number" value={form.advance_duration} onChange={e => set('advance_duration', e.target.value)} placeholder="e.g. 6" min="1" />
+                                            <FField label="Advance Duration (months)" hint="Number of months required upfront" error={errors.advance_duration}>
+                                                <FSelect value={form.advance_duration} onChange={e => set('advance_duration', e.target.value)}>
+                                                    <option value="">Select…</option>
+                                                    {[1,2,3,4,5,6,12].map(n => <option key={n} value={n}>{n} month{n > 1 ? 's' : ''}</option>)}
+                                                </FSelect>
                                             </FField>
                                         )}
                                     </div>
@@ -614,12 +664,6 @@ const ListingEdit = ({ listing, agents = [], property_types = [], amenities = []
                                             <FField label="Bathrooms" error={errors.bathrooms}>
                                                 <FInput type="number" value={form.bathrooms} onChange={e => set('bathrooms', e.target.value)} placeholder="—" min="0" />
                                             </FField>
-                                            {/* <FField label="Toilets" error={errors.toilets}>
-                                                <FInput type="number" value={form.toilets} onChange={e => set('toilets', e.target.value)} placeholder="—" min="0" />
-                                            </FField> */}
-                                            {/* <FField label="Area (sqft)" error={errors.area_sqft}>
-                                                <FInput type="number" value={form.area_sqft} onChange={e => set('area_sqft', e.target.value)} placeholder="—" min="0" />
-                                            </FField> */}
                                         </div>
                                     </div>
 
@@ -628,9 +672,10 @@ const ListingEdit = ({ listing, agents = [], property_types = [], amenities = []
                                             <SectionLabel>Amenities</SectionLabel>
                                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
                                                 {amenities.map(am => {
-                                                    const selected = form.amenity_ids.includes(am.id);
+                                                    // Check by name string — matches how DB stores them
+                                                    const selected = form.amenities.includes(am.name);
                                                     return (
-                                                        <button type="button" key={am.id} onClick={() => toggleAmenity(am.id)}
+                                                        <button type="button" key={am.id} onClick={() => toggleAmenity(am.name)}
                                                             style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', padding: '0.32rem 0.7rem', borderRadius: '999px', border: `1.5px solid ${selected ? 'hsl(152 55% 50%)' : 'hsl(220 15% 86%)'}`, backgroundColor: selected ? 'hsl(152 55% 94%)' : 'white', color: selected ? 'hsl(152 55% 28%)' : 'hsl(220 15% 42%)', fontSize: '0.76rem', fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s' }}>
                                                             {am.icon && <span>{am.icon}</span>}
                                                             {am.name}
@@ -639,16 +684,16 @@ const ListingEdit = ({ listing, agents = [], property_types = [], amenities = []
                                                     );
                                                 })}
                                             </div>
-                                            <p style={{ margin: 0, fontSize: '0.7rem', color: 'hsl(220 15% 55%)' }}>{form.amenity_ids.length} selected</p>
+                                            <p style={{ margin: 0, fontSize: '0.7rem', color: 'hsl(220 15% 55%)' }}>{form.amenities.length} selected</p>
                                         </div>
                                     )}
                                 </>
                             )}
 
-                            {/* ── STEP 3: Images ── */}
+                            {/* ── STEP 3 ── */}
                             {step === 3 && (
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                                    <SectionLabel>Listing Images ({imageCount}/6)</SectionLabel>
+                                    <SectionLabel>Listing Images ({imageCount}/{MAX_IMAGES})</SectionLabel>
 
                                     {existingImages.length > 0 && (
                                         <div style={{ padding: '0.6rem 0.875rem', borderRadius: '0.5rem', backgroundColor: 'hsl(214 100% 96%)', border: '1px solid hsl(214 80% 88%)', fontSize: '0.75rem', color: 'hsl(214 80% 38%)' }}>
@@ -657,31 +702,27 @@ const ListingEdit = ({ listing, agents = [], property_types = [], amenities = []
                                         </div>
                                     )}
 
-                                    {/* Upload zone */}
-                                    {imageCount < 6 && (
+                                    {imageCount < MAX_IMAGES && (
                                         <label style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '7rem', border: '2px dashed hsl(220 15% 82%)', borderRadius: '0.75rem', backgroundColor: 'hsl(220 15% 98.5%)', cursor: 'pointer', transition: 'all 0.15s', gap: '0.5rem' }}
                                             onMouseEnter={e => { e.currentTarget.style.borderColor = 'hsl(220 25% 55%)'; e.currentTarget.style.backgroundColor = 'hsl(214 100% 98%)'; }}
                                             onMouseLeave={e => { e.currentTarget.style.borderColor = 'hsl(220 15% 82%)'; e.currentTarget.style.backgroundColor = 'hsl(220 15% 98.5%)'; }}>
                                             <span style={{ color: 'hsl(220 15% 52%)', display: 'flex' }}><Icons.upload /></span>
                                             <span style={{ fontSize: '0.8rem', fontWeight: '600', color: 'hsl(220 25% 38%)' }}>Click to upload images</span>
-                                            <span style={{ fontSize: '0.7rem', color: 'hsl(220 15% 55%)' }}>JPEG, PNG, GIF · max 5 MB each</span>
+                                            <span style={{ fontSize: '0.7rem', color: 'hsl(220 15% 55%)' }}>JPEG, PNG, GIF, WebP · max 5 MB each</span>
                                             <input type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={handleImageUpload} />
                                         </label>
                                     )}
 
-                                    {/* Image grid */}
                                     {imageCount > 0 && (
                                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.65rem' }}>
                                             {allImages.map(img => (
                                                 <div key={img.id} style={{ position: 'relative', aspectRatio: '1', borderRadius: '0.65rem', overflow: 'hidden', border: img.isExisting ? '2px solid hsl(214 80% 72%)' : '2px solid hsl(152 55% 68%)' }}>
                                                     <img src={img.preview} alt={img.name ?? img.path}
-                                                        onError={e => { e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23e2e8f0" width="100" height="100"/%3E%3C/svg%3E'; }}
+                                                        onError={e => { e.target.style.display = 'none'; e.target.parentElement.style.backgroundColor = 'hsl(220 15% 91%)'; }}
                                                         style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                                    {/* Badge */}
                                                     <div style={{ position: 'absolute', top: '0.35rem', left: '0.35rem', padding: '0.15rem 0.4rem', borderRadius: '0.25rem', fontSize: '0.6rem', fontWeight: '700', backgroundColor: img.isExisting ? 'hsl(214 80% 50%)' : 'hsl(152 55% 38%)', color: 'white' }}>
                                                         {img.isExisting ? 'Saved' : 'New'}
                                                     </div>
-                                                    {/* Remove */}
                                                     <button type="button" onClick={() => removeImage(img.id, img.isExisting)}
                                                         style={{ position: 'absolute', top: '0.35rem', right: '0.35rem', width: '1.4rem', height: '1.4rem', borderRadius: '50%', border: 'none', backgroundColor: 'hsl(0 65% 50%)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}>
                                                         <Icons.x />
@@ -692,32 +733,31 @@ const ListingEdit = ({ listing, agents = [], property_types = [], amenities = []
                                     )}
 
                                     {imageCount === 0 && (
-                                        <p style={{ margin: 0, fontSize: '0.78rem', color: 'hsl(220 15% 55%)', textAlign: 'center' }}>No images yet. Upload up to 6.</p>
+                                        <p style={{ margin: 0, fontSize: '0.78rem', color: 'hsl(220 15% 55%)', textAlign: 'center' }}>No images yet. Upload up to {MAX_IMAGES}.</p>
                                     )}
                                 </div>
                             )}
 
-                            {/* ── STEP 4: Review ── */}
+                            {/* ── STEP 4 ── */}
                             {step === 4 && (
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                                     <SectionLabel>Review before saving</SectionLabel>
 
-                                    {/* Property */}
                                     <div style={{ borderRadius: '0.75rem', backgroundColor: 'hsl(220 15% 97.5%)', border: '1px solid hsl(220 15% 91%)', overflow: 'hidden' }}>
                                         <div style={{ padding: '0.6rem 1rem', backgroundColor: 'hsl(220 15% 95%)', fontSize: '0.7rem', fontWeight: '800', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'hsl(220 25% 35%)' }}>Property Info</div>
                                         <div style={{ padding: '0.25rem 1rem 0.5rem' }}>
-                                            <ReviewRow label="Title"       value={form.title} />
-                                            <ReviewRow label="Type"        value={(form.purpose).toLowerCase()} />
-                                            <ReviewRow label="Property"    value={form.property_type} />
-                                            <ReviewRow label="Location"    value={form.location} />
-                                            <ReviewRow label="Address"     value={form.address} />
-                                            <ReviewRow label="Status"      value={STATUS_CFG[form.status]?.label ?? form.status} />
-                                            {/* <ReviewRow label="Featured"    value={form.is_featured ? 'Yes' : 'No'} /> */}
-                                            <ReviewRow label="Verified"    value={form.is_verified ? 'Yes' : 'No'} />
+                                            <ReviewRow label="Title"         value={form.title} />
+                                            <ReviewRow label="Type"          value={LISTING_TYPES.find(t => t.value === form.purpose)?.label ?? form.purpose} />
+                                            <ReviewRow label="Property Type" value={allPropTypes.find(pt => pt.value === form.property_type)?.label ?? form.property_type} />
+                                            <ReviewRow label="Region / City" value={form.location} />
+                                            <ReviewRow label="Area"          value={form.area} />
+                                            <ReviewRow label="Address"       value={form.address} />
+                                            <ReviewRow label="Status"        value={STATUS_CFG[form.status]?.label ?? form.status} />
+                                            <ReviewRow label="Featured"      value={form.is_featured ? 'Yes' : 'No'} />
+                                            <ReviewRow label="Verified"      value={form.is_verified ? 'Yes' : 'No'} />
                                         </div>
                                     </div>
 
-                                    {/* Pricing */}
                                     <div style={{ borderRadius: '0.75rem', backgroundColor: 'hsl(220 15% 97.5%)', border: '1px solid hsl(220 15% 91%)', overflow: 'hidden' }}>
                                         <div style={{ padding: '0.6rem 1rem', backgroundColor: 'hsl(220 15% 95%)', fontSize: '0.7rem', fontWeight: '800', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'hsl(220 25% 35%)' }}>Pricing & Specs</div>
                                         <div style={{ padding: '0.25rem 1rem 0.5rem' }}>
@@ -726,26 +766,21 @@ const ListingEdit = ({ listing, agents = [], property_types = [], amenities = []
                                                 : <>
                                                     <ReviewRow label="Min Rent" value={form.rent_min ? `${form.currency} ${Number(form.rent_min).toLocaleString()}/mo` : '—'} />
                                                     <ReviewRow label="Max Rent" value={form.rent_max ? `${form.currency} ${Number(form.rent_max).toLocaleString()}/mo` : '—'} />
-                                                    <ReviewRow label="Advance"  value={form.advance_duration ? `${form.advance_duration} year(s)` : '—'} />
+                                                    <ReviewRow label="Advance"  value={form.advance_duration ? `${form.advance_duration} month(s)` : '—'} />
                                                 </>
                                             }
                                             <ReviewRow label="Bedrooms"  value={form.bedrooms} />
                                             <ReviewRow label="Bathrooms" value={form.bathrooms} />
-                                            {/* <ReviewRow label="Toilets"   value={form.toilets} /> */}
-                                            {/* <ReviewRow label="Area"      value={form.area_sqft ? `${form.area_sqft} sqft` : '—'} /> */}
-                                            {form.amenity_ids.length > 0 && (
-                                                <ReviewRow label="Amenities" value={`${form.amenity_ids.length} selected`} />
-                                            )}
+                                            {form.amenities.length > 0 && <ReviewRow label="Amenities" value={`${form.amenities.length} selected`} />}
                                         </div>
                                     </div>
 
-                                    {/* Images */}
                                     <div style={{ borderRadius: '0.75rem', backgroundColor: 'hsl(220 15% 97.5%)', border: '1px solid hsl(220 15% 91%)', overflow: 'hidden' }}>
                                         <div style={{ padding: '0.6rem 1rem', backgroundColor: 'hsl(220 15% 95%)', fontSize: '0.7rem', fontWeight: '800', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'hsl(220 25% 35%)' }}>Images ({imageCount})</div>
                                         {imageCount > 0 ? (
                                             <div style={{ padding: '0.75rem 1rem', display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '0.4rem' }}>
                                                 {allImages.map(img => (
-                                                    <div key={img.id} style={{ aspectRatio: '1', borderRadius: '0.4rem', overflow: 'hidden' }}>
+                                                    <div key={img.id} style={{ aspectRatio: '1', borderRadius: '0.4rem', overflow: 'hidden', backgroundColor: 'hsl(220 15% 92%)' }}>
                                                         <img src={img.preview} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                                     </div>
                                                 ))}
@@ -755,7 +790,6 @@ const ListingEdit = ({ listing, agents = [], property_types = [], amenities = []
                                         )}
                                     </div>
 
-                                    {/* Info banner */}
                                     <div style={{ padding: '0.75rem 1rem', borderRadius: '0.6rem', backgroundColor: 'hsl(152 60% 96%)', border: '1px solid hsl(152 55% 85%)', fontSize: '0.78rem', color: 'hsl(152 55% 28%)', lineHeight: 1.6 }}>
                                         ✓ All changes save immediately. The listing page will reflect updates within a few seconds.
                                     </div>
@@ -780,7 +814,6 @@ const ListingEdit = ({ listing, agents = [], property_types = [], amenities = []
                                     Cancel
                                 </Link>
                             )}
-
                             {step < 4 ? (
                                 <button type="button" onClick={handleNext}
                                     style={{ flex: 2, padding: '0.65rem', borderRadius: '0.65rem', border: 'none', backgroundColor: 'hsl(220 25% 15%)', color: 'white', fontSize: '0.875rem', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit', transition: 'background-color 0.15s' }}
@@ -799,8 +832,6 @@ const ListingEdit = ({ listing, agents = [], property_types = [], amenities = []
 
                     {/* ═══ RIGHT: sidebar ═══════════════════════════════════ */}
                     <div style={{ position: 'sticky', top: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-
-                        {/* Record info */}
                         <div style={{ backgroundColor: 'white', border: '1px solid hsl(220 15% 91%)', borderRadius: '0.875rem', overflow: 'hidden', boxShadow: '0 1px 3px hsl(220 20% 15% / 0.04)' }}>
                             <div style={{ padding: '0.7rem 1rem', borderBottom: '1px solid hsl(220 15% 94%)', backgroundColor: 'hsl(220 15% 98.5%)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                 <p style={{ margin: 0, fontSize: '0.72rem', fontWeight: '800', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'hsl(220 25% 22%)' }}>Record Info</p>
@@ -813,7 +844,7 @@ const ListingEdit = ({ listing, agents = [], property_types = [], amenities = []
                                     { label: 'Inquiries',  value: l.inquiries_count ?? l.inquiries ?? 0 },
                                     { label: 'Created',    value: fmtDate(l.created_at) },
                                     { label: 'Updated',    value: fmtDate(l.updated_at) },
-                                    { label: 'Images',     value: `${imageCount} / 6` },
+                                    { label: 'Images',     value: `${imageCount} / ${MAX_IMAGES}` },
                                 ].map(({ label, value }) => (
                                     <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.42rem 0', borderBottom: '1px solid hsl(220 15% 95%)' }}>
                                         <span style={{ fontSize: '0.74rem', color: 'hsl(220 15% 52%)' }}>{label}</span>
@@ -823,12 +854,11 @@ const ListingEdit = ({ listing, agents = [], property_types = [], amenities = []
                             </div>
                         </div>
 
-                        {/* Quick actions */}
                         <div style={{ backgroundColor: 'white', border: '1px solid hsl(220 15% 91%)', borderRadius: '0.875rem', padding: '1rem', boxShadow: '0 1px 3px hsl(220 20% 15% / 0.04)' }}>
                             <p style={{ margin: '0 0 0.75rem', fontSize: '0.7rem', fontWeight: '800', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'hsl(220 15% 50%)' }}>Quick Actions</p>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
                                 <Link href={`/super-admin/listings/${l.id}`}
-                                    style={{ width: '100%', padding: '0.55rem 0.875rem', borderRadius: '0.55rem', border: '1px solid hsl(214 80% 88%)', backgroundColor: 'hsl(214 100% 97%)', color: 'hsl(214 80% 44%)', fontSize: '0.8rem', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', fontFamily: 'inherit', textDecoration: 'none', boxSizing: 'border-box' }}>
+                                    style={{ width: '100%', padding: '0.55rem 0.875rem', borderRadius: '0.55rem', border: '1px solid hsl(214 80% 88%)', backgroundColor: 'hsl(214 100% 97%)', color: 'hsl(214 80% 44%)', fontSize: '0.8rem', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none', boxSizing: 'border-box' }}>
                                     <Icons.back /> View Listing
                                 </Link>
                                 {statusKey !== 'suspended' && (
@@ -844,7 +874,6 @@ const ListingEdit = ({ listing, agents = [], property_types = [], amenities = []
                             </div>
                         </div>
 
-                        {/* Danger zone */}
                         <div style={{ backgroundColor: 'hsl(0 70% 98%)', border: '1px solid hsl(0 65% 88%)', borderRadius: '0.875rem', padding: '1rem' }}>
                             <p style={{ margin: '0 0 0.35rem', fontSize: '0.72rem', fontWeight: '800', letterSpacing: '0.07em', textTransform: 'uppercase', color: 'hsl(0 65% 44%)' }}>Danger Zone</p>
                             <p style={{ margin: '0 0 0.75rem', fontSize: '0.74rem', color: 'hsl(0 40% 45%)', lineHeight: 1.55 }}>

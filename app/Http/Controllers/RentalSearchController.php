@@ -41,7 +41,6 @@ class RentalSearchController extends Controller
 
         try {
             $listings = Rental::where('purpose', 'rent')
-                // ->where('status', 'approved')
                 ->latest()
                 ->paginate($perPage, ['*'], 'page', $page);
 
@@ -74,32 +73,72 @@ class RentalSearchController extends Controller
 
     public function areas()
     {
-        // Get areas grouped by city with proper structure
-        $areas = Rental::select('city', 'area', 'rent_min', 'rent_max', 'created_at')
-            ->get()
-            ->groupBy('city')
-            ->map(function ($cityAreas, $cityName) {
-                return $cityAreas->groupBy('area')->map(function ($areaRentals) {
-                    $avgRent = $areaRentals->avg(function ($rental) {
-                        return ($rental->rent_min + $rental->rent_max) / 2;
+        try {
+            $areas = Rental::where('purpose', 'rent')
+                // ->where('is_sold', false)
+                ->select('city', 'area', 'rent_min', 'rent_max', 'created_at')
+                ->get()
+                ->groupBy('city')
+                ->map(function ($cityAreas, $cityName) {
+                    return $cityAreas->groupBy('area')->map(function ($areaRentals) {
+                        $avgRent = $areaRentals->avg(function ($rental) {
+                            return ($rental->rent_min + $rental->rent_max) / 2;
+                        });
+    
+                        return [
+                            'name'         => $areaRentals->first()->area,
+                            'listingCount' => $areaRentals->count(),
+                            'avgRent'      => round($avgRent),
+                            'minRent'      => $areaRentals->min('rent_min'),
+                            'maxRent'      => $areaRentals->max('rent_max'),
+                            'trend'        => $this->calculateTrend($areaRentals),
+                        ];
                     });
-
-                    $minRent = $areaRentals->min('rent_min');
-                    $maxRent = $areaRentals->max('rent_max');
-
-                    return [
-                        'name' => $areaRentals->first()->area,
-                        'listingCount' => $areaRentals->count(),
-                        'avgRent' => round($avgRent),
-                        'minRent' => $minRent,
-                        'maxRent' => $maxRent,
-                        'trend' => $this->calculateTrend($areaRentals),
-                    ];
                 });
-            });
-
-        return inertia('AreasPage', ['areas' => $areas]);
+    
+            return inertia('AreasPage', ['areas' => $areas]);
+    
+        } catch (\Exception $e) {
+            Log::error('Failed to fetch rental areas', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+    
+            return response()->json([
+                'error'   => 'Failed to fetch rental areas',
+                'message' => config('app.debug') ? $e->getMessage() : 'Server error',
+            ], 500);
+        }
     }
+
+    // public function areas()
+    // {
+    //     // Get areas grouped by city with proper structure
+    //     $areas = Rental::select('city', 'area', 'rent_min', 'rent_max', 'created_at', 'rent')
+    //         ->get()
+    //         ->groupBy('city')
+    //         ->map(function ($cityAreas, $cityName) {
+    //             return $cityAreas->groupBy('area')->map(function ($areaRentals) {
+    //                 $avgRent = $areaRentals->avg(function ($rental) {
+    //                     return ($rental->rent_min + $rental->rent_max) / 2;
+    //                 });
+
+    //                 $minRent = $areaRentals->min('rent_min');
+    //                 $maxRent = $areaRentals->max('rent_max');
+
+    //                 return [
+    //                     'name' => $areaRentals->first()->area,
+    //                     'listingCount' => $areaRentals->count(),
+    //                     'avgRent' => round($avgRent),
+    //                     'minRent' => $minRent,
+    //                     'maxRent' => $maxRent,
+    //                     'trend' => $this->calculateTrend($areaRentals),
+    //                 ];
+    //             });
+    //         });
+
+    //     return inertia('AreasPage', ['areas' => $areas]);
+    // }
 
     public function getAreasByCity($city)
     {
@@ -171,35 +210,6 @@ class RentalSearchController extends Controller
             return '+0%';
         }
     }
-
-    // public function areas()
-    // {
-    //     $areas = Rental::where('purpose', 'rent')
-    //         // ->where('status', 'approved')
-    //         ->select('city', 'area', 'rent_min', 'rent_max', 'created_at')
-    //         ->get()
-    //         ->groupBy('city')
-    //         ->map(function ($cityAreas, $cityName) {
-    //             return $cityAreas->groupBy('area')->map(function ($areaRentals) {
-    //                 $avgRent = $areaRentals->avg(function ($rental) {
-    //                     return ($rental->rent_min + $rental->rent_max) / 2;
-    //                 });
-
-    //                 $minRent = $areaRentals->min('rent_min');
-    //                 $maxRent = $areaRentals->max('rent_max');
-
-    //                 return [
-    //                     'name' => $areaRentals->first()->area,
-    //                     'listingCount' => $areaRentals->count(),
-    //                     'avgRent' => round($avgRent),
-    //                     'minRent' => $minRent,
-    //                     'maxRent' => $maxRent,
-    //                 ];
-    //             });
-    //         });
-
-    //     return inertia('AreasPage', ['areas' => $areas]);
-    // }
 
     public function showArea($city, $area)
     {

@@ -559,8 +559,7 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData, locations
                           fontSize: 'clamp(0.875rem, 2.5vw, 1rem)'
                         }}
                       >
-                        <option value="">Select city</option>
-                        {/* <option value={names}>{names}</option> */}
+                        <option value="">Select Region</option>
                         {names.map(city => (
                           <option key={city} value={city}>
                               {city}

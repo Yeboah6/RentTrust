@@ -251,7 +251,7 @@ const TenantCard = ({ tenant: t, index, onAction }) => {
                 </div>
 
                 {/* Stats */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.45rem' }}>
+                {/* <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.45rem' }}>
                     {[
                         { v: t.inquiries_count, l: 'Inquiries' },
                         { v: t.rentals_count,   l: 'Rentals' },
@@ -262,7 +262,7 @@ const TenantCard = ({ tenant: t, index, onAction }) => {
                             <div style={{ fontSize: '0.58rem', fontWeight: '600', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'hsl(220 15% 55%)', marginTop: '0.15rem' }}>{l}</div>
                         </div>
                     ))}
-                </div>
+                </div> */}
 
                 {/* Joined */}
                 <div style={{ fontSize: '0.68rem', color: 'hsl(220 15% 55%)' }}>

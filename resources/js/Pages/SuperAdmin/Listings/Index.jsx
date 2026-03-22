@@ -87,6 +87,26 @@ const fmtPrice = (v, currency = 'GH₵') => {
 
 const avatarHue = (s = '') => [...s].reduce((a, c) => a + c.charCodeAt(0), 0) % 360;
 
+const resolveImage = (img) => {
+        if (!img) return null;
+        if (typeof img !== 'string') return null;
+
+        // Already a full URL
+        if (img.startsWith('http://') || img.startsWith('https://')) return img;
+
+        // Has folder prefix already e.g. "rental_images/file.jpg"
+        if (img.includes('/')) return `/storage/${img}`;
+
+        // Bare filename — agent store saves without folder prefix
+        return `/storage/rental_images/${img}`;
+    };
+
+    const resolveImages = (raw) => {
+        if (!raw) return [];
+        const arr = typeof raw === 'string' ? (() => { try { return JSON.parse(raw); } catch { return []; } })() : raw;
+        return (Array.isArray(arr) ? arr : []).map(resolveImage).filter(Boolean);
+    };
+
 const normalise = (l) => ({
     ...l,
     _id:           l.id,
@@ -106,10 +126,9 @@ const normalise = (l) => ({
     agent_id:      l.agent_id      ?? null,
     views:         l.views_count   ?? l.views         ?? 0,
     inquiries:     l.inquiries_count ?? l.inquiries   ?? 0,
-    images:        l.images        ?? l.media         ?? [],
+    images:        resolveImages(l.images ?? l.media),
     bedrooms:      l.bedrooms      ?? null,
     bathrooms:     l.bathrooms     ?? null,
-    area_sqft:     l.area_sqft     ?? l.floor_area    ?? null,
     is_featured:   l.is_featured   ?? l.featured      ?? false,
     is_verified:   l.is_verified   ?? l.verified      ?? false,
     is_sold:       l.is_sold       ?? false,
@@ -118,6 +137,7 @@ const normalise = (l) => ({
 });
 
 // ─── Atoms ────────────────────────────────────────────────────────────────────
+
 
 const StatusBadge = ({ sk }) => {
     const cfg = STATUS_CFG[sk] ?? STATUS_CFG.draft;

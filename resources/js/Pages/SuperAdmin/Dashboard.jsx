@@ -1,5 +1,5 @@
 import React from 'react';
-import { usePage } from '@inertiajs/react';
+import { usePage, Link } from '@inertiajs/react';
 import SuperAdminLayout from '@/Layouts/SuperAdminLayout';
 import AdminKpiCard from '@/Components/Modules/AdminKpiCard';
 
@@ -157,6 +157,22 @@ const Dashboard = ({ platform, saas }) => {
             value: saas.mrr ?? '—',
             label: 'Monthly Recurring Revenue',
         },
+        {
+            icon: RevenueIcon,
+            iconBg: 'hsl(40 90% 93%)',
+            iconColor: 'hsl(40 80% 40%)',
+            badge: 'Location',
+            value: saas.mrr ?? '—',
+            label: 'Total Locations',
+        },
+        {
+            icon: RevenueIcon,
+            iconBg: 'hsl(40 90% 93%)',
+            iconColor: 'hsl(40 80% 40%)',
+            badge: 'Amenities',
+            value: saas.mrr ?? '—',
+            label: 'Total Amenities',
+        },
     ];
 
     return (
@@ -197,12 +213,16 @@ const Dashboard = ({ platform, saas }) => {
 
                     {/* Quick Actions */}
                     <div className="flex gap-2">
-                        <button className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
+                        <Link 
+                        href={'/super-admin/profile'}
+                            className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
                             View Profile
-                        </button>
-                        <button className="px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors">
+                        </Link>
+                        <Link 
+                        href={'/super-admin/settings'}
+                            className="px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors">
                             Settings
-                        </button>
+                        </Link>
                     </div>
                 </div>
             </div>
