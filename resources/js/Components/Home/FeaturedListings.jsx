@@ -13,8 +13,7 @@ const PropertyCard = ({
   purpose,
   advance_duration, 
   agent_name, 
-  is_verified, 
-  is_claimed,
+  is_verified,
   images = []
 }) => {
   const [isHovered, setIsHovered] = useState(false);
@@ -147,7 +146,7 @@ const PropertyCard = ({
               <span className="text-sm" style={{ color: 'hsl(200 15% 45%)' }}>
                 Agent: {agent_name}
               </span>
-              {is_verified && (
+              {is_verified === "verified" && (
                 <div className="inline-flex items-center gap-1">
                   <Shield className="h-3 w-3" style={{ color: 'hsl(152 60% 40%)' }} />
                 </div>
@@ -158,13 +157,13 @@ const PropertyCard = ({
 
         {/* Rating and Reviews */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1">
+          {/* <div className="flex items-center gap-1">
             <Star className="h-4 w-4 fill-current" style={{ color: 'hsl(38 92% 50%)' }} />
-          </div>
+          </div> */}
           
           {/* Badges */}
           <div className="flex gap-2">
-            { is_verified !== "unverified" && (
+            { is_verified === "verified" && (
               <span 
                 className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium"
                 style={{ 

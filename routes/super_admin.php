@@ -16,6 +16,7 @@ use App\Http\Controllers\SuperAdmin\FeatureFlagController;
 use App\Http\Controllers\SuperAdmin\SystemController;
 use App\Http\Controllers\SuperAdmin\TenantController;
 use App\Http\Controllers\SuperAdmin\ProfileController;
+use App\Http\Controllers\SuperAdmin\ReviewsReportsController;
 
 Route::prefix('super-admin')
     ->name('super-admin.')
@@ -109,4 +110,11 @@ Route::prefix('super-admin')
     Route::get ('profile',          [ProfileController::class, 'show'])           ->name('profile');
     Route::patch('profile',         [ProfileController::class, 'update'])         ->name('profile.update');
     Route::put  ('profile/password',[ProfileController::class, 'updatePassword']) ->name('profile.password');
+
+    Route::get ('reports-reviews',             [ReviewsReportsController::class, 'index'])           ->name('reports-reviews');
+    Route::post('reviews/{review}/reply',      [ReviewsReportsController::class, 'reply'])           ->name('reviews.reply');
+    Route::post('reports/{report}/status',     [ReviewsReportsController::class, 'reportStatus'])    ->name('reports.status');
+    Route::delete('reviews/{review}',          [ReviewsReportsController::class, 'deleteReview'])    ->name('reviews.destroy');
+    Route::delete('app-reviews/{review}',      [ReviewsReportsController::class, 'deleteAppReview'])->name('app-reviews.destroy');
+    Route::delete('reports/{report}',          [ReviewsReportsController::class, 'deleteReport'])    ->name('reports.destroy');
 });

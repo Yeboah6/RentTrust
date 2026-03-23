@@ -75,7 +75,6 @@ class RentalSearchController extends Controller
     {
         try {
             $areas = Rental::where('purpose', 'rent')
-                // ->where('is_sold', false)
                 ->select('city', 'area', 'rent_min', 'rent_max', 'created_at')
                 ->get()
                 ->groupBy('city')
@@ -110,35 +109,6 @@ class RentalSearchController extends Controller
             ], 500);
         }
     }
-
-    // public function areas()
-    // {
-    //     // Get areas grouped by city with proper structure
-    //     $areas = Rental::select('city', 'area', 'rent_min', 'rent_max', 'created_at', 'rent')
-    //         ->get()
-    //         ->groupBy('city')
-    //         ->map(function ($cityAreas, $cityName) {
-    //             return $cityAreas->groupBy('area')->map(function ($areaRentals) {
-    //                 $avgRent = $areaRentals->avg(function ($rental) {
-    //                     return ($rental->rent_min + $rental->rent_max) / 2;
-    //                 });
-
-    //                 $minRent = $areaRentals->min('rent_min');
-    //                 $maxRent = $areaRentals->max('rent_max');
-
-    //                 return [
-    //                     'name' => $areaRentals->first()->area,
-    //                     'listingCount' => $areaRentals->count(),
-    //                     'avgRent' => round($avgRent),
-    //                     'minRent' => $minRent,
-    //                     'maxRent' => $maxRent,
-    //                     'trend' => $this->calculateTrend($areaRentals),
-    //                 ];
-    //             });
-    //         });
-
-    //     return inertia('AreasPage', ['areas' => $areas]);
-    // }
 
     public function getAreasByCity($city)
     {
@@ -247,33 +217,6 @@ class RentalSearchController extends Controller
             'properties' => $properties,
         ]);
     }
-
-    /**
-     * Show individual rental listing
-     */
-    // public function show(Request $request, Rental $rental)
-    // {
-    //     // Only block unapproved listings, allow both rent and sale
-    //     if ($rental->status !== 'approved') {
-    //         abort(404, 'Listing not found');
-    //     }
-    
-    //     // Track view
-    //     $this->trackView($request, $rental);
-    
-    //     $rental->load('user');
-    
-    //     $reviews = $rental->reviews()
-    //         ->orderBy('created_at', 'desc')
-    //         ->get();
-    
-    //     return inertia('RentalDetailsPage', [
-    //         'rental'      => $rental,
-    //         'reviews'     => $reviews,
-    //         'price_label' => $rental->purpose === 'sale' ? 'Sale Price' : 'Annual Rent Range',
-    //     ]);
-    // }
-
     /**
      * Track listing view
      */

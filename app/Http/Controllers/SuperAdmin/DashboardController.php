@@ -9,6 +9,11 @@ use App\Models\Plan;
 use App\Models\User;
 use App\Models\ListingInquiry;
 use App\Models\ListingView;
+use App\Models\PropertyType;
+use App\Models\Location;
+use App\Models\Amenity;
+use App\Models\Report;
+use App\Models\Review;
 
 class DashboardController extends Controller
 {
@@ -30,13 +35,19 @@ class DashboardController extends Controller
         $totalInquiries  = ListingInquiry::count();
         $totalView  = ListingView::count();
         $totalPlans = Plan::count();
+        $totalPropertyType = PropertyType::count();
+        $totalLocations = Location::count();
+        $totalAmenities = Amenity::count();
+        $totalReports = Report::count();
+        $totalReviews = Review::count();
+        $totalAppReviews = Review::where('review_type', 'app')->count();
+        $totalRentReviews = Review::where('review_type', 'rent')->count();
 
         // SaaS metrics - reuse existing models
         $activeSubs      = User::whereHas('subscription', function ($q) {
             $q->where('status', 'active');
         })->count();
         $mrr = \App\Models\Payment::where('status', 'success')->sum('amount');
-        // other metrics could be calculated as needed
 
         return inertia('SuperAdmin/Dashboard', [
             'platform' => [
@@ -49,6 +60,13 @@ class DashboardController extends Controller
                 'total_inquiries' => $totalInquiries,
                 'total_views' => $totalView,
                 'total_plans' => $totalPlans,
+                'total_property_types' => $totalPropertyType,
+                'total_locations' => $totalLocations,
+                'total_amenities' => $totalAmenities,
+                'total_reports' => $totalReports,
+                'total_reviews' => $totalReviews,
+                'total_app_reviews' => $totalAppReviews,
+                'total_rent_reviews' => $totalRentReviews,
             ],
             'saas' => [
                 'active_subscriptions' => $activeSubs,

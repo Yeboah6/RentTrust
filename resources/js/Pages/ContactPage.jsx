@@ -65,7 +65,7 @@ export default function ContactPage() {
                 </svg>
             ),
             label: 'Office',
-            value: '14 Independence Ave, Accra, Ghana',
+            value: 'Dome Pillar II, Accra, Ghana',
         },
         {
             icon: (
@@ -202,60 +202,63 @@ export default function ContactPage() {
                 <main style={{ flex: 1 }}>
 
                     {/* ── Hero Banner ── */}
-                    <div className="contact-hero" style={{
-                        position: 'relative',
-                        background: 'linear-gradient(135deg, hsl(174 62% 22%) 0%, hsl(174 55% 32%) 60%, hsl(174 45% 38%) 100%)',
-                        overflow: 'hidden',
-                        padding: 'clamp(3rem, 8vw, 5rem) clamp(1rem, 4vw, 2rem)',
-                    }}>
-                        {/* Decorative pattern */}
-                        <div className="hero-pattern" style={{
-                            position: 'absolute', inset: 0, pointerEvents: 'none', opacity: 0.07,
-                            backgroundImage: `radial-gradient(circle, white 1px, transparent 1px)`,
-                            backgroundSize: '32px 32px',
-                        }} />
-                        {/* Decorative circle */}
-                        <div style={{
-                            position: 'absolute', right: '-4rem', top: '-4rem',
-                            width: '22rem', height: '22rem',
-                            borderRadius: '50%',
-                            background: 'radial-gradient(circle, hsl(174 62% 50% / 0.25) 0%, transparent 70%)',
-                            pointerEvents: 'none',
-                        }} />
+                    {/* ── Hero Banner — mosaic background ── */}
+                    <div style={{ position: 'relative', overflow: 'hidden', minHeight: '360px', display: 'flex', alignItems: 'center' }}>
 
-                        <div className="container mx-auto" style={{ maxWidth: '900px', position: 'relative' }}>
-                            <div style={{
-                                display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
-                                padding: '0.375rem 0.875rem',
-                                borderRadius: '9999px',
-                                backgroundColor: 'rgba(255,255,255,0.15)',
-                                border: '1px solid rgba(255,255,255,0.25)',
-                                color: 'rgba(255,255,255,0.9)',
-                                fontSize: '0.8125rem',
-                                fontWeight: '600',
-                                marginBottom: '1.25rem',
-                                backdropFilter: 'blur(8px)',
-                            }}>
-                                <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: 'hsl(152 70% 60%)', animation: 'pulse 2s ease infinite' }} />
+                        {/* Base gradient */}
+                        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, hsl(174 62% 22%) 0%, hsl(174 55% 32%) 60%, hsl(174 45% 38%) 100%)', zIndex: 0 }} />
+
+                        {/* Property mosaic — right 52% */}
+                        <div style={{
+                            position: 'absolute', right: 0, top: 0, bottom: 0, width: '56%', zIndex: 1,
+                            display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)',
+                            gridTemplateRows: 'repeat(3, 1fr)', gap: '4px',
+                          }}>
+                            {/* Tall cell spanning 2 rows */}
+                            <div style={{ gridRow: '1 / 3', background: 'hsl(174 25% 22%)', overflow: 'hidden' }}>
+                              <img src="/images/download 2.jfif" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.75 }} />
+                            </div>
+                            <div style={{ background: 'hsl(200 30% 18%)', overflow: 'hidden' }}>
+                              <img src="/images/download 1.jfif" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.75 }} />
+                            </div>
+                            <div style={{ background: 'hsl(174 35% 16%)', overflow: 'hidden' }}>
+                              <img src="/images/download 2.jfif" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.75 }} />
+                            </div>
+                            {/* Wide cell spanning 2 columns */}
+                            <div style={{ gridColumn: '2 / 4', background: 'hsl(30 25% 18%)', overflow: 'hidden' }}>
+                              <img src="/images/download 1.jfif" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.75 }} />
+                            </div>
+                            <div style={{ background: 'hsl(220 30% 16%)', overflow: 'hidden' }}>
+                              <img src="/images/download 3.jfif" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.75 }} />
+                            </div>
+                            <div style={{ background: 'hsl(174 20% 14%)', overflow: 'hidden' }}>
+                              <img src="/images/download 5.jfif" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.75 }} />
+                            </div>
+                            <div style={{ background: 'hsl(15 25% 16%)', overflow: 'hidden' }}>
+                              <img src="/images/download 4.jfif" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.75 }} />
+                            </div>
+                          </div>
+                        
+                        {/* Dot grid overlay */}
+                        <div style={{ position: 'absolute', inset: 0, zIndex: 2, pointerEvents: 'none', opacity: 0.06, backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
+                        
+                        {/* Glow accent */}
+                        <div style={{ position: 'absolute', right: '-4rem', top: '-4rem', width: '20rem', height: '20rem', borderRadius: '50%', background: 'radial-gradient(circle, hsl(174 62% 50% / 0.2) 0%, transparent 70%)', zIndex: 2, pointerEvents: 'none' }} />
+                        
+                        {/* Gradient fade — content side */}
+                        <div style={{ position: 'absolute', inset: 0, zIndex: 2, background: 'linear-gradient(to right, hsl(174 60% 22% / 0.98) 0%, hsl(174 58% 22% / 0.88) 38%, hsl(174 55% 22% / 0.45) 70%, hsl(174 55% 22% / 0.15) 100%)' }} />
+                        
+                        {/* Content */}
+                        <div style={{ position: 'relative', zIndex: 3, padding: 'clamp(2.5rem, 7vw, 4.5rem) clamp(1rem, 4vw, 2.5rem)', maxWidth: '560px' }}>
+                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '5px 14px', borderRadius: '999px', background: 'rgba(255,255,255,0.14)', border: '1px solid rgba(255,255,255,0.22)', color: 'rgba(255,255,255,0.9)', fontSize: '13px', fontWeight: '600', marginBottom: '1.25rem' }}>
+                                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'hsl(152 70% 60%)', animation: 'pulse 2s ease infinite', flexShrink: 0 }} />
                                 We typically respond within 24 hours
                             </div>
-                            <h1 style={{
-                                color: 'white',
-                                fontSize: 'clamp(2rem, 6vw, 3.25rem)',
-                                fontWeight: '800',
-                                lineHeight: '1.1',
-                                marginBottom: '1rem',
-                                letterSpacing: '-0.02em',
-                            }}>
+                            <h1 style={{ color: 'white', fontSize: 'clamp(2rem, 5vw, 3.25rem)', fontWeight: '800', lineHeight: '1.1', marginBottom: '1rem', letterSpacing: '-0.02em' }}>
                                 Let's talk about<br />
                                 <span style={{ color: 'hsl(40 90% 70%)' }}>your property.</span>
                             </h1>
-                            <p style={{
-                                color: 'rgba(255,255,255,0.75)',
-                                fontSize: 'clamp(1rem, 2.5vw, 1.125rem)',
-                                lineHeight: '1.6',
-                                maxWidth: '480px',
-                            }}>
+                            <p style={{ color: 'rgba(255,255,255,0.72)', fontSize: 'clamp(0.9rem, 2.2vw, 1.1rem)', lineHeight: '1.6', maxWidth: '420px' }}>
                                 Whether you're listing a property, need help with verification, or just have a question — we're here for you.
                             </p>
                         </div>

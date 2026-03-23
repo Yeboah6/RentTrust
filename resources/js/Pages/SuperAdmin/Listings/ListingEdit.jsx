@@ -36,7 +36,7 @@ const Icons = {
 // ─── Config ───────────────────────────────────────────────────────────────────
 
 const STATUS_CFG = {
-    approved:    { label: 'Approved',    bg: 'hsl(152 60% 93%)', color: 'hsl(152 60% 28%)', dot: 'hsl(152 60% 38%)' },
+    active:    { label: 'Active',    bg: 'hsl(152 60% 93%)', color: 'hsl(152 60% 28%)', dot: 'hsl(152 60% 38%)' },
     pending:   { label: 'Pending',   bg: 'hsl(40 90% 93%)',  color: 'hsl(40 80% 30%)',  dot: 'hsl(40 80% 44%)' },
     sold:      { label: 'Sold',      bg: 'hsl(214 100% 95%)',color: 'hsl(214 80% 38%)', dot: 'hsl(214 80% 50%)' },
     rented:    { label: 'Rented',    bg: 'hsl(270 60% 95%)', color: 'hsl(270 55% 38%)', dot: 'hsl(270 55% 50%)' },
@@ -62,7 +62,7 @@ const CURRENCIES = [
     { value: '₦',   label: '₦ NGN' },
 ];
 
-const ALL_STATUSES = ['approved','pending','sold','rented','rejected','draft','expired','flagged','suspended'];
+const ALL_STATUSES = ['active','pending','sold','rented','rejected','draft','expired','flagged','suspended'];
 
 const STEPS = [
     { number: 1, label: 'Property Info', icon: Icons.home },
@@ -267,6 +267,7 @@ const ListingEdit = ({ listing, agents = [], property_types = [], amenities = []
         rent_max:         l.rent_max         ?? '',
         advance_duration: l.advance_duration ?? '',
         currency:         l.currency         ?? 'GH₵',
+        // FIX: city = region/location, area = sub-area — separate fields
         location:         l.city             ?? l.location ?? '',
         area:             l.area             ?? '',
         address:          l.address          ?? '',
@@ -278,8 +279,14 @@ const ListingEdit = ({ listing, agents = [], property_types = [], amenities = []
         agent_id:         l.agent?.id        ?? l.agent_id ?? '',
         amenities:        (() => {
             const raw = l.amenities ?? [];
+            // DB stores amenities as name strings e.g. ["Pool", "Gym"]
+            // but may also come as objects [{id, name}] from a relation load
             return raw.map(a => typeof a === 'string' ? a : (a.name ?? '')).filter(Boolean);
         })(),
+        // Contact info — fall back to existing DB values
+        agentName:        l.agent_name  ?? l.agentName  ?? '',
+        agentPhone:       l.agent_phone ?? l.agentPhone ?? '',
+        agentEmail:       l.agent_email ?? l.agentEmail ?? '',
     });
 
     const set = (key, val) => setForm(prev => ({ ...prev, [key]: val }));
@@ -356,10 +363,13 @@ const ListingEdit = ({ listing, agents = [], property_types = [], amenities = []
     const validateStep = (s) => {
         const e = {};
         if (s === 1) {
-            if (!form.title.trim())    e.title    = 'Title is required.';
-            if (!form.purpose)         e.purpose  = 'Listing type is required.';
-            if (!form.location.trim()) e.location = 'Region / city is required.';
-            if (!form.area.trim())     e.area     = 'Area is required.';
+            if (!form.title.trim())       e.title      = 'Title is required.';
+            if (!form.purpose)            e.purpose    = 'Listing type is required.';
+            if (!form.location.trim())    e.location   = 'Region / city is required.';
+            if (!form.area.trim())        e.area       = 'Area is required.';
+            if (!form.agentName?.trim())  e.agentName  = 'Contact name is required.';
+            if (!form.agentPhone?.trim()) e.agentPhone = 'Phone number is required.';
+            if (!form.agentEmail?.trim()) e.agentEmail = 'Email address is required.';
         }
         if (s === 2) {
             if (isSale) {
@@ -616,6 +626,65 @@ const ListingEdit = ({ listing, agents = [], property_types = [], amenities = []
                                         <Toggle value={form.is_featured} onChange={v => set('is_featured', v)} label="Featured Listing" sub="Highlighted in search and featured sections" />
                                         <Toggle value={form.is_verified} onChange={v => set('is_verified', v)} label="Verified Listing" sub="Shows the verified badge on the listing" />
                                     </div>
+
+                                    {/* ── Contact Information ── */}
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                        <SectionLabel>Contact Information</SectionLabel>
+                                        <p style={{ margin: 0, fontSize: '0.75rem', color: 'hsl(220 15% 52%)', lineHeight: 1.55 }}>
+                                            Shown to interested tenants and buyers on the listing page.
+                                        </p>
+
+                                        <FField label="Contact Name" required error={errors.agentName}>
+                                            <FInput
+                                                value={form.agentName}
+                                                onChange={e => set('agentName', e.target.value)}
+                                                placeholder="e.g. Kwame Mensah"
+                                                hasError={!!errors.agentName}
+                                            />
+                                        </FField>
+
+                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.875rem' }}>
+                                            <FField label="Phone Number" required error={errors.agentPhone}>
+                                                <FInput
+                                                    type="tel"
+                                                    value={form.agentPhone}
+                                                    onChange={e => set('agentPhone', e.target.value)}
+                                                    placeholder="+233 xx xxx xxxx"
+                                                    hasError={!!errors.agentPhone}
+                                                />
+                                            </FField>
+                                            <FField label="Email Address" required error={errors.agentEmail}>
+                                                <FInput
+                                                    type="email"
+                                                    value={form.agentEmail}
+                                                    onChange={e => set('agentEmail', e.target.value)}
+                                                    placeholder="contact@agency.com"
+                                                    hasError={!!errors.agentEmail}
+                                                />
+                                            </FField>
+                                        </div>
+
+                                        {/* Live preview — shows when any field has a value */}
+                                        {(form.agentName || form.agentPhone || form.agentEmail) && (
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem', padding: '0.875rem', borderRadius: '0.65rem', backgroundColor: 'hsl(220 15% 97.5%)', border: '1px solid hsl(220 15% 91%)' }}>
+                                                <div style={{ width: '2.5rem', height: '2.5rem', borderRadius: '50%', backgroundColor: `hsl(${[...( form.agentName || 'A')].reduce((a, c) => a + c.charCodeAt(0), 0) % 360} 50% 88%)`, color: `hsl(${[...(form.agentName || 'A')].reduce((a, c) => a + c.charCodeAt(0), 0) % 360} 50% 28%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.78rem', fontWeight: '800', flexShrink: 0 }}>
+                                                    {form.agentName
+                                                        ? form.agentName.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
+                                                        : '?'
+                                                    }
+                                                </div>
+                                                <div style={{ minWidth: 0 }}>
+                                                    {form.agentName && (
+                                                        <div style={{ fontSize: '0.875rem', fontWeight: '700', color: 'hsl(220 25% 14%)', marginBottom: '0.2rem' }}>{form.agentName}</div>
+                                                    )}
+                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.1rem' }}>
+                                                        {form.agentPhone && <div style={{ fontSize: '0.72rem', color: 'hsl(220 15% 48%)' }}>📞 {form.agentPhone}</div>}
+                                                        {form.agentEmail && <div style={{ fontSize: '0.72rem', color: 'hsl(220 15% 48%)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>✉ {form.agentEmail}</div>}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
                                 </>
                             )}
 
@@ -755,6 +824,16 @@ const ListingEdit = ({ listing, agents = [], property_types = [], amenities = []
                                             <ReviewRow label="Status"        value={STATUS_CFG[form.status]?.label ?? form.status} />
                                             <ReviewRow label="Featured"      value={form.is_featured ? 'Yes' : 'No'} />
                                             <ReviewRow label="Verified"      value={form.is_verified ? 'Yes' : 'No'} />
+                                        </div>
+                                    </div>
+
+                                    {/* Contact info review block */}
+                                    <div style={{ borderRadius: '0.75rem', backgroundColor: 'hsl(220 15% 97.5%)', border: '1px solid hsl(220 15% 91%)', overflow: 'hidden' }}>
+                                        <div style={{ padding: '0.6rem 1rem', backgroundColor: 'hsl(220 15% 95%)', fontSize: '0.7rem', fontWeight: '800', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'hsl(220 25% 35%)' }}>Contact Info</div>
+                                        <div style={{ padding: '0.25rem 1rem 0.5rem' }}>
+                                            <ReviewRow label="Name"  value={form.agentName} />
+                                            <ReviewRow label="Phone" value={form.agentPhone} />
+                                            <ReviewRow label="Email" value={form.agentEmail} />
                                         </div>
                                     </div>
 

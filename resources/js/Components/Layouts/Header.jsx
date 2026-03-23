@@ -280,12 +280,12 @@ const Header = () => {
             borderTop: isMenuOpen ? '1px solid hsl(40 20% 88%)' : 'none'
           }}
         >
-          <nav className="container mx-auto" style={{ 
-            padding: 'clamp(0.75rem, 3vw, 1rem)',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '0.25rem'
-          }}>
+            <nav className="container mx-auto" style={{ 
+              padding: 'clamp(0.75rem, 3vw, 1rem)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.25rem'
+            }}>
                 {/* Show "Find Rentals" only when not on rent page */}
                 <RentMobile isOnRentPage={isOnRentPage} handleMobileLinkClick={handleMobileLinkClick} />
                 

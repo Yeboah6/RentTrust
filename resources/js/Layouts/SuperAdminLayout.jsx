@@ -89,6 +89,7 @@ const NAV = [
             { label: 'Subscriptions', href: '/super-admin/subscriptions', icon: SubscriptionsIcon },
             { label: 'Payments',      href: '/super-admin/payments',      icon: PaymentsIcon },
             { label: 'Listings',      href: '/super-admin/listings',      icon: PropertyTypesIcon },
+            { label: 'Reports & Reviews',      href: '/super-admin/reports-reviews',      icon: PropertyTypesIcon },
         ],
     },
     {

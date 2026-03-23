@@ -373,15 +373,19 @@ const PropertyCard = ({ listing }) => {
             style={{
               display: 'inline-flex',
               alignItems: 'center',
+              gap: '0.25rem',
               padding: '0.25rem 0.625rem',
               fontSize: '0.75rem',
               fontWeight: '500',
-              backgroundColor: listing.status ? 'hsl(174 62% 32% / 0.1)' : '#efece7',
-              color: listing.status === "pending" ? '#627884' : '#1f847a',
-              borderRadius: '9999px'
+              borderRadius: '9999px',
+              ...(listing.status === "available" || listing.status === "approved"
+                ? { backgroundColor: 'hsl(174 62% 32% / 0.1)', color: '#1f847a' }
+                : listing.status === "pending"
+                ? { backgroundColor: '#efece7', color: '#627884' }
+                : { backgroundColor: 'hsl(38 92% 50% / 0.1)', color: 'hsl(38 92% 40%)' })
             }}
           >
-            <Clock style={{ height: '0.75rem', width: '0.75rem' }} /> 
+            { listing.status === 'pending' ? <Clock style={{ height: '0.75rem', width: '0.75rem' }} /> : <CheckCircle2 className="h-3 w-3" />}
             {listing.status}
           </span>
         </div>
@@ -420,19 +424,13 @@ const PropertyCard = ({ listing }) => {
               <span style={{ fontSize: '0.875rem', color: 'hsl(200 15% 45%)' }}>
                 {listing.agentName}
               </span>
-              {listing.status === "verified" && (
-                <span
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    padding: '0.125rem 0.5rem',
-                    fontSize: '0.75rem',
-                    fontWeight: '500',
-                    backgroundColor: 'hsl(152 60% 40% / 0.1)',
-                    color: 'hsl(152 60% 40%)',
-                    borderRadius: '9999px'
-                  }}
-                >
+              {listing.isAgentVerified && (
+                <span style={{
+                  display: 'inline-flex', alignItems: 'center',
+                  padding: '0.125rem 0.5rem', fontSize: '0.75rem', fontWeight: '500',
+                  backgroundColor: 'hsl(152 60% 40% / 0.1)',
+                  color: 'hsl(152 60% 40%)', borderRadius: '9999px'
+                }}>
                   <CheckCircle2 style={{ height: '0.75rem', width: '0.75rem', marginRight: '0.25rem' }} />
                   Verified
                 </span>
@@ -501,9 +499,10 @@ const RentalListingsPage = ({ listings: initialListingsData = {} }) => {
       bathrooms: listing.bathrooms,
       property_type: listing.property_type,
       agentName: listing.agent_name || null,
-      status: listing.status,
+      status: listing.status === "verified" ? "available" : listing.status,
+      isAgentVerified: listing.status === "verified",
       isVerified: Boolean(listing.status),
-      isClaimed: Boolean(listing.is_verified), 
+      // isClaimed: Boolean(listing.is_verified), 
       reviewCount: parseInt(listing.review_count) || 0,
       rating: parseFloat(listing.rating) || 0,
       images: listing.images || [],

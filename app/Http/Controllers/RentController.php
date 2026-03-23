@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Agent;
+use App\Models\User;
 use App\Models\Rental;
 use App\Models\Report;
 use App\Models\Review;
@@ -32,7 +32,7 @@ class RentController extends Controller
 
         // Show recent sale listings
         $recentSales = Rental::where('purpose', 'sale')
-            ->where('is_sold', false)
+            // ->where('is_sold', false)
             ->latest()
             ->limit(4)
             ->get();
@@ -77,13 +77,22 @@ class RentController extends Controller
                 });
             });
 
+        $totalAreas = Rental::distinct()->count('area');
+        $totalVerifiedAgents = User::where('status', 'verified')
+            ->where('role', 'agent')
+            ->count();
+        $totalListings = Rental::all()->count();
+        $users = User::all()->count();
+
         return inertia('Home', [
             'recentRentals' => $recentRentals,
             'recentSales' => $recentSales,
             'rentalAreas' => $rentalAreas,
             'saleAreas' => $saleAreas,
-            'pageTitle' => 'RentTrust - Rent Smarter. Sell Confidently.',
-            'pageDescription' => 'Find the best rental properties or sell with confidence on RentTrust marketplace.',
+            'totalAreas' => $totalAreas,
+            'totalVerifiedAgents' => $totalVerifiedAgents,
+            'totalListings' => $totalListings,
+            'users' => $users,
         ]);
     }
 
