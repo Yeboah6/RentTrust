@@ -97,6 +97,11 @@ class RentController extends Controller
         ]);
     }
 
+    public function about()
+    {
+        return inertia('AboutPage');
+    }
+
     /**
      * Store a newly created resource in storage.
      */

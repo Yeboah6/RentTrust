@@ -216,6 +216,19 @@ const Header = () => {
                 >
                   Pricing
                 </Link>
+                <Link
+                  href="/about"
+                  onMouseEnter={() => setActiveLink('pricing')}
+                  onMouseLeave={() => setActiveLink(null)}
+                  className="desktop-nav-link px-4 py-2 font-medium transition-all rounded-lg"
+                  style={{
+                    color: activeLink === 'pricing' ? 'hsl(200 25% 15%)' : 'hsl(200 15% 45%)',
+                    backgroundColor: activeLink === 'pricing' ? 'hsl(40 30% 94%)' : 'transparent',
+                    fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)'
+                  }}
+                >
+                  About us
+                </Link>
             </>
           </nav>
 
@@ -343,6 +356,20 @@ const Header = () => {
                   onTouchEnd={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                 >
                   Pricing
+                </Link>
+
+                <Link
+                  href="/about"
+                  onClick={handleMobileLinkClick}
+                  className="mobile-menu-link block px-4 py-3 font-medium rounded-lg transition-colors"
+                  style={{ 
+                    color: 'hsl(200 25% 15%)',
+                    fontSize: 'clamp(0.875rem, 3vw, 1rem)'
+                  }}
+                  onTouchStart={(e) => e.currentTarget.style.backgroundColor = 'hsl(40 30% 94%)'}
+                  onTouchEnd={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                >
+                  About us
                 </Link>
 
             <div style={{ 

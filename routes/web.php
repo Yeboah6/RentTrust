@@ -22,6 +22,8 @@ Route::resource('rent', RentController::class)
 
 Route::get('/', [RentController::class, 'index']);
 
+Route::get('/about', [RentController::class, 'about'])->name('about');
+
 // ── Rental Search Routes ──────────────────────────────────────────────────────
 Route::prefix('rent')->group(function () {
     Route::get('/areas', [RentalSearchController::class, 'areas'])->name('rent.areas');
