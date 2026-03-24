@@ -26,13 +26,14 @@ class RentController extends Controller
     {
         // Show recent rental listings
         $recentRentals = Rental::where('purpose', 'rent')
+            ->where('is_featured', true)
             ->latest()
             ->limit(4)
             ->get();
 
         // Show recent sale listings
         $recentSales = Rental::where('purpose', 'sale')
-            // ->where('is_sold', false)
+            ->where('is_featured', true)
             ->latest()
             ->limit(4)
             ->get();
@@ -398,6 +399,7 @@ class RentController extends Controller
             'existingImages.*' => 'string',
             'removedImages' => 'nullable|array',
             'removedImages.*' => 'string',
+            'status' => 'nullable|in:active,inactive,rented,sold',
         ];
 
         $purpose = $request->input('purpose', $rent->purpose);
@@ -531,6 +533,7 @@ class RentController extends Controller
                 'agent_email' => $request->agentEmail,
                 'images' => $finalImages ?? [],
                 'updated_at' => now(),
+                'status' => $request->status ?? 'active',
             ]);
             
             Log::info('Rental updated successfully', [

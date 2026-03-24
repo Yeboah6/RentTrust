@@ -34,8 +34,6 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [toast, setToast] = useState(null);
 
-  // const allImages = [...existingImages, ...newImages];
-
   const parseImages = (imagesData) => {
     if (!imagesData) return [];
     
@@ -119,7 +117,8 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental }) => {
         description: rental.description || '',
         agentName: rental.agent_name || agentData?.fullName || '',
         agentPhone: rental.agent_phone || agentData?.phone || '',
-        agentEmail: rental.agent_email || agentData?.email || ''
+        agentEmail: rental.agent_email || agentData?.email || '',
+        status: rental.status || 'active'
       });
     }
   }, [rental]);
@@ -262,10 +261,8 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental }) => {
       formData.append('advanceDuration', data.advanceDuration);
     } else {
       formData.append('salePrice', data.salePrice);
-      // ensure previous rental-only values are removed by sending empty values
       formData.append('rentMin', '');
       formData.append('rentMax', '');
-      // do NOT append advanceDuration when editing a sale listing – it should be omitted
     }
     formData.append('bedrooms', data.bedrooms);
     formData.append('bathrooms', data.bathrooms || '0');
@@ -273,6 +270,7 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental }) => {
     formData.append('agentName', data.agentName);
     formData.append('agentPhone', data.agentPhone);
     formData.append('agentEmail', data.agentEmail);
+    formData.append('status', data.status);
 
     // Add amenities as JSON string
     formData.append('amenities', JSON.stringify(data.amenities));
@@ -344,6 +342,8 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental }) => {
     { number: 3, title: 'Contact Information', icon: FileText },
     { number: 4, title: 'Review & Submit', icon: CheckCircle2 }
   ];
+
+  console.log(data.status);
 
   const allImages = [...existingImages, ...newImages];
 
@@ -1713,6 +1713,62 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental }) => {
                             width: 'clamp(0.75rem, 2vw, 0.875rem)' 
                           }} /> 
                           {errors.agentEmail}
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label style={{ 
+                        fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                        fontWeight: '500',
+                        color: 'hsl(200 25% 15%)',
+                        display: 'block', 
+                        marginBottom: 'clamp(0.375rem, 1.5vw, 0.5rem)' 
+                      }}>
+                        Status
+                      </label>
+                      <select
+                        value={data.status}
+                        onChange={(e) => setData('status', e.target.value)}
+                        style={{
+                          width: '100%',
+                          padding: 'clamp(0.625rem, 2vw, 0.75rem) clamp(0.75rem, 3vw, 1rem)',
+                          border: `1px solid ${errors.status ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)'}`,
+                          borderRadius: 'clamp(0.375rem, 2vw, 0.5rem)',
+                          fontSize: 'clamp(0.875rem, 2vw, 0.875rem)',
+                          fontFamily: 'inherit',
+                          backgroundColor: 'white',
+                          appearance: 'none',
+                          transition: 'all 0.2s'
+                        }}
+                        onFocus={(e) => {
+                          e.target.style.borderColor = 'hsl(174 62% 32%)';
+                          e.target.style.boxShadow = '0 0 0 2px hsl(174 62% 32% / 0.2)';
+                        }}
+                        onBlur={(e) => {
+                          e.target.style.borderColor = errors.status ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)';
+                          e.target.style.boxShadow = 'none';
+                        }}
+                      >
+                        <option value="active">Active</option>
+                        {/* <option value="inactive">Inactive</option> */}
+                        <option value="rented">Rented</option>
+                        <option value="sold">Sold</option>
+                      </select>
+                      {errors.status && (
+                        <p style={{ 
+                          fontSize: 'clamp(0.75rem, 2vw, 0.75rem)', 
+                          marginTop: 'clamp(0.25rem, 1vw, 0.375rem)', 
+                          color: 'hsl(0 72% 51%)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 'clamp(0.25rem, 1vw, 0.375rem)'
+                        }}>
+                          <AlertCircle style={{ 
+                            height: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                            width: 'clamp(0.75rem, 2vw, 0.875rem)' 
+                          }} /> 
+                          {errors.status}
                         </p>
                       )}
                     </div>

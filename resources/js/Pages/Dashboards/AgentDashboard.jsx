@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useForm, router, usePage } from "@inertiajs/react";  {/* ← added usePage */}
+import { Link, useForm, router, usePage } from "@inertiajs/react";
 import Header from "@/Components/Layouts/Header";
 import Footer from "@/Components/Layouts/Footer";
 import AddRentalPage from "@/Components/Modules/AddRentals";

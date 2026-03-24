@@ -1,177 +1,263 @@
 import React, { useState } from 'react';
 import { Link } from "@inertiajs/react";
-import { ArrowRight, MapPin, Star, CheckCircle2, Shield } from 'lucide-react';
+import { ArrowRight, MapPin, CheckCircle2, Shield, Sparkles } from 'lucide-react';
 
-const PropertyCard = ({ 
-  id, 
-  title, 
-  area, 
-  city, 
-  rent_min, 
-  rent_max, 
+const parseImages = (images) => {
+  try {
+    if (!images) return [];
+    if (Array.isArray(images)) return images;
+    if (typeof images === 'string') {
+      const parsed = JSON.parse(images);
+      return Array.isArray(parsed) ? parsed : [];
+    }
+    return [];
+  } catch {
+    return [];
+  }
+};
+
+const PropertyCard = ({
+  id,
+  title,
+  area,
+  city,
+  rent_min,
+  rent_max,
   sale_price,
   purpose,
-  advance_duration, 
-  agent_name, 
-  is_verified,
-  images = []
+  advance_duration,
+  agent_name,
+  status,
+  is_featured,
+  images = [],
 }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [imageError, setImageError] = useState(false);
 
-  const formatPrice = (price) => `GH₵${price.toLocaleString()}`;
-  
-  // Parse images if they're stored as JSON string
-  let imagesArray = [];
-  try {
-    if (images) {
-      imagesArray = typeof images === 'string' ? JSON.parse(images) : images;
-      // Ensure it's an array
-      if (!Array.isArray(imagesArray)) {
-        imagesArray = [];
-      }
-    }
-  } catch (e) {
-    console.error('Error parsing images:', e);
-    imagesArray = [];
-  }
-
-  // Get the first image or null
+  const imagesArray = parseImages(images);
   const firstImage = imagesArray.length > 0 ? imagesArray[0] : null;
-
+  const isAgentVerified = status === 'verified';
   const linkHref = purpose === 'sale' ? `/buy/${id}` : `/rent/${id}`;
+
+  const formatPrice = (price) =>
+    `GH₵${Number(price).toLocaleString()}`;
 
   return (
     <Link
       href={linkHref}
-      className="border rounded-xl bg-white overflow-hidden transition-all duration-300 cursor-pointer"
-      style={{ 
-        borderColor: 'hsl(40 20% 88%)',
-        transform: isHovered ? 'translateY(-4px)' : 'translateY(0)',
-        boxShadow: isHovered 
-          ? '0 8px 20px -4px hsl(200 25% 15% / 0.12), 0 4px 8px -2px hsl(200 25% 15% / 0.08)'
-          : '0 2px 8px -2px hsl(200 25% 15% / 0.1), 0 1px 3px -1px hsl(200 25% 15% / 0.06)'
+      style={{
+        display: 'block',
+        textDecoration: 'none',
+        borderRadius: '1rem',
+        overflow: 'hidden',
+        backgroundColor: 'hsl(0 0% 100%)',
+        border: is_featured
+          ? '1.5px solid hsl(38 92% 55%)'
+          : '1px solid hsl(40 20% 88%)',
+        transition: 'transform 0.25s ease, box-shadow 0.25s ease',
+        transform: isHovered ? 'translateY(-5px)' : 'translateY(0)',
+        boxShadow: isHovered
+          ? '0 12px 28px -6px hsl(200 25% 15% / 0.14), 0 4px 10px -3px hsl(200 25% 15% / 0.08)'
+          : is_featured
+          ? '0 2px 10px -2px hsl(38 92% 55% / 0.18)'
+          : '0 2px 8px -2px hsl(200 25% 15% / 0.08)',
+        position: 'relative',
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Image section */}
+      {/* Featured ribbon */}
+      {is_featured && (
+        <div style={{
+          position: 'absolute',
+          top: '0.75rem',
+          left: '0.75rem',
+          zIndex: 10,
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '0.25rem',
+          padding: '0.25rem 0.625rem',
+          borderRadius: '9999px',
+          backgroundColor: 'hsl(38 92% 50%)',
+          color: 'hsl(28 90% 20%)',
+          fontSize: '0.7rem',
+          fontWeight: '600',
+          letterSpacing: '0.03em',
+          textTransform: 'uppercase',
+        }}>
+          <Sparkles style={{ width: '0.7rem', height: '0.7rem' }} />
+          Featured
+        </div>
+      )}
+
+      {/* Image */}
       <div style={{
         width: '100%',
-        height: '200px',
-        backgroundColor: 'hsl(40 30% 94%)',
+        height: '190px',
         position: 'relative',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        backgroundColor: 'hsl(40 30% 94%)',
       }}>
         {firstImage && !imageError ? (
-          <img 
+          <img
             src={`/storage/rental_images/${firstImage}`}
-            alt={`${title || 'Property'} image`}
+            alt={title || 'Property'}
+            onError={() => setImageError(true)}
             style={{
               width: '100%',
               height: '100%',
               objectFit: 'cover',
               objectPosition: 'center',
-              transition: 'transform 0.3s ease-in-out',
-              transform: isHovered ? 'scale(1.05)' : 'scale(1)'
+              transition: 'transform 0.35s ease',
+              transform: isHovered ? 'scale(1.06)' : 'scale(1)',
             }}
-            onError={() => setImageError(true)}
           />
         ) : (
           <div style={{
             display: 'flex',
+            flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
             width: '100%',
             height: '100%',
-            flexDirection: 'column'
           }}>
-            <MapPin style={{ height: '3rem', width: '3rem', color: 'hsl(200 25% 15% / 0.2)' }} />
-            <div style={{ fontSize: '12px', color: 'hsl(200 15% 45%)', marginTop: '8px' }}>
-              No image available
-            </div>
+            <MapPin style={{ height: '2.5rem', width: '2.5rem', color: 'hsl(200 25% 15% / 0.18)' }} />
+            <span style={{ fontSize: '0.75rem', color: 'hsl(200 15% 55%)', marginTop: '0.5rem' }}>
+              No image
+            </span>
           </div>
         )}
-        
-        {/* Image count badge */}
+
+        {/* Image count */}
         {imagesArray.length > 1 && !imageError && (
           <div style={{
             position: 'absolute',
-            bottom: '8px',
-            right: '8px',
-            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            bottom: '0.5rem',
+            right: '0.5rem',
+            backgroundColor: 'rgba(0,0,0,0.65)',
             color: 'white',
-            padding: '4px 8px',
-            borderRadius: '4px',
-            fontSize: '12px',
-            fontWeight: '500'
+            padding: '0.2rem 0.5rem',
+            borderRadius: '0.375rem',
+            fontSize: '0.7rem',
+            fontWeight: '500',
           }}>
-            +{imagesArray.length - 1} more
+            +{imagesArray.length - 1}
           </div>
         )}
+
+        {/* Purpose pill */}
+        <div style={{
+          position: 'absolute',
+          bottom: '0.5rem',
+          left: '0.5rem',
+          backgroundColor: purpose === 'sale'
+            ? 'hsl(174 50% 28% / 0.92)'
+            : 'hsl(220 60% 38% / 0.92)',
+          color: 'white',
+          padding: '0.2rem 0.55rem',
+          borderRadius: '0.375rem',
+          fontSize: '0.7rem',
+          fontWeight: '600',
+          letterSpacing: '0.04em',
+          textTransform: 'uppercase',
+        }}>
+          {purpose === 'sale' ? 'For Sale' : 'To Let'}
+        </div>
       </div>
 
-      <div className="p-4">
-        {/* Title and Location */}
-        <h3 className="font-bold text-lg mb-2 tracking-tight" style={{ color: 'hsl(200 25% 15%)' }}>
+      {/* Content */}
+      <div style={{ padding: '1rem' }}>
+        {/* Title */}
+        <h3 style={{
+          margin: '0 0 0.35rem',
+          fontSize: '0.975rem',
+          fontWeight: '600',
+          color: 'hsl(200 25% 15%)',
+          lineHeight: '1.35',
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+        }}>
           {title}
         </h3>
-        <div className="flex items-center gap-1 mb-3" style={{ color: 'hsl(200 15% 45%)' }}>
-          <MapPin className="h-4 w-4" />
-          <span className="text-sm">{area}, {city}</span>
+
+        {/* Location */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.2rem',
+          marginBottom: '0.75rem',
+        }}>
+          <MapPin style={{ height: '0.8rem', width: '0.8rem', color: 'hsl(200 15% 50%)', flexShrink: 0 }} />
+          <span style={{ fontSize: '0.8rem', color: 'hsl(200 15% 50%)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            {area}, {city}
+          </span>
         </div>
 
-        {/* Price Range */}
-        <div className="mb-3">
-          <div className="text-sm mb-1" style={{ color: 'hsl(200 15% 45%)' }}>
-            {purpose === 'sale' ? 'Sale Price' : 'Monthly Rent'}
-          </div>
-          <div className="text-xl font-bold" style={{ color: 'hsl(174 62% 32%)' }}>
-            {purpose === 'sale' 
+        {/* Price */}
+        <div style={{ marginBottom: '0.85rem' }}>
+          <div style={{ fontSize: '1.1rem', fontWeight: '700', color: 'hsl(174 62% 28%)' }}>
+            {purpose === 'sale'
               ? formatPrice(sale_price)
-              : `${formatPrice(rent_min)} - ${formatPrice(rent_max)}`
-            }
+              : `${formatPrice(rent_min)} – ${formatPrice(rent_max)}`}
           </div>
-          {purpose === 'rent' && (
-            <div className="text-xs" style={{ color: 'hsl(200 15% 45%)' }}>
-              {advance_duration} {advance_duration === 1 ? 'year' : 'years'} advance
-            </div>
-          )}
+          <div style={{ fontSize: '0.7rem', color: 'hsl(200 15% 55%)', marginTop: '0.1rem' }}>
+            {purpose === 'sale'
+              ? 'asking price'
+              : `per month · ${advance_duration} ${advance_duration === 1 ? 'yr' : 'yrs'} advance`}
+          </div>
         </div>
 
-        {/* Agent Info */}
-        {agent_name && (
-          <div className="mb-3 pb-3 border-b" style={{ borderColor: 'hsl(40 20% 88%)' }}>
-            <div className="flex items-center gap-2">
-              <span className="text-sm" style={{ color: 'hsl(200 15% 45%)' }}>
-                Agent: {agent_name}
-              </span>
-              {is_verified === "verified" && (
-                <div className="inline-flex items-center gap-1">
-                  <Shield className="h-3 w-3" style={{ color: 'hsl(152 60% 40%)' }} />
+        {/* Divider */}
+        <div style={{ borderTop: '1px solid hsl(40 20% 90%)', paddingTop: '0.75rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
+            {/* Agent */}
+            {agent_name ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', minWidth: 0 }}>
+                <div style={{
+                  width: '1.6rem',
+                  height: '1.6rem',
+                  borderRadius: '50%',
+                  backgroundColor: 'hsl(174 62% 32% / 0.12)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                  fontSize: '0.6rem',
+                  fontWeight: '700',
+                  color: 'hsl(174 62% 28%)',
+                }}>
+                  {agent_name.charAt(0).toUpperCase()}
                 </div>
-              )}
-            </div>
-          </div>
-         )} 
+                <span style={{
+                  fontSize: '0.78rem',
+                  color: 'hsl(200 15% 45%)',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }}>
+                  {agent_name}
+                </span>
+              </div>
+            ) : (
+              <span style={{ fontSize: '0.78rem', color: 'hsl(200 15% 60%)' }}>No agent</span>
+            )}
 
-        {/* Rating and Reviews */}
-        <div className="flex items-center justify-between">
-          {/* <div className="flex items-center gap-1">
-            <Star className="h-4 w-4 fill-current" style={{ color: 'hsl(38 92% 50%)' }} />
-          </div> */}
-          
-          {/* Badges */}
-          <div className="flex gap-2">
-            { is_verified === "verified" && (
-              <span 
-                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium"
-                style={{ 
-                  backgroundColor: 'hsl(152 60% 40% / 0.1)',
-                  color: 'hsl(152 60% 40%)'
-                }}
-              >
-                <CheckCircle2 className="h-3 w-3" />
+            {/* Verified badge */}
+            {isAgentVerified && (
+              <span style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.2rem',
+                padding: '0.18rem 0.5rem',
+                borderRadius: '9999px',
+                backgroundColor: 'hsl(152 60% 40% / 0.1)',
+                color: 'hsl(152 60% 32%)',
+                fontSize: '0.7rem',
+                fontWeight: '600',
+                flexShrink: 0,
+              }}>
+                <Shield style={{ width: '0.65rem', height: '0.65rem' }} />
                 Verified
               </span>
             )}
@@ -182,119 +268,134 @@ const PropertyCard = ({
   );
 };
 
-const FeaturedListings = ({ recentRentals = [], recentSales = [] }) => {
-  const hasRentals = recentRentals && recentRentals.length > 0;
-  const hasSales = recentSales && recentSales.length > 0;
+const SectionHeader = ({ title, subtitle, viewAllHref, viewAllLabel }) => (
+  <div style={{
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+    marginBottom: '1.5rem',
+    gap: '1rem',
+    flexWrap: 'wrap',
+  }}>
+    <div>
+      <h2 style={{
+        margin: '0 0 0.3rem',
+        fontSize: 'clamp(1.4rem, 3vw, 1.8rem)',
+        fontWeight: '700',
+        color: 'hsl(200 25% 13%)',
+        letterSpacing: '-0.02em',
+        lineHeight: '1.2',
+      }}>
+        {title}
+      </h2>
+      <p style={{ margin: 0, fontSize: '0.9rem', color: 'hsl(200 15% 48%)' }}>
+        {subtitle}
+      </p>
+    </div>
+    <Link
+      href={viewAllHref}
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '0.35rem',
+        padding: '0.5rem 1rem',
+        borderRadius: '0.625rem',
+        border: '1px solid hsl(174 62% 32% / 0.3)',
+        color: 'hsl(174 62% 28%)',
+        fontSize: '0.85rem',
+        fontWeight: '500',
+        textDecoration: 'none',
+        transition: 'background-color 0.15s',
+        whiteSpace: 'nowrap',
+      }}
+      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(174 62% 32% / 0.06)'}
+      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+    >
+      {viewAllLabel}
+      <ArrowRight style={{ width: '0.9rem', height: '0.9rem' }} />
+    </Link>
+  </div>
+);
 
-  // Show message if no listings available
+const FeaturedListings = ({ recentRentals = [], recentSales = [] }) => {
+  const hasRentals = recentRentals?.length > 0;
+  const hasSales = recentSales?.length > 0;
+
   if (!hasRentals && !hasSales) {
     return (
-      <>
-        <style>{`
-          @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-          
-          * {
-            font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
-          }
-        `}</style>
-
-        <section className="py-16" style={{ backgroundColor: 'hsl(40 33% 98%)' }}>
-          <div className="container mx-auto px-4">
-            <div className="text-center py-12">
-              <h2 className="text-2xl font-bold mb-2" style={{ color: 'hsl(200 25% 15%)' }}>
-                No Listings Available
-              </h2>
-              <p style={{ color: 'hsl(200 15% 45%)' }}>
-                Check back soon for new property listings
-              </p>
-            </div>
-          </div>
-        </section>
-      </>
+      <section style={{ padding: '4rem 0', backgroundColor: 'hsl(40 33% 98%)' }}>
+        <div className="container mx-auto px-4" style={{ textAlign: 'center' }}>
+          <p style={{ color: 'hsl(200 15% 50%)', fontSize: '1rem' }}>
+            No listings available yet. Check back soon.
+          </p>
+        </div>
+      </section>
     );
   }
 
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-        
-        * {
-          font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap');
+        .featured-section * { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
       `}</style>
 
-      <section className="py-16" style={{ backgroundColor: 'hsl(40 33% 98%)' }}>
+      <section className="featured-section" style={{ padding: '4rem 0', backgroundColor: 'hsl(40 33% 98%)' }}>
         <div className="container mx-auto px-4">
-          {/* Rentals Section */}
+
           {hasRentals && (
-            <>
-              <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
-                <div>
-                  <h2 className="text-2xl md:text-3xl font-bold mb-2 tracking-tight" style={{ color: 'hsl(200 25% 15%)' }}>
-                    Featured Rentals
-                  </h2>
-                  <p style={{ color: 'hsl(200 15% 45%)' }}>
-                    Browse the latest rental properties with transparent pricing
-                  </p>
-                </div>
-                <Link
-                  href="/rent/listings"
-                  className="self-start md:self-auto inline-flex items-center px-4 py-2 rounded-lg font-medium transition-colors"
-                  style={{ 
-                    color: 'hsl(174 62% 32%)',
-                    backgroundColor: 'transparent'
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(174 62% 32% / 0.1)'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                >
-                  View All Rentals
-                  <ArrowRight className="h-4 w-4 ml-2" />
-                </Link>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+            <div style={{ marginBottom: hasSales ? '4rem' : 0 }}>
+              <SectionHeader
+                title="Latest Rentals"
+                subtitle="Transparent pricing, no hidden fees"
+                viewAllHref="/rent/listings"
+                viewAllLabel="View all rentals"
+              />
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+                gap: '1.25rem',
+              }}>
                 {recentRentals.map((listing) => (
-                  <PropertyCard key={`rental-${listing.id}`} {...listing} purpose="rent" />
+                  <PropertyCard
+                    key={`rental-${listing.id}`}
+                    {...listing}
+                    purpose="rent"
+                    is_featured={listing.is_featured}
+                    status={listing.status}
+                  />
                 ))}
               </div>
-            </>
+            </div>
           )}
 
-          {/* Sales Section */}
           {hasSales && (
-            <>
-              <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
-                <div>
-                  <h2 className="text-2xl md:text-3xl font-bold mb-2 tracking-tight" style={{ color: 'hsl(200 25% 15%)' }}>
-                    Featured Properties for Sale
-                  </h2>
-                  <p style={{ color: 'hsl(200 15% 45%)' }}>
-                    Discover homes for sale with competitive pricing
-                  </p>
-                </div>
-                <Link
-                  href="/buy/listings"
-                  className="self-start md:self-auto inline-flex items-center px-4 py-2 rounded-lg font-medium transition-colors"
-                  style={{ 
-                    color: 'hsl(174 62% 32%)',
-                    backgroundColor: 'transparent'
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(174 62% 32% / 0.1)'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                >
-                  View All Sales
-                  <ArrowRight className="h-4 w-4 ml-2" />
-                </Link>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div>
+              <SectionHeader
+                title="Properties for Sale"
+                subtitle="Homes and land across Ghana's major cities"
+                viewAllHref="/buy/listings"
+                viewAllLabel="View all for sale"
+              />
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+                gap: '1.25rem',
+              }}>
                 {recentSales.map((listing) => (
-                  <PropertyCard key={`sale-${listing.id}`} {...listing} purpose="sale" />
+                  <PropertyCard
+                    key={`sale-${listing.id}`}
+                    {...listing}
+                    purpose="sale"
+                    is_featured={listing.is_featured}
+                    status={listing.status}
+                  />
                 ))}
               </div>
-            </>
+            </div>
           )}
+
         </div>
       </section>
     </>
