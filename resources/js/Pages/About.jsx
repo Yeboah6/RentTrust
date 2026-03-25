@@ -153,7 +153,7 @@ export default function AboutPage() {
                 }
             `}</style>
 
-            <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: BG }}>
+            <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'hsl(40 33% 98%)' }}>
                 <Header />
 
                 <main style={{ flex: 1 }}>

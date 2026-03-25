@@ -99,7 +99,7 @@ class RentController extends Controller
 
     public function about()
     {
-        return inertia('AboutPage');
+        return inertia('About');
     }
 
     /**
