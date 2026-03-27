@@ -31,7 +31,7 @@ export default defineConfig({
         host: '0.0.0.0', // Listen on all network interfaces
         port: 5173,
         hmr: {
-            host: '192.168.0.141' // Replace with your machine's IP
+            host: '192.168.0.145' // Replace with your machine's IP
         }
     }
 });

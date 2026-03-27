@@ -182,7 +182,7 @@ class AgentController extends Controller
     {
         $validated = $request->validate([
             'name'        => ['required', 'string', 'max:255'],
-            'email'       => ['required', 'email', Rule::unique('agents', 'email')->ignore($agent->id)],
+            'email'       => ['required', 'email', Rule::unique('users', 'email')->ignore($agent->id)],
             'phone'       => ['nullable', 'string', 'max:30'],
             'agency'      => ['nullable', 'string', 'max:255'],
             'license'     => ['nullable', 'string', 'max:100'],
@@ -200,7 +200,7 @@ class AgentController extends Controller
             $fillable = collect($validated)->except(['password', 'password_confirmation'])->toArray();
  
             // Map form fields to model fields
-            $fillable['agency_name'] = $fillable['agency'] ?? null;
+            $fillable['company'] = $fillable['agency'] ?? null;
             unset($fillable['agency']);
  
             $fillable['license_number'] = $fillable['license'] ?? null;
@@ -220,7 +220,7 @@ class AgentController extends Controller
         });
  
         Log::info('SuperAdmin updated agent', [
-            'agent_id' => $agent->id,
+            'user_id' => $agent->id,
             'admin_id' => auth()->id(),
         ]);
  
@@ -247,7 +247,7 @@ class AgentController extends Controller
         // $agent->user?->notify(new AgentVerified($agent));
  
         Log::info('SuperAdmin verified agent', [
-            'agent_id' => $agent->id,
+            'user_id' => $agent->id,
             'admin_id' => auth()->id(),
         ]);
  
@@ -279,7 +279,7 @@ class AgentController extends Controller
         // $agent->user?->notify(new AgentSuspended($agent));
  
         Log::info('SuperAdmin suspended agent', [
-            'agent_id' => $agent->id,
+            'user_id' => $agent->id,
             'admin_id' => auth()->id(),
         ]);
  

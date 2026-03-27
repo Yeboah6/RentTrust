@@ -16,6 +16,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use App\Mail\ListingUpdatedMail;
+use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 
 class ListingController extends Controller
@@ -461,10 +463,33 @@ class ListingController extends Controller
             'status'     => $dbStatus,
             'purpose'    => $dbPurpose,
         ]);
+
+        $agentEmail = $request->input('agentEmail') ?: $listing->agent_email;
+        $emailSent  = false;
+
+        if (filter_var($agentEmail, FILTER_VALIDATE_EMAIL)) {
+            try {
+                Mail::to($agentEmail)->send(new ListingUpdatedMail($listing->fresh()));
+                $emailSent = true;
+        
+                Log::info('Agent notification email sent', [
+                    'listing_id'  => $listing->id,
+                    'agent_email' => $agentEmail,
+                ]);
+            } catch (\Exception $e) {
+                Log::warning('Agent notification email failed', [
+                    'listing_id'  => $listing->id,
+                    'agent_email' => $agentEmail,
+                    'error'       => $e->getMessage(),
+                ]);
+            }
+        }
  
         return response()->json([
             'message' => 'Listing updated successfully.',
             'listing' => $this->formatListing($listing->fresh()),
+            'emailSent' => $emailSent,
+
         ]);
  
     } catch (\Exception $e) {
