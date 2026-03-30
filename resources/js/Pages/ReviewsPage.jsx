@@ -283,7 +283,14 @@ const ReviewsSection = ({ reviews, reports, appReviews }) => {
               </div>
               {activeTab === "app" && (
                 <button
-                  onClick={() => setShowReviewForm(true)}
+                onClick={() => {
+                    if (!auth?.agent && !auth?.super && !auth?.tenant) {
+                      window.location.href = '/sign-up';
+                    } else {
+                      setShowReviewForm(true);
+                    }
+                  }}
+                  // onClick={() => setShowReviewForm(true)}
                   style={{
                     padding: 'clamp(0.5rem, 2vw, 0.5rem) clamp(0.75rem, 3vw, 1rem)',
                     background: 'linear-gradient(135deg, hsl(174 62% 32%) 0%, hsl(174 50% 25%) 100%)',

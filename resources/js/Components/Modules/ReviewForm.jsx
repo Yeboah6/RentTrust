@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Star, X } from "lucide-react";
 import { useForm, usePage } from '@inertiajs/react';
 
@@ -28,29 +28,42 @@ const ReviewForm = ({ propertyId, agentId, onSuccess, rental, setShowAddReviewFo
     { name: "good_communication", label: "Good communication", description: "Clear and respectful communication" },
   ];
 
+  useEffect(() => {
+      if (userFullName && !data.full_name) {
+          setData("full_name", userFullName);
+      }
+  }, [userFullName]);
+
   const showToast = (title, description, variant = "success") => {
     setToast({ title, description, variant });
     setTimeout(() => setToast(null), 3000);
   };
 
   const handleSubmit = (e) => {
-    e.preventDefault();
-    if ((!data.full_name || data.full_name.trim() === "") && userFullName) {
-      setData("full_name", userFullName);
-    }
+      e.preventDefault();
 
-    post("/review-forms", {
-      onSuccess: () => {
-        showToast("Review Submitted", "Thank you for helping us maintain trust.", "success");
-        reset();
-        setTimeout(() => {
-          if (setShowAddReviewForm) setShowAddReviewForm(false);
-        }, 1500);
-      },
-      onError: () => {
-        showToast("Submission Failed", "Please check the form and try again.", "error");
-      }
-    });
+      // Resolve the name synchronously before posting
+      const resolvedName = (data.full_name && data.full_name.trim() !== "")
+          ? data.full_name.trim()
+          : userFullName;
+
+      post("/review-forms", {
+          // Override the data sent with the resolved name
+          data: {
+              ...data,
+              full_name: resolvedName,
+          },
+          onSuccess: () => {
+              showToast("Review Submitted", "Thank you for helping us maintain trust.", "success");
+              reset();
+              setTimeout(() => {
+                  if (setShowAddReviewForm) setShowAddReviewForm(false);
+              }, 1500);
+          },
+          onError: () => {
+              showToast("Submission Failed", "Please check the form and try again.", "error");
+          }
+      });
   };
 
   const handleCheckboxChange = (name, checked) => {
@@ -81,7 +94,7 @@ const ReviewForm = ({ propertyId, agentId, onSuccess, rental, setShowAddReviewFo
         </div>
       )}
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
         <form onSubmit={handleSubmit}>
           <div>
             <label style={{
@@ -89,11 +102,11 @@ const ReviewForm = ({ propertyId, agentId, onSuccess, rental, setShowAddReviewFo
               fontSize: '0.875rem',
               fontWeight: '500',
               color: '#374151',
-              marginBottom: '0.5rem'
+              marginBottom: '0.375rem'
             }}>
               Overall Rating *
             </label>
-            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
+            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.375rem' }}>
               {[1, 2, 3, 4, 5].map((value) => (
                 <button
                   key={value}
@@ -142,7 +155,7 @@ const ReviewForm = ({ propertyId, agentId, onSuccess, rental, setShowAddReviewFo
               fontSize: '0.875rem',
               fontWeight: '500',
               color: '#374151',
-              marginBottom: '1rem'
+              marginBottom: '0.375rem'
             }}>
               Your Experience (check all that apply)
             </label>
@@ -157,10 +170,10 @@ const ReviewForm = ({ propertyId, agentId, onSuccess, rental, setShowAddReviewFo
                   style={{
                     display: 'flex',
                     alignItems: 'flex-start',
-                    gap: '0.75rem',
+                    gap: '0.5rem',
                     border: '1px solid #e5e7eb',
                     borderRadius: '0.5rem',
-                    padding: '1rem'
+                    padding: '0.625rem'
                   }}
                 >
                   <input
@@ -184,7 +197,7 @@ const ReviewForm = ({ propertyId, agentId, onSuccess, rental, setShowAddReviewFo
                         fontSize: '0.875rem',
                         fontWeight: '500',
                         color: '#111827',
-                        marginBottom: '0.25rem',
+                        marginBottom: '0.375rem',
                         cursor: 'pointer'
                       }}
                     >
@@ -209,7 +222,7 @@ const ReviewForm = ({ propertyId, agentId, onSuccess, rental, setShowAddReviewFo
               fontSize: '0.875rem',
               fontWeight: '500',
               color: '#374151',
-              marginBottom: '0.5rem'
+              marginBottom: '0.375rem'
             }}>
               Additional Comments (optional)
             </label>
@@ -217,7 +230,7 @@ const ReviewForm = ({ propertyId, agentId, onSuccess, rental, setShowAddReviewFo
               value={data.comments}
               onChange={(e) => setData("comments", e.target.value)}
               placeholder="Share more details about your experience..."
-              rows={4}
+              rows={3}
               style={{
                 width: '100%',
                 padding: '0.5rem 0.75rem',
@@ -242,12 +255,12 @@ const ReviewForm = ({ propertyId, agentId, onSuccess, rental, setShowAddReviewFo
               fontSize: '0.875rem',
               fontWeight: '500',
               color: '#374151',
-              marginBottom: '0.5rem'
+              marginBottom: '0.375rem'
             }}>
               Full name
             </label>
             <input
-              value={data.full_name || userFullName}
+              value={data.full_name}
               onChange={(e) => setData("full_name", e.target.value)}
               placeholder="Solomon Yeboah"
               style={{
@@ -272,7 +285,7 @@ const ReviewForm = ({ propertyId, agentId, onSuccess, rental, setShowAddReviewFo
             disabled={processing}
             style={{
               width: '100%',
-              padding: '0.625rem',
+              padding: '0.5rem',
               backgroundColor: processing ? '#9ca3af' : '#3b82f6',
               color: 'white',
               border: 'none',
@@ -324,10 +337,12 @@ export default function App({ setShowAddReviewForm, rental, auth }) {
 
   return (
     <div style={{
-      minHeight: '50vh',
-      backgroundColor: '#f9fafb',
-      padding: '2rem',
-      fontFamily: 'system-ui, -apple-system, sans-serif'
+      // width: '50vh',
+      backgroundColor: 'transparent',
+      // transparency: '0',
+      padding: '0.5rem',
+      fontFamily: 'system-ui, -apple-system, sans-serif',
+
     }}>
       <button
         onClick={() => setShowAddReviewForm(false)}
@@ -345,18 +360,18 @@ export default function App({ setShowAddReviewForm, rental, auth }) {
         <X size={20} />
       </button>
       <div style={{
-        maxWidth: '500px',
+        maxWidth: '420px',
         margin: '0 auto',
         backgroundColor: 'white',
         borderRadius: '0.75rem',
-        padding: '2rem',
+        padding: '1.25rem',
         boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)'
       }}>
-        <div style={{ marginBottom: '2rem' }}>
+        <div style={{ marginBottom: '1rem' }}>
           <h1 style={{
-            fontSize: '1.875rem',
+            fontSize: '1.25rem',
             fontWeight: '700',
-            marginBottom: '0.5rem',
+            marginBottom: '0.25rem',
             color: '#111827'
           }}>
             Write a Review
@@ -368,9 +383,9 @@ export default function App({ setShowAddReviewForm, rental, auth }) {
 
         <div style={{
           backgroundColor: '#f3f4f6',
-          padding: '1rem',
+          padding: '0.625rem 0.875rem',
           borderRadius: '0.5rem',
-          marginBottom: '2rem',
+          marginBottom: '1rem',
           borderLeft: '4px solid #3b82f6'
         }}>
           <h3 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '0.25rem', color: '#111827' }}>

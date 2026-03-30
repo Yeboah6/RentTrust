@@ -24,6 +24,7 @@ class AuthController extends Controller
         $signUpData = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
+            'phone' => 'required|max:15|unique:users,phone',
             'password' => 'required|string|min:8|max:255'
         ]);
 
@@ -65,12 +66,6 @@ class AuthController extends Controller
     
         // ── Agent ─────────────────────────────────────────────────────────────────
         if ($user->role === 'agent') {
-            /*
-             * Resolve the agent's active or most-recent paid subscription.
-             * We check `ends_at` (or `renews_at`) to determine whether they
-             * still have access — even if the subscription was cancelled, a
-             * pre-paid period may still be valid until that date passes.
-             */
             $subscription = Subscription::where('user_id', $user->id)
                 ->whereIn('status', ['active', 'cancelled', 'grace'])
                 ->orderByDesc('ends_at')

@@ -46,6 +46,7 @@ const AuthPage = ({ isLogin: initialLogin = true }) => {
   const { data, setData, post, processing, errors, reset } = useForm({
     name: '',
     email: '',
+    phone: '',
     password: '',
   });
 
@@ -253,6 +254,48 @@ const AuthPage = ({ isLogin: initialLogin = true }) => {
                     </p>
                   )}
                 </div>
+
+              {!isLogin && (
+                <div>
+                  <label style={{ 
+                    display: 'block', 
+                    marginBottom: '0.5rem', 
+                    fontWeight: '500', 
+                    fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)', 
+                    color: 'hsl(200 25% 15%)' 
+                  }}>
+                    Phone Number
+                  </label>
+                  <input
+                    type="tel"
+                    placeholder="123-456-7890"
+                    value={data.phone}
+                    onChange={(e) => setData('phone', e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: 'clamp(0.625rem, 2vw, 0.75rem)',
+                      border: `1px solid ${errors.phone ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)'}`,
+                      borderRadius: '0.75rem',
+                      fontSize: 'clamp(0.9375rem, 2vw, 1rem)',
+                      outline: 'none',
+                      color: 'hsl(200 25% 15%)',
+                      backgroundColor: 'white'
+                    }}
+                    onFocus={(e) => e.currentTarget.style.borderColor = errors.phone ? 'hsl(0 72% 51%)' : 'hsl(174 62% 32%)'}
+                    onBlur={(e) => e.currentTarget.style.borderColor = errors.phone ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)'}
+                  />
+                  {errors.phone && (
+                    <p style={{ 
+                      fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)', 
+                      color: 'hsl(0 72% 51%)', 
+                      marginTop: '0.375rem',
+                      lineHeight: '1.4'
+                    }}>
+                      {errors.phone}
+                    </p>
+                  )}
+                </div>
+              )}
 
                 {/* Password */}
                 <div>

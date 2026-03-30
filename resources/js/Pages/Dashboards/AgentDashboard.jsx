@@ -660,6 +660,9 @@ const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views
                                 <p style={{ fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', color: 'hsl(200 15% 45%)', margin: '0.25rem 0 0', wordBreak: 'break-word' }}>
                                   {inquiry.user?.email || 'No email provided'}
                                 </p>
+                                <p style={{ fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', color: 'hsl(200 15% 45%)', margin: '0.25rem 0 0', wordBreak: 'break-word' }}>
+                                  {inquiry.user?.phone || 'No number provided'}
+                                </p>
                               </div>
                               <span style={{ fontSize: 'clamp(0.75rem, 2vw, 0.75rem)', color: 'hsl(200 15% 45%)', whiteSpace: 'nowrap' }}>
                                 {new Date(inquiry.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
@@ -672,10 +675,6 @@ const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views
                                 <p style={{ fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)', color: 'hsl(200 15% 45%)', margin: 0, lineHeight: '1.5', wordBreak: 'break-word' }}>"{inquiry.message}"</p>
                               </div>
                             )}
-
-                            <div style={{ display: 'flex', gap: 'clamp(0.5rem, 2vw, 0.75rem)', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', color: 'hsl(200 15% 45%)' }}>
-                              <span>📍 {inquiry.ip || 'IP not recorded'}</span>
-                            </div>
                           </div>
                         );
                       })}

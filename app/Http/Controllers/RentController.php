@@ -731,10 +731,10 @@ class RentController extends Controller
             ]);
     }
 
-    public function addRentals()
-    {
-        return inertia('AddRentals');
-    }
+    // public function addRentals()
+    // {
+    //     return inertia('AddRentals');
+    // }
 
     public function storeReviewForms(Request $request)
     {
