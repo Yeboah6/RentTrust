@@ -280,9 +280,6 @@ const Pricing = () => {
   const [errorMessage, setErrorMessage] = useState(null);
   const user = auth?.agent || auth?.tenant || auth?.super;
 
- // console.log('Auth object:', user);
- // console.log('Role candidate:', user ? (user.role || user.type || user.role_name || user.roles) : 'No user');
-
   // pull plan data from server so the page mirrors the pricing modal exactly
   const plansFromServer = props.plans || [];
   const pricingPlans = plansFromServer.map((p) => {
@@ -689,7 +686,7 @@ const Pricing = () => {
                 flexWrap: 'wrap'
               }}>
                 <Link
-                  href="/signup"
+                  href="/become-agent"
                   className="font-semibold rounded-lg text-white transition-all duration-200 active:scale-95"
                   style={{ 
                     backgroundColor: 'hsl(174 62% 32%)',

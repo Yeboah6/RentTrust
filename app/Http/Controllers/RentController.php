@@ -99,7 +99,17 @@ class RentController extends Controller
 
     public function about()
     {
-        return inertia('About');
+        $totalListings = Rental::count();
+        $totalVerifiedAgents = User::where('status', 'verified')->where('role', 'agent')->count();
+        $totalAreas = Rental::distinct('area')->count('area');
+        $platformRating = Review::avg('overall_rating');
+
+        return inertia('About', [
+            'totalListings' => $totalListings,
+            'totalVerifiedAgents' => $totalVerifiedAgents,
+            'totalAreas' => $totalAreas,
+            'platformRating' => $platformRating ? round($platformRating, 1) : null,
+        ]);
     }
 
     /**

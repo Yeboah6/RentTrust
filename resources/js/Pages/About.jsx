@@ -2,7 +2,7 @@ import { Link } from '@inertiajs/react';
 import Header from '../Components/Layouts/Header';
 import Footer from '../Components/Layouts/Footer';
 
-export default function AboutPage() {
+export default function AboutPage({ totalListings = 0, totalVerifiedAgents = 0, totalAreas = 0, platformRating = null }) {
 
     const values = [
         {
@@ -45,25 +45,25 @@ export default function AboutPage() {
     ];
 
     const stats = [
-        { value: '10,000+', label: 'Properties Listed',   sub: 'Across Ghana' },
-        { value: '200+',    label: 'Verified Agents',     sub: 'And growing' },
-        { value: '50+',     label: 'Areas Covered',       sub: 'Nationwide' },
-        { value: '4.8★',    label: 'Platform Rating',     sub: 'From our users' },
+        { value: totalListings.toLocaleString(), label: 'Properties Listed', sub: 'Across Ghana' },
+        { value: totalVerifiedAgents.toLocaleString(), label: 'Verified Agents', sub: 'And growing' },
+        { value: totalAreas.toLocaleString(), label: 'Areas Covered', sub: 'Nationwide' },
+        { value: platformRating ? `${platformRating.toFixed(1)}★` : 'N/A', label: 'Platform Rating', sub: 'From our users' },
     ];
 
     const team = [
         { initials: 'KM', name: 'Kwame Mensah',   role: 'Co-Founder & CEO',     hue: 174, bio: 'Former real estate broker who spent years watching tenants get scammed. Built RentTrust to fix that.' },
-        { initials: 'AA', name: 'Abena Asante',   role: 'Co-Founder & CTO',     hue: 220, bio: 'Software engineer passionate about using tech to solve housing problems across West Africa.' },
+        { initials: 'YSO', name: 'Yeboah Solomon O.',   role: 'Co-Founder & CTO',     hue: 220, bio: 'Software engineer passionate about using tech to solve housing problems across West Africa.' },
         { initials: 'EO', name: 'Emeka Okonkwo', role: 'Head of Verification',  hue: 38,  bio: 'Runs the team that physically inspects and verifies every property before it goes live.' },
         { initials: 'AF', name: 'Ama Frimpong',  role: 'Community Manager',     hue: 152, bio: 'Ensures tenants and landlords have a voice. Manages reviews, disputes, and agent accountability.' },
     ];
 
-    const milestones = [
-        { year: '2023', label: 'Founded',  detail: 'RentTrust was born in Accra after our founders experienced firsthand how broken the rental market was for everyday Ghanaians.' },
-        { year: '2024', label: 'Launched', detail: 'Public launch with 500 verified listings across Accra and Tema. Our first 1,000 tenants joined within the first month.' },
-        { year: '2025', label: 'Expanded', detail: 'Grew to Kumasi, Takoradi, and Tamale. Crossed 5,000 active listings and onboarded 100 verified agents.' },
-        { year: '2026', label: 'Today',    detail: 'Over 10,000 properties listed nationwide. Building better tools to make renting and selling property fair for all.' },
-    ];
+    // const milestones = [
+    //     { year: '2023', label: 'Founded',  detail: 'RentTrust was born in Accra after our founders experienced firsthand how broken the rental market was for everyday Ghanaians.' },
+    //     { year: '2024', label: 'Launched', detail: 'Public launch with 500 verified listings across Accra and Tema. Our first 1,000 tenants joined within the first month.' },
+    //     { year: '2025', label: 'Expanded', detail: 'Grew to Kumasi, Takoradi, and Tamale. Crossed 5,000 active listings and onboarded 100 verified agents.' },
+    //     { year: '2026', label: 'Today',    detail: 'Over 10,000 properties listed nationwide. Building better tools to make renting and selling property fair for all.' },
+    // ];
 
     const promises = [
         { icon: <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>, title: 'No fake listings',     body: 'Every property confirmed before going live.' },
