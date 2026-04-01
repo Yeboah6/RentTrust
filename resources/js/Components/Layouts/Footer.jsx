@@ -6,10 +6,10 @@ const Footer = () => {
 
   const footerLinks = {
     explore: [
-      { label: 'Find Rentals', path: '/listings' },
-      { label: 'Browse Areas', path: '/areas' },
       { label: 'Verified Agents', path: '/agents' },
-      // { label: 'Rent Calculator', path: '/calculator' }
+      { label: 'About us', path: '/about' },
+      { label: 'Contact', path: '/contact' },
+      { label: 'Pricing', path: '/pricing' }
     ],
     resources: [
       { label: 'Renting Guide', path: '/guide' },
