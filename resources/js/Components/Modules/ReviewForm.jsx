@@ -2,14 +2,21 @@ import { useState, useEffect } from "react";
 import { Star, X } from "lucide-react";
 import { useForm, usePage } from '@inertiajs/react';
 
-const ReviewForm = ({ propertyId, agentId, onSuccess, rental, setShowAddReviewForm, auth }) => {
-  // const { auth } = usePage().props;
+const checkboxItems = [
+  { name: "landlord_responsive",          label: "Responsive landlord",       icon: "⚡" },
+  { name: "property_matched_description", label: "Matched description",        icon: "✓" },
+  { name: "fair_pricing",                 label: "Fair pricing",               icon: "₵" },
+  { name: "good_communication",           label: "Good communication",         icon: "◎" },
+];
+
+const ratingLabels = ["", "Poor", "Fair", "Good", "Great", "Excellent"];
+
+const ReviewForm = ({ rental, onSuccess, setShowAddReviewForm, auth }) => {
   const [hoveredRating, setHoveredRating] = useState(0);
   const [toast, setToast] = useState(null);
 
   const userFullName = auth?.agent?.name || auth?.tenant?.name || auth?.super?.name || "";
-  console.log("Auth in ReviewForm:", auth);
-  
+
   const { data, setData, post, processing, errors, reset } = useForm({
     overall_rating: 0,
     landlord_responsive: undefined,
@@ -21,396 +28,396 @@ const ReviewForm = ({ propertyId, agentId, onSuccess, rental, setShowAddReviewFo
     rental_id: rental?.id || "",
   });
 
-  const checkboxItems = [
-    { name: "landlord_responsive", label: "Landlord was responsive", description: "Quick to respond to inquiries and issues" },
-    { name: "property_matched_description", label: "Property matched description", description: "What you saw matched the listing" },
-    { name: "fair_pricing", label: "Fair pricing", description: "Rent and fees were reasonable" },
-    { name: "good_communication", label: "Good communication", description: "Clear and respectful communication" },
-  ];
-
   useEffect(() => {
-      if (userFullName && !data.full_name) {
-          setData("full_name", userFullName);
-      }
+    if (userFullName && !data.full_name) setData("full_name", userFullName);
   }, [userFullName]);
 
   const showToast = (title, description, variant = "success") => {
     setToast({ title, description, variant });
-    setTimeout(() => setToast(null), 3000);
+    setTimeout(() => setToast(null), 3500);
   };
 
   const handleSubmit = (e) => {
-      e.preventDefault();
+    e.preventDefault();
+    const resolvedName = (data.full_name && data.full_name.trim() !== "")
+      ? data.full_name.trim()
+      : userFullName;
 
-      // Resolve the name synchronously before posting
-      const resolvedName = (data.full_name && data.full_name.trim() !== "")
-          ? data.full_name.trim()
-          : userFullName;
-
-      post("/review-forms", {
-          // Override the data sent with the resolved name
-          data: {
-              ...data,
-              full_name: resolvedName,
-          },
-          onSuccess: () => {
-              showToast("Review Submitted", "Thank you for helping us maintain trust.", "success");
-              reset();
-              setTimeout(() => {
-                  if (setShowAddReviewForm) setShowAddReviewForm(false);
-              }, 1500);
-          },
-          onError: () => {
-              showToast("Submission Failed", "Please check the form and try again.", "error");
-          }
-      });
-  };
-
-  const handleCheckboxChange = (name, checked) => {
-    setData({
-      ...data,
-      [name]: checked ? true : !checked ? false : undefined
+    post("/review-forms", {
+      data: { ...data, full_name: resolvedName },
+      onSuccess: () => {
+        showToast("Review submitted", "Thank you for your feedback.", "success");
+        reset();
+        setTimeout(() => { if (setShowAddReviewForm) setShowAddReviewForm(false); }, 1600);
+      },
+      onError: () => showToast("Submission failed", "Please check the form and try again.", "error"),
     });
   };
 
+  const active = hoveredRating || data.overall_rating;
+
   return (
     <>
-      {toast && (
-        <div style={{
-          position: 'fixed',
-          top: '1rem',
-          right: '1rem',
-          backgroundColor: toast.variant === 'error' ? '#ef4444' : '#10b981',
-          color: 'white',
-          padding: '1rem',
-          borderRadius: '0.5rem',
-          boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
-          zIndex: 9999,
-          maxWidth: '400px',
-          animation: 'slideIn 0.3s ease-out'
-        }}>
-          <div style={{ fontWeight: '600', marginBottom: '0.25rem' }}>{toast.title}</div>
-          <div style={{ fontSize: '0.875rem' }}>{toast.description}</div>
-        </div>
-      )}
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
-        <form onSubmit={handleSubmit}>
-          <div>
-            <label style={{
-              display: 'block',
-              fontSize: '0.875rem',
-              fontWeight: '500',
-              color: '#374151',
-              marginBottom: '0.375rem'
-            }}>
-              Overall Rating *
-            </label>
-            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.375rem' }}>
-              {[1, 2, 3, 4, 5].map((value) => (
-                <button
-                  key={value}
-                  type="button"
-                  onMouseEnter={() => setHoveredRating(value)}
-                  onMouseLeave={() => setHoveredRating(0)}
-                  onClick={() => setData('overall_rating', value)}
-                  style={{
-                    padding: '0.25rem',
-                    border: 'none',
-                    background: 'none',
-                    cursor: 'pointer',
-                    transition: 'transform 0.2s'
-                  }}
-                  onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
-                  onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
-                >
-                  <Star
-                    size={32}
-                    style={{
-                      color: value <= (hoveredRating || data.overall_rating) ? '#f59e0b' : '#d1d5db',
-                      fill: value <= (hoveredRating || data.overall_rating) ? '#f59e0b' : 'none',
-                      transition: 'all 0.2s'
-                    }}
-                  />
-                </button>
-              ))}
-            </div>
-            <p style={{ fontSize: '0.75rem', color: '#6b7280' }}>
-              {data.overall_rating === 0 
-                ? "Click to rate" 
-                : `You rated ${data.overall_rating} star${data.overall_rating !== 1 ? "s" : ""}`}
-            </p>
-            {errors.overall_rating && (
-              <p style={{ fontSize: '0.75rem', color: '#ef4444', marginTop: '0.25rem' }}>
-                {errors.overall_rating}
-              </p>
-            )}
-          </div>
-
-          <input type="hidden" value={data.property_id} />
-
-          <div>
-            <label style={{
-              display: 'block',
-              fontSize: '0.875rem',
-              fontWeight: '500',
-              color: '#374151',
-              marginBottom: '0.375rem'
-            }}>
-              Your Experience (check all that apply)
-            </label>
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-              gap: '1rem'
-            }}>
-              {checkboxItems.map((item) => (
-                <div
-                  key={item.name}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'flex-start',
-                    gap: '0.5rem',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '0.5rem',
-                    padding: '0.625rem'
-                  }}
-                >
-                  <input
-                    type="checkbox"
-                    id={item.name}
-                    checked={data[item.name] === true}
-                    onChange={(e) => handleCheckboxChange(item.name, e.target.checked)}
-                    style={{
-                      width: '1rem',
-                      height: '1rem',
-                      marginTop: '0.125rem',
-                      cursor: 'pointer',
-                      accentColor: '#3b82f6'
-                    }}
-                  />
-                  <div style={{ flex: 1 }}>
-                    <label
-                      htmlFor={item.name}
-                      style={{
-                        display: 'block',
-                        fontSize: '0.875rem',
-                        fontWeight: '500',
-                        color: '#111827',
-                        marginBottom: '0.375rem',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      {item.label}
-                    </label>
-                    <p style={{
-                      fontSize: '0.75rem',
-                      color: '#6b7280',
-                      lineHeight: '1.4'
-                    }}>
-                      {item.description}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <label style={{
-              display: 'block',
-              fontSize: '0.875rem',
-              fontWeight: '500',
-              color: '#374151',
-              marginBottom: '0.375rem'
-            }}>
-              Additional Comments (optional)
-            </label>
-            <textarea
-              value={data.comments}
-              onChange={(e) => setData("comments", e.target.value)}
-              placeholder="Share more details about your experience..."
-              rows={3}
-              style={{
-                width: '100%',
-                padding: '0.5rem 0.75rem',
-                border: `1px solid ${errors.comments ? '#ef4444' : '#d1d5db'}`,
-                borderRadius: '0.375rem',
-                fontSize: '0.875rem',
-                outline: 'none',
-                resize: 'vertical',
-                fontFamily: 'inherit'
-              }}
-            />
-            {errors.comments && (
-              <p style={{ fontSize: '0.75rem', color: '#ef4444', marginTop: '0.25rem' }}>
-                {errors.comments}
-              </p>
-            )}
-          </div>
-
-          <div>
-            <label style={{
-              display: 'block',
-              fontSize: '0.875rem',
-              fontWeight: '500',
-              color: '#374151',
-              marginBottom: '0.375rem'
-            }}>
-              Full name
-            </label>
-            <input
-              value={data.full_name}
-              onChange={(e) => setData("full_name", e.target.value)}
-              placeholder="Solomon Yeboah"
-              style={{
-                width: '100%',
-                padding: '0.5rem 0.75rem',
-                border: `1px solid ${errors.full_name ? '#ef4444' : '#d1d5db'}`,
-                borderRadius: '0.375rem',
-                fontSize: '0.875rem',
-                outline: 'none',
-                fontFamily: 'inherit'
-              }}
-            />
-            {errors.full_name && (
-              <p style={{ fontSize: '0.75rem', color: '#ef4444', marginTop: '0.25rem' }}>
-                {errors.full_name}
-              </p>
-            )}
-          </div>
-          <br />
-          <button
-            type="submit"
-            disabled={processing}
-            style={{
-              width: '100%',
-              padding: '0.5rem',
-              backgroundColor: processing ? '#9ca3af' : '#3b82f6',
-              color: 'white',
-              border: 'none',
-              borderRadius: '0.375rem',
-              fontWeight: '500',
-              cursor: processing ? 'not-allowed' : 'pointer',
-              fontSize: '0.875rem'
-            }}
-          >
-            {processing ? "Submitting..." : "Submit Review"}
-          </button>
-        </form>
-      </div>
-
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500&display=swap');
 
-        * {
-          font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+        .rf-wrap * { box-sizing: border-box; margin: 0; padding: 0; }
+        .rf-wrap { font-family: 'DM Sans', sans-serif; }
+
+        .rf-overlay {
+          position: fixed; inset: 0;
+          background: rgba(10, 8, 5, 0.72);
+          backdrop-filter: blur(6px);
+          -webkit-backdrop-filter: blur(6px);
+          display: flex; align-items: center; justify-content: center;
+          z-index: 9000; padding: 1rem;
         }
 
-        input:focus, textarea:focus, select:focus {
+        .rf-card {
+          background: #0f0e0c;
+          border: 1px solid rgba(255,255,255,0.08);
+          border-radius: 2px;
+          width: 100%; max-width: 460px;
+          max-height: 90vh;
+          overflow-y: auto;
+          scrollbar-width: none;
+          position: relative;
+        }
+        .rf-card::-webkit-scrollbar { display: none; }
+
+        .rf-stripe {
+          height: 3px;
+          background: linear-gradient(90deg, #e8a020 0%, #f0c060 50%, #e8a020 100%);
+        }
+
+        .rf-header {
+          padding: 1.25rem 1.5rem 1rem;
+          border-bottom: 1px solid rgba(255,255,255,0.06);
+          display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem;
+        }
+
+        .rf-title {
+          font-family: 'DM Serif Display', serif;
+          font-size: 1.5rem;
+          color: #f5f0e8;
+          line-height: 1.2;
+          letter-spacing: -0.01em;
+        }
+
+        .rf-subtitle {
+          font-size: 0.75rem;
+          color: rgba(245,240,232,0.4);
+          margin-top: 0.25rem;
+          font-weight: 300;
+          letter-spacing: 0.04em;
+          text-transform: uppercase;
+        }
+
+        .rf-close {
+          background: rgba(255,255,255,0.06);
+          border: none; border-radius: 2px;
+          width: 28px; height: 28px;
+          display: flex; align-items: center; justify-content: center;
+          cursor: pointer; color: rgba(245,240,232,0.5);
+          flex-shrink: 0; margin-top: 2px;
+          transition: background 0.15s, color 0.15s;
+        }
+        .rf-close:hover { background: rgba(255,255,255,0.12); color: #f5f0e8; }
+
+        .rf-property {
+          margin: 0 1.5rem;
+          padding: 0.75rem 1rem;
+          background: rgba(232,160,32,0.06);
+          border-left: 2px solid #e8a020;
+          border-radius: 0 2px 2px 0;
+          margin-top: 1rem;
+        }
+        .rf-prop-name {
+          font-size: 0.8125rem; font-weight: 500;
+          color: #f5f0e8; line-height: 1.3;
+        }
+        .rf-prop-meta {
+          font-size: 0.6875rem; color: rgba(245,240,232,0.4);
+          margin-top: 0.2rem; letter-spacing: 0.02em;
+        }
+        .rf-prop-agent {
+          font-size: 0.6875rem; color: rgba(232,160,32,0.8);
+          margin-top: 0.3rem;
+        }
+
+        .rf-body { padding: 1.25rem 1.5rem 1.5rem; display: flex; flex-direction: column; gap: 1.25rem; }
+
+        .rf-label {
+          font-size: 0.6875rem;
+          font-weight: 500;
+          color: rgba(245,240,232,0.4);
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          display: block;
+          margin-bottom: 0.6rem;
+        }
+
+        .rf-stars { display: flex; align-items: center; gap: 4px; }
+        .rf-star-btn {
+          background: none; border: none; padding: 2px;
+          cursor: pointer; line-height: 0;
+          transition: transform 0.12s;
+        }
+        .rf-star-btn:hover { transform: scale(1.15); }
+
+        .rf-rating-label {
+          font-size: 0.75rem;
+          color: #e8a020;
+          margin-left: 8px;
+          font-weight: 300;
+          min-width: 60px;
+          opacity: 0;
+          transition: opacity 0.2s;
+        }
+        .rf-rating-label.visible { opacity: 1; }
+
+        .rf-checks { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+
+        .rf-check {
+          display: flex; align-items: center; gap: 0.6rem;
+          padding: 0.6rem 0.75rem;
+          border: 1px solid rgba(255,255,255,0.07);
+          border-radius: 2px;
+          cursor: pointer;
+          background: rgba(255,255,255,0.02);
+          transition: border-color 0.15s, background 0.15s;
+          user-select: none;
+        }
+        .rf-check:hover { border-color: rgba(232,160,32,0.3); background: rgba(232,160,32,0.04); }
+        .rf-check.checked { border-color: rgba(232,160,32,0.5); background: rgba(232,160,32,0.07); }
+
+        .rf-check-box {
+          width: 14px; height: 14px; flex-shrink: 0;
+          border: 1px solid rgba(255,255,255,0.2);
+          border-radius: 2px;
+          display: flex; align-items: center; justify-content: center;
+          transition: border-color 0.15s, background 0.15s;
+        }
+        .rf-check.checked .rf-check-box {
+          border-color: #e8a020;
+          background: #e8a020;
+        }
+        .rf-check-tick { font-size: 9px; color: #0f0e0c; font-weight: 700; line-height: 1; }
+        .rf-check-icon { font-size: 0.75rem; color: rgba(245,240,232,0.3); }
+        .rf-check.checked .rf-check-icon { color: rgba(232,160,32,0.7); }
+        .rf-check-label {
+          font-size: 0.75rem; font-weight: 400;
+          color: rgba(245,240,232,0.55);
+          line-height: 1.3;
+        }
+        .rf-check.checked .rf-check-label { color: rgba(245,240,232,0.9); }
+
+        .rf-input, .rf-textarea {
+          width: 100%;
+          background: rgba(255,255,255,0.03);
+          border: 1px solid rgba(255,255,255,0.08);
+          border-radius: 2px;
+          padding: 0.6rem 0.75rem;
+          font-size: 0.8125rem;
+          color: #f5f0e8;
+          font-family: 'DM Sans', sans-serif;
+          font-weight: 300;
           outline: none;
-          box-shadow: 0 0 0 2px #1f847a;
+          transition: border-color 0.15s;
         }
-          
-        @keyframes slideIn {
-          from {
-            transform: translateX(100%);
-            opacity: 0;
-          }
-          to {
-            transform: translateX(0);
-            opacity: 1;
-          }
+        .rf-input::placeholder, .rf-textarea::placeholder {
+          color: rgba(245,240,232,0.2);
+        }
+        .rf-input:focus, .rf-textarea:focus {
+          border-color: rgba(232,160,32,0.5);
+          background: rgba(232,160,32,0.03);
+        }
+        .rf-textarea { resize: vertical; min-height: 72px; line-height: 1.5; }
+        .rf-input.err, .rf-textarea.err { border-color: rgba(220,60,60,0.5); }
+
+        .rf-error { font-size: 0.6875rem; color: #e05050; margin-top: 0.3rem; }
+
+        .rf-submit {
+          width: 100%;
+          padding: 0.7rem;
+          background: #e8a020;
+          border: none; border-radius: 2px;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 0.8125rem;
+          font-weight: 500;
+          color: #0f0e0c;
+          letter-spacing: 0.05em;
+          text-transform: uppercase;
+          cursor: pointer;
+          transition: background 0.15s, opacity 0.15s;
+        }
+        .rf-submit:hover:not(:disabled) { background: #f0b030; }
+        .rf-submit:disabled { opacity: 0.45; cursor: not-allowed; }
+
+        .rf-divider {
+          height: 1px;
+          background: rgba(255,255,255,0.06);
+        }
+
+        .rf-toast {
+          position: fixed; top: 1.25rem; right: 1.25rem;
+          padding: 0.875rem 1.125rem;
+          border-radius: 2px;
+          z-index: 9999; max-width: 320px;
+          border-left: 3px solid;
+          animation: rfSlide 0.25s ease-out;
+        }
+        .rf-toast.success { background: #0f1a10; border-color: #4caf65; }
+        .rf-toast.error   { background: #1a0f0f; border-color: #e05050; }
+        .rf-toast-title { font-size: 0.8125rem; font-weight: 500; color: #f5f0e8; }
+        .rf-toast-desc  { font-size: 0.75rem; color: rgba(245,240,232,0.5); margin-top: 0.2rem; }
+
+        @keyframes rfSlide {
+          from { transform: translateX(110%); opacity: 0; }
+          to   { transform: translateX(0);    opacity: 1; }
         }
       `}</style>
+
+      <div className="rf-wrap">
+        {toast && (
+          <div className={`rf-toast ${toast.variant}`}>
+            <div className="rf-toast-title">{toast.title}</div>
+            <div className="rf-toast-desc">{toast.description}</div>
+          </div>
+        )}
+
+        <div className="rf-overlay">
+          <div className="rf-card">
+            <div className="rf-stripe" />
+
+            <div className="rf-header">
+              <div>
+                <div className="rf-title">Write a review</div>
+                <div className="rf-subtitle">Help others make better decisions</div>
+              </div>
+              <button className="rf-close" onClick={() => setShowAddReviewForm?.(false)}>
+                <X size={14} />
+              </button>
+            </div>
+
+            {rental && (
+              <div className="rf-property">
+                <div className="rf-prop-name">{rental.title} {rental.property_type}</div>
+                <div className="rf-prop-meta">{rental.area}, {rental.city}</div>
+                {rental.agent_name && (
+                  <div className="rf-prop-agent">Agent — {rental.agent_name}</div>
+                )}
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit}>
+              <div className="rf-body">
+
+                {/* Star rating */}
+                <div>
+                  <label className="rf-label">Overall rating *</label>
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                    <div className="rf-stars">
+                      {[1,2,3,4,5].map(v => (
+                        <button
+                          key={v} type="button"
+                          className="rf-star-btn"
+                          onMouseEnter={() => setHoveredRating(v)}
+                          onMouseLeave={() => setHoveredRating(0)}
+                          onClick={() => setData('overall_rating', v)}
+                        >
+                          <Star
+                            size={22}
+                            strokeWidth={1.5}
+                            style={{
+                              color: v <= active ? '#e8a020' : 'rgba(255,255,255,0.15)',
+                              fill:  v <= active ? '#e8a020' : 'none',
+                              transition: 'color 0.12s, fill 0.12s',
+                            }}
+                          />
+                        </button>
+                      ))}
+                    </div>
+                    <span className={`rf-rating-label ${active ? 'visible' : ''}`}>
+                      {ratingLabels[active]}
+                    </span>
+                  </div>
+                  {errors.overall_rating && <p className="rf-error">{errors.overall_rating}</p>}
+                </div>
+
+                <div className="rf-divider" />
+
+                {/* Checkboxes */}
+                <div>
+                  <label className="rf-label">Your experience</label>
+                  <div className="rf-checks">
+                    {checkboxItems.map(item => {
+                      const checked = data[item.name] === true;
+                      return (
+                        <div
+                          key={item.name}
+                          className={`rf-check ${checked ? 'checked' : ''}`}
+                          onClick={() => setData({ ...data, [item.name]: checked ? false : true })}
+                        >
+                          <div className="rf-check-box">
+                            {checked && <span className="rf-check-tick">✓</span>}
+                          </div>
+                          <span className="rf-check-icon">{item.icon}</span>
+                          <span className="rf-check-label">{item.label}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="rf-divider" />
+
+                {/* Comments */}
+                <div>
+                  <label className="rf-label">Comments <span style={{ opacity: 0.4 }}>(optional)</span></label>
+                  <textarea
+                    className={`rf-textarea ${errors.comments ? 'err' : ''}`}
+                    value={data.comments}
+                    onChange={e => setData("comments", e.target.value)}
+                    placeholder="Share more about your experience…"
+                    rows={3}
+                  />
+                  {errors.comments && <p className="rf-error">{errors.comments}</p>}
+                </div>
+
+                {/* Full name */}
+                <div>
+                  <label className="rf-label">Full name *</label>
+                  <input
+                    className={`rf-input ${errors.full_name ? 'err' : ''}`}
+                    value={data.full_name || userFullName}
+                    onChange={e => setData("full_name", e.target.value)}
+                    placeholder="Solomon Yeboah"
+                  />
+                  {errors.full_name && <p className="rf-error">{errors.full_name}</p>}
+                </div>
+
+                <input type="hidden" value={data.rental_id} />
+
+                <button type="submit" className="rf-submit" disabled={processing}>
+                  {processing ? "Submitting…" : "Submit review"}
+                </button>
+
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
     </>
   );
 };
 
 export default function App({ setShowAddReviewForm, rental, auth }) {
-  // const { auth } = usePage().props;
-  console.log(auth);
-
-  const handleSuccess = () => {
-    console.log("Review submitted successfully!");
-  };
-
   return (
-    <div style={{
-      // width: '50vh',
-      backgroundColor: 'transparent',
-      // transparency: '0',
-      padding: '0.5rem',
-      fontFamily: 'system-ui, -apple-system, sans-serif',
-
-    }}>
-      <button
-        onClick={() => setShowAddReviewForm(false)}
-        style={{
-          position: 'absolute',
-          right: '1rem',
-          top: '1rem',
-          border: 'none',
-          background: 'none',
-          cursor: 'pointer',
-          color: '#6b7280',
-          padding: '0.25rem'
-        }}
-      >
-        <X size={20} />
-      </button>
-      <div style={{
-        maxWidth: '420px',
-        margin: '0 auto',
-        backgroundColor: 'white',
-        borderRadius: '0.75rem',
-        padding: '1.25rem',
-        boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)'
-      }}>
-        <div style={{ marginBottom: '1rem' }}>
-          <h1 style={{
-            fontSize: '1.25rem',
-            fontWeight: '700',
-            marginBottom: '0.25rem',
-            color: '#111827'
-          }}>
-            Write a Review
-          </h1>
-          <p style={{ color: '#6b7280' }}>
-            Share your experience to help others make informed decisions
-          </p>
-        </div>
-
-        <div style={{
-          backgroundColor: '#f3f4f6',
-          padding: '0.625rem 0.875rem',
-          borderRadius: '0.5rem',
-          marginBottom: '1rem',
-          borderLeft: '4px solid #3b82f6'
-        }}>
-          <h3 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '0.25rem', color: '#111827' }}>
-            {rental.title} {rental.property_type}
-          </h3>
-          <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.5rem' }}>
-            {rental.area}, {rental.city}
-          </p>
-            <p style={{ fontSize: '0.875rem', fontWeight: '500', color: '#374151', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              Agent:
-              <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '24px', height: '24px', borderRadius: '50%', backgroundColor: '#e5e7eb', fontSize: '0.75rem', fontWeight: '600' }}>
-                {rental.agent_name?.[0]?.toUpperCase() || 'A'}
-              </span>
-               <span style={{ fontWeight: '600' }}>{rental.agent_name}</span>
-            </p>
-          </div>
-
-        <ReviewForm
-          propertyId={rental?.id}
-          rental={rental}
-          onSuccess={handleSuccess}
-          auth={auth}
-          setShowAddReviewForm={setShowAddReviewForm}
-        />
-      </div>
-    </div>
+    <ReviewForm
+      rental={rental}
+      auth={auth}
+      setShowAddReviewForm={setShowAddReviewForm}
+    />
   );
 }

@@ -38,8 +38,10 @@ class RentController extends Controller
             ->limit(4)
             ->get();
 
-        // Get rental areas grouped by city
+        // Get rental areas grouped by city (limit to last 6 months for performance)
+        $sixMonthsAgo = now()->subMonths(6);
         $rentalAreas = Rental::where('purpose', 'rent')
+            ->where('created_at', '>', $sixMonthsAgo)
             ->select('city', 'area', 'rent_min', 'rent_max', 'created_at')
             ->get()
             ->groupBy('city')
@@ -60,9 +62,10 @@ class RentController extends Controller
                 });
             });
 
-        // Get sale areas grouped by city
+        // Get sale areas grouped by city (limit to last 6 months for performance)
         $saleAreas = Rental::where('purpose', 'sale')
             ->where('is_sold', false)
+            ->where('created_at', '>', $sixMonthsAgo)
             ->select('city', 'area', 'sale_price', 'created_at')
             ->get()
             ->groupBy('city')
@@ -82,8 +85,8 @@ class RentController extends Controller
         $totalVerifiedAgents = User::where('status', 'verified')
             ->where('role', 'agent')
             ->count();
-        $totalListings = Rental::all()->count();
-        $users = User::all()->count();
+        $totalListings = Rental::count();
+        $users = User::count();
 
         return inertia('Home', [
             'recentRentals' => $recentRentals,
@@ -687,8 +690,10 @@ class RentController extends Controller
 
     public function areas()
     {
-        // Get areas grouped by city with proper structure
+        // Get areas grouped by city with proper structure (limit to last 6 months for performance)
+        $sixMonthsAgo = now()->subMonths(6);
         $areas = Rental::select('city', 'area', 'rent_min', 'rent_max', 'created_at')
+            ->where('created_at', '>', $sixMonthsAgo)
             ->get()
             ->groupBy('city')
             ->map(function ($cityAreas, $cityName) {
@@ -740,11 +745,6 @@ class RentController extends Controller
                 'appReviews' => $appReviews,
             ]);
     }
-
-    // public function addRentals()
-    // {
-    //     return inertia('AddRentals');
-    // }
 
     public function storeReviewForms(Request $request)
     {
@@ -981,8 +981,10 @@ class RentController extends Controller
     {
         $cityName = str_replace('-', ' ', $city);
 
+        $sixMonthsAgo = now()->subMonths(6);
         $areas = Rental::select('area', 'rent_min', 'rent_max', 'created_at')
             ->where('city', 'like', $cityName)
+            ->where('created_at', '>', $sixMonthsAgo)
             ->get()
             ->groupBy('area')
             ->map(function ($areaRentals) {
