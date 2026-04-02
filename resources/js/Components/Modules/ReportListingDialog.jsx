@@ -82,142 +82,52 @@ const ReportListingDialog = ({ setShowAddListingModal, rental, auth }) => {
 
   return (
     <>
-      {/* Toast Notification - unchanged */}
+      {/* Toast Notification */}
       {toast && (
-        <div style={{
-          position: 'fixed',
-          top: '1rem',
-          right: '1rem',
-          backgroundColor: toast.variant === 'error' ? '#ef4444' : '#10b981',
-          color: 'white',
-          padding: '1rem',
-          borderRadius: '0.5rem',
-          boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
-          zIndex: 9999,
-          maxWidth: '400px',
-          animation: 'slideIn 0.3s ease-out'
-        }}>
-          <div style={{ fontWeight: '600', marginBottom: '0.25rem' }}>{toast.title}</div>
-          <div style={{ fontSize: '0.875rem' }}>{toast.description}</div>
+        <div className={`rf-toast ${toast.variant}`}>
+          <div className="rf-toast-title">{toast.title}</div>
+          <div className="rf-toast-desc">{toast.description}</div>
         </div>
       )}
 
       {/* Dialog Overlay */}
-      <div
-        style={{
-          position: 'fixed',
-          inset: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 50,
-          padding: '1rem'
-        }}
-        onClick={() => setShowAddListingModal && setShowAddListingModal(false)}
-      >
-        {/* Dialog Content - Wrap in form for better accessibility */}
-        <form
-          onSubmit={handleSubmit}
-          style={{
-            backgroundColor: 'white',
-            borderRadius: '0.75rem',
-            maxWidth: '32rem',
-            width: '100%',
-            maxHeight: '90vh',
-            overflowY: 'auto',
-            boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)',
-            position: 'relative'
-          }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          {/* Header - unchanged */}
-          <div style={{
-            padding: '1.5rem',
-            borderBottom: '1px solid #e5e7eb'
-          }}>
-            <button
-              type="button"
-              onClick={() => setShowAddListingModal && setShowAddListingModal(false)}
-              style={{
-                position: 'absolute',
-                right: '1rem',
-                top: '1rem',
-                border: 'none',
-                background: 'none',
-                cursor: 'pointer',
-                color: '#6b7280',
-                padding: '0.25rem'
-              }}
-            >
-              <X size={20} />
-            </button>
-
-            <div className="hide-scrollbar"
-             style={{
-              backgroundColor: '#f3f4f6',
-              padding: '1.5rem',
-              borderRadius: '0.5rem',
-              marginBottom: '1.5rem'
-            }}>
-              <h2 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '0.5rem', color: '#111827' }}>
-                {rental?.title} {rental?.property_type}
-              </h2>
-              <p style={{ color: '#6b7280', marginBottom: '1rem' }}>
-                {rental?.address}, {rental?.city} • GH₵ {rental?.rent_min} - GH₵ {rental?.rent_max}/month
-              </p>
-              <p style={{ color: '#374151', lineHeight: '1.5', marginBottom: '0.5rem' }}>
-                {rental?.description}
-              </p>
-              <p style={{ fontSize: '0.875rem', fontWeight: '500', color: '#374151', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                Agent:
-                <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '24px', height: '24px', borderRadius: '50%', backgroundColor: '#e5e7eb', fontSize: '0.75rem', fontWeight: '600' }}>
-                  {rental.agent_name?.[0]?.toUpperCase() || 'A'}
-                </span>
-                 <span style={{ fontWeight: '600' }}>{rental.agent_name}</span>
-              </p>
+      <div className="rf-overlay" onClick={() => setShowAddListingModal && setShowAddListingModal(false)}>
+        {/* Dialog Content */}
+        <div className="rf-card" onClick={(e) => e.stopPropagation()}>
+          <div className="rf-stripe" />
+          {/* Header */}
+          <div className="rf-header">
+            <div>
+              <div className="rf-title">Report This Listing</div>
+              <div className="rf-subtitle">Help us maintain trust by reporting problematic listings. All reports are reviewed by our team.</div>
             </div>
-            <h2 style={{
-              fontSize: '1.25rem',
-              fontWeight: '600',
-              color: '#111827',
-              marginBottom: '0.5rem'
-            }}>
-              Report This Listing
-            </h2>
-            <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>
-              Help us maintain trust by reporting problematic listings. All reports are reviewed by our team.
-            </p>
+            <button className="rf-close" onClick={() => setShowAddListingModal && setShowAddListingModal(false)}>
+              <X size={14} />
+            </button>
           </div>
 
-          {/* Body */}
-          <div style={{ padding: '1.5rem' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          {rental && (
+            <div className="rf-property">
+              <div className="rf-prop-name">{rental?.title} {rental?.property_type}</div>
+              <div className="rf-prop-meta">{rental?.area}, {rental?.city}</div>
+              {rental?.agent_name && (
+                <div className="rf-prop-agent">Agent — {rental?.agent_name}</div>
+              )}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit}>
+            {/* Body */}
+            <div className="rf-body">
               {/* Hidden property_id field */}
               <input type="hidden" name="property_id" value={data.property_id} />
-              
               {/* Issue Type */}
               <div>
-                <label style={{
-                  display: 'block',
-                  fontSize: '0.875rem',
-                  fontWeight: '500',
-                  color: '#374151',
-                  marginBottom: '0.5rem'
-                }}>
-                  Issue Type *
-                </label>
+                <label className="rf-label">Issue Type *</label>
                 <select
+                  className={`rf-select ${errors.report_type ? 'err' : ''}`}
                   value={data.report_type}
                   onChange={(e) => setData('report_type', e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '0.5rem 0.75rem',
-                    border: `1px solid ${errors.report_type ? '#ef4444' : '#d1d5db'}`,
-                    borderRadius: '0.375rem',
-                    fontSize: '0.875rem',
-                    outline: 'none'
-                  }}
                 >
                   <option value="">Select the issue type</option>
                   {subjectOptions.map((option) => (
@@ -226,64 +136,26 @@ const ReportListingDialog = ({ setShowAddListingModal, rental, auth }) => {
                     </option>
                   ))}
                 </select>
-                {errors.report_type && (
-                  <p style={{ fontSize: '0.75rem', color: '#ef4444', marginTop: '0.25rem' }}>
-                    {errors.report_type}
-                  </p>
-                )}
+                {errors.report_type && <p className="rf-error">{errors.report_type}</p>}
               </div>
 
               {/* Description */}
               <div>
-                <label style={{
-                  display: 'block',
-                  fontSize: '0.875rem',
-                  fontWeight: '500',
-                  color: '#374151',
-                  marginBottom: '0.5rem'
-                }}>
-                  Description *
-                </label>
+                <label className="rf-label">Description *</label>
                 <textarea
+                  className={`rf-textarea ${errors.description ? 'err' : ''}`}
                   value={data.description}
                   onChange={(e) => setData('description', e.target.value)}
                   placeholder="Please describe the issue in detail. Include dates, amounts, and any relevant information..."
-                  rows={5}
-                  style={{
-                    width: '100%',
-                    padding: '0.5rem 0.75rem',
-                    border: `1px solid ${errors.description ? '#ef4444' : '#d1d5db'}`,
-                    borderRadius: '0.375rem',
-                    fontSize: '0.875rem',
-                    outline: 'none',
-                    resize: 'vertical',
-                    fontFamily: 'inherit'
-                  }}
+                  rows={3}
                 />
-                {errors.description && (
-                  <p style={{ fontSize: '0.75rem', color: '#ef4444', marginTop: '0.25rem' }}>
-                    {errors.description}
-                  </p>
-                )}
+                {errors.description && <p className="rf-error">{errors.description}</p>}
               </div>
 
               {/* Evidence Upload */}
               <div>
-                <label style={{
-                  display: 'block',
-                  fontSize: '0.875rem',
-                  fontWeight: '500',
-                  color: '#374151',
-                  marginBottom: '0.5rem'
-                }}>
-                  Evidence (optional)
-                </label>
-                <div style={{
-                  border: '2px dashed #d1d5db',
-                  borderRadius: '0.5rem',
-                  padding: '1rem',
-                  textAlign: 'center'
-                }}>
+                <label className="rf-label">Evidence (optional)</label>
+                <div className="rf-upload">
                   <input
                     type="file"
                     id="evidence-upload"
@@ -301,49 +173,26 @@ const ReportListingDialog = ({ setShowAddListingModal, rental, auth }) => {
                       opacity: uploadedFiles.length >= 5 ? 0.5 : 1
                     }}
                   >
-                    <Upload size={32} style={{ margin: '0 auto 0.5rem', color: '#9ca3af' }} />
-                    <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+                    <Upload size={32} style={{ margin: '0 auto 0.5rem', color: 'rgba(245,240,232,0.4)' }} />
+                    <p style={{ fontSize: '0.875rem', color: 'rgba(245,240,232,0.6)' }}>
                       Click to upload screenshots or documents
                     </p>
-                    <p style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: '0.25rem' }}>
+                    <p style={{ fontSize: '0.75rem', color: 'rgba(245,240,232,0.4)', marginTop: '0.25rem' }}>
                       Max 5 files, 5MB each ({uploadedFiles.length}/5 uploaded)
                     </p>
                   </label>
                 </div>
 
                 {uploadedFiles.length > 0 && (
-                  <div style={{ marginTop: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  <div style={{ marginTop: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                     {uploadedFiles.map((file, index) => (
-                      <div
-                        key={index}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          backgroundColor: '#f3f4f6',
-                          borderRadius: '0.375rem',
-                          padding: '0.5rem'
-                        }}
-                      >
-                        <span style={{
-                          fontSize: '0.875rem',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
-                          flex: 1
-                        }}>
+                      <div className="rf-file-item" key={index}>
+                        <span>
                           {file.name}
                         </span>
                         <button
                           type="button"
                           onClick={() => removeFile(index)}
-                          style={{
-                            border: 'none',
-                            background: 'none',
-                            cursor: 'pointer',
-                            padding: '0.25rem',
-                            color: '#6b7280'
-                          }}
                         >
                           <X size={16} />
                         </button>
@@ -355,80 +204,307 @@ const ReportListingDialog = ({ setShowAddListingModal, rental, auth }) => {
 
               {/* Full Name */}
               <div>
-                <label style={{
-                  display: 'block',
-                  fontSize: '0.875rem',
-                  fontWeight: '500',
-                  color: '#374151',
-                  marginBottom: '0.5rem'
-                }}>
-                  Full Name
-                </label>
+                <label className="rf-label">Full name</label>
                 <input
+                  className={`rf-input ${errors.name ? 'err' : ''}`}
                   type="text"
                   value={data.name || userFullName}
                   onChange={(e) => setData("name", e.target.value)}
                   placeholder="Solomon Yeboah"
-                  style={{
-                    width: '100%',
-                    padding: '0.5rem 0.75rem',
-                    border: `1px solid ${errors.name ? '#ef4444' : '#d1d5db'}`,
-                    borderRadius: '0.375rem',
-                    fontSize: '0.875rem',
-                    outline: 'none',
-                    fontFamily: 'inherit'
-                  }}
                 />
-                {errors.name && (
-                  <p style={{ fontSize: '0.75rem', color: '#ef4444', marginTop: '0.25rem' }}>
-                    {errors.name}
-                  </p>
-                )}
+                {errors.name && <p className="rf-error">{errors.name}</p>}
               </div>
 
-              {/* Submit Button */}
-              <button
-                type="submit"
-                disabled={processing}
-                style={{
-                  width: '100%',
-                  padding: '0.625rem',
-                  backgroundColor: processing ? '#9ca3af' : '#3b82f6',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '0.375rem',
-                  fontWeight: '500',
-                  cursor: processing ? 'not-allowed' : 'pointer',
-                  fontSize: '0.875rem'
-                }}
-              >
-                {processing ? "Submitting..." : "Submit Report"}
+              <button type="submit" className="rf-submit" disabled={processing}>
+                {processing ? "Submitting…" : "Submit report"}
               </button>
             </div>
-          </div>
-        </form>
+          </form>
       </div>
 
-      <style>{`
-        @keyframes slideIn {
-          from {
-            transform: translateX(100%);
-            opacity: 0;
-          }
-          to {
-            transform: translateX(0);
-            opacity: 1;
-          }
-        }
-        .hide-scrollbar {
-          scrollbar-width: none; /* Firefox */
-          -ms-overflow-style: none; /* IE and Edge */
+      <style dangerouslySetInnerHTML={{ __html: `
+        @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500&display=swap');
+
+        .rf-wrap * { box-sizing: border-box; margin: 0; padding: 0; }
+        .rf-wrap { font-family: 'DM Sans', sans-serif; }
+
+        .rf-overlay {
+          position: fixed; inset: 0;
+          background: rgba(10, 8, 5, 0.72);
+          backdrop-filter: blur(6px);
+          -webkit-backdrop-filter: blur(6px);
+          display: flex; align-items: center; justify-content: center;
+          z-index: 9000; padding: 1rem;
         }
 
-        .hide-scrollbar::-webkit-scrollbar {
-          display: none; /* Chrome, Safari, Opera */
+        .rf-card {
+          background: #0f0e0c;
+          border: 1px solid rgba(255,255,255,0.08);
+          border-radius: 2px;
+          width: 100%; max-width: 460px;
+          max-height: 90vh;
+          overflow-y: auto;
+          scrollbar-width: none;
+          position: relative;
         }
-      `}</style>
+        .rf-card::-webkit-scrollbar { display: none; }
+
+        .rf-stripe {
+          height: 3px;
+          background: linear-gradient(90deg, #e8a020 0%, #f0c060 50%, #e8a020 100%);
+        }
+
+        .rf-header {
+          padding: 1.25rem 1.5rem 1rem;
+          border-bottom: 1px solid rgba(255,255,255,0.06);
+          display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem;
+        }
+
+        .rf-title {
+          font-family: 'DM Serif Display', serif;
+          font-size: 1.5rem;
+          color: #f5f0e8;
+          line-height: 1.2;
+          letter-spacing: -0.01em;
+        }
+
+        .rf-subtitle {
+          font-size: 0.75rem;
+          color: rgba(245,240,232,0.4);
+          margin-top: 0.25rem;
+          font-weight: 300;
+          letter-spacing: 0.04em;
+          text-transform: uppercase;
+        }
+
+        .rf-close {
+          background: rgba(255,255,255,0.06);
+          border: none; border-radius: 2px;
+          width: 28px; height: 28px;
+          display: flex; align-items: center; justify-content: center;
+          cursor: pointer; color: rgba(245,240,232,0.5);
+          flex-shrink: 0; margin-top: 2px;
+          transition: background 0.15s, color 0.15s;
+        }
+        .rf-close:hover { background: rgba(255,255,255,0.12); color: #f5f0e8; }
+
+        .rf-property {
+          margin: 0 1.5rem;
+          padding: 0.75rem 1rem;
+          background: rgba(232,160,32,0.06);
+          border-left: 2px solid #e8a020;
+          border-radius: 0 2px 2px 0;
+          margin-top: 1rem;
+        }
+        .rf-prop-name {
+          font-size: 0.8125rem; font-weight: 500;
+          color: #f5f0e8; line-height: 1.3;
+        }
+        .rf-prop-meta {
+          font-size: 0.6875rem; color: rgba(245,240,232,0.4);
+          margin-top: 0.2rem; letter-spacing: 0.02em;
+        }
+        .rf-prop-agent {
+          font-size: 0.6875rem; color: rgba(232,160,32,0.8);
+          margin-top: 0.3rem;
+        }
+
+        .rf-body { padding: 1.25rem 1.5rem 1.5rem; display: flex; flex-direction: column; gap: 1.25rem; }
+
+        .rf-label {
+          font-size: 0.6875rem;
+          font-weight: 500;
+          color: rgba(245,240,232,0.4);
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          display: block;
+          margin-bottom: 0.6rem;
+        }
+
+        .rf-stars { display: flex; align-items: center; gap: 4px; }
+        .rf-star-btn {
+          background: none; border: none; padding: 2px;
+          cursor: pointer; line-height: 0;
+          transition: transform 0.12s;
+        }
+        .rf-star-btn:hover { transform: scale(1.15); }
+
+        .rf-rating-label {
+          font-size: 0.75rem;
+          color: #e8a020;
+          margin-left: 8px;
+          font-weight: 300;
+          min-width: 60px;
+          opacity: 0;
+          transition: opacity 0.2s;
+        }
+        .rf-rating-label.visible { opacity: 1; }
+
+        .rf-checks { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+
+        .rf-check {
+          display: flex; align-items: center; gap: 0.6rem;
+          padding: 0.6rem 0.75rem;
+          border: 1px solid rgba(255,255,255,0.07);
+          border-radius: 2px;
+          cursor: pointer;
+          background: rgba(255,255,255,0.02);
+          transition: border-color 0.15s, background 0.15s;
+          user-select: none;
+        }
+        .rf-check:hover { border-color: rgba(232,160,32,0.3); background: rgba(232,160,32,0.04); }
+        .rf-check.checked { border-color: rgba(232,160,32,0.5); background: rgba(232,160,32,0.07); }
+
+        .rf-check-box {
+          width: 14px; height: 14px; flex-shrink: 0;
+          border: 1px solid rgba(255,255,255,0.2);
+          border-radius: 2px;
+          display: flex; align-items: center; justify-content: center;
+          transition: border-color 0.15s, background 0.15s;
+        }
+        .rf-check.checked .rf-check-box {
+          border-color: #e8a020;
+          background: #e8a020;
+        }
+        .rf-check-tick { font-size: 9px; color: #0f0e0c; font-weight: 700; line-height: 1; }
+        .rf-check-icon { font-size: 0.75rem; color: rgba(245,240,232,0.3); }
+        .rf-check.checked .rf-check-icon { color: rgba(232,160,32,0.7); }
+        .rf-check-label {
+          font-size: 0.75rem; font-weight: 400;
+          color: rgba(245,240,232,0.55);
+          line-height: 1.3;
+        }
+        .rf-check.checked .rf-check-label { color: rgba(245,240,232,0.9); }
+
+        .rf-input, .rf-textarea, .rf-select {
+          width: 100%;
+          background: rgba(255,255,255,0.03);
+          border: 1px solid rgba(255,255,255,0.08);
+          border-radius: 2px;
+          padding: 0.6rem 0.75rem;
+          font-size: 0.8125rem;
+          color: #f5f0e8;
+          font-family: 'DM Sans', sans-serif;
+          font-weight: 300;
+          outline: none;
+          transition: border-color 0.15s;
+        }
+        .rf-input::placeholder, .rf-textarea::placeholder, .rf-select::placeholder {
+          color: rgba(245,240,232,0.2);
+        }
+        .rf-input:focus, .rf-textarea:focus, .rf-select:focus {
+          border-color: rgba(232,160,32,0.5);
+          background: rgba(232,160,32,0.03);
+        }
+        .rf-textarea { resize: vertical; min-height: 72px; line-height: 1.5; }
+        .rf-input.err, .rf-textarea.err, .rf-select.err { border-color: rgba(220,60,60,0.5); }
+
+        .rf-error { font-size: 0.6875rem; color: #e05050; margin-top: 0.3rem; }
+
+        .rf-submit {
+          width: 100%;
+          padding: 0.7rem;
+          background: #e8a020;
+          border: none; border-radius: 2px;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 0.8125rem;
+          font-weight: 500;
+          color: #0f0e0c;
+          letter-spacing: 0.05em;
+          text-transform: uppercase;
+          cursor: pointer;
+          transition: background 0.15s, opacity 0.15s;
+        }
+        .rf-submit:hover:not(:disabled) { background: #f0b030; }
+        .rf-submit:disabled { opacity: 0.45; cursor: not-allowed; }
+
+        .rf-divider {
+          height: 1px;
+          background: rgba(255,255,255,0.06);
+        }
+
+        .rf-toast {
+          position: fixed; top: 1.25rem; right: 1.25rem;
+          padding: 0.875rem 1.125rem;
+          border-radius: 2px;
+          z-index: 9999; max-width: 320px;
+          border-left: 3px solid;
+          animation: rfSlide 0.25s ease-out;
+        }
+        .rf-toast.success { background: #0f1a10; border-color: #4caf65; }
+        .rf-toast.error   { background: #1a0f0f; border-color: #e05050; }
+        .rf-toast-title { font-size: 0.8125rem; font-weight: 500; color: #f5f0e8; }
+        .rf-toast-desc  { font-size: 0.75rem; color: rgba(245,240,232,0.5); margin-top: 0.2rem; }
+
+        @keyframes rfSlide {
+          from { transform: translateX(110%); opacity: 0; }
+          to   { transform: translateX(0);    opacity: 1; }
+        }
+
+        .rf-select {
+          width: 100%;
+          background: rgba(255,255,255,0.03);
+          border: 1px solid rgba(255,255,255,0.08);
+          border-radius: 2px;
+          padding: 0.6rem 0.75rem;
+          font-size: 0.8125rem;
+          color: #f5f0e8;
+          font-family: 'DM Sans', sans-serif;
+          font-weight: 300;
+          outline: none;
+          transition: border-color 0.15s;
+        }
+        .rf-select:focus {
+          border-color: rgba(232,160,32,0.5);
+          background: rgba(232,160,32,0.03);
+        }
+        .rf-select.err {
+          border-color: rgba(220,60,60,0.5);
+        }
+
+        .rf-upload {
+          border: 2px dashed rgba(255,255,255,0.08);
+          border-radius: 2px;
+          padding: 1rem;
+          text-align: center;
+          background: rgba(255,255,255,0.02);
+          cursor: pointer;
+          transition: border-color 0.15s;
+        }
+        .rf-upload:hover {
+          border-color: rgba(232,160,32,0.3);
+          background: rgba(232,160,32,0.04);
+        }
+
+        .rf-file-item {
+          background: rgba(255,255,255,0.02);
+          border: 1px solid rgba(255,255,255,0.08);
+          border-radius: 2px;
+          padding: 0.5rem;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+        .rf-file-item span {
+          color: #f5f0e8;
+          font-size: 0.8125rem;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          flex: 1;
+        }
+        .rf-file-item button {
+          background: none;
+          border: none;
+          color: rgba(245,240,232,0.5);
+          cursor: pointer;
+          padding: 2px;
+          transition: color 0.15s;
+        }
+        .rf-file-item button:hover {
+          color: #f5f0e8;
+        }
+      ` }} />
     </>
   );
 };
