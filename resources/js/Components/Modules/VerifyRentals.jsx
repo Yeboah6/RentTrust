@@ -208,28 +208,50 @@ const VerificationRequestModal = ({ isOpen, onClose, agentData, selectedRental }
   };
 
   const handleSubmit = () => {
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
 
-    // Use Inertia's post method to submit the form
-    post('/verification-requests', {
-      onSuccess: () => {
-        showToast('Verification request submitted successfully!', 'success', 3000);
-        setTimeout(() => {
-          router.reload({ only: ['rentals'] });
-          handleClose();
-        }, 1500);
-      },
-      onError: (errors) => {
-        console.error('Submission errors:', errors);
-        const firstError = Object.values(errors)[0];
-        showToast(typeof firstError === 'string' ? firstError : 'An error occurred while submitting', 'error', 4000);
-      },
-      // Important: Use FormData for file uploads
-      forceFormData: true
+    const formData = new FormData();
+
+    // Scalar fields
+    formData.append('rental_id',        data.rental_id);
+    formData.append('agent_id',         data.agent_id);
+    formData.append('agent_name',       data.agent_name);
+    formData.append('request_type',     data.request_type);
+    formData.append('additional_notes', data.additional_notes ?? '');
+
+    // Files — must be appended as array notation so Laravel sees them as arrays
+    data.proof_docs.forEach(file => {
+        formData.append('proof_docs[]', file);
     });
-  };
+
+    data.ownership_documents.forEach(file => {
+        formData.append('ownership_documents[]', file);
+    });
+
+    data.utility_bills.forEach(file => {
+        formData.append('utility_bills[]', file);
+    });
+
+    router.post('/verification-requests', formData, {
+        forceFormData: true,
+        onSuccess: () => {
+            showToast('Verification request submitted successfully!', 'success', 3000);
+            setTimeout(() => {
+                router.reload({ only: ['rentals'] });
+                handleClose();
+            }, 1500);
+        },
+        onError: (errors) => {
+            console.error('Submission errors:', errors);
+            const firstError = Object.values(errors)[0];
+            showToast(
+                typeof firstError === 'string' ? firstError : 'An error occurred while submitting',
+                'error',
+                4000
+            );
+        },
+    });
+};
 
   const showToast = (message, type = 'success', duration = 3000) => {
     setToast({ message, type });

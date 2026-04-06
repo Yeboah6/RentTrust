@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
 
 Schedule::command('subscriptions:expire')->daily();
+Schedule::command('featured:expire')->daily();
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());

@@ -59,10 +59,10 @@ class VerificationsController extends Controller
             'additional_notes' => 'nullable|string|max:1000',
             'agent_id' => 'required',
             'agent_name' => 'required|string|max:255',
-            
+
             // File validations - updated field names to match frontend
             'proof_docs.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:10240',
-            'ownership_documents.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:10240', // Changed from ownership_docs
+            'ownership_documents.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:10240',
             'utility_bills.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:10240',
         ], [
             'rental_id.required' => 'Please select a rental property',
@@ -73,11 +73,9 @@ class VerificationsController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation failed',
-                'errors' => $validator->errors()
-            ], 422);
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput();
         }
 
         try {
@@ -85,17 +83,15 @@ class VerificationsController extends Controller
 
             // Check if rental exists
             $rental = Rental::findOrFail($request->rental_id);
-            
+
             // Check if user is authorized (owner or assigned agent)
             $isOwner = $rental->user_id == Auth::id();
-            $isAgent = $rental->agent_id == $request->agent_id;
-            
+            $isAgent = Auth::id() == $request->agent_id;
+
             if (!$isOwner && !$isAgent) {
                 DB::rollBack();
-                return response()->json([
-                    'success' => false,
-                    'message' => 'You do not have permission to verify this property'
-                ], 403);
+                return redirect()->back()
+                    ->with('error', 'You do not have permission to verify this property');
             }
 
             // Check for existing pending request
@@ -105,16 +101,14 @@ class VerificationsController extends Controller
 
             if ($existingRequest) {
                 DB::rollBack();
-                return response()->json([
-                    'success' => false,
-                    'message' => 'A verification request for this property is already pending review'
-                ], 409);
+                return redirect()->back()
+                    ->with('error', 'A verification request for this property is already pending review');
             }
 
             // Process and store uploaded files
             $uploadedFiles = [
                 'proof_documents' => $this->handleFileUploads($request, 'proof_docs', 'verification_docs/proof'),
-                'ownership_documents' => $this->handleFileUploads($request, 'ownership_documents', 'verification_docs/property_photos'), // Changed
+                'ownership_documents' => $this->handleFileUploads($request, 'ownership_documents', 'verification_docs/property_photos'),
                 'utility_bills' => $this->handleFileUploads($request, 'utility_bills', 'verification_docs/utility_bills'),
             ];
 
@@ -123,10 +117,8 @@ class VerificationsController extends Controller
 
             if ($totalDocuments === 0) {
                 DB::rollBack();
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Please upload at least one document'
-                ], 422);
+                return redirect()->back()
+                    ->with('error', 'Please upload at least one document');
             }
 
             // Create verification request
@@ -137,11 +129,11 @@ class VerificationsController extends Controller
                 'request_type' => $request->request_type,
                 'status' => 'pending',
                 'proof_documents' => json_encode($uploadedFiles['proof_documents']),
-                'ownership_documents' => json_encode($uploadedFiles['ownership_documents']), // Changed
+                'ownership_documents' => json_encode($uploadedFiles['ownership_documents']),
                 'utility_bills' => json_encode($uploadedFiles['utility_bills']),
                 'additional_notes' => $request->additional_notes,
                 'submitted_at' => now(),
-                'user_id' => Auth::id(), // Store the user who submitted
+                'user_id' => Auth::id(),
             ]);
 
             // Update rental status to indicate verification is pending
@@ -158,15 +150,17 @@ class VerificationsController extends Controller
                 'total_documents' => $totalDocuments
             ]);
 
-            // TODO: Send notification email to admin
-            // TODO: Send confirmation email to agent
-
             return redirect()->back()
-                ->with('success', 'Rental listing created successfully! It will be reviewed and activated soon.');
+                ->with('success', 'Verification request submitted successfully! It will be reviewed soon.');
 
         } catch (\Exception $e) {
             DB::rollBack();
-            
+
+            // Clean up uploaded files when the request fails after file storage
+            if (!empty($uploadedFiles ?? [])) {
+                $this->cleanupUploadedFiles($uploadedFiles);
+            }
+
             Log::error('Verification request submission failed', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
@@ -174,8 +168,7 @@ class VerificationsController extends Controller
             ]);
 
             return redirect()->back()
-                ->with('error', 'Failed to create rental listing. Please try again.')
-                ->withInput();
+                ->with('error', 'Failed to submit verification request. Please try again.');
         }
     }
 
@@ -188,10 +181,10 @@ class VerificationsController extends Controller
                 try {
                     // Generate unique filename
                     $filename = time() . '_' . uniqid() . '_' . preg_replace('/[^A-Za-z0-9\.]/', '_', $file->getClientOriginalName());
-                    
+
                     // Store file
                     $path = $file->storeAs($storagePath, $filename, 'public');
-                    
+
                     if ($path) {
                         $uploadedFiles[] = [
                             'filename' => $filename,
@@ -217,13 +210,33 @@ class VerificationsController extends Controller
         return $uploadedFiles;
     }
 
+    private function cleanupUploadedFiles(array $uploadedFiles): void
+    {
+        foreach ($uploadedFiles as $category => $files) {
+            if (!is_array($files)) continue;
+
+            foreach ($files as $file) {
+                if (isset($file['path']) && Storage::disk('public')->exists($file['path'])) {
+                    try {
+                        Storage::disk('public')->delete($file['path']);
+                    } catch (\Exception $e) {
+                        Log::warning('Failed to delete orphaned verification upload', [
+                            'path' => $file['path'],
+                            'error' => $e->getMessage()
+                        ]);
+                    }
+                }
+            }
+        }
+    }
+
     public function index(Request $request)
     {
         try {
             $query = VerificationRequest::query();
-            
+
             // Check if user is admin
-            if (Auth::user()->is_admin ?? false) {
+            if (Auth::check() && Auth::user()->role === 'super_admin') {
                 // Admin can see all requests
                 $requests = $query->with(['rental:id,title,area,city', 'user:id,name,email'])
                     ->orderBy('created_at', 'desc')
@@ -253,9 +266,6 @@ class VerificationsController extends Controller
         }
     }
 
-    /**
-     * Get a specific verification request
-     */
     public function show($id)
     {
         try {
@@ -263,7 +273,7 @@ class VerificationsController extends Controller
 
             // Check authorization
             $isOwner = $request->agent_id == Auth::id() || $request->user_id == Auth::id();
-            $isAdmin = Auth::user()->is_admin ?? false;
+            $isAdmin = Auth::check() && Auth::user()->role === 'super_admin';
             
             if (!$isOwner && !$isAdmin) {
                 return response()->json([
@@ -274,7 +284,7 @@ class VerificationsController extends Controller
 
             // Parse JSON fields
             $request->proof_documents = json_decode($request->proof_documents, true) ?? [];
-            $request->ownership_documents = json_decode($request->ownership_documents, true) ?? []; // Changed
+            $request->ownership_documents = json_decode($request->ownership_documents, true) ?? [];
             $request->utility_bills = json_decode($request->utility_bills, true) ?? [];
 
             // Add full URLs for files
@@ -306,13 +316,10 @@ class VerificationsController extends Controller
         }
     }
 
-    /**
-     * Update verification request status (Admin only)
-     */
     public function updateStatus(Request $request, $id)
     {
         // Check if user is admin
-        if (!(Auth::guard('super')->check())) {
+        if (!Auth::check() || Auth::user()->role !== 'super_admin') {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized. Admin access required.'
@@ -336,7 +343,7 @@ class VerificationsController extends Controller
             DB::beginTransaction();
 
             $verificationRequest = VerificationRequest::findOrFail($id);
-            
+
             $verificationRequest->update([
                 'status' => $request->status,
                 'admin_notes' => $request->admin_notes,
@@ -369,6 +376,7 @@ class VerificationsController extends Controller
                         'status' => 'pending',
                     ]);
                 }
+            }
 
             DB::commit();
 
@@ -378,19 +386,15 @@ class VerificationsController extends Controller
                 'reviewed_by' => Auth::id()
             ]);
 
-            }
-
-            // TODO: Send notification email to agent
-
-            // return response()->json([
-            //     'success' => true,
-            //     'message' => "Verification request {$request->status} successfully",
-            //     'data' => $verificationRequest
-            // ]);
+            return response()->json([
+                'success' => true,
+                'message' => "Verification request {$request->status} successfully",
+                'data' => $verificationRequest
+            ]);
 
         } catch (\Exception $e) {
             DB::rollBack();
-            
+
             Log::error('Failed to update verification status', [
                 'error' => $e->getMessage(),
                 'request_id' => $id
@@ -403,9 +407,6 @@ class VerificationsController extends Controller
         }
     }
 
-    /**
-     * Delete/Cancel a verification request
-     */
     public function destroy($id)
     {
         try {
@@ -413,7 +414,7 @@ class VerificationsController extends Controller
 
             // Check authorization
             $isOwner = $verificationRequest->agent_id == Auth::id() || $verificationRequest->user_id == Auth::id();
-            $isAdmin = Auth::user()->is_admin ?? false;
+            $isAdmin = Auth::check() && Auth::user()->role === 'super_admin';
             
             if (!$isOwner && !$isAdmin) {
                 return response()->json([
@@ -462,7 +463,7 @@ class VerificationsController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            
+
             Log::error('Failed to delete verification request', [
                 'error' => $e->getMessage(),
                 'request_id' => $id
@@ -475,16 +476,13 @@ class VerificationsController extends Controller
         }
     }
 
-    /**
-     * Delete files associated with a verification request
-     */
     private function deleteRequestFiles($verificationRequest)
     {
-        $fileFields = ['proof_documents', 'ownership_documents', 'utility_bills']; // Updated fields
+        $fileFields = ['proof_documents', 'ownership_documents', 'utility_bills'];
 
         foreach ($fileFields as $field) {
             $files = json_decode($verificationRequest->$field, true) ?? [];
-            
+
             foreach ($files as $file) {
                 if (isset($file['path']) && Storage::disk('public')->exists($file['path'])) {
                     try {
@@ -500,18 +498,15 @@ class VerificationsController extends Controller
         }
     }
 
-    /**
-     * Get verification requests for a specific rental
-     */
     public function getRentalRequests($rentalId)
     {
         try {
             $rental = Rental::findOrFail($rentalId);
-            
+
             // Check authorization
             $isOwner = $rental->user_id == Auth::id();
             $isAgent = $rental->agent_id == Auth::id();
-            $isAdmin = Auth::user()->is_admin ?? false;
+            $isAdmin = Auth::check() && Auth::user()->role === 'super_admin';
             
             if (!$isOwner && !$isAgent && !$isAdmin) {
                 return response()->json([

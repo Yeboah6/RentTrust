@@ -10,6 +10,7 @@ class Plan extends Model
     protected $fillable = [
         'name', 'description', 'slug', 'price', 'currency', 'interval',
         'listing_limit', 'rental_limit', 'sale_limit', 'boost_limit', 'lead_limit',
+        'featured_limit', 'featured_duration_days',
         'verified_badge', 'priority_ranking', 'analytics_access', 'features',
         'paystack_plan_code', 'flutterwave_plan_id',
         'is_active', 'sort_order',
@@ -26,6 +27,8 @@ class Plan extends Model
         'sale_limit'       => 'integer',
         'boost_limit'      => 'integer',
         'lead_limit'       => 'integer',
+        'featured_limit'   => 'integer',
+        'featured_duration_days' => 'integer',
         'features' => 'array',
     ];
 

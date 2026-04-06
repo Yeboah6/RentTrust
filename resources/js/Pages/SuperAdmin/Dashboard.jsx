@@ -221,6 +221,14 @@ const Dashboard = ({ platform, saas }) => {
             label: 'Total Reviews',
             subValue: `${platform.total_app_reviews ?? 0} app · ${platform.total_rent_reviews ?? 0} listing`,
         },
+        {
+            icon: SubscriptionIcon,
+            iconBg: 'hsl(152 60% 93%)',
+            iconColor: 'hsl(152 60% 35%)',
+            badge: 'VERIFICATIONS',
+            value: platform.total_verifications?.toLocaleString() ?? '—',
+            label: 'Total Verifications',
+        },
     ];
 
     return (

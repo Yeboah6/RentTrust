@@ -48,6 +48,24 @@ class ListingController extends Controller
         ]);
     }
 
+    public function verification()
+    {
+        $pendingListings = Rental::where('status', 'pending')
+            ->with(['user'])
+            ->withCount(['views', 'inquiries', 'reviews'])
+            ->latest()
+            ->paginate(20);
+
+        $metrics = [
+            'pending' => $pendingListings->total(),
+        ];
+
+        return Inertia::render('SuperAdmin/Listings/Verification', [
+            'listings' => $pendingListings,
+            'metrics'  => $metrics,
+        ]);
+    }
+
     // ─── Create ───────────────────────────────────────────────────────────────
 
     public function create()

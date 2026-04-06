@@ -5,7 +5,7 @@ import { useForm, usePage } from "@inertiajs/react";
 const ReportListingDialog = ({ setShowAddListingModal, rental, auth }) => {
   const [uploadedFiles, setUploadedFiles] = useState([]);
   
-  const { data, setData, post, transform, processing, errors, reset } = useForm({
+  const { data, setData, post, processing, errors, reset } = useForm({
     report_type: "",
     description: "",
     evidence: [],
@@ -58,12 +58,11 @@ const ReportListingDialog = ({ setShowAddListingModal, rental, auth }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     
-    transform((formData) => ({
-      ...formData,
-      name: (formData.name && formData.name.trim() !== "") ? formData.name : userFullName,
-    }));
+    const resolvedName = (data.name && data.name.trim() !== "") ? data.name : userFullName;
+    const formData = { ...data, name: resolvedName };
   
     post('/report-listing', {
+      data: formData,
       forceFormData: true,
       onSuccess: () => {
         showToast("Report Submitted", "Thank you for helping us maintain trust.", "success");
@@ -220,6 +219,7 @@ const ReportListingDialog = ({ setShowAddListingModal, rental, auth }) => {
               </button>
             </div>
           </form>
+        </div>
       </div>
 
       <style dangerouslySetInnerHTML={{ __html: `

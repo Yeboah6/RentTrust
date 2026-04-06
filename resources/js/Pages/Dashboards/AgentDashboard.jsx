@@ -146,6 +146,29 @@ const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views
     setShowViewModal(true);
   };
 
+  const handleFeatureClick = (property) => {
+    if (window.confirm(`Are you sure you want to feature this ${property.purpose === 'sale' ? 'sale' : 'rental'} listing?`)) {
+      router.post(`/api/listings/${property.id}/feature`, {}, {
+        onSuccess: (response) => {
+          setShowToast({
+            message: response.data.message || "Listing featured successfully!",
+            variant: "success"
+          });
+          setTimeout(() => setShowToast(null), 3000);
+          // Optionally refresh the page or update the listing status
+          window.location.reload();
+        },
+        onError: (errors) => {
+          setShowToast({
+            message: errors.message || "Failed to feature listing. Please try again.",
+            variant: "error" 
+          });
+          setTimeout(() => setShowToast(null), 3000);
+        },
+      });
+    }
+  };
+
   const agent = {
     name: agentData?.name || "Unknown Agent",
     company: agentData?.company || null,
@@ -511,6 +534,9 @@ const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views
                             <button onClick={() => { setSelectedRentalForVerification(property); setShowVerificationModal(true); }} className="action-button mobile-full-width" style={{ width: '100%', padding: 'clamp(0.375rem, 2vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem)', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.25rem, 1.5vw, 0.375rem)', backgroundColor: 'white', color: 'hsl(174 62% 32%)', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', fontWeight: '500', cursor: 'pointer' }}>
                               Request Verification
                             </button>
+                            <button onClick={() => handleFeatureClick(property)} className="action-button mobile-full-width" style={{ width: '100%', padding: 'clamp(0.375rem, 2vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem)', border: '1px solid hsl(38 92% 50%)', borderRadius: 'clamp(0.25rem, 1.5vw, 0.375rem)', backgroundColor: 'hsl(38 92% 50%)', color: 'white', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', fontWeight: '500', cursor: 'pointer' }}>
+                              ⭐ Feature Listing
+                            </button>
                           </div>
                         ))}
                       </div>
@@ -542,6 +568,9 @@ const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views
                             </div>
                             <button onClick={() => { setSelectedRentalForVerification(property); setShowVerificationModal(true); }} className="action-button" style={{ width: '100%', padding: 'clamp(0.375rem, 2vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem)', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.25rem, 1.5vw, 0.375rem)', backgroundColor: 'white', color: 'hsl(38 92% 50%)', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', fontWeight: '500', cursor: 'pointer' }}>
                               Request Verification
+                            </button>
+                            <button onClick={() => handleFeatureClick(property)} className="action-button" style={{ width: '100%', padding: 'clamp(0.375rem, 2vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem)', border: '1px solid hsl(38 92% 50%)', borderRadius: 'clamp(0.25rem, 1.5vw, 0.375rem)', backgroundColor: 'hsl(38 92% 50%)', color: 'white', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', fontWeight: '500', cursor: 'pointer' }}>
+                              ⭐ Feature Listing
                             </button>
                           </div>
                         ))}

@@ -9,8 +9,9 @@ use App\Models\Review;
 use App\Models\Plan;
 use App\Models\ListingView;
 use App\Models\ListingInquiry;
-use App\Services\ListingLimitService;
+use App\Services\FeaturedListingService;
 use Illuminate\Http\Request;
+use App\Services\ListingLimitService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -20,23 +21,17 @@ use Illuminate\Support\Facades\Validator;
 class RentController extends Controller
 {
     /**
-     * Display homepage with recent listings
+     * Display homepage with featured listings
      */
     public function index()
     {
-        // Show recent rental listings
-        $recentRentals = Rental::where('purpose', 'rent')
-            ->where('is_featured', true)
-            ->latest()
-            ->limit(4)
-            ->get();
+        $featuredService = app(FeaturedListingService::class);
 
-        // Show recent sale listings
-        $recentSales = Rental::where('purpose', 'sale')
-            ->where('is_featured', true)
-            ->latest()
-            ->limit(4)
-            ->get();
+        // Get featured rental listings
+        $featuredRentals = $featuredService->getFeaturedListings('rent', 8);
+
+        // Get featured sale listings
+        $featuredSales = $featuredService->getFeaturedListings('sale', 8);
 
         // Get rental areas grouped by city (limit to last 6 months for performance)
         $sixMonthsAgo = now()->subMonths(6);
@@ -89,8 +84,8 @@ class RentController extends Controller
         $users = User::count();
 
         return inertia('Home', [
-            'recentRentals' => $recentRentals,
-            'recentSales' => $recentSales,
+            'featuredRentals' => $featuredRentals,
+            'featuredSales' => $featuredSales,
             'rentalAreas' => $rentalAreas,
             'saleAreas' => $saleAreas,
             'totalAreas' => $totalAreas,
@@ -1120,5 +1115,27 @@ class RentController extends Controller
         return inertia('PricingPage', [
             'plans' => $plans,
         ]);
+    }
+
+    public function featureListing(Request $request, Rental $rent)
+    {
+        $user = auth()->user();
+        
+        $featuredService = app(FeaturedListingService::class);
+        
+        try {
+            $result = $featuredService->featureListing($user, $rent);
+            
+            return response()->json([
+                'success' => true,
+                'message' => $result['message'] ?? 'Listing featured successfully',
+                'data' => $result
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 400);
+        }
     }
 }

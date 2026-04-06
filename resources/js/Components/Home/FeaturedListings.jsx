@@ -318,9 +318,9 @@ const SectionHeader = ({ title, subtitle, viewAllHref, viewAllLabel }) => (
   </div>
 );
 
-const FeaturedListings = ({ recentRentals = [], recentSales = [] }) => {
-  const hasRentals = recentRentals?.length > 0;
-  const hasSales = recentSales?.length > 0;
+const FeaturedListings = ({ featuredRentals = [], featuredSales = [] }) => {
+  const hasRentals = featuredRentals?.length > 0;
+  const hasSales = featuredSales?.length > 0;
 
   if (!hasRentals && !hasSales) {
     return (
@@ -357,7 +357,7 @@ const FeaturedListings = ({ recentRentals = [], recentSales = [] }) => {
                 gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
                 gap: '1.25rem',
               }}>
-                {recentRentals.map((listing) => (
+                {featuredRentals.map((listing) => (
                   <PropertyCard
                     key={`rental-${listing.id}`}
                     {...listing}
@@ -383,7 +383,7 @@ const FeaturedListings = ({ recentRentals = [], recentSales = [] }) => {
                 gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
                 gap: '1.25rem',
               }}>
-                {recentSales.map((listing) => (
+                {featuredSales.map((listing) => (
                   <PropertyCard
                     key={`sale-${listing.id}`}
                     {...listing}

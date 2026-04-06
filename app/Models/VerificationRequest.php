@@ -49,6 +49,14 @@ class VerificationRequest extends Model
     }
 
     /**
+     * Get the user who submitted the request (if different from agent)
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    /**
      * Get the admin who reviewed the request
      */
     public function reviewer()

@@ -31,8 +31,18 @@ class Rental extends Model
         'status',
         'is_verified',
         'is_featured',
+        'featured_at',
+        'featured_expires_at',
+        'is_boosted',
+        'boost_expires_at',
+        'featured_priority',
         'is_sold',
         'sold_at',
+        'verification_status',
+        'verification_requested_at',
+        'verified_at',
+        'verification_rejected_at',
+        'verification_rejection_reason',
     ];
 
     protected $casts = [
@@ -46,8 +56,16 @@ class Rental extends Model
         'advance_duration' => 'integer',
         'is_verified' => 'boolean',
         'is_featured' => 'boolean',
+        'featured_at' => 'datetime',
+        'featured_expires_at' => 'datetime',
+        'is_boosted' => 'boolean',
+        'boost_expires_at' => 'datetime',
+        'featured_priority' => 'integer',
         'is_sold' => 'boolean',
         'sold_at' => 'datetime',
+        'verification_requested_at' => 'datetime',
+        'verified_at' => 'datetime',
+        'verification_rejected_at' => 'datetime',
     ];
 
     public function user()
@@ -119,13 +137,33 @@ class Rental extends Model
     }
 
     /**
-     * Mark listing as sold
+     * Scope for active boost
      */
-    public function markAsSold(): void
+    public function scopeActiveBoost($query)
     {
-        $this->update([
-            'is_sold' => true,
-            'sold_at' => now(),
-        ]);
+        return $query->where('is_boosted', true)
+                     ->where('boost_expires_at', '>', now());
+    }
+
+    /**
+     * Check if boost is active
+     */
+    public function isBoostActive(): bool
+    {
+        return $this->is_boosted && $this->boost_expires_at && $this->boost_expires_at->isFuture();
+    }
+
+    /**
+     * Get user's plan priority
+     */
+    public function getPlanPriority(): int
+    {
+        $planSlug = strtolower($this->user->subscription?->plan?->slug ?? 'free');
+        
+        return match($planSlug) {
+            'elite' => 3,
+            'pro' => 2,
+            default => 1, // free
+        };
     }
 }

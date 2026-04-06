@@ -7,7 +7,7 @@ import RentCalculator from "../Components/Home/RentCalculator";
 import TrustFeatures from "../Components/Home/TrustFeatures";
 import CTASection from "../Components/Home/CTASection";
 
-const Home = ({ recentRentals, recentSales, rentalAreas, saleAreas, totalListings, totalAreas, totalVerifiedAgents, users }) => {
+const Home = ({ featuredRentals, featuredSales, rentalAreas, saleAreas, totalListings, totalAreas, totalVerifiedAgents, users }) => {
   return (
     
     <div className="min-h-screen flex flex-col">
@@ -15,7 +15,7 @@ const Home = ({ recentRentals, recentSales, rentalAreas, saleAreas, totalListing
 
       <main className="flex-1">
          <HeroSearch totalAreas={totalAreas} totalListings={totalListings} totalVerifiedAgents={totalVerifiedAgents} users={users} />
-        <FeaturedListings recentRentals={recentRentals} recentSales={recentSales} />
+        <FeaturedListings featuredRentals={featuredRentals} featuredSales={featuredSales} />
         <PopularAreas rentalAreas={rentalAreas} saleAreas={saleAreas} />
         <RentCalculator />
         <TrustFeatures />

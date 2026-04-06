@@ -84,6 +84,7 @@ Route::middleware(['auth', 'verified', 'throttle:60,1', 'role:agent'])->group(fu
         ->name('verification.store');
     Route::delete('/api/verification-requests/{id}', [VerificationsController::class, 'destroy'])
         ->name('verification.destroy');
+    Route::post('/api/listings/{rent}/feature', [RentController::class, 'featureListing'])->name('listings.feature');
 });
 
 Route::get('/agent/dashboard', [DashboardController::class, 'freeTier'])->middleware(['auth','role:agent','throttle:60,1'])->name('free.agent.dashboard');

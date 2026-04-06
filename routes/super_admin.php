@@ -65,6 +65,10 @@ Route::prefix('super-admin')
     Route::post('tenants/{tenant}/reactivate', [TenantController::class, 'reactivate']) ->name('tenants.reactivate');
 
     // ── Listings ──────────────────────────────────────────────────────────────
+    // Verification page
+    Route::get('listings/verification', [ListingController::class, 'verification'])
+        ->name('listings.verification');
+ 
     Route::resource('listings', ListingController::class)
         ->only(['index', 'show', 'edit', 'update', 'destroy', 'create', 'store']);
  
