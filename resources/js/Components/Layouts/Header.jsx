@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, usePage, useForm } from "@inertiajs/react";
 import { Menu, X, Search, User, LogOut, LayoutDashboard } from 'lucide-react';
 import { RentDesktop, RentMobile } from "./RentLinks";
@@ -37,7 +37,20 @@ const Header = () => {
   // Close menu when clicking a link (mobile)
   const handleMobileLinkClick = () => {
     setIsMenuOpen(false);
+    document.body.classList.remove('menu-open');
   };
+
+  useEffect(() => {
+    if (isMenuOpen) {
+      document.body.classList.add('menu-open');
+    } else {
+      document.body.classList.remove('menu-open');
+    }
+
+    return () => {
+      document.body.classList.remove('menu-open');
+    };
+  }, [isMenuOpen]);
 
   return (
     <>
@@ -253,15 +266,7 @@ const Header = () => {
           </div>
           {/* Mobile Menu Button */}
           <button
-            onClick={() => {
-              setIsMenuOpen(!isMenuOpen);
-              // Toggle body scroll
-              if (!isMenuOpen) {
-                document.body.classList.add('menu-open');
-              } else {
-                document.body.classList.remove('menu-open');
-              }
-            }}
+            onClick={() => setIsMenuOpen((prev) => !prev)}
             className="mobile-menu-button md:hidden p-2 rounded-lg transition-colors"
             style={{ 
               color: 'hsl(200 15% 45%)',
