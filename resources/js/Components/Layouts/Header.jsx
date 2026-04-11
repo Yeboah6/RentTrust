@@ -203,7 +203,7 @@ const Header = () => {
               >
                 Reports & Reviews
               </Link>
-              <Link
+              {/* <Link
                   href="/contact"
                   onMouseEnter={() => setActiveLink('contact')}
                   onMouseLeave={() => setActiveLink(null)}
@@ -215,7 +215,7 @@ const Header = () => {
                   }}
                 >
                   Contact
-                </Link>
+              </Link> */}
                 <Link
                   href="/pricing"
                   onMouseEnter={() => setActiveLink('pricing')}
@@ -229,7 +229,7 @@ const Header = () => {
                 >
                   Pricing
                 </Link>
-                <Link
+                {/* <Link
                   href="/about"
                   onMouseEnter={() => setActiveLink('about')}
                   onMouseLeave={() => setActiveLink(null)}
@@ -241,7 +241,7 @@ const Header = () => {
                   }}
                 >
                   About us
-                </Link>
+                </Link> */}
             </>
           </nav>
 

@@ -67,10 +67,9 @@ const Footer = () => {
                   <li key={link.path}>
                     <Link
                       href={link.path}
-                      onClick={() => handleLinkClick(link.path)}
                       onMouseEnter={() => setHoveredLink(link.path)}
                       onMouseLeave={() => setHoveredLink(null)}
-                      className="text-sm transition-colors text-left"
+                      className="text-sm transition-colors text-left block"
                       style={{ 
                         color: hoveredLink === link.path ? 'hsl(200 25% 15%)' : 'hsl(200 15% 45%)'
                       }}
@@ -90,17 +89,17 @@ const Footer = () => {
               <ul className="space-y-2">
                 {footerLinks.resources.map((link) => (
                   <li key={link.path}>
-                    <button
-                      onClick={() => handleLinkClick(link.path)}
+                    <Link
+                      href={link.path}
                       onMouseEnter={() => setHoveredLink(link.path)}
                       onMouseLeave={() => setHoveredLink(null)}
-                      className="text-sm transition-colors text-left"
+                      className="text-sm transition-colors text-left block"
                       style={{ 
                         color: hoveredLink === link.path ? 'hsl(200 25% 15%)' : 'hsl(200 15% 45%)'
                       }}
                     >
                       {link.label}
-                    </button>
+                    </Link>
                   </li>
                 ))}
               </ul>
@@ -114,17 +113,17 @@ const Footer = () => {
               <ul className="space-y-2">
                 {footerLinks.legal.map((link) => (
                   <li key={link.path}>
-                    <button
-                      onClick={() => handleLinkClick(link.path)}
+                    <Link
+                      href={link.path}
                       onMouseEnter={() => setHoveredLink(link.path)}
                       onMouseLeave={() => setHoveredLink(null)}
-                      className="text-sm transition-colors text-left"
+                      className="text-sm transition-colors text-left block"
                       style={{ 
                         color: hoveredLink === link.path ? 'hsl(200 25% 15%)' : 'hsl(200 15% 45%)'
                       }}
                     >
                       {link.label}
-                    </button>
+                    </Link>
                   </li>
                 ))}
               </ul>
