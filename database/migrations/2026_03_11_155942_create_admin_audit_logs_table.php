@@ -13,22 +13,21 @@ return new class extends Migration
 
             // Who performed the action
             $table->foreignId('causer_id')->nullable()->constrained('users')->nullOnDelete();
-            $table->string('causer_name',  120)->nullable();   // snapshot — survives user deletion
+            $table->string('causer_name',  120)->nullable(); 
             $table->string('causer_email', 180)->nullable();
 
             // What happened
-            $table->string('action',        200);              // human-readable label
-            $table->string('type',           40)->index();     // enum-like: subscription|payment|…
-            $table->string('affected_user', 160)->nullable();  // display name of affected entity
+            $table->string('action',        200);
+            $table->string('type',           40)->index();
+            $table->string('affected_user', 160)->nullable();
             $table->unsignedBigInteger('affected_id')->nullable()->index();
 
             // Context
             $table->text('notes')->nullable();
-            $table->string('ip_address', 45)->nullable();      // supports IPv6
-            $table->json('properties')->nullable();            // extra structured data
+            $table->string('ip_address', 45)->nullable();
+            $table->json('properties')->nullable();
 
             $table->timestamp('created_at')->useCurrent()->index();
-            // no updated_at — logs are immutable
 
             // Useful composite indexes
             $table->index(['causer_id',   'created_at']);

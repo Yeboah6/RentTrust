@@ -1,184 +1,158 @@
-// import Header from '../Components/Layouts/Header';
-// import Footer from '../Components/Layouts/Footer';
-
-// export default function TermsPage() {
-//     return (
-//         <>
-//             <style>{`
-//                 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap');
-
-//                 * { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; box-sizing: border-box; }
-//                 .page-shell { min-height: 100vh; display: flex; flex-direction: column; background: hsl(40 33% 98%); }
-//                 .page-hero { position: relative; overflow: hidden; min-height: 320px; display: flex; align-items: center; background: linear-gradient(135deg, hsl(200 24% 28%) 0%, hsl(200 18% 24%) 40%, hsl(200 14% 20%) 100%); color: white; }
-//                 .hero-inner { width: min(1100px, 100%); margin: 0 auto; padding: clamp(2rem, 5vw, 4rem); display: grid; gap: 1rem; }
-//                 .hero-badge { display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(255,255,255,0.16); border: 1px solid rgba(255,255,255,0.22); padding: 0.6rem 1rem; border-radius: 999px; font-weight: 600; font-size: 0.875rem; }
-//                 .hero-title { font-size: clamp(2rem, 5vw, 3.25rem); line-height: 1.05; font-weight: 800; max-width: 9ch; }
-//                 .hero-copy { max-width: 42rem; color: rgba(255,255,255,0.9); font-size: clamp(1rem, 2.2vw, 1.125rem); line-height: 1.75; }
-//                 .page-content { width: min(1100px, 100%); margin: 0 auto; padding: clamp(2rem, 5vw, 4rem) clamp(1rem, 4vw, 2rem); }
-//                 .term-card { background: white; border: 1px solid hsl(40 20% 88%); border-radius: 1rem; padding: 1.5rem; box-shadow: 0 16px 48px hsl(200 15% 20% / 0.06); margin-bottom: 1.25rem; }
-//                 .term-card h2 { margin: 0 0 0.75rem; font-size: 1.1rem; color: hsl(200 25% 15%); }
-//                 .term-card p, .term-card ul { margin: 0; color: hsl(200 15% 45%); line-height: 1.75; font-size: 0.96rem; }
-//                 .term-card ul { margin-top: 0.75rem; padding-left: 1.2rem; }
-//                 .term-card li { margin-bottom: 0.65rem; }
-//                 .note { margin-top: 1rem; padding: 1rem; border-radius: 1rem; background: hsl(40 90% 90%); color: hsl(200 25% 15%); border: 1px solid hsl(40 20% 88%); }
-//             `}</style>
-
-//             <div className="page-shell">
-//                 <Header />
-//                 <main style={{ flex: 1 }}>
-//                     <section className="page-hero">
-//                         <div className="hero-inner">
-//                             <span className="hero-badge">Terms of Service</span>
-//                             <h1 className="hero-title">How RentTrust works and what you agree to.</h1>
-//                             <p className="hero-copy">These terms explain your rights, responsibilities and the rules for using RentTrust to browse, list, verify and report rental properties.</p>
-//                         </div>
-//                     </section>
-
-//                     <section className="page-content">
-//                         <div className="term-card">
-//                             <h2>Using the platform</h2>
-//                             <p>RentTrust is a property listing marketplace. You may browse, search and contact agents, but you must act responsibly and provide accurate information.</p>
-//                         </div>
-//                         <div className="term-card">
-//                             <h2>Listing accuracy</h2>
-//                             <p>Agents and landlords must provide truthful details. If a listing is false or misleading, you should report it immediately so we can remove it.</p>
-//                         </div>
-//                         <div className="term-card">
-//                             <h2>Responsible behaviour</h2>
-//                             <p>Do not harass other users, post fraudulent information, or misrepresent yourself. Any abusive or illegal activity may lead to account suspension.</p>
-//                         </div>
-//                         <div className="term-card">
-//                             <h2>Payments and fees</h2>
-//                             <p>RentTrust does not process rental payments directly. You are responsible for all payments agreed with the landlord or agent outside the platform.</p>
-//                         </div>
-//                         <div className="term-card note">
-//                             <p>By continuing to use RentTrust, you confirm that you understand these terms and agree to follow the rules that keep the marketplace safe for everyone.</p>
-//                         </div>
-//                     </section>
-//                 </main>
-//                 <Footer />
-//             </div>
-//         </>
-//     );
-// }
-
 import Header from '../Components/Layouts/Header';
 import Footer from '../Components/Layouts/Footer';
 import { Link } from '@inertiajs/react';
- 
-/* ── shared hero mosaic (same images, tinted per page) ── */
-const HeroMosaic = ({ tint = 'hsl(174 62% 22% / 0.98)' }) => (
-    <>
-        <div style={{ position:'absolute',right:0,top:0,bottom:0,width:'56%',zIndex:1,
-            display:'grid',gridTemplateColumns:'repeat(3,1fr)',gridTemplateRows:'repeat(3,1fr)',gap:4 }}>
-            <div style={{ gridRow:'1/3',overflow:'hidden',background:'hsl(174 25% 22%)' }}>
-                <img src="/images/download 2.jfif" alt="" style={{ width:'100%',height:'100%',objectFit:'cover',opacity:0.72 }} />
-            </div>
-            <div style={{ overflow:'hidden',background:'hsl(200 30% 18%)' }}>
-                <img src="/images/download 1.jfif" alt="" style={{ width:'100%',height:'100%',objectFit:'cover',opacity:0.72 }} />
-            </div>
-            <div style={{ overflow:'hidden',background:'hsl(174 35% 16%)' }}>
-                <img src="/images/download 3.jfif" alt="" style={{ width:'100%',height:'100%',objectFit:'cover',opacity:0.72 }} />
-            </div>
-            <div style={{ gridColumn:'2/4',overflow:'hidden',background:'hsl(30 25% 18%)' }}>
-                <img src="/images/download 4.jfif" alt="" style={{ width:'100%',height:'100%',objectFit:'cover',opacity:0.72 }} />
-            </div>
-            <div style={{ overflow:'hidden',background:'hsl(220 30% 16%)' }}>
-                <img src="/images/download 5.jfif" alt="" style={{ width:'100%',height:'100%',objectFit:'cover',opacity:0.72 }} />
-            </div>
-            <div style={{ overflow:'hidden',background:'hsl(174 20% 14%)' }}>
-                <img src="/images/download 1.jfif" alt="" style={{ width:'100%',height:'100%',objectFit:'cover',opacity:0.72 }} />
-            </div>
-            <div style={{ overflow:'hidden',background:'hsl(15 25% 16%)' }}>
-                <img src="/images/download 2.jfif" alt="" style={{ width:'100%',height:'100%',objectFit:'cover',opacity:0.72 }} />
-            </div>
+
+const MosaicHero = ({ badge, title, highlight, sub }) => (
+    <div style={{ position:'relative', overflow:'hidden', minHeight:'360px', display:'flex', alignItems:'center' }}>
+        <div style={{ position:'absolute', inset:0, background:'linear-gradient(135deg,hsl(200 28% 14%) 0%,hsl(200 22% 22%) 60%,hsl(200 18% 28%) 100%)', zIndex:0 }} />
+        <div style={{ position:'absolute', right:0, top:0, bottom:0, width:'56%', zIndex:1,
+            display:'grid', gridTemplateColumns:'repeat(3,1fr)', gridTemplateRows:'repeat(3,1fr)', gap:'4px' }}>
+            <div style={{ gridRow:'1/3', overflow:'hidden', background:'hsl(200 25% 14%)' }}><img src="/images/download 2.jfif" alt="" style={{ width:'100%', height:'100%', objectFit:'cover', opacity:0.72 }} /></div>
+            <div style={{ overflow:'hidden', background:'hsl(200 30% 12%)' }}><img src="/images/download 1.jfif" alt="" style={{ width:'100%', height:'100%', objectFit:'cover', opacity:0.72 }} /></div>
+            <div style={{ overflow:'hidden', background:'hsl(200 35% 10%)' }}><img src="/images/download 3.jfif" alt="" style={{ width:'100%', height:'100%', objectFit:'cover', opacity:0.72 }} /></div>
+            <div style={{ gridColumn:'2/4', overflow:'hidden', background:'hsl(200 28% 12%)' }}><img src="/images/download 4.jfif" alt="" style={{ width:'100%', height:'100%', objectFit:'cover', opacity:0.72 }} /></div>
+            <div style={{ overflow:'hidden', background:'hsl(200 22% 10%)' }}><img src="/images/download 5.jfif" alt="" style={{ width:'100%', height:'100%', objectFit:'cover', opacity:0.72 }} /></div>
+            <div style={{ overflow:'hidden', background:'hsl(200 18% 10%)' }}><img src="/images/download 1.jfif" alt="" style={{ width:'100%', height:'100%', objectFit:'cover', opacity:0.72 }} /></div>
+            <div style={{ overflow:'hidden', background:'hsl(200 15% 12%)' }}><img src="/images/download 2.jfif" alt="" style={{ width:'100%', height:'100%', objectFit:'cover', opacity:0.72 }} /></div>
         </div>
-        <div style={{ position:'absolute',inset:0,zIndex:2,pointerEvents:'none',opacity:0.06,
-            backgroundImage:'radial-gradient(circle,white 1px,transparent 1px)',backgroundSize:'28px 28px' }} />
-        <div style={{ position:'absolute',right:'-4rem',top:'-4rem',width:'20rem',height:'20rem',
-            borderRadius:'50%',background:'radial-gradient(circle,rgba(255,255,255,0.14) 0%,transparent 70%)',
-            zIndex:2,pointerEvents:'none' }} />
-        <div style={{ position:'absolute',inset:0,zIndex:2,
-            background:`linear-gradient(to right,${tint} 0%,${tint.replace('0.98','0.88')} 36%,${tint.replace('0.98','0.42')} 68%,${tint.replace('0.98','0.1')} 100%)` }} />
-    </>
+        <div style={{ position:'absolute', inset:0, zIndex:2, pointerEvents:'none', opacity:0.06, backgroundImage:'radial-gradient(circle,white 1px,transparent 1px)', backgroundSize:'28px 28px' }} />
+        <div style={{ position:'absolute', inset:0, zIndex:2, background:'linear-gradient(to right,hsl(200 28% 14% / 0.98) 0%,hsl(200 25% 14% / 0.88) 38%,hsl(200 22% 14% / 0.45) 70%,hsl(200 22% 14% / 0.15) 100%)' }} />
+        <div style={{ position:'relative', zIndex:3, padding:'clamp(2.5rem,7vw,4.5rem) clamp(1rem,4vw,2.5rem)', maxWidth:'560px' }}>
+            <div style={{ display:'inline-flex', alignItems:'center', gap:'6px', padding:'5px 14px', borderRadius:'999px', background:'rgba(255,255,255,0.14)', border:'1px solid rgba(255,255,255,0.22)', color:'rgba(255,255,255,0.9)', fontSize:'13px', fontWeight:'600', marginBottom:'1.25rem' }}>
+                <span style={{ width:'6px', height:'6px', borderRadius:'50%', background:'hsl(200 70% 62%)', animation:'pulse 2s ease infinite', flexShrink:0 }} />{badge}
+            </div>
+            <h1 style={{ color:'white', fontSize:'clamp(2rem,5vw,3.25rem)', fontWeight:'800', lineHeight:'1.1', marginBottom:'1rem', letterSpacing:'-0.02em' }}>
+                {title}<br />{highlight && <span style={{ color:'hsl(40 90% 70%)' }}>{highlight}</span>}
+            </h1>
+            <p style={{ color:'rgba(255,255,255,0.72)', fontSize:'clamp(0.9rem,2.2vw,1.1rem)', lineHeight:'1.6', maxWidth:'420px' }}>{sub}</p>
+        </div>
+    </div>
 );
- 
-/* ── shared CSS injected once per page ── */
-const BASE_CSS = `
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap');
-    *,*::before,*::after { font-family:'Plus Jakarta Sans',system-ui,sans-serif; box-sizing:border-box; margin:0; padding:0; }
-    @keyframes spFadeUp { from{opacity:0;transform:translateY(22px)} to{opacity:1;transform:translateY(0)} }
-    @keyframes spFadeIn { from{opacity:0} to{opacity:1} }
-    @keyframes spPulse  { 0%,100%{opacity:1} 50%{opacity:0.45} }
-    .sp-shell  { min-height:100vh; display:flex; flex-direction:column; background:hsl(40 33% 98%); }
-    .sp-hero   { position:relative; overflow:hidden; min-height:360px; display:flex; align-items:center; animation:spFadeIn 0.6s ease both; }
-    .sp-content{ width:min(1100px,100%); margin:0 auto; padding:clamp(2rem,5vw,4rem) clamp(1rem,4vw,2rem); animation:spFadeUp 0.6s ease 0.1s both; }
-    .sp-badge  { display:inline-flex; align-items:center; gap:6px; padding:5px 14px; border-radius:999px;
-                 background:rgba(255,255,255,0.14); border:1px solid rgba(255,255,255,0.22);
-                 color:rgba(255,255,255,0.9); font-size:13px; font-weight:600; margin-bottom:1.25rem; }
-    .sp-pulse  { width:7px; height:7px; border-radius:50%; flex-shrink:0; animation:spPulse 2s ease infinite; }
-    .sp-h1     { font-size:clamp(2rem,5vw,3.25rem); font-weight:800; color:white; line-height:1.1;
-                 letter-spacing:-0.02em; margin-bottom:1rem; }
-    .sp-sub    { color:rgba(255,255,255,0.72); font-size:clamp(0.9rem,2.2vw,1.1rem); line-height:1.65; max-width:440px; }
-    .sp-hero-inner { position:relative; z-index:3; padding:clamp(2.5rem,7vw,4.5rem) clamp(1rem,4vw,2.5rem); max-width:560px; }
-    .sp-card   { background:white; border:1px solid hsl(40 20% 88%); border-radius:1rem; padding:1.5rem;
-                 box-shadow:0 4px 32px hsl(200 25% 15% / 0.07); }
-    .sp-card-h { font-size:1rem; font-weight:700; color:hsl(200 25% 15%); margin-bottom:0.5rem; }
-    .sp-card-p { color:hsl(200 15% 45%); font-size:0.875rem; line-height:1.7; }
-    .sp-card ul{ margin:0.625rem 0 0; padding-left:1.1rem; }
-    .sp-card li{ margin-bottom:0.5rem; color:hsl(200 15% 42%); font-size:0.875rem; line-height:1.6; }
-    .sp-icon   { width:40px; height:40px; border-radius:0.625rem; display:flex; align-items:center;
-                 justify-content:center; flex-shrink:0; margin-bottom:0.875rem; }
-    .sp-callout{ padding:1.25rem 1.5rem; border-radius:1rem; background:hsl(174 62% 32% / 0.07);
-                 border:1px solid hsl(174 62% 32% / 0.18); }
-    .sp-grid-2 { display:grid; grid-template-columns:repeat(2,1fr); gap:1.1rem; }
-    .sp-grid-3 { display:grid; grid-template-columns:repeat(3,1fr); gap:1.1rem; }
-    .sp-grid-1 { display:grid; grid-template-columns:1fr; gap:1.1rem; }
-    @media(max-width:768px) { .sp-grid-2,.sp-grid-3 { grid-template-columns:1fr !important; } }
+
+const Card = ({ children, style={} }) => (
+    <div style={{ backgroundColor:'white', borderRadius:'1.25rem', border:'1px solid hsl(40 20% 88%)', padding:'clamp(1.5rem,4vw,2.5rem)', boxShadow:'0 4px 32px hsl(200 25% 15% / 0.07)', ...style }}>{children}</div>
+);
+const SmallCard = ({ children, style={} }) => (
+    <div style={{ backgroundColor:'white', borderRadius:'1.25rem', border:'1px solid hsl(40 20% 88%)', padding:'1.5rem', boxShadow:'0 4px 32px hsl(200 25% 15% / 0.06)', ...style }}>{children}</div>
+);
+const FaqItem = ({ q, a }) => (
+    <div style={{ borderBottom:'1px solid hsl(40 20% 88%)', padding:'1rem 0' }}>
+        <p style={{ fontWeight:'600', fontSize:'0.875rem', color:'hsl(200 25% 20%)', marginBottom:'0.375rem' }}>{q}</p>
+        <p style={{ fontSize:'0.8125rem', color:'hsl(200 15% 50%)', lineHeight:'1.55' }}>{a}</p>
+    </div>
+);
+
+const BASE_STYLE = `
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap');
+* { font-family:'Plus Jakarta Sans',system-ui,sans-serif; box-sizing:border-box; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+@keyframes fadeUp { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
+.sp-main { animation:fadeUp 0.6s ease 0.1s both; }
+.sp-side { animation:fadeUp 0.6s ease 0.2s both; }
+@media(max-width:768px){.sp-grid{flex-direction:column!important}}
 `;
 
 export default function TermsPage() {
     const terms = [
-        { title:'Using the platform',     body:'RentTrust is a property listing marketplace. You may browse, search and contact agents, but you must act responsibly and provide accurate information at all times.', items:['Do not create false accounts or listings','Treat all users with respect','Do not scrape or copy our content without permission'] },
-        { title:'Listing accuracy',        body:'Agents and landlords must provide truthful details. If a listing is false or misleading, report it immediately so we can remove it.', items:['Photos must match the actual property','Prices must reflect what is charged','Location must be correct and verifiable'] },
-        { title:'Responsible behaviour',   body:'Do not harass other users, post fraudulent information, or misrepresent yourself. Any abusive or illegal activity may lead to account suspension.', items:['No threats or harassment','No impersonation of agents or landlords','No illegal listing content'] },
-        { title:'Payments and fees',       body:'RentTrust does not process rental payments directly. You are responsible for all payments agreed with the landlord or agent outside the platform.', items:['Always get a receipt for payments made','Confirm payment terms in writing','RentTrust is not liable for off-platform transactions'] },
-        { title:'Intellectual property',   body:'All content on RentTrust, including logos, text, and design, is owned by RentTrust and may not be reused without written permission.', items:['Do not copy or reproduce our content','Do not use our brand without permission','User-submitted content remains your own'] },
-        { title:'Changes to these terms',  body:'We may update these terms from time to time. Continued use of the platform after changes are published means you accept the new terms.', items:['Changes are announced on the platform','Major changes are communicated by email','Last updated: April 2026'] },
+        { n:'01', title:'Using the platform', body:'RentTrust is a property listing marketplace. You may browse, search and contact agents, but you must act responsibly and provide accurate information at all times.',
+          items:['No creating false accounts or listings','Treat all users with respect','No scraping or copying our content'] },
+        { n:'02', title:'Listing accuracy', body:'Agents and landlords must provide truthful details. If a listing is false or misleading, report it immediately so we can remove it.',
+          items:['Photos must match the actual property','Prices must reflect what is charged','Location must be correct and verifiable'] },
+        { n:'03', title:'Responsible behaviour', body:'Do not harass other users, post fraudulent information, or misrepresent yourself. Abusive or illegal activity may lead to account suspension.',
+          items:['No threats or harassment','No impersonation of agents or landlords','No illegal listing content'] },
+        { n:'04', title:'Payments and fees', body:'RentTrust does not process rental payments directly. You are responsible for all payments agreed with the landlord or agent outside the platform.',
+          items:['Always get a receipt for payments made','Confirm payment terms in writing','RentTrust is not liable for off-platform transactions'] },
+        { n:'05', title:'Intellectual property', body:'All content on RentTrust, including logos, text, and design, is owned by RentTrust and may not be reused without written permission.',
+          items:['Do not copy or reproduce our content','Do not use our brand without permission','User-submitted content remains your own'] },
+        { n:'06', title:'Changes to these terms', body:'We may update these terms from time to time. Continued use of the platform after changes means you accept the new terms.',
+          items:['Changes are announced on the platform','Major changes are communicated by email','Last updated: April 2026'] },
     ];
- 
+
     return (
         <>
-            <style>{BASE_CSS}</style>
-            <div className="sp-shell">
+            <style>{BASE_STYLE}</style>
+            <div style={{ minHeight:'100vh', display:'flex', flexDirection:'column', backgroundColor:'hsl(40 33% 98%)' }}>
                 <Header />
                 <main style={{ flex:1 }}>
-                    <div className="sp-hero" style={{ background:'linear-gradient(135deg,hsl(200 28% 14%),hsl(200 22% 22%))' }}>
-                        <HeroMosaic tint="hsl(200 28% 14% / 0.98)" />
-                        <div className="sp-hero-inner">
-                            <div className="sp-badge"><span className="sp-pulse" style={{ background:'hsl(200 70% 62%)' }} />Terms of Service</div>
-                            <h1 className="sp-h1">How RentTrust works and what you agree to.</h1>
-                            <p className="sp-sub">These terms explain your rights, responsibilities and the rules for using RentTrust to browse, list, verify and report rental properties.</p>
-                        </div>
-                    </div>
- 
-                    <div className="sp-content">
-                        <div className="sp-grid-2" style={{ marginBottom:'1.5rem' }}>
-                            {terms.map((t, i) => (
-                                <div key={t.title} className="sp-card">
-                                    <div style={{ display:'flex', alignItems:'center', gap:'0.625rem', marginBottom:'0.625rem' }}>
-                                        <span style={{ width:24, height:24, borderRadius:'50%', background:'hsl(200 28% 18%)', color:'white', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'0.7rem', fontWeight:800, flexShrink:0 }}>{String(i+1).padStart(2,'0')}</span>
-                                        <h3 style={{ fontSize:'0.9375rem', fontWeight:700, color:'hsl(200 25% 15%)', margin:0 }}>{t.title}</h3>
+                    <MosaicHero
+                        badge="Terms of Service"
+                        title="How RentTrust works"
+                        highlight="and what you agree to."
+                        sub="These terms explain your rights, responsibilities and the rules for using RentTrust to browse, list, verify and report rental properties."
+                    />
+                    <div style={{ maxWidth:'1080px', margin:'0 auto', padding:'clamp(2rem,6vw,4rem) clamp(0.75rem,3vw,1rem)' }}>
+                        <div className="sp-grid" style={{ display:'flex', gap:'clamp(1.5rem,4vw,3rem)', alignItems:'flex-start' }}>
+
+                            {/* ── Left ── */}
+                            <div className="sp-main" style={{ flex:'1 1 0', display:'flex', flexDirection:'column', gap:'1.25rem' }}>
+                                <Card>
+                                    <div style={{ marginBottom:'1.5rem' }}>
+                                        <h2 style={{ fontSize:'clamp(1.25rem,3vw,1.5rem)', fontWeight:'700', color:'hsl(200 25% 15%)', marginBottom:'0.375rem' }}>Terms of Service</h2>
+                                        <p style={{ color:'hsl(200 15% 50%)', fontSize:'0.9rem' }}>By using RentTrust you agree to the following terms. Please read them carefully.</p>
                                     </div>
-                                    <p className="sp-card-p">{t.body}</p>
-                                    <ul>{t.items.map(item => <li key={item}>{item}</li>)}</ul>
+                                    <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))', gap:'1rem' }}>
+                                        {terms.map(t => (
+                                            <div key={t.n} style={{ border:'1px solid hsl(40 20% 88%)', borderRadius:'1rem', padding:'1.25rem', background:'white' }}>
+                                                <div style={{ display:'flex', alignItems:'center', gap:'0.625rem', marginBottom:'0.875rem' }}>
+                                                    <span style={{ width:28, height:28, borderRadius:'50%', background:'hsl(200 28% 18%)', color:'white', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'0.7rem', fontWeight:800, flexShrink:0 }}>{t.n}</span>
+                                                    <h3 style={{ fontSize:'0.9rem', fontWeight:700, color:'hsl(200 25% 15%)', margin:0 }}>{t.title}</h3>
+                                                </div>
+                                                <p style={{ fontSize:'0.8125rem', color:'hsl(200 15% 42%)', lineHeight:1.65, marginBottom:'0.75rem' }}>{t.body}</p>
+                                                <ul style={{ margin:0, paddingLeft:'1.1rem' }}>
+                                                    {t.items.map(i => <li key={i} style={{ fontSize:'0.775rem', color:'hsl(200 15% 48%)', marginBottom:'0.3rem', lineHeight:1.5 }}>{i}</li>)}
+                                                </ul>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </Card>
+
+                                <div style={{ display:'flex', gap:'1rem', alignItems:'flex-start', padding:'1.25rem 1.5rem', borderRadius:'1rem', background:'hsl(174 62% 32% / 0.07)', border:'1px solid hsl(174 62% 32% / 0.18)' }}>
+                                    <span style={{ fontSize:'1.25rem', flexShrink:0 }}>⚖</span>
+                                    <div>
+                                        <div style={{ fontWeight:700, fontSize:'0.9375rem', color:'hsl(174 62% 22%)', marginBottom:4 }}>By using RentTrust, you agree to these terms.</div>
+                                        <p style={{ color:'hsl(200 15% 40%)', fontSize:'0.875rem', lineHeight:1.65 }}>
+                                            If you disagree with any part of these terms, please stop using the platform and <Link href="/contact" style={{ color:'hsl(174 62% 30%)', fontWeight:600 }}>contact our support team</Link>. We're happy to answer any questions about our policies.
+                                        </p>
+                                    </div>
                                 </div>
-                            ))}
-                        </div>
- 
-                        <div className="sp-callout">
-                            <div style={{ fontWeight:700, fontSize:'0.9375rem', color:'hsl(174 62% 22%)', marginBottom:4 }}>By using RentTrust, you agree to these terms.</div>
-                            <p style={{ color:'hsl(200 15% 40%)', fontSize:'0.875rem', lineHeight:1.65 }}>If you disagree with any part of these terms, please stop using the platform and contact our support team. We are happy to answer any questions about our policies.</p>
+                            </div>
+
+                            {/* ── Right ── */}
+                            <div className="sp-side" style={{ flex:'0 0 clamp(260px,30%,320px)', display:'flex', flexDirection:'column', gap:'1.5rem' }}>
+                                <SmallCard>
+                                    <h3 style={{ fontSize:'1rem', fontWeight:'700', color:'hsl(200 25% 15%)', marginBottom:'0.25rem' }}>Your key rights</h3>
+                                    <p style={{ fontSize:'0.8375rem', color:'hsl(200 15% 50%)', marginBottom:'1.25rem' }}>As a RentTrust user, you are always entitled to:</p>
+                                    {[
+                                        { icon:'✓', t:'Browse listings for free', col:'hsl(152 55% 35%)' },
+                                        { icon:'✓', t:'Read all agent reviews', col:'hsl(152 55% 35%)' },
+                                        { icon:'✓', t:'Report any suspicious listing', col:'hsl(152 55% 35%)' },
+                                        { icon:'✓', t:'Request deletion of your data', col:'hsl(152 55% 35%)' },
+                                        { icon:'✓', t:'Appeal any account decision', col:'hsl(152 55% 35%)' },
+                                    ].map(r => (
+                                        <div key={r.t} style={{ display:'flex', gap:'0.625rem', alignItems:'center', padding:'0.625rem 0', borderBottom:'1px solid hsl(40 20% 92%)' }}>
+                                            <span style={{ color:r.col, fontWeight:900, fontSize:'0.875rem', flexShrink:0 }}>{r.icon}</span>
+                                            <span style={{ fontSize:'0.8375rem', color:'hsl(200 25% 22%)', fontWeight:500 }}>{r.t}</span>
+                                        </div>
+                                    ))}
+                                </SmallCard>
+
+                                <SmallCard>
+                                    <h3 style={{ fontSize:'1rem', fontWeight:'700', color:'hsl(200 25% 15%)', marginBottom:'1rem' }}>Common questions</h3>
+                                    {[
+                                        { q:'Can I use RentTrust content?', a:'Personal and non-commercial use is fine. Reproducing or redistributing our content commercially requires written permission.' },
+                                        { q:'What happens if I break the rules?', a:'We may suspend or permanently remove accounts that violate our terms, with or without prior notice.' },
+                                        { q:'How are disputes handled?', a:"Disputes between tenants and landlords are handled outside of RentTrust. We're here to help facilitate, not adjudicate." },
+                                    ].map(({q,a}) => <FaqItem key={q} q={q} a={a} />)}
+                                </SmallCard>
+
+                                <div style={{ borderRadius:'1.25rem', background:'linear-gradient(135deg,hsl(174 62% 22%) 0%,hsl(174 50% 32%) 100%)', padding:'1.5rem', color:'white' }}>
+                                    <p style={{ fontWeight:'700', fontSize:'1rem', marginBottom:'0.375rem' }}>Questions about our terms?</p>
+                                    <p style={{ fontSize:'0.8125rem', color:'rgba(255,255,255,0.7)', marginBottom:'1rem' }}>Our team is happy to explain any part of our Terms of Service.</p>
+                                    <Link href="/contact" style={{ display:'inline-flex', alignItems:'center', gap:'6px', padding:'0.5rem 1.1rem', borderRadius:'0.5rem', backgroundColor:'hsl(38 92% 50%)', color:'hsl(200 25% 10%)', fontSize:'0.8125rem', fontWeight:'700', textDecoration:'none' }}>
+                                        Contact Us →
+                                    </Link>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </main>

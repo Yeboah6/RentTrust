@@ -30,6 +30,8 @@ return new class extends Migration
             $table->integer('sort_order')->default(0);
             $table->integer('rental_limit')->nullable();
             $table->integer('sale_limit')->nullable()->default(0)->after('listing_limit');
+            $table->integer('featured_limit')->default(0)->after('boost_limit');
+            $table->integer('featured_duration_days')->default(0)->after('featured_limit');
             $table->timestamps();
         });
 

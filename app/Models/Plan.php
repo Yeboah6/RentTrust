@@ -13,7 +13,7 @@ class Plan extends Model
         'featured_limit', 'featured_duration_days',
         'verified_badge', 'priority_ranking', 'analytics_access', 'features',
         'paystack_plan_code', 'flutterwave_plan_id',
-        'is_active', 'sort_order',
+        'is_active', 'sort_order', 'featured_limit', 'featured_duration_days'
     ];
 
     protected $casts = [
