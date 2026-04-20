@@ -75,16 +75,19 @@ const Gift = ({ style }) => (
 );
 
 // Plan badge for agent cards
-const PlanBadge = ({ slug }) => {
+const PlanBadge = ({ plan }) => {
+  const slug = plan?.slug ?? 'free';
+  const label = plan?.name ?? slug.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
   const configs = {
-    pro:      { label: 'Pro',      bg: 'hsl(174 62% 32%)',   text: 'white' },
-    verified: { label: 'Verified', bg: 'hsl(214 100% 50%)',  text: 'white' },
-    free:     { label: 'Free',     bg: 'hsl(40 20% 88%)',    text: 'hsl(200 25% 35%)' },
+    pro:      { bg: 'hsl(174 62% 32%)',   text: 'white' },
+    verified: { bg: 'hsl(214 100% 50%)',  text: 'white' },
+    elite:    { bg: 'hsl(174 62% 32%)',   text: 'white' },
+    free:     { bg: 'hsl(40 20% 88%)',    text: 'hsl(200 25% 35%)' },
   };
-  const c = configs[slug ?? 'free'] ?? configs.free;
+  const c = configs[slug] ?? configs.free;
   return (
     <span style={{ display: 'inline-block', padding: '0.15rem 0.5rem', borderRadius: '9999px', fontSize: '0.68rem', fontWeight: '700', backgroundColor: c.bg, color: c.text, letterSpacing: '0.03em' }}>
-      {c.label}
+      {label}
     </span>
   );
 };
@@ -93,6 +96,7 @@ const PlanBadge = ({ slug }) => {
 
 const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, verifications, plans }) => {
   const { auth } = usePage().props;
+  const findPlan = (packageSlug) => plans?.find(p => p.slug === packageSlug) ?? null;
   const [activeTab, setActiveTab] = useState("agents");
   const [respondingTo, setRespondingTo] = useState(null);
   const [responseText, setResponseText] = useState("");
@@ -416,7 +420,7 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, verif
                           {agentItem.company && <p style={{ fontSize: '0.8rem', color: 'hsl(200 15% 45%)' }}>{agentItem.company}</p>}
                         </div>
                         {/* Plan badge */}
-                        <PlanBadge slug={agentItem.package} />
+                        <PlanBadge plan={findPlan(agentItem.package)} />
                       </div>
 
                       {/* Meta */}
@@ -573,7 +577,7 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, verif
                       const reportStatusBadge = (status) => {
                         const s = {
                           pending:       { label: 'Pending',       bg: 'hsl(40 30% 94%)',    color: 'hsl(200 25% 15%)', border: 'hsl(40 20% 88%)' },
-                          investigating: { label: 'Investigating', bg: 'hsl(214 100% 95%)',  color: 'hsl(214 100% 40%)', border: 'hsl(214 100% 80%)' },
+                          reviewing:     { label: 'Reviewing',     bg: 'hsl(214 100% 95%)',  color: 'hsl(214 100% 40%)', border: 'hsl(214 100% 80%)' },
                           resolved:      { label: 'Resolved',      bg: 'hsl(152 60% 95%)',  color: 'hsl(152 60% 35%)', border: 'hsl(152 60% 80%)' },
                           dismissed:     { label: 'Dismissed',     bg: 'hsl(0 0% 95%)',     color: 'hsl(0 0% 45%)',    border: 'hsl(0 0% 80%)' },
                         };
@@ -638,11 +642,11 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, verif
                           )}
 
                           {/* Action buttons */}
-                          {(!report.status || report.status !== 'resolved') && report.status !== 'dismissed' && (
+                          {(!report.status || report.status === 'pending') && (
                             <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                              <button onClick={() => router.put(`/admin/reports/${report.id}/status`, { status: 'investigating' }, { onSuccess: () => showToast('Status Updated', 'Marked as investigating.') })}
+                              <button onClick={() => router.put(`/admin/reports/${report.id}/status`, { status: 'reviewing' }, { onSuccess: () => showToast('Status Updated', 'Marked as reviewing.') })}
                                 style={{ padding: '0.35rem 0.7rem', background: 'linear-gradient(135deg, hsl(214 100% 40%) 0%, hsl(214 100% 35%) 100%)', color: 'white', border: 'none', borderRadius: '0.375rem', fontSize: '0.8rem', fontWeight: '500', cursor: 'pointer' }}>
-                                Mark as Investigating
+                                Mark as Reviewing
                               </button>
                               <button onClick={() => { if (confirm('Resolve this report?')) router.put(`/admin/reports/${report.id}/status`, { status: 'resolved' }, { onSuccess: () => showToast('Report Resolved', 'Marked as resolved.') }); }}
                                 style={{ padding: '0.35rem 0.7rem', background: 'linear-gradient(135deg, hsl(152 60% 40%) 0%, hsl(152 50% 35%) 100%)', color: 'white', border: 'none', borderRadius: '0.375rem', fontSize: '0.8rem', fontWeight: '500', cursor: 'pointer' }}>
@@ -654,6 +658,9 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, verif
                                 onMouseLeave={e => e.currentTarget.style.backgroundColor = 'white'}
                               >Dismiss Report</button>
                             </div>
+                          )}
+                          {report.status === 'reviewing' && (
+                            <div style={{ padding: '0.625rem', backgroundColor: 'hsl(214 100% 95%)', borderRadius: '0.5rem', color: 'hsl(214 100% 40%)', fontSize: '0.8rem', fontWeight: '500', textAlign: 'center' }}>⏳ This report is under review</div>
                           )}
                           {report.status === 'resolved' && (
                             <div style={{ padding: '0.625rem', backgroundColor: 'hsl(152 60% 95%)', borderRadius: '0.5rem', color: 'hsl(152 60% 35%)', fontSize: '0.8rem', fontWeight: '500', textAlign: 'center' }}>✓ This report has been resolved</div>

@@ -460,7 +460,7 @@ const AdminsIndex = ({ admins: initial = [] }) => {
             return matchSearch && matchStatus;
         })
         .sort((a, b) => {
-            const km = { name: 'name', role: 'role', status: 'status', date: 'created_at', login: 'last_login_at' };
+            const km = { name: 'name', role: 'role', status: 'status', date: 'created_at', login: 'last_active' };
             const k  = km[sortField] ?? 'name';
             const cmp = (a[k] ?? '') < (b[k] ?? '') ? -1 : (a[k] ?? '') > (b[k] ?? '') ? 1 : 0;
             return sortDir === 'asc' ? cmp : -cmp;
@@ -625,11 +625,11 @@ const AdminsIndex = ({ admins: initial = [] }) => {
                                             {/* Last active */}
                                             <td style={{ padding: '0.875rem 1rem' }}>
                                                 <div style={{ fontSize: '0.82rem', fontWeight: '600', color: 'hsl(220 25% 22%)' }}>
-                                                    {fmtRelative(a.last_login_at)}
+                                                    {fmtRelative(a.last_active)}
                                                 </div>
-                                                {a.last_login_at && (
+                                                {a.last_active && (
                                                     <div style={{ fontSize: '0.68rem', color: 'hsl(220 15% 55%)', marginTop: '0.1rem' }}>
-                                                        {fmtDate(a.last_login_at)}
+                                                        {fmtDate(a.last_active)}
                                                     </div>
                                                 )}
                                             </td>

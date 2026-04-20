@@ -75,6 +75,31 @@ const ReviewsSection = ({ reviews, reports, appReviews }) => {
     { id: "app", label: "App Reviews", icon: Phone, count: appReviews.length }
   ];
 
+  const renderReportStatusBadge = (status) => {
+    const normalized = (status || 'pending').toLowerCase();
+    const styles = {
+      pending:    { label: 'Pending',    bg: 'hsl(40 30% 94%)',    color: 'hsl(200 25% 15%)', border: 'hsl(40 20% 88%)' },
+      reviewing:  { label: 'Reviewing',  bg: 'hsl(214 100% 95%)',  color: 'hsl(214 100% 40%)', border: 'hsl(214 100% 80%)' },
+      resolved:   { label: 'Resolved',   bg: 'hsl(152 60% 95%)',  color: 'hsl(152 60% 40%)', border: 'hsl(152 60% 80%)' },
+      dismissed:  { label: 'Dismissed',  bg: 'hsl(0 0% 95%)',     color: 'hsl(0 0% 45%)',    border: 'hsl(0 0% 80%)' },
+    };
+    const s = styles[normalized] ?? styles.pending;
+    return (
+      <span style={{
+        padding: 'clamp(0.1875rem, 1vw, 0.25rem) clamp(0.5rem, 2vw, 0.75rem)',
+        borderRadius: '9999px',
+        fontSize: 'clamp(0.6875rem, 2vw, 0.75rem)',
+        fontWeight: '500',
+        backgroundColor: s.bg,
+        color: s.color,
+        border: `1px solid ${s.border}`,
+        whiteSpace: 'nowrap'
+      }}>
+        {s.label}
+      </span>
+    );
+  };
+
   return (
     <>
       <style>{`
@@ -290,7 +315,6 @@ const ReviewsSection = ({ reviews, reports, appReviews }) => {
                       setShowReviewForm(true);
                     }
                   }}
-                  // onClick={() => setShowReviewForm(true)}
                   style={{
                     padding: 'clamp(0.5rem, 2vw, 0.5rem) clamp(0.75rem, 3vw, 1rem)',
                     background: 'linear-gradient(135deg, hsl(174 62% 32%) 0%, hsl(174 50% 25%) 100%)',
@@ -500,17 +524,7 @@ const ReviewsSection = ({ reviews, reports, appReviews }) => {
                               {report.title}
                             </p>
                           </div>
-                          <span style={{
-                            padding: 'clamp(0.1875rem, 1vw, 0.25rem) clamp(0.5rem, 2vw, 0.75rem)',
-                            borderRadius: '9999px',
-                            fontSize: 'clamp(0.6875rem, 2vw, 0.75rem)',
-                            fontWeight: '500',
-                            backgroundColor: report.status === "Resolved" ? 'hsl(152 60% 95%)' : 'hsl(38 92% 95%)',
-                            color: report.status === "Resolved" ? 'hsl(152 60% 40%)' : 'hsl(38 92% 40%)',
-                            whiteSpace: 'nowrap'
-                          }}>
-                            {report.status}
-                          </span>
+                          {renderReportStatusBadge(report.status)}
                         </div>
                         <p style={{
                           color: 'hsl(200 15% 45%)',

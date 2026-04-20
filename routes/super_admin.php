@@ -50,7 +50,7 @@ Route::prefix('super-admin')
 
     // ── Agents ────────────────────────────────────────────────────────────────
     Route::resource('agents', AgentController::class)
-        ->only(['index', 'show', 'edit', 'update', 'destroy', 'create']);
+        ->only(['index', 'show', 'edit', 'update', 'destroy', 'create', 'store']);
 
     // Status action routes
     Route::post('agents/{agent}/verify',     [AgentController::class, 'verify'])     ->name('agents.verify');

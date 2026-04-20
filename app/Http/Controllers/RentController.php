@@ -729,6 +729,7 @@ class RentController extends Controller
         $reviews = Review::where('review_type', 'rent')->get();
         $reports = DB::table('reports')
             ->join('rentals', 'reports.rental_id', '=', 'rentals.id')
+            ->select('reports.*', 'rentals.title', 'rentals.city', 'rentals.area', 'rentals.purpose', 'rentals.agent_name', 'rentals.agent_phone', 'rentals.agent_email', 'rentals.is_verified')
             ->get();
 
         $appReviews = Review::where('review_type', 'app')->get();
@@ -828,10 +829,11 @@ class RentController extends Controller
     public function updateReportStatus(Request $request, $id)
     {
         $validated = $request->validate([
-            'status' => 'required|in:pending,investigating,resolved,dismissed',
+            'status' => 'required|in:pending,reviewing,resolved,dismissed',
         ]);
 
         $report = Report::findOrFail($id);
+
         $report->update([
             'status' => $validated['status'],
             'updated_at' => now(),

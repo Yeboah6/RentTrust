@@ -36,7 +36,7 @@ class SubscriptionController extends Controller
     {
         $sub = Subscription::with(['user', 'plan'])->findOrFail($id);
 
-        $auditLogs = AdminAuditLog::with('admin')
+        $auditLogs = SubscriptionAuditLog::with('admin')
             ->where('subscription_id', $id)
             ->latest()
             ->get()
@@ -76,6 +76,17 @@ class SubscriptionController extends Controller
                 'user_id'         => $sub->user_id,
             ], 'Subscription cancelled by admin. User downgraded to free.');
 
+            AdminAuditLog::record('subscription', 'Subscription cancelled', [
+                'affected_user' => $sub->user?->name ?? '—',
+                'affected_id'   => $sub->user_id,
+                'notes'         => 'Subscription cancelled by admin and user downgraded to free.',
+                'properties'    => [
+                    'subscription_id' => $sub->id,
+                    'previous_status' => $previousStatus,
+                    'plan'            => $sub->plan?->name,
+                ],
+            ]);
+
             Log::info('SuperAdmin cancelled subscription', [
                 'subscription_id' => $sub->id,
                 'user_id'         => $sub->user_id,
@@ -104,6 +115,17 @@ class SubscriptionController extends Controller
                 'plan_name'       => $sub->plan?->name,
                 'user_id'         => $sub->user_id,
             ], 'Subscription suspended by admin. Paid features access removed immediately.');
+
+            AdminAuditLog::record('subscription', 'Subscription suspended', [
+                'affected_user' => $sub->user?->name ?? '—',
+                'affected_id'   => $sub->user_id,
+                'notes'         => 'Subscription suspended by admin.',
+                'properties'    => [
+                    'subscription_id' => $sub->id,
+                    'previous_status' => $previousStatus,
+                    'plan'            => $sub->plan?->name,
+                ],
+            ]);
 
             Log::info('SuperAdmin suspended subscription', [
                 'subscription_id' => $sub->id,
@@ -140,6 +162,18 @@ class SubscriptionController extends Controller
                 'plan_name'         => $sub->plan?->name,
                 'user_id'           => $sub->user_id,
             ], "Admin granted {$days} free day(s). Renewal date extended.");
+
+            AdminAuditLog::record('subscription', 'Subscription extended', [
+                'affected_user' => $sub->user?->name ?? '—',
+                'affected_id'   => $sub->user_id,
+                'notes'         => "Admin granted {$days} free day(s). Renewal date extended.",
+                'properties'    => [
+                    'subscription_id'    => $sub->id,
+                    'days_granted'       => $days,
+                    'previous_renews_at' => $previousRenewsAt,
+                    'new_renews_at'      => $newRenewsAt,
+                ],
+            ]);
 
             Log::info('SuperAdmin granted free extension', [
                 'subscription_id'    => $sub->id,
@@ -205,8 +239,19 @@ class SubscriptionController extends Controller
                 'plan_name'                => $plan->name,
                 'user_id'                  => $sub->user_id,
             ], "Subscription created by admin upgrade from '{$previousPlan}'.");
-    
-            // 6. System log — Log::info(), NOT AdminAuditLog::info() (that method does not exist)
+
+            AdminAuditLog::record('subscription', 'Subscription upgraded', [
+                'affected_user' => $sub->user?->name ?? '—',
+                'affected_id'   => $sub->user_id,
+                'notes'         => "Upgraded subscription from '{$previousPlan}' to '{$plan->name}'.",
+                'properties'    => [
+                    'old_subscription_id' => $sub->id,
+                    'new_subscription_id' => $newSub->id,
+                    'new_plan'            => $plan->name,
+                    'new_plan_slug'       => $plan->slug,
+                ],
+            ]);
+
             Log::info('SuperAdmin upgraded subscription', [
                 'old_subscription_id' => $sub->id,
                 'new_subscription_id' => $newSub->id,
@@ -302,12 +347,16 @@ class SubscriptionController extends Controller
                 'expires_at'      => now()->addMonths($months),
             ], "Admin granted {$months} month(s) of '{$plan->name}' at no charge.");
 
-            SubscriptionAuditLog::info('Admin granted subscription', [
-                'target_user_id'  => $userId,
-                'plan_id'         => $plan->id,
-                'plan_slug'       => $plan->slug,
-                'duration_months' => $months,
-                'admin_id'        => Auth::id(),
+            AdminAuditLog::record('subscription', 'Subscription granted', [
+                'affected_user' => User::find($userId)?->name ?? '—',
+                'affected_id'   => $userId,
+                'notes'         => "Admin granted {$months} month(s) of '{$plan->name}' to user.",
+                'properties'    => [
+                    'plan_id'         => $plan->id,
+                    'plan_slug'       => $plan->slug,
+                    'duration_months' => $months,
+                    'subscription_id' => $newSub->id,
+                ],
             ]);
         });
 

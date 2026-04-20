@@ -248,11 +248,6 @@ const SuperAdminLayout = ({ children }) => {
                     <Header />
                 </div>
 
-                {/*
-                    Body row fills remaining height.
-                    overflow:hidden + minHeight:0 lets both children
-                    scroll independently inside their own boxes.
-                */}
                 <div style={{ flex: 1, display: 'flex', overflow: 'hidden', minHeight: 0 }}>
 
                     {/* ── Sidebar — never scrolls horizontally, nav scrolls vertically ── */}
@@ -281,14 +276,14 @@ const SuperAdminLayout = ({ children }) => {
                         }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', overflow: 'hidden' }}>
                                 <div style={{
-                                    width: '1.75rem', height: '1.75rem', borderRadius: '0.45rem', flexShrink: 0,
-                                    background: 'linear-gradient(135deg, hsl(214 90% 55%), hsl(240 70% 60%))',
+                                    width: '3rem', height: '3rem', borderRadius: '0.45rem', flexShrink: 0,
                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    boxShadow: '0 2px 10px hsl(214 90% 40% / 0.45)',
                                 }}>
-                                    <svg fill="white" viewBox="0 0 20 20" style={{ width: '0.9rem', height: '0.9rem' }}>
-                                        <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
-                                    </svg>
+                                    <img
+                                        src="/rent-trust.png"
+                                        alt="RentTrustGh Logo"
+                                        style={{ width: '100%', height: '100%', display: 'block' }}
+                                      />
                                 </div>
                                 {!collapsed && (
                                     <div style={{ overflow: 'hidden' }}>
@@ -318,10 +313,6 @@ const SuperAdminLayout = ({ children }) => {
                             )}
                         </div>
 
-                        {/*
-                            Nav — this is the ONLY thing that scrolls inside the sidebar.
-                            flex:1 + minHeight:0 = takes remaining height and enables overflow.
-                        */}
                         <nav className="sa-nav" style={{
                             flex: 1,
                             minHeight: 0,        // ← critical: without this flex child won't shrink
@@ -372,12 +363,6 @@ const SuperAdminLayout = ({ children }) => {
                         </div>
                     </aside>
 
-                    {/*
-                        Main content area.
-                        overflowY:auto = this panel scrolls, not the page.
-                        minWidth:0 = prevents flex blowout on wide content.
-                        minHeight:0 = required for flex child scrolling.
-                    */}
                     <main className="sa-main" style={{
                         flex: 1,
                         minWidth: 0,

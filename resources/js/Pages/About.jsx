@@ -55,7 +55,7 @@ export default function AboutPage({ totalListings = 0, totalVerifiedAgents = 0, 
         { initials: 'KM', name: 'Kwame Mensah',   role: 'Co-Founder & CEO',     hue: 174, bio: 'Former real estate broker who spent years watching tenants get scammed. Built RentTrust to fix that.' },
         { initials: 'YSO', name: 'Yeboah Solomon O.',   role: 'Co-Founder & CTO',     hue: 220, bio: 'Software engineer passionate about using tech to solve housing problems across West Africa.' },
         { initials: 'EO', name: 'Emeka Okonkwo', role: 'Head of Verification',  hue: 38,  bio: 'Runs the team that physically inspects and verifies every property before it goes live.' },
-        { initials: 'AF', name: 'Ama Frimpong',  role: 'Community Manager',     hue: 152, bio: 'Ensures tenants and landlords have a voice. Manages reviews, disputes, and agent accountability.' },
+        { initials: 'ED', name: 'Ethel Damoah',  role: 'Community Manager',     hue: 152, bio: 'Ensures tenants and landlords have a voice. Manages reviews, disputes, and agent accountability.' },
     ];
 
     // const milestones = [

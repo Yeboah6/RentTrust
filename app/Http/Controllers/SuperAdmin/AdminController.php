@@ -16,14 +16,22 @@ class AdminController extends Controller
 
     public function index()
     {
-        $admins = User::where('role', 'admin')->get();
+        $admins = User::where('role', 'admin')
+            ->get()
+            ->map(function (User $user) {
+                return [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'phone' => $user->phone,
+                    'status' => $user->status ?? 'active',
+                    'joined_at' => $user->created_at,
+                    'created_at' => $user->created_at,
+                    'last_active' => $user->last_active,
+                ];
+            });
         return inertia('SuperAdmin/Admins/Index', ['admins' => $admins]);
     }
-
-    // public function create()
-    // {
-    //     return inertia('SuperAdmin/Admins/Create');
-    // }
 
     public function store(Request $request)
     {
@@ -40,11 +48,6 @@ class AdminController extends Controller
         User::create($data);
         return redirect()-> back()->with('success', 'Admin account created');
     }
-
-    // public function edit(User $user)
-    // {
-    //     return inertia('SuperAdmin/Admins/Edit', ['admin' => $user]);
-    // }
 
     public function update(Request $request, User $user)
     {

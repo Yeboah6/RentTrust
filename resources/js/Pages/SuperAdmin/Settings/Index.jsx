@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { useForm } from '@inertiajs/react';
+import { router } from '@inertiajs/react';
 import SuperAdminLayout from '@/Layouts/SuperAdminLayout';
 
 // ── Icons ─────────────────────────────────────────────────────────────────────
@@ -63,6 +63,11 @@ const SECTIONS = [
     { key: 'security',      label: 'Security',      Icon: ShieldIcon,   color: 'hsl(340 70% 48%)', bg: 'hsl(340 70% 94%)' },
     { key: 'notifications', label: 'Notifications', Icon: BellIcon,     color: 'hsl(200 65% 38%)', bg: 'hsl(200 70% 93%)' },
 ];
+
+const SECTION_GROUPINGS = {
+    general: ['platform_name', 'support_email', 'support_phone', 'default_currency', 'default_language'],
+    listings: ['guest_inquiry_enabled', 'listing_approval_required', 'maintenance_mode'],
+};
 
 // ── Field components ──────────────────────────────────────────────────────────
 
@@ -285,8 +290,27 @@ const SettingsIndex = ({ settings = {} }) => {
         const isGrouped = sectionKeys.some(k => settings[k] !== undefined && typeof settings[k] === 'object');
         if (isGrouped) return { ...settings };
 
-        // Otherwise put everything under 'general'
-        return { general: { ...settings } };
+        // Otherwise group settings by their defined sections
+        const grouped = {};
+        sectionKeys.forEach(section => {
+            grouped[section] = {};
+        });
+
+        Object.entries(settings).forEach(([key, value]) => {
+            let assigned = false;
+            for (const [section, keys] of Object.entries(SECTION_GROUPINGS)) {
+                if (keys.includes(key)) {
+                    grouped[section][key] = value;
+                    assigned = true;
+                    break;
+                }
+            }
+            if (!assigned) {
+                grouped.general[key] = value;
+            }
+        });
+
+        return grouped;
     };
 
     const [data, setData] = useState(initialData);
@@ -304,11 +328,14 @@ const SettingsIndex = ({ settings = {} }) => {
     const handleSave = async (sectionKey) => {
         setSaving(prev => ({ ...prev, [sectionKey]: true }));
         try {
-            await new Promise(r => setTimeout(r, 600)); // replace with real Inertia post/put
-            // Example real call:
-            // await router.put(`/super-admin/settings/${sectionKey}`, data[sectionKey]);
+            await router.post('/super-admin/settings', {
+                ...data[sectionKey],
+                _method: 'POST',
+            });
             setSaved(prev => ({ ...prev, [sectionKey]: true }));
             setTimeout(() => setSaved(prev => ({ ...prev, [sectionKey]: false })), 2500);
+        } catch (error) {
+            console.error('Settings save failed', error);
         } finally {
             setSaving(prev => ({ ...prev, [sectionKey]: false }));
         }

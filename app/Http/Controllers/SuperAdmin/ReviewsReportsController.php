@@ -5,7 +5,6 @@ namespace App\Http\Controllers\SuperAdmin;
 use App\Http\Controllers\Controller;
 use App\Models\Review;
 use App\Models\Report;
-// use App\Models\AppReview;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
@@ -70,7 +69,7 @@ class ReviewsReportsController extends Controller
         $report->update([
             'status'      => $request->status,
             'resolved_by' => auth()->id(),
-            'updated_at' => in_array($request->status, ['resolved', 'dismissed']) ? now() : null,
+            'updated_at' => now(),
         ]);
 
         Log::info('SuperAdmin updated report status', [

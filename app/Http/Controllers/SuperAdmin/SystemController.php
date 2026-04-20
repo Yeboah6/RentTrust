@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use App\Models\AdminAuditLog;
+use App\Models\SubscriptionAuditLog;
 use Inertia\Inertia;
 
 class SystemController extends Controller
@@ -60,6 +61,8 @@ class SystemController extends Controller
 
         // Fetch up to 500 most recent entries (frontend paginates client-side)
         $logs = $query->limit(500)->get()->map(fn ($l) => $this->formatLog($l));
+
+        $activity = SubscriptionAuditLog::with('admin', 'subscription.user')->latest()->limit(500)->get()->map(fn ($l) => $this->formatSubscriptionLog($l));
 
         return Inertia::render('SuperAdmin/Support/Logs', [
             'logs'     => $logs ?? [],
@@ -125,6 +128,22 @@ class SystemController extends Controller
             'timestamp'     => $l->created_at?->toIso8601String() ?? '',
             'notes'         => $l->notes               ?? $l->description ?? '',
             'ip'            => $l->ip_address          ?? '',
+        ];
+    }
+
+    private function formatSubscriptionLog(SubscriptionAuditLog $l): array
+    {
+        return [
+            'id'            => $l->id,
+            'admin'         => $l->admin?->name ?? 'System',
+            'admin_email'   => $l->admin?->email ?? '',
+            'action'        => $l->action_label,
+            'type'          => 'subscription',
+            'affected_user' => $l->subscription?->user?->name ?? '—',
+            'affected_id'   => $l->subscription_id,
+            'timestamp'     => $l->created_at?->toIso8601String() ?? '',
+            'notes'         => $l->notes ?? '',
+            'ip'            => '',
         ];
     }
 }

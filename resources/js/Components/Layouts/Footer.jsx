@@ -43,13 +43,13 @@ const Footer = () => {
                 className="flex items-center gap-2 mb-4 hover:opacity-80 transition-opacity"
               >
                 <div 
-                  className="flex h-8 w-8 items-center justify-center rounded-lg"
-                  style={{ backgroundColor: '#1f847a' }}
+                  className="flex h-13 w-13 items-center justify-center rounded-lg"
+                  // style={{ backgroundColor: '#1f847a' }}
                 >
-                  <span className="text-base font-bold text-white">R</span>
+                  <span className="text-base font-bold text-white"><img src='/rent-trust.png' alt="Logo" /></span>
                 </div>
                 <span className="text-lg font-bold tracking-tight" style={{ color: '#1d2930' }}>
-                  RentTrust
+                  RentTrustGh
                 </span>
               </Link>
               <p className="text-sm" style={{ color: 'hsl(200 15% 45%)' }}>

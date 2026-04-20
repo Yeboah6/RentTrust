@@ -309,6 +309,7 @@ const PlanEdit = ({ plan, inline = false, onClose } = {}) => {
     const normalisedPlan = {
         ...plan,
         currency:      plan.currency      ?? 'GHS',
+        description:   plan.description,
         interval:      plan.interval      ?? plan.billing_cycle ?? 'month',
         is_active:     plan.is_active     ?? true,
         slug:          plan.slug          ?? '',
@@ -471,6 +472,15 @@ const PlanEdit = ({ plan, inline = false, onClose } = {}) => {
                                             <PlanInput type="number" value={data.sort_order} onChange={e => setData('sort_order', Number(e.target.value))} placeholder="0" min="0" />
                                         </FField>
                                     </div>
+
+                                    <FField label="Description" hint="Shown to users on the pricing page">
+                                        <PlanTextarea
+                                            value={data.description}
+                                            onChange={e => setData('description', e.target.value)}
+                                            placeholder="e.g. Perfect for getting started…"
+                                            rows={2}
+                                        />
+                                    </FField>
 
                                     <FField label="Slug" hint="URL-friendly identifier">
                                         <PlanInput value={data.slug} onChange={e => setData('slug', e.target.value)} placeholder="e.g. professional, starter…" error={errors.slug} hasError={!!errors.slug} />

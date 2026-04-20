@@ -274,255 +274,257 @@ class ListingController extends Controller
     // ─── Update ───────────────────────────────────────────────────────────────
  
     public function update(Request $request, Rental $listing)
-{
-    Log::info('SuperAdmin listing update request', [
-        'listing_id'            => $listing->id,
-        'has_new_images'        => $request->hasFile('newImages'),
-        'existing_images_count' => count($request->input('existingImages', [])),
-        'removed_images_count'  => count($request->input('removedImages', [])),
-    ]);
- 
-    // ── Amenities — decode if sent as JSON string ─────────────────────────────
-    $amenities = $request->amenities;
-    if (is_array($amenities)) {
-        $amenities = json_encode($amenities);
-    }
-    $request->merge(['amenities' => $amenities]);
- 
-    // ── Purpose + isSale ──────────────────────────────────────────────────────
-    $purpose = $request->input('purpose', $listing->purpose ?? 'rent');
-    $isSale  = $purpose === 'sale';
- 
-    // ── Status map — DB only accepts 'pending', 'approved', 'rejected' ────────
-    $statusMap = [
-        'active'   => 'approved',
-        'approved' => 'approved',
-        'pending'  => 'pending',
-        'rejected' => 'rejected',
-    ];
-    $dbStatus = $statusMap[$request->input('status', 'pending')] ?? 'pending';
- 
-    // ── Purpose map — DB only accepts 'rent', 'sale' ──────────────────────────
-    $purposeMap = [
-        'sale'  => 'sale',
-        'rent'  => 'rent',
-        'short' => 'rent',
-        'lease' => 'rent',
-    ];
-    $dbPurpose = $purposeMap[$purpose] ?? 'rent';
- 
-    // ── Validation rules ──────────────────────────────────────────────────────
-    $rules = [
-        'title'            => 'required|string|max:255',
-        'propertyType'     => 'nullable|string|max:100',
-        'area'             => 'required|string|max:255',
-        'city'             => 'required|string|max:255',
-        'address'          => 'nullable|string|max:500',
-        'bedrooms'         => 'nullable|integer|min:0',
-        'bathrooms'        => 'nullable|integer|min:0',
-        'description'      => 'nullable|string',
-        'agentName'        => 'nullable|string|max:255',
-        'agentPhone'       => 'nullable|string|max:20',
-        'agentEmail'       => 'nullable|email|max:255',
-        'amenities'        => 'nullable',
-        'status'           => 'nullable|string',
-        'is_featured'      => 'nullable|boolean',
-        'is_verified'      => 'nullable|boolean',
-        'newImages.*'      => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
-        'existingImages'   => 'nullable|array',
-        'existingImages.*' => 'string',
-        'removedImages'    => 'nullable|array',
-        'removedImages.*'  => 'string',
-    ];
- 
-    // Purpose-specific price rules — same as agent store
-    if ($isSale) {
-        $rules['salePrice']       = 'required|numeric|min:0';
-        $rules['rentMin']         = 'prohibited';
-        $rules['rentMax']         = 'prohibited';
-        $rules['advanceDuration'] = 'prohibited';
-    } else {
-        $rules['rentMin']         = 'required|numeric|min:0';
-        $rules['rentMax']         = 'required|numeric|min:0|gte:rentMin';
-        $rules['advanceDuration'] = 'nullable|integer|min:1|max:5';
-        $rules['salePrice']       = 'prohibited';
-    }
- 
-    $validator = Validator::make($request->all(), $rules, [
-        'rentMax.gte'        => 'Maximum rent must be ≥ minimum rent.',
-        'newImages.*.max'    => 'Each image must not exceed 5 MB.',
-        'newImages.*.mimes'  => 'Images must be jpeg, png, jpg, gif, or webp.',
-    ]);
- 
-    if ($validator->fails()) {
-        return response()->json([
-            'message' => 'Validation failed.',
-            'errors'  => $validator->errors(),
-        ], 422);
-    }
- 
-    try {
-        // ── Image handling — identical to agent update() ───────────────────────
-        $currentImages  = $this->parseImages($listing->images);
-        $existingImages = $request->input('existingImages', []);
-        $removedImages  = $request->input('removedImages',  []);
- 
-        // Delete removed images from storage
-        foreach ($removedImages as $imagePath) {
-            $bare = basename($imagePath);
-            if (in_array($bare, $currentImages, true)) {
-                Storage::disk('public')->delete("rental_images/{$bare}");
-            }
+    {
+        Log::info('SuperAdmin listing update request', [
+            'listing_id'            => $listing->id,
+            'has_new_images'        => $request->hasFile('newImages'),
+            'existing_images_count' => count($request->input('existingImages', [])),
+            'removed_images_count'  => count($request->input('removedImages', [])),
+        ]);
+    
+        // ── Amenities — decode if sent as JSON string ─────────────────────────────
+        $amenities = $request->amenities;
+        if (is_array($amenities)) {
+            $amenities = json_encode($amenities);
         }
- 
-        // Upload new images
-        $newImagePaths = [];
-        $uploadErrors  = [];
- 
-        if ($request->hasFile('newImages')) {
-            $imageIndex = 0;
-            foreach ($request->file('newImages') as $image) {
+        $request->merge(['amenities' => $amenities]);
+    
+        // ── Purpose + isSale ──────────────────────────────────────────────────────
+        $purpose = $request->input('purpose', $listing->purpose ?? 'rent');
+        $isSale  = $purpose === 'sale';
+    
+        // ── Status map — DB only accepts 'pending', 'approved', 'rejected' ────────
+        $statusMap = [
+            'active'   => 'approved',
+            'approved' => 'approved',
+            'pending'  => 'pending',
+            'rejected' => 'rejected',
+            'rented'   => 'rented',
+            'sold'     => 'sold'
+        ];
+        $dbStatus = $statusMap[$request->input('status', 'pending')] ?? 'pending';
+    
+        // ── Purpose map — DB only accepts 'rent', 'sale' ──────────────────────────
+        $purposeMap = [
+            'sale'  => 'sale',
+            'rent'  => 'rent',
+            'short' => 'rent',
+            'lease' => 'rent',
+        ];
+        $dbPurpose = $purposeMap[$purpose] ?? 'rent';
+    
+        // ── Validation rules ──────────────────────────────────────────────────────
+        $rules = [
+            'title'            => 'required|string|max:255',
+            'propertyType'     => 'nullable|string|max:100',
+            'area'             => 'required|string|max:255',
+            'city'             => 'required|string|max:255',
+            'address'          => 'nullable|string|max:500',
+            'bedrooms'         => 'nullable|integer|min:0',
+            'bathrooms'        => 'nullable|integer|min:0',
+            'description'      => 'nullable|string',
+            'agentName'        => 'nullable|string|max:255',
+            'agentPhone'       => 'nullable|string|max:20',
+            'agentEmail'       => 'nullable|email|max:255',
+            'amenities'        => 'nullable',
+            'status'           => 'nullable|string',
+            'is_featured'      => 'nullable|boolean',
+            'is_verified'      => 'nullable|boolean',
+            'newImages.*'      => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            'existingImages'   => 'nullable|array',
+            'existingImages.*' => 'string',
+            'removedImages'    => 'nullable|array',
+            'removedImages.*'  => 'string',
+        ];
+    
+        // Purpose-specific price rules — same as agent store
+        if ($isSale) {
+            $rules['salePrice']       = 'required|numeric|min:0';
+            $rules['rentMin']         = 'prohibited';
+            $rules['rentMax']         = 'prohibited';
+            $rules['advanceDuration'] = 'prohibited';
+        } else {
+            $rules['rentMin']         = 'required|numeric|min:0';
+            $rules['rentMax']         = 'required|numeric|min:0|gte:rentMin';
+            $rules['advanceDuration'] = 'nullable|integer|min:1|max:5';
+            $rules['salePrice']       = 'prohibited';
+        }
+    
+        $validator = Validator::make($request->all(), $rules, [
+            'rentMax.gte'        => 'Maximum rent must be ≥ minimum rent.',
+            'newImages.*.max'    => 'Each image must not exceed 5 MB.',
+            'newImages.*.mimes'  => 'Images must be jpeg, png, jpg, gif, or webp.',
+        ]);
+    
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation failed.',
+                'errors'  => $validator->errors(),
+            ], 422);
+        }
+    
+        try {
+            // ── Image handling — identical to agent update() ───────────────────────
+            $currentImages  = $this->parseImages($listing->images);
+            $existingImages = $request->input('existingImages', []);
+            $removedImages  = $request->input('removedImages',  []);
+    
+            // Delete removed images from storage
+            foreach ($removedImages as $imagePath) {
+                $bare = basename($imagePath);
+                if (in_array($bare, $currentImages, true)) {
+                    Storage::disk('public')->delete("rental_images/{$bare}");
+                }
+            }
+    
+            // Upload new images
+            $newImagePaths = [];
+            $uploadErrors  = [];
+    
+            if ($request->hasFile('newImages')) {
+                $imageIndex = 0;
+                foreach ($request->file('newImages') as $image) {
+                    try {
+                        if (!$image->isValid()) {
+                            $uploadErrors[] = "Image " . ($imageIndex + 1) . " is invalid or corrupted.";
+                            $imageIndex++;
+                            continue;
+                        }
+    
+                        $fileName = 'rental_' . time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
+                        $path     = $image->storeAs('rental_images', $fileName, 'public');
+    
+                        if ($path) {
+                            $newImagePaths[] = $fileName;
+                        } else {
+                            $uploadErrors[] = "Image " . ($imageIndex + 1) . " could not be saved.";
+                        }
+                    } catch (\Exception $e) {
+                        $uploadErrors[] = "Image " . ($imageIndex + 1) . " failed: " . $e->getMessage();
+                        Log::error('SuperAdmin image upload failed', [
+                            'listing_id'  => $listing->id,
+                            'image_index' => $imageIndex,
+                            'error'       => $e->getMessage(),
+                        ]);
+                    }
+                    $imageIndex++;
+                }
+    
+                if (!empty($uploadErrors)) {
+                    return response()->json([
+                        'message' => 'Some images failed to upload.',
+                        'errors'  => ['newImages' => implode(' ', $uploadErrors)],
+                    ], 422);
+                }
+            }
+    
+            // Merge existing + new, cap at 6, normalise to bare filenames
+            $finalImages = array_slice(
+                array_merge(
+                    array_map('basename', $existingImages),
+                    $newImagePaths
+                ),
+                0, 6
+            );
+    
+            // Guard: never allow empty — images column is NOT NULL
+            if (empty($finalImages)) {
+                $finalImages = $currentImages;
+            }
+    
+            Log::info('SuperAdmin image processing complete', [
+                'listing_id'     => $listing->id,
+                'kept_existing'  => count($existingImages),
+                'uploaded_new'   => count($newImagePaths),
+                'deleted'        => count($removedImages),
+                'final_total'    => count($finalImages),
+            ]);
+    
+            // ── Decode amenities ──────────────────────────────────────────────────
+            $amenitiesArray = [];
+            if (!empty($amenities)) {
+                $decoded = json_decode($amenities, true);
+                if (is_array($decoded)) {
+                    $amenitiesArray = $decoded;
+                }
+            }
+    
+            // ── Update listing ────────────────────────────────────────────────────
+            $listing->update([
+                'title'            => $request->title,
+                'property_type'    => $request->propertyType,
+                'area'             => $request->area,
+                'city'             => $request->city,
+                'address'          => $request->address,
+                'bedrooms'         => $request->bedrooms,
+                'bathrooms'        => $request->bathrooms ?? 0,
+                'amenities'        => $amenitiesArray,
+                'description'      => $request->description,
+                'agent_name'       => $request->input('agentName')  ?: $listing->agent_name,
+                'agent_phone'      => $request->input('agentPhone') ?: $listing->agent_phone,
+                'agent_email'      => $request->input('agentEmail') ?: $listing->agent_email,
+                'images'           => $finalImages,
+                // Super admin extras — mapped to DB-safe values
+                'status'           => $dbStatus,
+                'purpose'          => $dbPurpose,
+                'is_featured'      => filter_var($request->input('is_featured', false), FILTER_VALIDATE_BOOLEAN),
+                'is_verified'      => filter_var($request->input('is_verified', false), FILTER_VALIDATE_BOOLEAN),
+                // Pricing
+                'sale_price'       => $isSale  ? $request->salePrice  : null,
+                'rent_min'         => !$isSale ? $request->rentMin     : null,
+                'rent_max'         => !$isSale ? $request->rentMax     : null,
+                'advance_duration' => !$isSale ? $request->advanceDuration : null,
+                'updated_at'       => now(),
+            ]);
+    
+            Log::info('SuperAdmin listing updated successfully', [
+                'listing_id' => $listing->id,
+                'title'      => $listing->title,
+                'status'     => $dbStatus,
+                'purpose'    => $dbPurpose,
+            ]);
+    
+            $agentEmail = $request->input('agentEmail') ?: $listing->agent_email;
+            $emailSent  = false;
+    
+            if (filter_var($agentEmail, FILTER_VALIDATE_EMAIL)) {
                 try {
-                    if (!$image->isValid()) {
-                        $uploadErrors[] = "Image " . ($imageIndex + 1) . " is invalid or corrupted.";
-                        $imageIndex++;
-                        continue;
-                    }
- 
-                    $fileName = 'rental_' . time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
-                    $path     = $image->storeAs('rental_images', $fileName, 'public');
- 
-                    if ($path) {
-                        $newImagePaths[] = $fileName;
-                    } else {
-                        $uploadErrors[] = "Image " . ($imageIndex + 1) . " could not be saved.";
-                    }
-                } catch (\Exception $e) {
-                    $uploadErrors[] = "Image " . ($imageIndex + 1) . " failed: " . $e->getMessage();
-                    Log::error('SuperAdmin image upload failed', [
+                    Mail::to($agentEmail)->send(new ListingUpdatedMail($listing->fresh()));
+                    $emailSent = true;
+            
+                    Log::info('Agent notification email sent', [
                         'listing_id'  => $listing->id,
-                        'image_index' => $imageIndex,
+                        'agent_email' => $agentEmail,
+                    ]);
+                } catch (\Exception $e) {
+                    Log::warning('Agent notification email failed', [
+                        'listing_id'  => $listing->id,
+                        'agent_email' => $agentEmail,
                         'error'       => $e->getMessage(),
                     ]);
                 }
-                $imageIndex++;
             }
- 
-            if (!empty($uploadErrors)) {
-                return response()->json([
-                    'message' => 'Some images failed to upload.',
-                    'errors'  => ['newImages' => implode(' ', $uploadErrors)],
-                ], 422);
-            }
+    
+            return response()->json([
+                'message' => 'Listing updated successfully.',
+                'listing' => $this->formatListing($listing->fresh()),
+                'emailSent' => $emailSent,
+    
+            ]);
+    
+        } catch (\Exception $e) {
+            Log::error('SuperAdmin listing update failed', [
+                'listing_id' => $listing->id,
+                'error'      => $e->getMessage(),
+                'trace'      => $e->getTraceAsString(),
+            ]);
+    
+            return response()->json([
+                'message' => 'Failed to update listing. Please try again.',
+                'error'   => config('app.debug') ? $e->getMessage() : null,
+            ], 500);
         }
- 
-        // Merge existing + new, cap at 6, normalise to bare filenames
-        $finalImages = array_slice(
-            array_merge(
-                array_map('basename', $existingImages),
-                $newImagePaths
-            ),
-            0, 6
-        );
- 
-        // Guard: never allow empty — images column is NOT NULL
-        if (empty($finalImages)) {
-            $finalImages = $currentImages;
-        }
- 
-        Log::info('SuperAdmin image processing complete', [
-            'listing_id'     => $listing->id,
-            'kept_existing'  => count($existingImages),
-            'uploaded_new'   => count($newImagePaths),
-            'deleted'        => count($removedImages),
-            'final_total'    => count($finalImages),
-        ]);
- 
-        // ── Decode amenities ──────────────────────────────────────────────────
-        $amenitiesArray = [];
-        if (!empty($amenities)) {
-            $decoded = json_decode($amenities, true);
-            if (is_array($decoded)) {
-                $amenitiesArray = $decoded;
-            }
-        }
- 
-        // ── Update listing ────────────────────────────────────────────────────
-        $listing->update([
-            'title'            => $request->title,
-            'property_type'    => $request->propertyType,
-            'area'             => $request->area,
-            'city'             => $request->city,
-            'address'          => $request->address,
-            'bedrooms'         => $request->bedrooms,
-            'bathrooms'        => $request->bathrooms ?? 0,
-            'amenities'        => $amenitiesArray,
-            'description'      => $request->description,
-            'agent_name'       => $request->input('agentName')  ?: $listing->agent_name,
-            'agent_phone'      => $request->input('agentPhone') ?: $listing->agent_phone,
-            'agent_email'      => $request->input('agentEmail') ?: $listing->agent_email,
-            'images'           => $finalImages,
-            // Super admin extras — mapped to DB-safe values
-            'status'           => $dbStatus,
-            'purpose'          => $dbPurpose,
-            'is_featured'      => filter_var($request->input('is_featured', false), FILTER_VALIDATE_BOOLEAN),
-            'is_verified'      => filter_var($request->input('is_verified', false), FILTER_VALIDATE_BOOLEAN),
-            // Pricing
-            'sale_price'       => $isSale  ? $request->salePrice  : null,
-            'rent_min'         => !$isSale ? $request->rentMin     : null,
-            'rent_max'         => !$isSale ? $request->rentMax     : null,
-            'advance_duration' => !$isSale ? $request->advanceDuration : null,
-            'updated_at'       => now(),
-        ]);
- 
-        Log::info('SuperAdmin listing updated successfully', [
-            'listing_id' => $listing->id,
-            'title'      => $listing->title,
-            'status'     => $dbStatus,
-            'purpose'    => $dbPurpose,
-        ]);
-
-        $agentEmail = $request->input('agentEmail') ?: $listing->agent_email;
-        $emailSent  = false;
-
-        if (filter_var($agentEmail, FILTER_VALIDATE_EMAIL)) {
-            try {
-                Mail::to($agentEmail)->send(new ListingUpdatedMail($listing->fresh()));
-                $emailSent = true;
-        
-                Log::info('Agent notification email sent', [
-                    'listing_id'  => $listing->id,
-                    'agent_email' => $agentEmail,
-                ]);
-            } catch (\Exception $e) {
-                Log::warning('Agent notification email failed', [
-                    'listing_id'  => $listing->id,
-                    'agent_email' => $agentEmail,
-                    'error'       => $e->getMessage(),
-                ]);
-            }
-        }
- 
-        return response()->json([
-            'message' => 'Listing updated successfully.',
-            'listing' => $this->formatListing($listing->fresh()),
-            'emailSent' => $emailSent,
-
-        ]);
- 
-    } catch (\Exception $e) {
-        Log::error('SuperAdmin listing update failed', [
-            'listing_id' => $listing->id,
-            'error'      => $e->getMessage(),
-            'trace'      => $e->getTraceAsString(),
-        ]);
- 
-        return response()->json([
-            'message' => 'Failed to update listing. Please try again.',
-            'error'   => config('app.debug') ? $e->getMessage() : null,
-        ], 500);
     }
-}
 
     // ─── Approve ──────────────────────────────────────────────────────────────
  

@@ -34,6 +34,8 @@ class AuthController extends Controller
 
         Auth::login($tenant);
         
+        $tenant->update(['last_active' => now()]);
+        
         // Get the referrer URL from session, default to home page
         $redirectUrl = $request->session()->pull('signup_referrer', '/');
         
@@ -54,9 +56,18 @@ class AuthController extends Controller
                 'email' => 'The provided credentials do not match our records.',
             ])->onlyInput('email');
         }
+
+        // ── Suspension check ──────────────────────────────────────────────────────
+        if ($user->status === 'suspended') {
+            return back()->withErrors([
+                'email' => 'Your account has been suspended. Please contact support for assistance.',
+            ])->onlyInput('email');
+        }
     
         $request->session()->regenerate();
         Auth::login($user);
+        
+        $user->update(['last_active' => now()]);
     
         // ── Tenant ────────────────────────────────────────────────────────────────
         if ($user->role === 'tenant') {
@@ -81,6 +92,7 @@ class AuthController extends Controller
             }
     
             // Free plan, expired subscription, or no subscription at all
+            // if($user->)
             return redirect()->intended('/agent/dashboard');
         }
     

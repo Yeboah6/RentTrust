@@ -50,6 +50,8 @@ const INITIAL_STATUSES = [
 
 const avatarHue = (s = '') => [...s].reduce((a, c) => a + c.charCodeAt(0), 0) % 360;
 
+const agentTypes = ['Landlord', 'Agent'];
+
 // ─── Field atoms ──────────────────────────────────────────────────────────────
 
 const inputStyle = (focused, hasError) => ({
@@ -214,7 +216,7 @@ const AgentCreate = () => {
         license:               '',
         location:              '',
         bio:                   '',
-        website:               '',
+        type:                  '',
         status:                'pending',
         tier:                  'standard',
         is_verified:           false,
@@ -315,13 +317,31 @@ const AgentCreate = () => {
                                     <FField label="Agency / Company" error={errors.agency}>
                                         <FInput value={data.agency} onChange={e => setData('agency', e.target.value)} placeholder="e.g. Devtraco Properties" />
                                     </FField>
-                                    <FField label="License / REA Number" error={errors.license} hint="Registered estate agent number">
-                                        <FInput value={data.license} onChange={e => setData('license', e.target.value)} placeholder="e.g. REA-2024-XXXX" />
-                                    </FField>
+                                    <div>
+                                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', fontSize: '0.875rem', color: 'hsl(200 25% 15%)' }}>
+                                        Type of Agent
+                                      </label>
+                                      <select
+                                        value={data.type}
+                                        onChange={(e) => setData('type', e.target.value)}
+                                        className="w-full px-4 py-3 border rounded-lg focus:ring-2 transition-all appearance-none"
+                                        style={{ borderColor: errors.type ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)' }}
+                                      >
+                                        <option value="">Select agent type</option>
+                                        {agentTypes.map(type => (
+                                          <option key={type} value={type}>{type}</option>
+                                        ))}
+                                      </select>
+                                      {errors.type && (
+                                        <p style={{ fontSize: '0.875rem', color: 'hsl(0 72% 51%)', marginTop: '0.375rem' }}>
+                                          {errors.type}
+                                        </p>
+                                      )}
+                                    </div>
                                 </div>
-                                <FField label="Website" error={errors.website}>
+                                {/* <FField label="Website" error={errors.website}>
                                     <FInput type="url" value={data.website} onChange={e => setData('website', e.target.value)} placeholder="https://agency.com" />
-                                </FField>
+                                </FField> */}
                             </div>
 
                             {/* ── Tier ── */}

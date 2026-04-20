@@ -7,6 +7,7 @@ use App\Models\Payment;
 use App\Services\FeatureGateService;
 use App\Services\PaymentService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -115,6 +116,8 @@ class CheckoutController extends Controller
         }
 
         $payment = Payment::where('reference', $reference)->first();
+        $currentUser = Auth::user();
+        $wasFree = $currentUser?->package === 'free';
 
         if ($payment?->status === 'success') {
             // Webhook already confirmed — sync package from subscription
@@ -122,6 +125,16 @@ class CheckoutController extends Controller
                 $this->syncPackageFromSubscription($payment->user);
                 $this->markUserVerified($payment->user);
             }
+
+            if ($wasFree && in_array($payment->subscription?->plan?->slug, ['pro', 'elite'], true)) {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+
+                return redirect()->route('login')
+                    ->with('success', 'Your account was upgraded. Please log in again to access your new plan.');
+            }
+
             return redirect()->route('agent.dashboard')
                 ->with('success', 'Subscription activated! Welcome aboard.');
         }
@@ -135,6 +148,16 @@ class CheckoutController extends Controller
                 $this->syncPackageFromSubscription($payment->user);
                 $this->markUserVerified($payment->user);
             }
+
+            if ($wasFree && in_array($payment->subscription?->plan?->slug, ['pro', 'elite'], true)) {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+
+                return redirect()->route('login')
+                    ->with('success', 'Your account was upgraded. Please log in again to access your new plan.');
+            }
+
             return redirect()->route('agent.dashboard')
                 ->with('success', 'Subscription activated! Welcome aboard.');
         }

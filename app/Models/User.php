@@ -31,7 +31,8 @@ class User extends Authenticatable
         'bio',
         'status',
         'fee',
-        'package'
+        'package',
+        'last_active'
     ];
 
     public function rentals()
@@ -71,6 +72,7 @@ class User extends Authenticatable
         return [
             // 'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'last_active' => 'datetime',
         ];
     }
 

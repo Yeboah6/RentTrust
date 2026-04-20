@@ -284,7 +284,6 @@ const Dashboard = ({ platform, saas }) => {
             </div>
 
             {/* Dashboard Title */}
-            {/* <h1 className="text-2xl font-bold mb-6">Super Admin Dashboard</h1> */}
             
             {/* KPI Grid */}
             <div

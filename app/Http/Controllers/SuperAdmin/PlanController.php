@@ -19,10 +19,10 @@ class PlanController extends Controller
         return inertia('SuperAdmin/Plans/Index', ['plans' => $plans]);
     }
 
-    public function create()
-    {
-        return inertia('SuperAdmin/Plans/Create');
-    }
+    // public function create()
+    // {
+    //     return inertia('SuperAdmin/Plans/Create');
+    // }
 
     public function store(Request $request)
     {
@@ -52,10 +52,10 @@ class PlanController extends Controller
         return redirect()->back()->with('success', 'Plan created');
     }
 
-    public function edit(Plan $plan)
-    {
-        return inertia('SuperAdmin/Plans/Edit', ['plan' => $plan]);
-    }
+    // public function edit(Plan $plan)
+    // {
+    //     return inertia('SuperAdmin/Plans/Edit', ['plan' => $plan]);
+    // }
 
     public function update(Request $request, Plan $plan)
     {
@@ -63,6 +63,7 @@ class PlanController extends Controller
             'name'               => 'required|string|max:255',
             'slug'               => 'nullable|string|unique:plans,slug,' . $plan->id,
             'price'              => 'required|numeric|min:0',
+            'description'        => 'required|string',
             'currency'           => 'required|string|max:10',
             'interval'           => 'required|in:week,month,quarter,year,once',
             'listing_limit'      => 'nullable|integer|min:0',

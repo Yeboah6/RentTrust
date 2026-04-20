@@ -61,15 +61,9 @@ const normalise = (logs, activity) => {
     const safeLogs     = logs     ?? [];
     const safeActivity = activity ?? [];
 
-    if (safeLogs.length > 0)     return safeLogs;
-    if (safeActivity.length > 0) return safeActivity.map((item, i) => {
+    const mappedActivity = safeActivity.map((item, i) => {
 
-    // if (logs.length > 0) return logs;
-    // if (activity.length > 0) {
-        // return activity.map((item, i) => {
-            // AdminAudit shape: { id, title, status, description, time }
-            // Also handle richer shapes: { admin, action, affected_user, timestamp, ... }
-            const title        = item.title ?? item.action ?? item.event ?? '—';
+        const title        = item.title ?? item.action ?? item.event ?? '—';
             const affectedUser = item.affected_user
                 ?? item.affectedUser
                 ?? item.subject_name
@@ -92,23 +86,8 @@ const normalise = (logs, activity) => {
                 ip:            item.ip ?? item.ip_address ?? '',
             };
         });
-        // );
-    // }
-    // Fallback demo data
-    return [
-        { id: 1,  admin: 'Super Admin',  admin_email: 'super@platform.com',  action: 'Refund processed',         type: 'refund',       affected_user: 'Kwame Mensah',  affected_id: 104, timestamp: '2024-02-14 10:30:45', notes: 'Duplicate charge refund — confirmed by finance.', ip: '102.88.0.1' },
-        { id: 2,  admin: 'Jane Admin',   admin_email: 'jane@platform.com',   action: 'Subscription extended',    type: 'subscription', affected_user: 'Ama Serwaa',    affected_id: 78,  timestamp: '2024-02-14 09:15:22', notes: 'Manually extended 30 days — CS compensation.', ip: '41.66.5.22' },
-        { id: 3,  admin: 'Super Admin',  admin_email: 'super@platform.com',  action: 'Account suspended',        type: 'suspension',   affected_user: 'Kofi Asante',   affected_id: 210, timestamp: '2024-02-14 08:45:10', notes: 'Fraudulent activity detected — card fraud.', ip: '102.88.0.1' },
-        { id: 4,  admin: 'Jane Admin',   admin_email: 'jane@platform.com',   action: 'Payment verified',         type: 'payment',      affected_user: 'Yaw Boateng',   affected_id: 55,  timestamp: '2024-02-13 16:20:33', notes: 'Manual verification — bank confirmation received.', ip: '41.66.5.22' },
-        { id: 5,  admin: 'Super Admin',  admin_email: 'super@platform.com',  action: 'Listing approved',         type: 'listing',      affected_user: 'Abena Osei',    affected_id: 321, timestamp: '2024-02-13 14:10:08', notes: 'Listing #321 approved after document review.', ip: '102.88.0.1' },
-        { id: 6,  admin: 'Kojo Admin',   admin_email: 'kojo@platform.com',   action: 'Agent verified',           type: 'verification', affected_user: 'Nana Mensah',   affected_id: 99,  timestamp: '2024-02-13 12:05:17', notes: 'Verified real estate license, Ghana REA #7834.', ip: '154.0.10.5' },
-        { id: 7,  admin: 'Jane Admin',   admin_email: 'jane@platform.com',   action: 'Report resolved',          type: 'report',       affected_user: 'Fiifi Darko',   affected_id: 143, timestamp: '2024-02-13 10:45:55', notes: 'Fraudulent listing report resolved — listing removed.', ip: '41.66.5.22' },
-        { id: 8,  admin: 'Super Admin',  admin_email: 'super@platform.com',  action: 'Platform settings updated',type: 'settings',     affected_user: '—',             affected_id: null,timestamp: '2024-02-12 18:30:00', notes: 'Updated payment gateway config — test mode off.', ip: '102.88.0.1' },
-        { id: 9,  admin: 'Kojo Admin',   admin_email: 'kojo@platform.com',   action: 'User account unlocked',    type: 'user',         affected_user: 'Efua Asante',   affected_id: 302, timestamp: '2024-02-12 15:22:41', notes: 'Account unlocked — verified OTP issue resolved.', ip: '154.0.10.5' },
-        { id: 10, admin: 'Super Admin',  admin_email: 'super@platform.com',  action: 'Security alert dismissed', type: 'security',     affected_user: 'System',        affected_id: null,timestamp: '2024-02-12 11:14:03', notes: 'False positive 2FA alert — reviewed and dismissed.', ip: '102.88.0.1' },
-        { id: 11, admin: 'Jane Admin',   admin_email: 'jane@platform.com',   action: 'Subscription cancelled',   type: 'subscription', affected_user: 'Kwabena Boadu', affected_id: 188, timestamp: '2024-02-11 16:08:29', notes: 'Admin-initiated cancellation per user request.', ip: '41.66.5.22' },
-        { id: 12, admin: 'Kojo Admin',   admin_email: 'kojo@platform.com',   action: 'Payment marked failed',    type: 'payment',      affected_user: 'Adwoa Frimpong',affected_id: 256, timestamp: '2024-02-11 13:55:18', notes: 'Marked failed after 3 retries — notified user.', ip: '154.0.10.5' },
-    ];
+
+    return [...safeLogs, ...mappedActivity];
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -384,7 +363,7 @@ const LogRow = ({ log, index, onView }) => {
 
 const AuditLog = ({ logs: rawLogs, activity }) => {
     const allLogs = useMemo(
-        () => normalise(rawLogs ?? [], activity ?? []),
+        () => normalise(rawLogs ?? [], activity ?? []).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)),
         [rawLogs, activity]
     );
 

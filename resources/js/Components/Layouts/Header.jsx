@@ -142,22 +142,22 @@ const Header = () => {
             <div
               className="logo-icon flex items-center justify-center rounded-lg"
               style={{ 
-                backgroundColor: 'hsl(174 62% 32%)',
-                width: 'clamp(2rem, 8vw, 2.25rem)',
-                height: 'clamp(2rem, 8vw, 2.25rem)'
+                width: 'clamp(2rem, 10vw, 3.25rem)',
+                height: 'clamp(2rem, 10vw, 3.25rem)',
+                overflow: 'hidden',
               }}
             >
-              <span style={{ 
-                fontSize: 'clamp(1rem, 4vw, 1.125rem)',
-                fontWeight: '700',
-                color: 'white'
-              }}>R</span>
+              <img
+                src="/rent-trust.png"
+                alt="RentTrustGh Logo"
+                style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}
+              />
             </div>
             <span className="logo-text font-bold tracking-tight" style={{ 
               color: 'hsl(200 25% 15%)',
               fontSize: 'clamp(1.125rem, 4vw, 1.25rem)'
             }}>
-              RentTrust
+              RentTrustGh
             </span>
           </Link>
 
@@ -203,19 +203,6 @@ const Header = () => {
               >
                 Reports & Reviews
               </Link>
-              {/* <Link
-                  href="/contact"
-                  onMouseEnter={() => setActiveLink('contact')}
-                  onMouseLeave={() => setActiveLink(null)}
-                  className="desktop-nav-link px-4 py-2 font-medium transition-all rounded-lg"
-                  style={{
-                    color: activeLink === 'contact' ? 'hsl(200 25% 15%)' : 'hsl(200 15% 45%)',
-                    backgroundColor: activeLink === 'contact' ? 'hsl(40 30% 94%)' : 'transparent',
-                    fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)'
-                  }}
-                >
-                  Contact
-              </Link> */}
                 <Link
                   href="/pricing"
                   onMouseEnter={() => setActiveLink('pricing')}
@@ -229,19 +216,6 @@ const Header = () => {
                 >
                   Pricing
                 </Link>
-                {/* <Link
-                  href="/about"
-                  onMouseEnter={() => setActiveLink('about')}
-                  onMouseLeave={() => setActiveLink(null)}
-                  className="desktop-nav-link px-4 py-2 font-medium transition-all rounded-lg"
-                  style={{
-                    color: activeLink === 'about' ? 'hsl(200 25% 15%)' : 'hsl(200 15% 45%)',
-                    backgroundColor: activeLink === 'about' ? 'hsl(40 30% 94%)' : 'transparent',
-                    fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)'
-                  }}
-                >
-                  About us
-                </Link> */}
             </>
           </nav>
 

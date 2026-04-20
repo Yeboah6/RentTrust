@@ -52,7 +52,7 @@ class AgentController extends Controller
                     'rating'          => $user->rating          ? round($user->rating, 1) : null,
                     'reviews_count'   => $user->reviews_count   ?? 0,       // add if you track commissions
                     'joined_at'       => $user->created_at,
-                    'last_active'     => $user->updated_at,            // swap for last_login_at if tracked
+                    'last_active'     => $user->last_active,
                 ];
             });
 
@@ -61,6 +61,7 @@ class AgentController extends Controller
         return inertia('SuperAdmin/Agents/Index', [
             'agents'         => $agents,
             'listings_count' => $listings_count,
+            'plans'          => \App\Models\Plan::active()->orderBy('sort_order')->get(),
         ]);
     }
 
@@ -77,10 +78,10 @@ class AgentController extends Controller
     {
         $validated = $request->validate([
             'name'                  => ['required', 'string', 'max:255'],
-            'email'                 => ['required', 'email', 'unique:agents,email'],
+            'email'                 => ['required', 'email', 'unique:users,email'],
             'phone'                 => ['nullable', 'string', 'max:30'],
             'agency'                => ['nullable', 'string', 'max:255'],
-            'license'               => ['nullable', 'string', 'max:100'],
+            'type'                  => ['nullable', 'string', 'max:100'],
             'location'              => ['nullable', 'string', 'max:255'],
             'bio'                   => ['nullable', 'string', 'max:2000'],
             'website'               => ['nullable', 'url', 'max:255'],
@@ -99,10 +100,10 @@ class AgentController extends Controller
                 'email'          => $validated['email'],
                 'phone'          => $validated['phone']    ?? null,
                 'agency_name'    => $validated['agency']   ?? null,
-                'license_number' => $validated['license']  ?? null,
+                'role'           => 'agent',
                 'location'       => $validated['location'] ?? null,
                 'bio'            => $validated['bio']      ?? null,
-                'website'        => $validated['website']  ?? null,
+                'type'        => $validated['type']  ?? null,
                 'status'         => $validated['status'],
                 'tier'           => $validated['tier'],
                 'is_verified'    => $validated['is_verified']  ?? false,
@@ -387,7 +388,7 @@ class AgentController extends Controller
                 ? (str_starts_with($agent->avatar, 'http') ? $agent->avatar : asset('storage/' . $agent->avatar))
                 : null,
             'joined_at'      => $agent->created_at?->toISOString(),
-            'last_active'    => $agent->last_login_at?->toISOString() ?? $agent->last_active?->toISOString(),
+            'last_active'    => $agent->last_active?->toISOString(),
             'updated_at'     => $agent->updated_at?->toISOString(),
         ];
     }

@@ -76,6 +76,14 @@ const fmtRelative = (v) => {
     } catch { return v; }
 };
 
+const resolveImage = (img) => {
+    if (!img) return null;
+    if (typeof img !== 'string') return null;
+    if (img.startsWith('http://') || img.startsWith('https://')) return img;
+    if (img.includes('/')) return img;
+    return `/storage/rental_images/${img}`;
+};
+
 const avatarHue = (s = '') => [...s].reduce((a, c) => a + c.charCodeAt(0), 0) % 360;
 
 const normalise = (a) => ({
@@ -245,13 +253,14 @@ const ListingRow = ({ listing: l }) => {
         if (n >= 1_000)     return `${cur}${n.toLocaleString()}`;
         return `${cur}${n}`;
     };
+    const imageUrl = resolveImage(l.images?.[0]);
     return (
         <Link href={`/super-admin/listings/${l.id}`}
             style={{ display: 'grid', gridTemplateColumns: '2rem minmax(0,1fr) 7rem 6rem', alignItems: 'center', gap: '0.6rem', padding: '0.6rem 1.125rem', borderBottom: '1px solid hsl(220 15% 96%)', textDecoration: 'none', transition: 'background-color 0.12s' }}
             onMouseEnter={e => e.currentTarget.style.backgroundColor = 'hsl(220 15% 98.5%)'}
             onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}>
             <div style={{ width: '2rem', height: '2rem', borderRadius: '0.4rem', backgroundColor: 'hsl(220 15% 91%)', overflow: 'hidden', flexShrink: 0 }}>
-                {l.images?.[0] && <img src={l.images[0]} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
+                {imageUrl && <img src={imageUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
             </div>
             <div style={{ minWidth: 0 }}>
                 <div style={{ fontSize: '0.8rem', fontWeight: '700', color: 'hsl(220 25% 15%)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{l.title ?? 'Untitled'}</div>
@@ -347,6 +356,12 @@ const AgentShow = ({ agent: rawAgent }) => {
                                     <span style={{ fontSize: '0.62rem', fontWeight: '800', backgroundColor: 'hsl(40 90% 93%)', color: 'hsl(40 80% 30%)', padding: '0.1rem 0.4rem', borderRadius: '0.3rem' }}>⭐ FEATURED</span>
                                 )}
                                 <span style={{ fontSize: '0.72rem', color: 'hsl(220 15% 52%)' }}>#{agent._id} · Joined {fmtDate(agent.joined_at)}</span>
+                                {agent.last_active && (
+                                    <span style={{ fontSize: '0.72rem', color: 'hsl(214 60% 45%)', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                        <Icons.clock style={{ width: '0.8rem', height: '0.8rem' }} />
+                                        Last active {fmtRelative(agent.last_active)}
+                                    </span>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -431,14 +446,30 @@ const AgentShow = ({ agent: rawAgent }) => {
                             {/* Stats strip */}
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', borderBottom: '1px solid hsl(220 15% 93%)' }}>
                                 {[
-                                    { label: 'Listings',    value: agent.listings_count ?? 0,          accent: 'hsl(220 25% 15%)' },
-                                    { label: 'Active',      value: agent.active_listings ?? 0,         accent: 'hsl(152 55% 33%)' },
-                                    { label: 'Sold/Rented', value: agent.sold_count ?? 0,              accent: 'hsl(214 80% 44%)' },
-                                    { label: 'Rating',      value: agent.rating ? `${Number(agent.rating).toFixed(1)}★` : '—', accent: 'hsl(40 80% 40%)' },
-                                ].map(({ label, value, accent }, i, arr) => (
+                                    { label: 'Listings',    value: agent.listings_count ?? 0,          accent: 'hsl(220 25% 15%)', isRating: false },
+                                    { label: 'Active',      value: agent.active_listings ?? 0,         accent: 'hsl(152 55% 33%)', isRating: false },
+                                    { label: 'Sold/Rented', value: agent.sold_count ?? 0,              accent: 'hsl(214 80% 44%)', isRating: false },
+                                    { label: 'Rating',      value: agent.rating ? agent.rating : null, accent: 'hsl(40 80% 40%)',  isRating: true },
+                                ].map(({ label, value, accent, isRating }, i, arr) => (
                                     <div key={label} style={{ padding: '1rem', textAlign: 'center', borderRight: i < arr.length - 1 ? '1px solid hsl(220 15% 93%)' : 'none' }}>
-                                        <div style={{ fontSize: '1.5rem', fontWeight: '900', color: accent, lineHeight: 1 }}>{value}</div>
-                                        <div style={{ fontSize: '0.64rem', fontWeight: '700', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'hsl(220 15% 52%)', marginTop: '0.25rem' }}>{label}</div>
+                                        <div style={{ fontSize: '1.5rem', fontWeight: '900', color: accent, lineHeight: 1, marginBottom: isRating && value ? '0.25rem' : 0 }}>
+                                            {isRating ? (
+                                                value ? <StarRating rating={Number(value)} size="1.2rem" /> : '—'
+                                            ) : (
+                                                value
+                                            )}
+                                        </div>
+                                        {!isRating && (
+                                            <div style={{ fontSize: '0.64rem', fontWeight: '700', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'hsl(220 15% 52%)', marginTop: '0.25rem' }}>{label}</div>
+                                        )}
+                                        {isRating && value && (
+                                            <div style={{ fontSize: '0.64rem', fontWeight: '700', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'hsl(220 15% 52%)', marginTop: '0.25rem' }}>
+                                                {Number(value).toFixed(1)} ★
+                                            </div>
+                                        )}
+                                        {isRating && !value && (
+                                            <div style={{ fontSize: '0.64rem', fontWeight: '700', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'hsl(220 15% 52%)', marginTop: '0.25rem' }}>{label}</div>
+                                        )}
                                     </div>
                                 ))}
                             </div>
@@ -479,8 +510,37 @@ const AgentShow = ({ agent: rawAgent }) => {
                             <CardHead title="Listings" sub={`${agent.listings_count} total`} />
                             {agent.listings?.length > 0 ? (
                                 <>
-                                    {agent.listings.slice(0, 8).map(l => <ListingRow key={l.id} listing={l} />)}
-                                    {agent.listings_count > 8 && (
+                                    {/* Image gallery for first few listings */}
+                                    {agent.listings.length > 0 && (
+                                        <div style={{ padding: '1rem 1.125rem', borderBottom: '1px solid hsl(220 15% 94%)' }}>
+                                            <p style={{ margin: '0 0 0.75rem', fontSize: '0.75rem', fontWeight: '800', letterSpacing: '0.05em', textTransform: 'uppercase', color: 'hsl(220 15% 50%)' }}>Recent Listing Images</p>
+                                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(80px, 1fr))', gap: '0.5rem' }}>
+                                                {agent.listings.slice(0, 6).map((l, index) => {
+                                                    const imageUrl = resolveImage(l.images?.[0]);
+                                                    return imageUrl ? (
+                                                        <div key={`img-${l.id}-${index}`} style={{ position: 'relative', aspectRatio: '1', borderRadius: '0.4rem', overflow: 'hidden', backgroundColor: 'hsl(220 15% 95%)' }}>
+                                                            <img
+                                                                src={imageUrl}
+                                                                alt={l.title ?? 'Listing'}
+                                                                style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.2s' }}
+                                                                onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
+                                                                onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                                                            />
+                                                            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(transparent, rgba(0,0,0,0.7))', padding: '0.3rem 0.4rem' }}>
+                                                                <div style={{ fontSize: '0.6rem', fontWeight: '700', color: 'white', textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}>
+                                                                    {l.title ? l.title.slice(0, 15) + (l.title.length > 15 ? '…' : '') : 'Untitled'}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    ) : null;
+                                                })}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Listing details */}
+                                    {agent.listings.slice(0, 5).map(l => <ListingRow key={l.id} listing={l} />)}
+                                    {agent.listings_count > 5 && (
                                         <div style={{ padding: '0.75rem 1.125rem', textAlign: 'center' }}>
                                             <Link href={`/super-admin/listings?agent=${agent._id}`}
                                                 style={{ fontSize: '0.78rem', fontWeight: '600', color: 'hsl(214 80% 44%)', textDecoration: 'none' }}>
@@ -556,13 +616,18 @@ const AgentShow = ({ agent: rawAgent }) => {
 
                         {/* Last active */}
                         {agent.last_active && (
-                            <div style={{ padding: '0.75rem 1rem', borderRadius: '0.65rem', backgroundColor: 'hsl(214 100% 98%)', border: '1px solid hsl(214 80% 90%)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                <span style={{ color: 'hsl(214 80% 48%)', flexShrink: 0, display: 'flex' }}><Icons.clock /></span>
-                                <div>
-                                    <p style={{ margin: 0, fontSize: '0.73rem', fontWeight: '600', color: 'hsl(214 60% 35%)' }}>Last seen {fmtRelative(agent.last_active)}</p>
-                                    <p style={{ margin: 0, fontSize: '0.68rem', color: 'hsl(214 50% 55%)' }}>{fmtDate(agent.last_active)}</p>
+                            <Card>
+                                <div style={{ padding: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                    <div style={{ width: '2.5rem', height: '2.5rem', borderRadius: '50%', backgroundColor: 'hsl(214 100% 96%)', border: '1px solid hsl(214 80% 88%)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                        <Icons.clock style={{ width: '1.2rem', height: '1.2rem', color: 'hsl(214 80% 48%)' }} />
+                                    </div>
+                                    <div style={{ flex: 1 }}>
+                                        <p style={{ margin: '0 0 0.15rem', fontSize: '0.8rem', fontWeight: '700', color: 'hsl(214 60% 35%)' }}>Last Active</p>
+                                        <p style={{ margin: '0 0 0.1rem', fontSize: '0.75rem', color: 'hsl(214 50% 50%)', fontWeight: '600' }}>{fmtRelative(agent.last_active)}</p>
+                                        <p style={{ margin: 0, fontSize: '0.68rem', color: 'hsl(220 15% 55%)' }}>{fmtDate(agent.last_active)}</p>
+                                    </div>
                                 </div>
-                            </div>
+                            </Card>
                         )}
                     </div>
                 </div>
