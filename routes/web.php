@@ -18,7 +18,7 @@ use App\Http\Controllers\ContactController;
 
 Route::resource('rent', RentController::class)
     ->except('index')
-    ->where(['rent' => '[0-9]+']);
+    ->where(['rent' => '[a-f0-9\-]{36}|[0-9]+']);
 
 Route::get('/', [RentController::class, 'index']);
 

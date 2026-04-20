@@ -4,11 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Traits\GeneratesUUIDs;
 
 class Subscription extends Model
 {
+    use GeneratesUUIDs;
     protected $fillable = [
         'user_id', 'plan_id', 'provider',
+        'subscription_uuid',
         'provider_subscription_id', 'provider_customer_code',
         'status', 'starts_at', 'ends_at', 'grace_ends_at',
         'retry_count', 'last_retry_at', 'meta',
@@ -47,6 +50,12 @@ class Subscription extends Model
         if ($this->grace_ends_at && $this->grace_ends_at->isFuture()) {
             return false;
         }
+    }
+
+    public function getRouteKeyName()
+    {
+        return 'subscription_uuid';
+    }
 
         return $this->ends_at->isPast();
     }

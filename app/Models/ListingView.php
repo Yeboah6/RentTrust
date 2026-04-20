@@ -4,11 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Traits\GeneratesUUIDs;
 
 class ListingView extends Model
 {
+    use GeneratesUUIDs;
     protected $fillable = [
         'rental_id',
+        'listing_view_id',
         'user_id',
         'ip',
         'user_agent',
@@ -34,6 +37,11 @@ class ListingView extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function getRouteKeyName()
+    {
+        return 'listing_view_id';
     }
 
     /**

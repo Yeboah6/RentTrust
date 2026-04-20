@@ -5,11 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use App\Models\Review;
+use App\Traits\GeneratesUUIDs;
 
 class Rental extends Model
 {
+    use GeneratesUUIDs;
     protected $fillable = [
         'user_id',
+        'rental_id',
         'title',
         'property_type',
         'purpose',
@@ -91,6 +94,11 @@ class Rental extends Model
     public function reports()
     {
         return $this->hasMany(Report::class);
+    }
+
+    public function getRouteKeyName()
+    {
+        return 'rental_id';
     }
 
     /**

@@ -4,11 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Traits\GeneratesUUIDs;
 
 class Plan extends Model
 {
+    use GeneratesUUIDs;
     protected $fillable = [
         'name', 'description', 'slug', 'price', 'currency', 'interval',
+        'plan_id',
         'listing_limit', 'rental_limit', 'sale_limit', 'boost_limit', 'lead_limit',
         'featured_limit', 'featured_duration_days',
         'verified_badge', 'priority_ranking', 'analytics_access', 'features',
@@ -35,6 +38,11 @@ class Plan extends Model
     public function subscriptions(): HasMany
     {
         return $this->hasMany(Subscription::class);
+    }
+
+    public function getRouteKeyName()
+    {
+        return 'plan_id';
     }
 
     public function isFree(): bool
