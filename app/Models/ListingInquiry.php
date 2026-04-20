@@ -4,11 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Traits\GeneratesUUIDs;
 
 class ListingInquiry extends Model
 {
+    use GeneratesUUIDs;
     protected $fillable = [
         'rental_id',
+        'listing_inquiry_id',
         'user_id',
         'type',
         'message',
@@ -36,11 +39,13 @@ class ListingInquiry extends Model
         return $this->belongsTo(User::class);
     }
 
-    /**
-     * Get inquiry types enum validation.
-     */
     public static function validTypes(): array
     {
         return ['whatsapp', 'phone', 'form'];
+    }
+
+    public function getRouteKeyName()
+    {
+        return 'listing_inquiry_id';
     }
 }

@@ -4,11 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Traits\GeneratesUUIDs;
 
 class Payment extends Model
 {
+    use GeneratesUUIDs;
     protected $fillable = [
         'user_id', 'subscription_id', 'reference',
+        'payment_id',
         'provider', 'amount', 'currency',
         'status', 'failure_reason', 'raw_payload',
     ];
@@ -36,5 +39,10 @@ class Payment extends Model
     {
         // avoid a circular import if Plan lives elsewhere
         return $this->belongsTo(\App\Models\Plan::class);
+    }
+
+    public function getRouteKeyName()
+    {
+        return 'payment_id';
     }
 }

@@ -6,15 +6,18 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Request;
+use App\Traits\GeneratesUUIDs;
 
 class AdminAuditLog extends Model
 {
+    use GeneratesUUIDs;
     public    $timestamps  = true;
     public    const UPDATED_AT = null;          // audit records are immutable
 
     protected $table       = 'admin_audit_logs';
 
     protected $fillable = [
+        'admin_audit_log_id',
         'causer_id',        // admin user id
         'causer_name',      // snapshot of admin name at log time
         'causer_email',     // snapshot of admin email at log time
@@ -47,6 +50,11 @@ class AdminAuditLog extends Model
     ];
 
     // ─── Relations ────────────────────────────────────────────────────────────
+
+    public function getRouteKeyName()
+    {
+        return 'admin_audit_log_id';
+    }
 
     public function causer(): BelongsTo
     {

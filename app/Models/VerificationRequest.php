@@ -4,13 +4,15 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\GeneratesUUIDs;
 
 class VerificationRequest extends Model
 {
-    use HasFactory;
+    use HasFactory, GeneratesUUIDs;
 
     protected $fillable = [
         'rental_id',
+        'verification_request_id',
         'agent_id',
         'agent_name',
         'request_type',
@@ -46,6 +48,11 @@ class VerificationRequest extends Model
     public function agent()
     {
         return $this->belongsTo(User::class, 'agent_id');
+    }
+
+    public function getRouteKeyName()
+    {
+        return 'verification_request_id';
     }
 
     /**

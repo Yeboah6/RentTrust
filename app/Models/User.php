@@ -9,11 +9,12 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Models\Rental;
+use App\Traits\GeneratesUUIDs;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, GeneratesUUIDs;
 
     /**
      * The attributes that are mass assignable.
@@ -31,7 +32,8 @@ class User extends Authenticatable
         'bio',
         'status',
         'fee',
-        'package'
+        'package',
+        'user_id'
     ];
 
     public function rentals()
@@ -77,6 +79,11 @@ class User extends Authenticatable
     public function subscription(): HasOne
     {
         return $this->hasOne(Subscription::class)->latestOfMany();
+    }
+
+    public function getRouteKeyName()
+    {
+        return 'user_id';
     }
 
     /**

@@ -4,14 +4,17 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Traits\GeneratesUUIDs;
 
 class SubscriptionAuditLog extends Model
 {
+    use GeneratesUUIDs;
     public $timestamps = true;
     public const UPDATED_AT = null; // audit logs are immutable once written
 
     protected $fillable = [
         'subscription_id',
+        'subscription_audit_log_id',
         'admin_id',
         'action',
         'notes',
@@ -44,6 +47,11 @@ class SubscriptionAuditLog extends Model
     public function subscription(): BelongsTo
     {
         return $this->belongsTo(Subscription::class);
+    }
+
+    public function getRouteKeyName()
+    {
+        return 'subscription_audit_log_id';
     }
 
     public function admin(): BelongsTo

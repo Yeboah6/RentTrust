@@ -3,12 +3,15 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\GeneratesUUIDs;
 
 class Review extends Model
 {
+    use GeneratesUUIDs;
     protected $fillable = [
         'review_type',
         'rental_id',
+        'review_id',
         'overall_rating',
         'landlord_responsive',
         'property_matched_description',
@@ -28,5 +31,10 @@ class Review extends Model
     public function rental()
     {
         return $this->belongsTo(Rental::class);
+    }
+
+    public function getRouteKeyName()
+    {
+        return 'review_id';
     }
 }
