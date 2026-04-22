@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('verification_requests', function (Blueprint $table) {
             $table->id();
+            $table->uuid('verification_request_id')->unique();
             $table->foreignId('rental_id')->constrained('rentals')->onDelete('cascade');
             $table->unsignedBigInteger('user_id');
             $table->string('agent_name');

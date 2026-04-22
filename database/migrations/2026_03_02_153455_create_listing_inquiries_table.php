@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('listing_inquiries', function (Blueprint $table) {
             $table->id();
+            $table->uuid('listing_inquiry_id')->unique();
             $table->foreignId('rental_id')->constrained()->cascadeOnDelete();
             $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
             $table->enum('type', ['whatsapp', 'phone', 'form']);

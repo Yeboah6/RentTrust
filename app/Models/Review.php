@@ -25,7 +25,7 @@ class Review extends Model
 
 
     protected $cast = [
-        'overall_rating'=>'array',
+        'overall_rating'=>'integer',
     ];
 
     public function rental()

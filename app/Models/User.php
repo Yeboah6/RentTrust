@@ -33,11 +33,8 @@ class User extends Authenticatable
         'status',
         'fee',
         'package',
-<<<<<<< HEAD
-        'last_active'
-=======
+        'last_active',
         'user_id'
->>>>>>> 0ee3c901457eefa5d0daf5b1d6cca406c6712920
     ];
 
     public function rentals()

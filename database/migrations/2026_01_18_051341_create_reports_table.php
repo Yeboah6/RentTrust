@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('reports', function (Blueprint $table) {
             $table->id();
+            $table->uuid('report_id')->unique();
             $table->foreignId('rental_id')->constrained('rentals')->onDelete('cascade');
             $table->string('report_type');
             $table->string('report_description', 1000);

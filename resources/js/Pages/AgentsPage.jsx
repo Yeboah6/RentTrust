@@ -176,8 +176,8 @@ const AgentsPage = ({ agents }) => {
     id: agentItem.id,
     name: agentItem.name,
     isVerified: agentItem.status === 'verified',
-    rating: agentItem.rentals_reviews_avg_overall_rating || 0,
-    reviewCount: agentItem.total_reviews_count || 0,
+    rating: Math.round((agentItem.reviews_avg_overall_rating || 0) * 10) / 10,
+    reviewCount: agentItem.reviews_count || 0,
     listingsCount: agentItem.rentals_count || 0,
     feePercent: agentItem.fee || 0,
     responseRate: 95,
@@ -192,8 +192,7 @@ const AgentsPage = ({ agents }) => {
 
   const filteredAgents = agentsData.filter(
     (agent) =>
-      agent.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      agent.areas.some((area) => area.toLowerCase().includes(searchQuery.toLowerCase()))
+      agent.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (

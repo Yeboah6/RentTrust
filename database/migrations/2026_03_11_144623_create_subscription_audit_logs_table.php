@@ -10,6 +10,7 @@ return new class extends Migration
     {
         Schema::create('subscription_audit_logs', function (Blueprint $table) {
             $table->id();
+            $table->uuid('subscription_audit_log_id')->unique();
             $table->foreignId('subscription_id')->constrained()->cascadeOnDelete();
             $table->foreignId('admin_id')->nullable()->constrained('users')->nullOnDelete();
             $table->string('action', 60)->index();   // cancel | suspend | free_month | upgrade | admin_grant …

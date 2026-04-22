@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
+            $table->uuid('user_id')->unique();
             $table->string('name');
             $table->string('email')->unique();
             $table->string('phone')->nullable();
@@ -24,6 +25,7 @@ return new class extends Migration
             $table->string('fee')->nullable();
             $table->string('package')->nullable()->default('free');
             $table->string('password');
+            $table->timestamp('last_active')->nullable();
             $table->timestamps();
         });
 

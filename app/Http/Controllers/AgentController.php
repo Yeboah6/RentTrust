@@ -17,6 +17,7 @@ class AgentController extends Controller
     public function agent()
     {
         $agents = User::where('role', 'agent')
+            ->whereIn('status', ['verified', 'pending'])
             ->withCount('rentals')
             ->withCount('reviews')
             ->withAvg('reviews', 'overall_rating')

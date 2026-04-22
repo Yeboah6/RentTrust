@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('reviews', function (Blueprint $table) {
             $table->id();
+            $table->uuid('review_id')->unique();
             $table->enum('review_type', ['rent', 'app'])->default('rent');
             $table->foreignId('rental_id')->nullable()->constrained('rentals')->onDelete('cascade'); // Make nullable for app reviews
             $table->json('overall_rating');

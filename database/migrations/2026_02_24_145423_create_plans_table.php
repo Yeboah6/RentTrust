@@ -11,6 +11,7 @@ return new class extends Migration
     {
         Schema::create('plans', function (Blueprint $table) {
             $table->id();
+            $table->uuid('plan_id')->unique();
             $table->string('name');
             $table->text('description');
             $table->string('slug')->unique();

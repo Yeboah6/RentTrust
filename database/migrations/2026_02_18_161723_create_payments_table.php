@@ -10,6 +10,7 @@ return new class extends Migration
     {
         Schema::create('payments', function (Blueprint $table) {
             $table->id();
+            $table->uuid('payment_id')->unique();
             $table->foreignId('user_id')->constrained();
             $table->foreignId('subscription_id')->nullable()->constrained()->nullOnDelete();
             $table->string('reference')->unique();

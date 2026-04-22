@@ -10,6 +10,7 @@ return new class extends Migration
     {
         Schema::create('admin_audit_logs', function (Blueprint $table) {
             $table->id();
+            $table->uuid('admin_audit_log_id')->unique();
 
             // Who performed the action
             $table->foreignId('causer_id')->nullable()->constrained('users')->nullOnDelete();
