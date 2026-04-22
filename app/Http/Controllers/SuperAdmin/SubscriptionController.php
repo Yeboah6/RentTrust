@@ -206,6 +206,7 @@ class SubscriptionController extends Controller
     
             // 2. Create new active subscription for the user
             $newSub = Subscription::create([
+                'subscription_uuid' => Subscription::generateUUID(),
                 'user_id'   => $sub->user_id,
                 'plan_id'   => $plan->id,
                 'status'    => 'active',
@@ -290,6 +291,7 @@ class SubscriptionController extends Controller
     private function auditLog(int $subscriptionId, string $action, array $meta = [], string $notes = ''): void
     {
         SubscriptionAuditLog::create([
+            'subscription_audit_log_id' => SubscriptionAuditLog::generateUUID(),
             'subscription_id' => $subscriptionId,
             'admin_id'        => Auth::id(),
             'action'          => $action,
@@ -327,6 +329,7 @@ class SubscriptionController extends Controller
 
             // Create new admin-granted subscription
             $newSub = Subscription::create([
+                'subscription_uuid' => Subscription::generateUUID(),
                 'user_id'        => $userId,
                 'plan_id'        => $plan->id,
                 'status'         => 'active',

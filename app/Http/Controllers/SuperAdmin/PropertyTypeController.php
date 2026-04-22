@@ -27,6 +27,7 @@ class PropertyTypeController extends Controller
             'description' => 'nullable|string',
             'is_active' => 'boolean',
             ]);
+        $data['property_type_id'] = PropertyType::generateUUID();
         PropertyType::create($data);
         return back()->with('success', 'Property type added');
     }

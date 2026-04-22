@@ -27,6 +27,7 @@ class AmenityController extends Controller
             'description' => 'nullable|string',
             'is_active' => 'boolean'
         ]);
+        $data['amenity_id'] = Amenity::generateUUID();
         Amenity::create($data);
         return back()->with('success', 'Amenity added');
     }

@@ -48,6 +48,7 @@ class PlanController extends Controller
             'features'           => 'required'
         ]);
 
+        $data['plan_id'] = Plan::generateUUID();
         Plan::create($data);
         return redirect()->back()->with('success', 'Plan created');
     }

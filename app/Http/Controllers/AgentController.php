@@ -45,6 +45,7 @@ class AgentController extends Controller
         $validated['role']     = 'agent';
         $validated['status']   = 'unverified';
         $validated['package']  = null; // No plan yet — modal will prompt them
+        $validated['user_id']  = User::generateUUID();
 
         $agent = User::create($validated);
 

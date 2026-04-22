@@ -189,6 +189,7 @@ class ListingController extends Controller
  
         // ── Build listing data ────────────────────────────────────────────────
         $listingData = [
+            'rental_id'    => Rental::generateUUID(),
             'user_id'      => auth()->id(),
             'purpose'      => $purpose,
             'title'        => $request->title,

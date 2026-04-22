@@ -123,6 +123,7 @@ class VerificationsController extends Controller
 
             // Create verification request
             $verificationRequest = VerificationRequest::create([
+                'verification_request_id' => VerificationRequest::generateUUID(),
                 'rental_id' => $request->rental_id,
                 'agent_id' => $request->agent_id,
                 'agent_name' => $request->agent_name,

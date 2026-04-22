@@ -44,6 +44,7 @@ class AdminController extends Controller
         $data['password'] = Hash::make($data['password']);
         $data['role'] = 'admin';
         $data['package'] = 'admin';
+        $data['user_id'] = User::generateUUID();
 
         User::create($data);
         return redirect()-> back()->with('success', 'Admin account created');

@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         User::create([
+            'user_id' => User::generateUUID(),
             'name' => 'Rent Trust',
             'email' => 'rent@trust.com',
             'role' => 'super_admin',

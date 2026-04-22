@@ -29,6 +29,7 @@ class AuthController extends Controller
         ]);
 
         $signUpData['password'] = Hash::make($signUpData['password']);
+        $signUpData['user_id'] = User::generateUUID();
 
         $tenant = User::create($signUpData);
 

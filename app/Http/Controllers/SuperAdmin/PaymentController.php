@@ -105,6 +105,7 @@ class PaymentController extends Controller
         DB::transaction(function () use ($payment, $refundAmount, $request, $isPartial, $maxRefundable) {
             // 1. Create a refund payment record
             $refund = Payment::create([
+                'payment_id'        => Payment::generateUUID(),
                 'user_id'           => $payment->user_id,
                 'subscription_id'   => $payment->subscription_id,
                 'parent_payment_id' => $payment->id,

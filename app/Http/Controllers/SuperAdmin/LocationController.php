@@ -27,6 +27,7 @@ class LocationController extends Controller
             'slug' => 'nullable|string',
             'is_active' => 'boolean'
         ]);
+        $location['location_id'] = Location::generateUUID();
         Location::create($location);
         return redirect()->back()->with('success', 'Location added');
     }

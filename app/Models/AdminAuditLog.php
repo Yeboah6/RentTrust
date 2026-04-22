@@ -80,6 +80,7 @@ class AdminAuditLog extends Model
         array  $context = []
     ): self {
         return static::create([
+            'admin_audit_log_id' => static::generateUUID(),
             'causer_id'     => $context['causer_id']    ?? Auth::id(),
             'causer_name'   => $context['causer_name']  ?? Auth::user()?->name   ?? 'System',
             'causer_email'  => $context['causer_email'] ?? Auth::user()?->email  ?? '',

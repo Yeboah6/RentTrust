@@ -96,6 +96,7 @@ class AgentController extends Controller
  
             // Create the agent record — map form field names to model column names
             $agent = User::create([
+                'user_id'        => User::generateUUID(),
                 'name'           => $validated['name'],
                 'email'          => $validated['email'],
                 'phone'          => $validated['phone']    ?? null,

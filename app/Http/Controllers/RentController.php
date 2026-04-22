@@ -247,6 +247,7 @@ class RentController extends Controller
 
             // Build listing data based on purpose
             $listingData = [
+                'rental_id'           => Rental::generateUUID(),
                 'user_id'             => $user->id,
                 'purpose'             => $purpose,
                 'title'               => $request->title,
@@ -330,6 +331,7 @@ class RentController extends Controller
         $name = $validated['name'] ?? 'Anonymous';
 
         $report = Report::create([
+            'report_id' => Report::generateUUID(),
             'rental_id' => $validated['property_id'],
             'report_description' => $validated['description'],
             'report_type' => $validated['report_type'],
@@ -787,6 +789,7 @@ class RentController extends Controller
 
             // Create the review
             $review = Review::create([
+                'review_id' => Review::generateUUID(),
                 'rental_id' => $validated['rental_id'],
                 'overall_rating' => $validated['overall_rating'],
                 'landlord_responsive' => $validated['landlord_responsive'] ?? false,
@@ -859,6 +862,7 @@ class RentController extends Controller
         ]);
 
         Review::create([
+            'review_id' => Review::generateUUID(),
             'review_type' => 'app',
             'overall_rating' => $validated['overall_rating'],
             'full_name' => $validated['name'],
@@ -939,6 +943,7 @@ class RentController extends Controller
         $ip = $request->ip();
         if (! ListingView::hasViewInWindow($rent->id, $ip)) {
             ListingView::create([
+                'listing_view_id' => ListingView::generateUUID(),
                 'rental_id'  => $rent->id,
                 'user_id'    => Auth::id(),
                 'ip'         => $ip,
@@ -961,6 +966,7 @@ class RentController extends Controller
         ]);
 
         ListingInquiry::create([
+            'listing_inquiry_id' => ListingInquiry::generateUUID(),
             'rental_id' => $rent->id,
             'user_id'   => Auth::id(),
             'type'      => $data['type'],
