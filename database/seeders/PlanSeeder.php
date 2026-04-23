@@ -74,7 +74,7 @@ class PlanSeeder extends Seeder
                 'name' => 'Elite',
                 'description' => 'Maximum exposure and premium features for top performers',
                 'slug' => 'elite',
-                'price' => 200,
+                'price' => 199,
                 'currency' => 'GHS',
                 'interval' => 'monthly',
                 'features' => [
