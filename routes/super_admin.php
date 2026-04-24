@@ -52,6 +52,9 @@ Route::prefix('super-admin')
     Route::resource('agents', AgentController::class)
         ->only(['index', 'show', 'edit', 'update', 'destroy', 'create', 'store']);
 
+    // Explicit POST route for store action (ensures POST is registered)
+    Route::post('agents', [AgentController::class, 'store'])->name('agents.store');
+
     // Status action routes
     Route::post('agents/{agent}/verify',     [AgentController::class, 'verify'])     ->name('agents.verify');
     Route::post('agents/{agent}/suspend',    [AgentController::class, 'suspend'])    ->name('agents.suspend');

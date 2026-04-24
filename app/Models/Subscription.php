@@ -17,6 +17,17 @@ class Subscription extends Model
         'retry_count', 'last_retry_at', 'meta',
     ];
 
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($model) {
+            if (empty($model->subscription_uuid)) {
+                $model->subscription_uuid = static::generateUUID();
+            }
+        });
+    }
+
     protected $casts = [
         'starts_at'      => 'datetime',
         'ends_at'        => 'datetime',
@@ -50,14 +61,13 @@ class Subscription extends Model
         if ($this->grace_ends_at && $this->grace_ends_at->isFuture()) {
             return false;
         }
+
+        return $this->ends_at->isPast();
     }
 
     public function getRouteKeyName()
     {
         return 'subscription_uuid';
-    }
-
-        return $this->ends_at->isPast();
     }
 
     public function inGracePeriod(): bool

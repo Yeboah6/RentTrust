@@ -98,7 +98,7 @@ class Rental extends Model
 
     public function getRouteKeyName()
     {
-        return 'rental_id';
+        return 'id';
     }
 
     /**
