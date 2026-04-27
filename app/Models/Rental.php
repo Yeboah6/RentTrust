@@ -96,6 +96,11 @@ class Rental extends Model
         return $this->hasMany(Report::class);
     }
 
+    public function verificationRequests()
+    {
+        return $this->hasMany(VerificationRequest::class);
+    }
+
     public function getRouteKeyName()
     {
         return 'id';

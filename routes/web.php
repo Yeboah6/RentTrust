@@ -86,10 +86,19 @@ Route::middleware(['auth', 'verified', 'throttle:60,1', 'role:agent'])->group(fu
     Route::get('/agent-dashboard', [DashboardController::class, 'agentDashboard'])->name('agent.dashboard');
     Route::post('/rent', [RentController::class, 'store']);
     Route::put('/response', [RentController::class, 'response']);
-    Route::post('/verification-requests', [VerificationsController::class, 'store'])
+    
+    // Verification request routes for agents
+    Route::post('/api/verification-requests', [VerificationsController::class, 'store'])
         ->name('verification.store');
     Route::delete('/api/verification-requests/{id}', [VerificationsController::class, 'destroy'])
         ->name('verification.destroy');
+    Route::get('/api/verification-requests', [VerificationsController::class, 'index'])
+        ->name('agent.verification.index');
+    Route::get('/api/verification-requests/{id}', [VerificationsController::class, 'show'])
+        ->name('agent.verification.show');
+    Route::get('/api/rentals/{rentalId}/verification-requests', [VerificationsController::class, 'getRentalRequests'])
+        ->name('rental.verification.requests');
+    
     Route::post('/api/listings/{rent}/feature', [RentController::class, 'featureListing'])->name('listings.feature');
 });
 
@@ -119,20 +128,30 @@ Route::middleware(['auth','verified'])->group(function () {
 // ── Admin Routes ──────────────────────────────────────────────────────────────
 Route::middleware(['auth','verified','throttle:60,1','role:admin'])->group(function () {
     Route::get('/admin', [DashboardController::class, 'adminDashboard'])->name('admin.dashboard');
+    
+    // Report management
     Route::put('/admin/reports/{id}/status', [RentController::class, 'updateReportStatus'])
-    ->name('admin.reports.status');
+        ->name('admin.reports.status');
+    
+    // Agent verification and management
     Route::put('/admin/agents/{id}/verify', [VerificationsController::class, 'verifyAgent'])
-    ->name('admin.verify.agent');
+        ->name('admin.verify.agent');
     Route::put('/admin/agents/{id}/suspend', [VerificationsController::class, 'suspendAgent'])
-    ->name('admin.suspend.agent');
+        ->name('admin.suspend.agent');
+    
+    // Listing approval
     Route::put('/admin/listings/{rent}/toggle-approval', [RentController::class, 'toggleApprovalStatus'])
-    ->name('admin.listings.toggle-approval');
+        ->name('admin.listings.toggle-approval');
+    
+    // Rental verification request management
     Route::get('/api/verification-requests', [VerificationsController::class, 'index'])
         ->name('verification.index');
     Route::patch('/api/verification-requests/{id}/status', [VerificationsController::class, 'updateStatus'])
         ->name('verification.update-status');
     Route::get('/api/verification-requests/{id}', [VerificationsController::class, 'show'])
         ->name('verification.show');
+    
+    // Payment management
     Route::get('/admin/payments/dashboard', [PaymentsController::class, 'paymentDashboard'])
         ->name('admin.payments.dashboard');
 

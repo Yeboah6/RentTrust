@@ -13,6 +13,7 @@ class VerificationRequest extends Model
     protected $fillable = [
         'rental_id',
         'verification_request_id',
+        'user_id',
         'agent_id',
         'agent_name',
         'request_type',

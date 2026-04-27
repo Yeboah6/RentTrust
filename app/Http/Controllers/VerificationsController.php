@@ -54,21 +54,26 @@ class VerificationsController extends Controller
 
         // Validation
         $validator = Validator::make($request->all(), [
-            'rental_id' => 'required|exists:rentals,id',
+            'rental_id' => 'required|uuid|exists:rentals,rental_id',
             'request_type' => 'required|in:initial_verification,re_verification',
             'additional_notes' => 'nullable|string|max:1000',
-            'agent_id' => 'required',
+            'agent_id' => 'required|exists:users,id',
             'agent_name' => 'required|string|max:255',
 
             // File validations - updated field names to match frontend
             'proof_docs.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:10240',
             'ownership_documents.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:10240',
+            'license_documents.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:10240',
             'utility_bills.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:10240',
         ], [
             'rental_id.required' => 'Please select a rental property',
+            'rental_id.uuid' => 'Invalid rental property ID format',
             'rental_id.exists' => 'The selected rental property does not exist',
+            'agent_id.required' => 'Agent ID is required',
+            'agent_id.exists' => 'The selected agent does not exist',
             'proof_docs.*.max' => 'Each proof document must not exceed 10MB',
             'ownership_documents.*.max' => 'Each property photo must not exceed 10MB',
+            'license_documents.*.max' => 'Each license document must not exceed 10MB',
             'utility_bills.*.max' => 'Each utility bill must not exceed 10MB',
         ]);
 
@@ -82,20 +87,26 @@ class VerificationsController extends Controller
             DB::beginTransaction();
 
             // Check if rental exists
-            $rental = Rental::findOrFail($request->rental_id);
+            $rental = Rental::where('rental_id', $request->rental_id)
+                ->orWhere('id', $request->rental_id)
+                ->firstOrFail();
+
+            // Verify agent exists
+            $agent = User::findOrFail($request->agent_id);
 
             // Check if user is authorized (owner or assigned agent)
             $isOwner = $rental->user_id == Auth::id();
             $isAgent = Auth::id() == $request->agent_id;
+            $isAdmin = Auth::user() && Auth::user()->role === 'super_admin';
 
-            if (!$isOwner && !$isAgent) {
+            if (!$isOwner && !$isAgent && !$isAdmin) {
                 DB::rollBack();
                 return redirect()->back()
                     ->with('error', 'You do not have permission to verify this property');
             }
 
             // Check for existing pending request
-            $existingRequest = VerificationRequest::where('rental_id', $request->rental_id)
+            $existingRequest = VerificationRequest::where('rental_id', $rental->id)
                 ->where('status', 'pending')
                 ->first();
 
@@ -105,10 +116,18 @@ class VerificationsController extends Controller
                     ->with('error', 'A verification request for this property is already pending review');
             }
 
+            // Check if rental is already verified
+            if ($rental->is_verified && $request->request_type === 'initial_verification') {
+                DB::rollBack();
+                return redirect()->back()
+                    ->with('error', 'This property is already verified. Use re-verification for updates');
+            }
+
             // Process and store uploaded files
             $uploadedFiles = [
                 'proof_documents' => $this->handleFileUploads($request, 'proof_docs', 'verification_docs/proof'),
                 'ownership_documents' => $this->handleFileUploads($request, 'ownership_documents', 'verification_docs/property_photos'),
+                'license_documents' => $this->handleFileUploads($request, 'license_documents', 'verification_docs/licenses'),
                 'utility_bills' => $this->handleFileUploads($request, 'utility_bills', 'verification_docs/utility_bills'),
             ];
 
@@ -124,13 +143,14 @@ class VerificationsController extends Controller
             // Create verification request
             $verificationRequest = VerificationRequest::create([
                 'verification_request_id' => VerificationRequest::generateUUID(),
-                'rental_id' => $request->rental_id,
+                'rental_id' => $rental->id,
                 'agent_id' => $request->agent_id,
                 'agent_name' => $request->agent_name,
                 'request_type' => $request->request_type,
                 'status' => 'pending',
                 'proof_documents' => json_encode($uploadedFiles['proof_documents']),
                 'ownership_documents' => json_encode($uploadedFiles['ownership_documents']),
+                'license_documents' => json_encode($uploadedFiles['license_documents']),
                 'utility_bills' => json_encode($uploadedFiles['utility_bills']),
                 'additional_notes' => $request->additional_notes,
                 'submitted_at' => now(),
@@ -140,15 +160,20 @@ class VerificationsController extends Controller
             // Update rental status to indicate verification is pending
             $rental->update([
                 'verification_status' => 'pending',
-                'verification_requested_at' => now()
+                'verification_requested_at' => now(),
+                'verification_rejected_at' => null,
+                'verification_rejection_reason' => null
             ]);
 
             DB::commit();
 
             Log::info('Verification request created successfully', [
-                'request_id' => $verificationRequest->id,
-                'rental_id' => $rental->id,
-                'total_documents' => $totalDocuments
+                'request_id' => $verificationRequest->verification_request_id,
+                'rental_id' => $rental->rental_id,
+                'agent_id' => $request->agent_id,
+                'request_type' => $request->request_type,
+                'total_documents' => $totalDocuments,
+                'submitted_by' => Auth::id()
             ]);
 
             return redirect()->back()
@@ -345,59 +370,85 @@ class VerificationsController extends Controller
 
             $verificationRequest = VerificationRequest::findOrFail($id);
 
+            // Log the status update action
+            Log::info('Admin updating verification request status', [
+                'request_id' => $verificationRequest->verification_request_id,
+                'old_status' => $verificationRequest->status,
+                'new_status' => $request->status,
+                'admin_id' => Auth::id()
+            ]);
+
+            // Update verification request
             $verificationRequest->update([
                 'status' => $request->status,
                 'admin_notes' => $request->admin_notes,
-                'rejection_reason' => $request->rejection_reason,
+                'rejection_reason' => $request->status === 'rejected' ? $request->rejection_reason : null,
                 'reviewed_at' => now(),
                 'reviewed_by' => Auth::id()
             ]);
 
-            // Update rental verification status
-            $rental = Rental::find($verificationRequest->rental_id);
-            if ($rental) {
-                if ($request->status === 'approved') {
-                    $rental->update([
-                        'verification_status' => 'verified',
-                        'status' => 'approved',
-                        'verified_at' => now(),
-                        'is_verified' => true
-                    ]);
-                } elseif ($request->status === 'rejected') {
-                    $rental->update([
-                        'verification_status' => 'rejected',
-                        'status' => 'rejected',
-                        'verification_rejected_at' => now(),
-                        'verification_rejection_reason' => $request->rejection_reason
-                    ]);
-                } else {
-                    // If status changed back to pending
-                    $rental->update([
-                        'verification_status' => 'pending',
-                        'status' => 'pending',
-                    ]);
-                }
+            // Update rental verification status based on verification decision
+            $rental = Rental::findOrFail($verificationRequest->rental_id);
+            
+            if ($request->status === 'approved') {
+                $rental->update([
+                    'verification_status' => 'verified',
+                    'is_verified' => true,
+                    'verified_at' => now(),
+                    'status' => 'approved',
+                    'verification_rejected_at' => null,
+                    'verification_rejection_reason' => null
+                ]);
+                
+                Log::info('Rental verification approved', [
+                    'rental_id' => $rental->rental_id,
+                    'verification_request_id' => $verificationRequest->verification_request_id
+                ]);
+            } elseif ($request->status === 'rejected') {
+                $rental->update([
+                    'verification_status' => 'rejected',
+                    'is_verified' => false,
+                    'verification_rejected_at' => now(),
+                    'verification_rejection_reason' => $request->rejection_reason,
+                    'status' => 'rejected'
+                ]);
+                
+                Log::warning('Rental verification rejected', [
+                    'rental_id' => $rental->rental_id,
+                    'reason' => $request->rejection_reason,
+                    'verification_request_id' => $verificationRequest->verification_request_id
+                ]);
+            } else {
+                // If status changed back to pending
+                $rental->update([
+                    'verification_status' => 'pending',
+                    'status' => 'pending',
+                    'verified_at' => null
+                ]);
             }
 
             DB::commit();
 
-            Log::info('Verification request status updated', [
-                'request_id' => $id,
-                'new_status' => $request->status,
-                'reviewed_by' => Auth::id()
-            ]);
-
             return response()->json([
                 'success' => true,
                 'message' => "Verification request {$request->status} successfully",
-                'data' => $verificationRequest
+                'data' => $verificationRequest->refresh()
             ]);
 
+        } catch (\ModelNotFoundException $e) {
+            DB::rollBack();
+            Log::error('Verification request not found', ['id' => $id]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Verification request not found'
+            ], 404);
         } catch (\Exception $e) {
             DB::rollBack();
 
             Log::error('Failed to update verification status', [
                 'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
                 'request_id' => $id
             ]);
 
@@ -506,7 +557,7 @@ class VerificationsController extends Controller
 
             // Check authorization
             $isOwner = $rental->user_id == Auth::id();
-            $isAgent = $rental->agent_id == Auth::id();
+            $isAgent = isset($rental->agent_id) && $rental->agent_id == Auth::id();
             $isAdmin = Auth::check() && Auth::user()->role === 'super_admin';
             
             if (!$isOwner && !$isAgent && !$isAdmin) {
@@ -537,4 +588,64 @@ class VerificationsController extends Controller
             ], 500);
         }
     }
-}
+
+    /**
+     * Get verification status description
+     */
+    private function getStatusDescription($status)
+    {
+        $descriptions = [
+            'pending' => 'Awaiting admin review',
+            'approved' => 'Property verified',
+            'rejected' => 'Verification failed - resubmit required',
+        ];
+
+        return $descriptions[$status] ?? $status;
+    }
+
+    /**
+     * Check if a rental can be verified
+     */
+    private function canRentalBeVerified(Rental $rental, $requestType = 'initial_verification')
+    {
+        $errors = [];
+
+        // Check if rental has required fields
+        if (empty($rental->title)) {
+            $errors[] = 'Rental must have a title';
+        }
+        if (empty($rental->address)) {
+            $errors[] = 'Rental must have an address';
+        }
+        if (empty($rental->images)) {
+            $errors[] = 'Rental must have at least one image';
+        }
+
+        // Check initial verification requirements
+        if ($requestType === 'initial_verification' && $rental->is_verified) {
+            $errors[] = 'This property is already verified';
+        }
+
+        return [
+            'can_verify' => empty($errors),
+            'errors' => $errors
+        ];
+    }
+
+    /**
+     * Get document statistics for a verification request
+     */
+    private function getDocumentStats(VerificationRequest $request)
+    {
+        $documents = $request->getAllDocuments();
+        $stats = [];
+
+        foreach ($documents as $type => $docs) {
+            $stats[$type] = [
+                'count' => count($docs),
+                'total_size' => array_sum(array_column($docs, 'size', )),
+            ];
+        }
+
+        return $stats;
+    }
