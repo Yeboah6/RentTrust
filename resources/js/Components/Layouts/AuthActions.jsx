@@ -496,9 +496,6 @@ export function AuthMobile({
             Find Rentals
           </Link>
         )}
-last month (March 7th, 2026 12:35 PM) 
-
-Well done
         {isOnRentPage && (
           <Link
             href="/buy/listings"

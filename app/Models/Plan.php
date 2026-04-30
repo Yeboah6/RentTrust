@@ -19,6 +19,17 @@ class Plan extends Model
         'is_active', 'sort_order', 'featured_limit', 'featured_duration_days'
     ];
 
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($model) {
+            if (empty($model->plan_id)) {
+                $model->plan_id = static::generateUUID();
+            }
+        });
+    }
+
     protected $casts = [
         'price'            => 'decimal:2',
         'verified_badge'   => 'boolean',

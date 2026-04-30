@@ -85,7 +85,7 @@ class User extends Authenticatable
 
     public function getRouteKeyName()
     {
-        return 'user_id';
+        return 'id';  // Use the integer primary key for route binding (faster lookups)
     }
 
     /**
