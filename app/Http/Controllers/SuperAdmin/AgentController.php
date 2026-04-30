@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Rental;
+use App\Models\AdminAuditLog;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -246,6 +247,14 @@ class AgentController extends Controller
             'verified_by' => auth()->id(),
         ]);
  
+        // Audit log
+        AdminAuditLog::record('verification', "Agent verified: {$agent->name}", [
+            'affected_user' => $agent->name,
+            'affected_id' => $agent->id,
+            'notes' => "Agent {$agent->email} has been verified",
+            'properties' => ['agent_id' => $agent->id, 'verified_by' => auth()->id()],
+        ]);
+ 
         // $agent->user?->notify(new AgentVerified($agent));
  
         Log::info('SuperAdmin verified agent', [
@@ -271,6 +280,14 @@ class AgentController extends Controller
             'suspended_at'     => now(),
             'suspended_by'     => auth()->id(),
             'previous_status'  => $previousStatus,
+        ]);
+ 
+        // Audit log
+        AdminAuditLog::record('suspension', "Agent suspended: {$agent->name}", [
+            'affected_user' => $agent->name,
+            'affected_id' => $agent->id,
+            'notes' => "Agent {$agent->email} has been suspended. Previous status: {$previousStatus}",
+            'properties' => ['agent_id' => $agent->id, 'previous_status' => $previousStatus, 'suspended_by' => auth()->id()],
         ]);
  
         // Optionally hide all active listings
@@ -303,6 +320,14 @@ class AgentController extends Controller
             'suspended_at'    => null,
             'suspended_by'    => null,
             'previous_status' => null,
+        ]);
+ 
+        // Audit log
+        AdminAuditLog::record('suspension', "Agent reactivated: {$agent->name}", [
+            'affected_user' => $agent->name,
+            'affected_id' => $agent->id,
+            'notes' => "Agent {$agent->email} has been reactivated. Restored status: {$restoreStatus}",
+            'properties' => ['agent_id' => $agent->id, 'restored_status' => $restoreStatus, 'reactivated_by' => auth()->id()],
         ]);
  
         // Restore suspended listings that belonged to this agent

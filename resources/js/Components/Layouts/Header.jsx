@@ -311,19 +311,6 @@ const Header = () => {
                   Reports & Reviews
                 </Link>
                 <Link
-                  href="/contact"
-                  onClick={handleMobileLinkClick}
-                  className="mobile-menu-link block px-4 py-3 font-medium rounded-lg transition-colors"
-                  style={{ 
-                    color: 'hsl(200 25% 15%)',
-                    fontSize: 'clamp(0.875rem, 3vw, 1rem)'
-                  }}
-                  onTouchStart={(e) => e.currentTarget.style.backgroundColor = 'hsl(40 30% 94%)'}
-                  onTouchEnd={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                >
-                  Contact
-                </Link>
-                <Link
                   href="/pricing"
                   onClick={handleMobileLinkClick}
                   className="mobile-menu-link block px-4 py-3 font-medium rounded-lg transition-colors"
@@ -335,20 +322,6 @@ const Header = () => {
                   onTouchEnd={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                 >
                   Pricing
-                </Link>
-
-                <Link
-                  href="/about"
-                  onClick={handleMobileLinkClick}
-                  className="mobile-menu-link block px-4 py-3 font-medium rounded-lg transition-colors"
-                  style={{ 
-                    color: 'hsl(200 25% 15%)',
-                    fontSize: 'clamp(0.875rem, 3vw, 1rem)'
-                  }}
-                  onTouchStart={(e) => e.currentTarget.style.backgroundColor = 'hsl(40 30% 94%)'}
-                  onTouchEnd={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                >
-                  About us
                 </Link>
 
             <div style={{ 

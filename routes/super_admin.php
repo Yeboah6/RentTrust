@@ -17,6 +17,7 @@ use App\Http\Controllers\SuperAdmin\SystemController;
 use App\Http\Controllers\SuperAdmin\TenantController;
 use App\Http\Controllers\SuperAdmin\ProfileController;
 use App\Http\Controllers\SuperAdmin\ReviewsReportsController;
+use App\Http\Controllers\SuperAdmin\ReportController;
 
 Route::prefix('super-admin')
     ->name('super-admin.')
@@ -26,6 +27,10 @@ Route::prefix('super-admin')
     // ── Dashboard ─────────────────────────────────────────────────────────────
     Route::get('/dashboard', [DashboardController::class, 'index'])
         ->name('dashboard');
+
+    // ── Analytics & Reports ───────────────────────────────────────────────────
+    Route::get('/reports', [ReportController::class, 'index'])
+        ->name('reports.index');
 
     // ── Plans ─────────────────────────────────────────────────────────────────
     Route::resource('plans', PlanController::class)

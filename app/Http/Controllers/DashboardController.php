@@ -32,8 +32,9 @@ class DashboardController extends Controller
             abort(403, 'Unauthorized. Agent access only.');
         }
 
-        // include view/inquiry/review counts for each rental
+        // include view/inquiry/review counts for each rental and fetch status from DB
         $rentals = Rental::where('user_id', $agentData->id)
+            ->select('id', 'rental_id', 'title', 'property_type', 'purpose', 'city', 'area', 'address', 'rent_min', 'rent_max', 'sale_price', 'status', 'is_verified', 'is_featured', 'images', 'created_at', 'updated_at')
             ->withCount(['views', 'inquiries', 'reviews'])
             ->latest()
             ->get();

@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Rental;
 use App\Models\VerificationRequest;
+use App\Models\AdminAuditLog;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -21,9 +22,18 @@ class VerificationsController extends Controller
         ]);
 
         $verify = User::findOrFail($id);
+        $oldStatus = $verify->status;
         $verify->update([
             'status' => $validated['status'],
             'updated_at' => now(),
+        ]);
+
+        // Audit log
+        AdminAuditLog::record('verification', "Agent verification status changed to {$validated['status']}", [
+            'affected_user' => $verify->name,
+            'affected_id' => $verify->id,
+            'notes' => "Status changed from {$oldStatus} to {$validated['status']}",
+            'properties' => ['old_status' => $oldStatus, 'new_status' => $validated['status']],
         ]);
 
         return redirect()->back()->with('success', 'Agent status updated successfully');
@@ -36,9 +46,18 @@ class VerificationsController extends Controller
         ]);
 
         $agent = User::findOrFail($id);
+        $oldStatus = $agent->status;
         $agent->update([
             'status' => $validated['status'],
             'updated_at' => now(),
+        ]);
+
+        // Audit log
+        AdminAuditLog::record('suspension', "Agent suspended: {$agent->name}", [
+            'affected_user' => $agent->name,
+            'affected_id' => $agent->id,
+            'notes' => "Agent status changed from {$oldStatus} to {$validated['status']}",
+            'properties' => ['old_status' => $oldStatus, 'new_status' => $validated['status']],
         ]);
 
         return redirect()->back()->with('success', 'Agent status updated successfully');
@@ -344,8 +363,8 @@ class VerificationsController extends Controller
 
     public function updateStatus(Request $request, $id)
     {
-        // Check if user is admin
-        if (!Auth::check() || Auth::user()->role !== 'super_admin') {
+        // Check if user is admin or super_admin
+        if (!Auth::check() || !in_array(Auth::user()->role, ['admin', 'super_admin'])) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized. Admin access required.'
@@ -369,6 +388,7 @@ class VerificationsController extends Controller
             DB::beginTransaction();
 
             $verificationRequest = VerificationRequest::findOrFail($id);
+            $oldStatus = $verificationRequest->status;
 
             // Log the status update action
             Log::info('Admin updating verification request status', [
@@ -400,6 +420,14 @@ class VerificationsController extends Controller
                     'verification_rejection_reason' => null
                 ]);
                 
+                // Audit log
+                AdminAuditLog::record('verification', "Listing verification approved: {$rental->title}", [
+                    'affected_user' => $rental->user->name ?? 'Unknown',
+                    'affected_id' => $rental->id,
+                    'notes' => "Verification request {$verificationRequest->verification_request_id} approved",
+                    'properties' => ['status' => 'approved', 'listing_id' => $rental->id, 'verification_request_id' => $verificationRequest->verification_request_id],
+                ]);
+                
                 Log::info('Rental verification approved', [
                     'rental_id' => $rental->rental_id,
                     'verification_request_id' => $verificationRequest->verification_request_id
@@ -413,6 +441,14 @@ class VerificationsController extends Controller
                     'status' => 'rejected'
                 ]);
                 
+                // Audit log
+                AdminAuditLog::record('verification', "Listing verification rejected: {$rental->title}", [
+                    'affected_user' => $rental->user->name ?? 'Unknown',
+                    'affected_id' => $rental->id,
+                    'notes' => "Verification request {$verificationRequest->verification_request_id} rejected. Reason: {$request->rejection_reason}",
+                    'properties' => ['status' => 'rejected', 'reason' => $request->rejection_reason, 'listing_id' => $rental->id, 'verification_request_id' => $verificationRequest->verification_request_id],
+                ]);
+                
                 Log::warning('Rental verification rejected', [
                     'rental_id' => $rental->rental_id,
                     'reason' => $request->rejection_reason,
@@ -424,6 +460,14 @@ class VerificationsController extends Controller
                     'verification_status' => 'pending',
                     'status' => 'pending',
                     'verified_at' => null
+                ]);
+                
+                // Audit log
+                AdminAuditLog::record('verification', "Listing verification reverted to pending: {$rental->title}", [
+                    'affected_user' => $rental->user->name ?? 'Unknown',
+                    'affected_id' => $rental->id,
+                    'notes' => "Verification request {$verificationRequest->verification_request_id} status changed back to pending",
+                    'properties' => ['status' => 'pending', 'listing_id' => $rental->id, 'verification_request_id' => $verificationRequest->verification_request_id],
                 ]);
             }
 
@@ -649,3 +693,4 @@ class VerificationsController extends Controller
 
         return $stats;
     }
+}

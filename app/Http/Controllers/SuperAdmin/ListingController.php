@@ -535,9 +535,18 @@ class ListingController extends Controller
             return back()->with('error', 'Listing is already approved.');
         }
  
+        $oldStatus = $listing->status;
         $listing->update([
             'status'      => 'approved',
             'verified_at' => now(),
+        ]);
+ 
+        // Audit log
+        AdminAuditLog::record('listing', "Listing approved: {$listing->title}", [
+            'affected_user' => $listing->user->name ?? 'Unknown',
+            'affected_id' => $listing->id,
+            'notes' => "Listing '{$listing->title}' status changed from {$oldStatus} to approved",
+            'properties' => ['old_status' => $oldStatus, 'new_status' => 'approved', 'listing_id' => $listing->id],
         ]);
  
         // Notify agent
@@ -559,11 +568,20 @@ class ListingController extends Controller
             'reason' => ['nullable', 'string', 'max:1000'],
         ]);
  
+        $oldStatus = $listing->status;
         $listing->update([
             'status'          => 'rejected',
             'rejection_reason' => $request->input('reason'),
             'rejected_at'     => now(),
             'rejected_by'     => auth()->id(),
+        ]);
+ 
+        // Audit log
+        AdminAuditLog::record('listing', "Listing rejected: {$listing->title}", [
+            'affected_user' => $listing->user->name ?? 'Unknown',
+            'affected_id' => $listing->id,
+            'notes' => "Listing '{$listing->title}' rejected. Reason: {$request->input('reason')}",
+            'properties' => ['old_status' => $oldStatus, 'new_status' => 'rejected', 'reason' => $request->input('reason'), 'listing_id' => $listing->id],
         ]);
  
         // Notify agent
@@ -590,10 +608,19 @@ class ListingController extends Controller
             return back()->with('error', 'Listing is already suspended.');
         }
  
+        $oldStatus = $listing->status;
         $listing->update([
             'status'       => 'suspended',
             'verified_at' => now(),
            // 'suspended_by' => auth()->id(),
+        ]);
+ 
+        // Audit log
+        AdminAuditLog::record('listing', "Listing suspended: {$listing->title}", [
+            'affected_user' => $listing->user->name ?? 'Unknown',
+            'affected_id' => $listing->id,
+            'notes' => "Listing '{$listing->title}' status changed from {$oldStatus} to suspended",
+            'properties' => ['old_status' => $oldStatus, 'new_status' => 'suspended', 'listing_id' => $listing->id],
         ]);
  
         // Notify agent
@@ -688,35 +715,6 @@ class ListingController extends Controller
             'updated_at'       => $listing->updated_at?->toISOString(),
         ];
     }
- 
-    // private function resolveImages(Rental $listing): array
-    // {
-    //     $raw = $listing->images ?? $listing->media ?? [];
-
-    //     if (is_string($raw)) {
-    //         $decoded = json_decode($raw, true);
-    //         $raw = is_array($decoded) ? $decoded : [];
-    //     }
-
-    //     return collect($raw)->map(function ($img) {
-    //         // Already a full URL — return as-is
-    //         if (is_string($img) && str_starts_with($img, 'http')) {
-    //             return $img;
-    //         }
-
-    //         $path = is_array($img)
-    //             ? ($img['path'] ?? $img['url'] ?? '')
-    //             : $img;
-
-    //         if (!$path) return null;
-    
-    //         if (!str_contains($path, '/')) {
-    //             $path = 'rental_images/' . $path;
-    //         }
-
-    //         return Storage::disk('public')->url($path);
-    //     })->filter()->values()->toArray();
-    // }
 
     private function resolveImages(Rental $listing): array
     {

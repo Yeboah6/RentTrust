@@ -237,7 +237,6 @@ export function AuthDesktop({
   }
 
   if (isSuperAdminLoggedIn || isAdminLoggedIn) {
-    // dashboard link logic inside href expressions
     return (
       <>
       {isOnBuyPage && (
@@ -459,7 +458,7 @@ export function AuthDesktop({
     );
   }
 
-  return null; // fallback
+  return null;
 }
 
 export function AuthMobile({
@@ -497,7 +496,9 @@ export function AuthMobile({
             Find Rentals
           </Link>
         )}
+last month (March 7th, 2026 12:35 PM) 
 
+Well done
         {isOnRentPage && (
           <Link
             href="/buy/listings"
