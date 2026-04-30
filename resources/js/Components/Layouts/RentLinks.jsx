@@ -33,20 +33,6 @@ export function RentDesktop({ activeLink, setActiveLink, isOnRentPage }) {
       >
         Areas
       </Link>
-
-      {/* <Link
-        href="/rent/calculator"
-        onMouseEnter={() => setActiveLink('calculator')}
-        onMouseLeave={() => setActiveLink(null)}
-        className="desktop-nav-link px-4 py-2 font-medium transition-all rounded-lg"
-        style={{
-          color: activeLink === 'calculator' ? 'hsl(200 25% 15%)' : 'hsl(200 15% 45%)',
-          backgroundColor: activeLink === 'calculator' ? 'hsl(40 30% 94%)' : 'transparent',
-          fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)'
-        }}
-      >
-        Calculator
-      </Link> */}
     </>
   );
   }
@@ -72,8 +58,8 @@ export function RentMobile({ isOnRentPage, handleMobileLinkClick }) {
         Find Rentals
       </Link>
 
-      {/* <Link
-        href="/rent/calculator"
+      <Link
+        href="/rent/areas"
         onClick={handleMobileLinkClick}
         className="mobile-menu-link block px-4 py-3 font-medium rounded-lg transition-colors"
         style={{
@@ -83,8 +69,8 @@ export function RentMobile({ isOnRentPage, handleMobileLinkClick }) {
         onTouchStart={(e) => (e.currentTarget.style.backgroundColor = 'hsl(40 30% 94%)')}
         onTouchEnd={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
       >
-        Calculator
-      </Link> */}
+        Areas
+      </Link>
     </>
   );
   }

@@ -6,6 +6,7 @@ use Illuminate\Foundation\Configuration\Middleware;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\EnsureAgentIsAuthenticated;
 use App\Http\Middleware\RoleMiddleware;
+use App\Http\Middleware\RoleCheckMiddleware;
 use App\Http\Middleware\RequiresSubscription;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -20,6 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
             $middleware->alias([
             'role' => RoleMiddleware::class,
+            'roles' => RoleCheckMiddleware::class,
             'subscription' => RequiresSubscription::class,
         ]);
 

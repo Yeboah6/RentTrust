@@ -9,6 +9,7 @@ use App\Models\Review;
 use App\Models\Plan;
 use App\Models\ListingView;
 use App\Models\ListingInquiry;
+use App\Models\AdminAuditLog;
 use App\Services\FeaturedListingService;
 use Illuminate\Http\Request;
 use App\Services\ListingLimitService;
@@ -667,8 +668,17 @@ class RentController extends Controller
     public function toggleApprovalStatus(Rental $rent)
     {
         try {
+            $oldStatus = $rent->status;
             $newStatus = $rent->status === 'pending' ? 'approved' : 'pending';
             $rent->update(['status' => $newStatus]);
+
+            // Audit log
+            AdminAuditLog::record('listing', "Listing {$newStatus}: {$rent->title}", [
+                'affected_user' => $rent->user->name ?? 'Unknown',
+                'affected_id' => $rent->id,
+                'notes' => "Listing '{$rent->title}' status changed from {$oldStatus} to {$newStatus}",
+                'properties' => ['old_status' => $oldStatus, 'new_status' => $newStatus, 'listing_id' => $rent->id],
+            ]);
 
             $message = $newStatus === 'approved'
                 ? "Listing '{$rent->title}' has been approved."
@@ -836,10 +846,19 @@ class RentController extends Controller
         ]);
 
         $report = Report::findOrFail($id);
+        $oldStatus = $report->status;
 
         $report->update([
             'status' => $validated['status'],
             'updated_at' => now(),
+        ]);
+
+        // Audit log
+        AdminAuditLog::record('report', "Report status updated to {$validated['status']}", [
+            'affected_user' => $report->reported_by ?? 'Unknown',
+            'affected_id' => $report->id,
+            'notes' => "Report ID {$report->id} status changed from {$oldStatus} to {$validated['status']}",
+            'properties' => ['old_status' => $oldStatus, 'new_status' => $validated['status'], 'report_id' => $report->id],
         ]);
 
         return redirect()->back()->with('success', 'Report status updated successfully');

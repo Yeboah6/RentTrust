@@ -124,6 +124,7 @@ const NAV = [
         items: [
             { label: 'Impersonate', href: '/super-admin/impersonate', icon: ImpersonateIcon },
             { label: 'System Logs', href: '/super-admin/audit-log',   icon: LogsIcon },
+            { label: 'Reports', href: '/reports',   icon: LogsIcon },
         ],
     },
 ];
