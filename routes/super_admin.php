@@ -54,16 +54,14 @@ Route::prefix('super-admin')
     Route::post('payments/{payment}/refund', [PaymentController::class, 'refund']) ->name('payments.refund');
 
     // ── Agents ────────────────────────────────────────────────────────────────
-    Route::resource('agents', AgentController::class)
-        ->only(['index', 'show', 'edit', 'update', 'destroy', 'create', 'store']);
-
-    // Explicit POST route for store action (ensures POST is registered)
-    Route::post('agents', [AgentController::class, 'store'])->name('agents.store');
-
-    // Status action routes
+    // Status action routes MUST come before resource() to be specific enough
     Route::post('agents/{agent}/verify',     [AgentController::class, 'verify'])     ->name('agents.verify');
     Route::post('agents/{agent}/suspend',    [AgentController::class, 'suspend'])    ->name('agents.suspend');
     Route::post('agents/{agent}/reactivate', [AgentController::class, 'reactivate']) ->name('agents.reactivate');
+
+    // Resource routes after specific routes
+    Route::resource('agents', AgentController::class)
+        ->only(['index', 'show', 'edit', 'update', 'destroy', 'create', 'store']);
 
     Route::resource('tenants', TenantController::class)
         ->only(['index', 'show', 'destroy']);

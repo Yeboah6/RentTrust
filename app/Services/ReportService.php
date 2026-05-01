@@ -92,12 +92,13 @@ class ReportService
                 ->select('id', 'title', 'purpose', 'city', 'created_at')
                 ->get(),
 
-            'avg_days_on_market' => Rental::where('purpose', 'sale')
+            'avg_days_on_market' => collect(Rental::where('purpose', 'sale')
                 ->where('is_sold', false)
                 ->where('created_at', '>=', $startDate)
                 ->where('created_at', '<=', $endDate)
-                ->selectRaw('AVG(DATEDIFF(NOW(), created_at)) as avg_days')
-                ->value('avg_days'),
+                ->select('created_at')
+                ->get()
+            )->avg(fn($rental) => now()->diffInDays($rental->created_at)) ?? 0,
         ];
     }
 

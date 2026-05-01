@@ -16,6 +16,17 @@ class Payment extends Model
         'status', 'failure_reason', 'raw_payload',
     ];
 
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($model) {
+            if (empty($model->payment_id)) {
+                $model->payment_id = static::generateUUID();
+            }
+        });
+    }
+
     protected $casts = [
         'amount'      => 'decimal:2',
         'raw_payload' => 'array',
