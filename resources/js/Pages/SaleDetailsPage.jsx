@@ -5,6 +5,7 @@ import { Link, usePage, useForm } from "@inertiajs/react";
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import ReportListingDialog from "../Components/Modules/ReportListingDialog";
 import ReviewForm from "../Components/Modules/ReviewForm";
+import InquiryModal from "../Components/Modules/InquiryForm";
 import AgentProfileModal from '../Components/Modules/AgentProfileModal';
 
 // Icon components
@@ -73,6 +74,7 @@ const SaleDetailsPage = ({ rental, reviews }) => {
   const formatCurrency = (amount) => `GH₵${amount?.toLocaleString() || '0'}`;
   const [showAddListingModal, setShowAddListingModal] = useState(false);
   const [toast, setToast] = useState(null);
+  // const [showInquiry, setShowInquiry] = useState(false);
 
   // Show toast notification
   const showToast = (title, description, variant = 'success') => {
@@ -992,63 +994,65 @@ const SaleDetailsPage = ({ rental, reviews }) => {
 
         {/* Inquiry Modal */}
         {showInquiryForm && (
-          <div style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 50,
-            padding: 'clamp(0.5rem, 2vw, 1rem)'
-          }}>
-            <div className="modal-content" style={{
-              backgroundColor: 'white',
-              borderRadius: 'clamp(0.75rem, 2vw, 1rem)',
-              maxHeight: '90vh',
-              overflow: 'auto',
-              maxWidth: 'clamp(90%, 95vw, 60%)',
-              width: '100%',
-              position: 'relative',
-              padding: '1.5rem'
-            }}>
-              <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '600', color: 'hsl(200 25% 15%)', marginBottom: '1rem' }}>
-                Send Inquiry
-              </h2>
-              <form onSubmit={handleSendInquiry} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                <textarea
-                  value={inquiryData.message}
-                  onChange={(e) => setInquiryData('message', e.target.value)}
-                  placeholder="Write your message to the agent..."
-                  style={{ width: '100%', minHeight: '8rem', padding: '0.75rem', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.5rem', resize: 'vertical', fontSize: '0.875rem' }}
-                />
-                {inquiryErrors.message && <p style={{ color: 'hsl(0 65% 51%)', fontSize: '0.75rem' }}>{inquiryErrors.message}</p>}
-              <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-                <button
-                  type="submit"
-                  disabled={inquiryProcessing || inquiryData.message.trim() === ''}
-                  className="action-button"
-                  style={{ flex: 1, padding: '0.75rem', backgroundColor: inquiryProcessing ? 'hsl(174 62% 32% / 0.5)' : 'hsl(174 62% 32%)', color: 'white', border: 'none', borderRadius: '0.5rem', fontWeight: '500', cursor: inquiryProcessing ? 'not-allowed' : 'pointer' }}
-                >
-                  {inquiryProcessing ? 'Sending...' : 'Send'}
-                </button>
-                
-                <button
-                  type="button"
-                  onClick={() => setShowInquiryForm(false)}
-                  className="action-button"
-                  style={{ flex: 1, padding: '0.75rem', backgroundColor: 'white', color: 'hsl(174 62% 32%)', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.5rem', fontWeight: '500', cursor: 'pointer' }}
-                >
-                  Cancel
-                </button>
-              </div>
-              </form>
-            </div>
-          </div>
+          <InquiryModal rental={rental} onClose={() => setShowInquiryForm(false)} />
         )}
+        {/* // <div style={{
+        //   position: 'fixed',
+        //   top: 0,
+        //   left: 0,
+        //   right: 0,
+          //   bottom: 0,
+          //   backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          //   display: 'flex',
+          //   alignItems: 'center',
+          //   justifyContent: 'center',
+          //   zIndex: 50,
+          //   padding: 'clamp(0.5rem, 2vw, 1rem)'
+          // }}>
+          //   <div className="modal-content" style={{
+          //     backgroundColor: 'white',
+          //     borderRadius: 'clamp(0.75rem, 2vw, 1rem)',
+          //     maxHeight: '90vh',
+          //     overflow: 'auto',
+          //     maxWidth: 'clamp(90%, 95vw, 60%)',
+          //     width: '100%',
+          //     position: 'relative',
+          //     padding: '1.5rem'
+          //   }}>
+          //     <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '600', color: 'hsl(200 25% 15%)', marginBottom: '1rem' }}>
+          //       Send Inquiry
+          //     </h2>
+          //     <form onSubmit={handleSendInquiry} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          //       <textarea
+          //         value={inquiryData.message}
+          //         onChange={(e) => setInquiryData('message', e.target.value)}
+          //         placeholder="Write your message to the agent..."
+          //         style={{ width: '100%', minHeight: '8rem', padding: '0.75rem', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.5rem', resize: 'vertical', fontSize: '0.875rem' }}
+          //       />
+          //       {inquiryErrors.message && <p style={{ color: 'hsl(0 65% 51%)', fontSize: '0.75rem' }}>{inquiryErrors.message}</p>}
+          //     <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+          //       <button
+          //         type="submit"
+          //         disabled={inquiryProcessing || inquiryData.message.trim() === ''}
+          //         className="action-button"
+          //         style={{ flex: 1, padding: '0.75rem', backgroundColor: inquiryProcessing ? 'hsl(174 62% 32% / 0.5)' : 'hsl(174 62% 32%)', color: 'white', border: 'none', borderRadius: '0.5rem', fontWeight: '500', cursor: inquiryProcessing ? 'not-allowed' : 'pointer' }}
+          //       >
+          //         {inquiryProcessing ? 'Sending...' : 'Send'}
+          //       </button>
+                
+          //       <button
+          //         type="button"
+          //         onClick={() => setShowInquiryForm(false)}
+          //         className="action-button"
+          //         style={{ flex: 1, padding: '0.75rem', backgroundColor: 'white', color: 'hsl(174 62% 32%)', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.5rem', fontWeight: '500', cursor: 'pointer' }}
+          //       >
+          //         Cancel
+          //       </button>
+          //     </div>
+          //     </form>
+          //   </div>
+          // </div>
+        // )} */}
 
         {/* Toast Notification */}
         {toast && (

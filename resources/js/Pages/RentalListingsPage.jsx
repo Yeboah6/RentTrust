@@ -368,27 +368,28 @@ const PropertyCard = ({ listing }) => {
 
       {/* Card Content Section */}
       <div className="p-4">
-        <div style={{ marginBottom: '0.75rem' }}>
-          <span
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.25rem',
-              padding: '0.25rem 0.625rem',
-              fontSize: '0.75rem',
-              fontWeight: '500',
-              borderRadius: '9999px',
-              ...(listing.status === "available" || listing.status === "approved"
-                ? { backgroundColor: 'hsl(174 62% 32% / 0.1)', color: '#1f847a' }
-                : listing.status === "pending"
-                ? { backgroundColor: '#efece7', color: '#627884' }
-                : { backgroundColor: 'hsl(38 92% 50% / 0.1)', color: 'hsl(38 92% 40%)' })
-            }}
-          >
-            { listing.status === 'pending' ? <Clock style={{ height: '0.75rem', width: '0.75rem' }} /> : <CheckCircle2 className="h-3 w-3" />}
-            {listing.status}
-          </span>
-        </div>
+        {/* Status badge - only show for verified/approved listings */}
+        {(listing.status === "available" || listing.status === "approved" || listing.status === "verified") && (
+          <div style={{ marginBottom: '0.75rem' }}>
+            <span
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.25rem',
+                padding: '0.25rem 0.625rem',
+                fontSize: '0.75rem',
+                fontWeight: '500',
+                borderRadius: '9999px',
+                ...(listing.status === "available" || listing.status === "approved" || listing.status === "verified"
+                  ? { backgroundColor: 'hsl(174 62% 32% / 0.1)', color: '#1f847a' }
+                  : { backgroundColor: 'hsl(38 92% 50% / 0.1)', color: 'hsl(38 92% 40%)' })
+              }}
+            >
+              <CheckCircle2 className="h-3 w-3" />
+              {listing.status === "verified" ? "Verified" : listing.status}
+            </span>
+          </div>
+        )}
 
         <h3 className="font-semibold tracking-tight mb-1" style={{ color: 'hsl(200 25% 15%)', fontSize: '1.125rem' }}>
           {listing.title}

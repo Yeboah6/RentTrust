@@ -180,6 +180,38 @@ const parseImages = (imagesData) => {
   }
 };
 
+const getStatusBadge = (status) => {
+  const normalized = String(status || 'pending').toLowerCase();
+
+  const meta = {
+    approved: {
+      label: 'Approved',
+      bg: 'hsl(174 62% 32% / 0.1)',
+      color: 'hsl(174 62% 32%)',
+      icon: 'check',
+    },
+    pending: {
+      label: 'Pending',
+      bg: '#efece7',
+      color: '#627884',
+      icon: 'clock',
+    },
+    rejected: {
+      label: 'Rejected',
+      bg: 'hsl(0 65% 51% / 0.1)',
+      color: 'hsl(0 65% 51%)',
+      icon: 'clock',
+    },
+  };
+
+  return meta[normalized] || {
+    label: String(status || 'Unknown').replace(/^(.)/, (m) => m.toUpperCase()),
+    bg: 'hsl(40 20% 88%)',
+    color: 'hsl(200 15% 45%)',
+    icon: 'clock',
+  };
+};
+
 const PropertyCard = ({ listing }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -368,23 +400,27 @@ const PropertyCard = ({ listing }) => {
 
       {/* Card Content Section */}
       <div className="p-4">
-        <div style={{ marginBottom: '0.75rem' }}>
-          <span
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              padding: '0.25rem 0.625rem',
-              fontSize: '0.75rem',
-              fontWeight: '500',
-              backgroundColor: listing.status ? 'hsl(174 62% 32% / 0.1)' : '#efece7',
-              color: listing.status === "pending" ? '#627884' : '#1f847a',
-              borderRadius: '9999px'
-            }}
-          >
-            <Clock style={{ height: '0.75rem', width: '0.75rem' }} /> 
-            {listing.status}
-          </span>
-        </div>
+        {/* Status badge - only show for verified/approved listings */}
+        {(listing.status === "available" || listing.status === "approved" || listing.status === "verified") && (
+          <div style={{ marginBottom: '0.75rem' }}>
+            <span
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.25rem',
+                padding: '0.25rem 0.625rem',
+                fontSize: '0.75rem',
+                fontWeight: '500',
+                borderRadius: '9999px',
+                backgroundColor: 'hsl(174 62% 32% / 0.1)',
+                color: '#1f847a'
+              }}
+            >
+              <CheckCircle2 style={{ height: '0.75rem', width: '0.75rem' }} />
+              {listing.status === "verified" ? "Verified" : listing.status}
+            </span>
+          </div>
+        )}
 
         <h3 className="font-semibold tracking-tight mb-1" style={{ color: 'hsl(200 25% 15%)', fontSize: '1.125rem' }}>
           {listing.title}
@@ -511,8 +547,8 @@ const SaleListingsPage = ({ listings: initialListingsData = {}, filters = {} }) 
       bathrooms: listing.bathrooms,
       property_type: listing.property_type,
       agentName: listing.agent_name || null,
-      status: listing.status,
-      isVerified: Boolean(listing.status),
+      status: listing.status || 'pending',
+      isVerified: Boolean(listing.is_verified),
       isClaimed: Boolean(listing.is_verified), 
       reviewCount: parseInt(listing.review_count) || 0,
       rating: parseFloat(listing.rating) || 0,

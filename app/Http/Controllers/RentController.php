@@ -352,10 +352,12 @@ class RentController extends Controller
         // record view if not already counted in past 24h
         try {
             $ip = $request->ip();
-            if (!ListingView::hasViewInWindow($rent->id, $ip)) {
+            $userId = Auth::id();
+            if (!ListingView::hasViewInWindow($rent->id, $ip, $userId)) {
                 ListingView::create([
+                    'listing_view_id' => ListingView::generateUUID(),
                     'rental_id'  => $rent->id,
-                    'user_id'    => Auth::id(),
+                    'user_id'    => $userId,
                     'ip'         => $ip,
                     'user_agent' => $request->userAgent(),
                     'referrer'   => $request->headers->get('referer'),
@@ -960,11 +962,12 @@ class RentController extends Controller
     public function trackView(Request $request, Rental $rent)
     {
         $ip = $request->ip();
-        if (! ListingView::hasViewInWindow($rent->id, $ip)) {
+        $userId = Auth::id();
+        if (! ListingView::hasViewInWindow($rent->id, $ip, $userId)) {
             ListingView::create([
                 'listing_view_id' => ListingView::generateUUID(),
                 'rental_id'  => $rent->id,
-                'user_id'    => Auth::id(),
+                'user_id'    => $userId,
                 'ip'         => $ip,
                 'user_agent' => $request->userAgent(),
                 'referrer'   => $request->headers->get('referer'),
@@ -981,7 +984,7 @@ class RentController extends Controller
     {
         $data = $request->validate([
             'type'    => ['required', 'in:' . implode(',', ListingInquiry::validTypes())],
-            'message' => 'nullable|string',
+            'message' => 'required|string|max:1000',
         ]);
 
         ListingInquiry::create([
@@ -989,11 +992,14 @@ class RentController extends Controller
             'rental_id' => $rent->id,
             'user_id'   => Auth::id(),
             'type'      => $data['type'],
-            'message'   => $data['message'] ?? null,
+            'message'   => $data['message'],
             'ip'        => $request->ip(),
         ]);
 
-        return redirect()->back()->with('success', 'Your inquiry has been sent to the agent successfully!');
+        return redirect()->back()->with([
+            'success' => true,
+            'message' => 'Your inquiry has been sent to the agent. They will contact you soon.'
+        ]);
     }
 
     /**

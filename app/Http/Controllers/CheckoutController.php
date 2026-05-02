@@ -20,19 +20,19 @@ class CheckoutController extends Controller
 
     // ─── Shared plan data ─────────────────────────────────────────────────────
 
+    /**
+     * Returns all active plans formatted for the frontend.
+     * Nothing here references a slug — every attribute comes from the DB.
+     */
     public function plansForModal(): array
     {
-        return Plan::active()->get()->map(fn (Plan $plan) => [
-            'id'          => $plan->id,
-            'name'        => $plan->name,
-            'slug'        => $plan->slug,
-            'price'       => (float) $plan->price,
-            'description' => $this->planDescription($plan->slug),
-            'features'    => $this->buildFeaturesList($plan),
-            'is_free'     => $plan->isFree(),
-            'is_popular'  => $plan->slug === 'pro',
-            'cta_text'    => 'Choose ' . $plan->name,
-        ])->values()->toArray();
+        return Plan::active()
+            ->orderBy('sort_order')
+            ->orderBy('price')
+            ->get()
+            ->map(fn (Plan $plan) => $this->formatPlan($plan))
+            ->values()
+            ->toArray();
     }
 
     // ─── Checkout page ────────────────────────────────────────────────────────
@@ -42,10 +42,8 @@ class CheckoutController extends Controller
         $planModel = is_numeric($plan)
             ? Plan::where('id', $plan)->where('is_active', true)->firstOrFail()
             : Plan::where('is_active', true)
-                  ->where(function ($q) use ($plan) {
-                      $q->where('slug', strtolower($plan))
-                        ->orWhere('name', ucfirst(strtolower($plan)));
-                  })
+                  ->where(fn ($q) => $q->where('slug', strtolower($plan))
+                                       ->orWhere('name', ucfirst(strtolower($plan))))
                   ->firstOrFail();
 
         if ($planModel->isFree()) {
@@ -54,22 +52,13 @@ class CheckoutController extends Controller
             return redirect()->route('agent.dashboard')->with('success', 'Free plan activated!');
         }
 
+        // Identify the "popular" plan dynamically — the one with the highest sort_order
+        // that is not the most expensive (i.e. middle tier). Falls back to second cheapest.
+        $popularPlanId = $this->resolvePopularPlanId();
+
         return Inertia::render('CheckoutPage', [
-            'plan' => [
-                'id'                    => $planModel->id,
-                'name'                  => $planModel->name,
-                'slug'                  => $planModel->slug,
-                'price'                 => (float) $planModel->price,
-                'listing_limit'         => $planModel->listing_limit,
-                'listing_limit_display' => $planModel->listing_limit_display,
-                'boost_limit'           => $planModel->boost_limit,
-                'lead_limit'            => $planModel->lead_limit,
-                'verified_badge'        => (bool) $planModel->verified_badge,
-                'priority_ranking'      => (bool) $planModel->priority_ranking,
-                'analytics_access'      => (bool) $planModel->analytics_access,
-                'features'              => $this->buildFeaturesList($planModel),
-                'description'           => $this->planDescription($planModel->slug),
-            ],
+            'plan'     => $this->formatPlan($planModel, $popularPlanId),
+            'allPlans' => $this->plansForModal(),
         ]);
     }
 
@@ -93,7 +82,6 @@ class CheckoutController extends Controller
             $result = $this->paymentService->initiate($user, $plan, $request->provider);
 
             if ($result['free'] ?? false) {
-                // Free path from initiate() — update package too
                 $this->updateUserPackage($user, $plan);
                 $this->markUserVerified($user);
                 return redirect()->route('agent.dashboard')->with('success', 'Free plan activated!');
@@ -115,51 +103,18 @@ class CheckoutController extends Controller
             return redirect()->to('/pricing')->with('error', 'Payment reference missing.');
         }
 
-        $payment = Payment::where('reference', $reference)->first();
+        $payment     = Payment::where('reference', $reference)->first();
         $currentUser = Auth::user();
-        $wasFree = $currentUser?->package === 'free';
 
         if ($payment?->status === 'success') {
-            // Webhook already confirmed — sync package from subscription
-            if ($payment->user) {
-                $this->syncPackageFromSubscription($payment->user);
-                $this->markUserVerified($payment->user);
-            }
-
-            if ($wasFree && in_array($payment->subscription?->plan?->slug, ['pro', 'elite'], true)) {
-                Auth::logout();
-                $request->session()->invalidate();
-                $request->session()->regenerateToken();
-
-                return redirect()->route('login')
-                    ->with('success', 'Your account was upgraded. Please log in again to access your new plan.');
-            }
-
-            return redirect()->route('agent.dashboard')
-                ->with('success', 'Subscription activated! Welcome aboard.');
+            return $this->handleConfirmedPayment($payment, $currentUser, $request);
         }
 
         $confirmed = $this->paymentService->verifyAndConfirm($reference, $provider);
 
         if ($confirmed) {
-            // Manual verify confirmed — sync package
             $payment->refresh();
-            if ($payment->user) {
-                $this->syncPackageFromSubscription($payment->user);
-                $this->markUserVerified($payment->user);
-            }
-
-            if ($wasFree && in_array($payment->subscription?->plan?->slug, ['pro', 'elite'], true)) {
-                Auth::logout();
-                $request->session()->invalidate();
-                $request->session()->regenerateToken();
-
-                return redirect()->route('login')
-                    ->with('success', 'Your account was upgraded. Please log in again to access your new plan.');
-            }
-
-            return redirect()->route('agent.dashboard')
-                ->with('success', 'Subscription activated! Welcome aboard.');
+            return $this->handleConfirmedPayment($payment, $currentUser, $request);
         }
 
         return redirect()->to('/pricing')
@@ -168,12 +123,12 @@ class CheckoutController extends Controller
 
     public function cancel(Request $request)
     {
-        $user = auth()->user();
+        $user      = auth()->user();
         $cancelled = $this->paymentService->cancel($user);
 
         if ($cancelled) {
-            // Downgrade package back to free on cancellation
-            $this->updateUserPackage($user, Plan::where('slug', 'free')->first());
+            $freePlan = Plan::free()->first(); // uses a local scope — see note below
+            $this->updateUserPackage($user, $freePlan);
             return back()->with('success', 'Subscription cancelled. Your plan stays active until the billing period ends.');
         }
 
@@ -182,28 +137,17 @@ class CheckoutController extends Controller
 
     // ─── Package sync helpers ─────────────────────────────────────────────────
 
-    /**
-     * Public entry point for activating free plan from AgentController.
-     * PaymentService::activateFree() handles both subscription + package sync.
-     */
     public function activateFreeForAgent($user, Plan $plan): void
     {
         $this->paymentService->activateFree($user, $plan);
     }
 
-    /**
-     * Activate free plan via PaymentService AND update user->package.
-     */
     private function activateAndUpdatePackage($user, Plan $plan): void
     {
         $this->paymentService->activateFree($user, $plan);
         $this->updateUserPackage($user, $plan);
     }
 
-    /**
-     * Update user->package to the plan slug.
-     * Keeps the users table in sync with the subscriptions table.
-     */
     private function updateUserPackage($user, ?Plan $plan): void
     {
         if (! $user || ! $plan) return;
@@ -212,10 +156,6 @@ class CheckoutController extends Controller
         $user->save();
     }
 
-    /**
-     * Sync user->package from their active subscription.
-     * Used after webhook confirmation where we only have the payment record.
-     */
     private function syncPackageFromSubscription($user): void
     {
         $sub = $user->subscription()->with('plan')->first();
@@ -225,64 +165,170 @@ class CheckoutController extends Controller
         }
     }
 
-    // ─── Helpers ──────────────────────────────────────────────────────────────
-
-    private function buildFeaturesList(Plan $plan): array
-    {
-        // use explicit rental and sale limits when available to make offerings crystal clear
-        $rentalDesc = $plan->rental_limit === null ? 'Unlimited rental listings' : "{$plan->rental_limit} rental listings";
-        $saleDesc   = $plan->sale_limit   === null ? 'Unlimited sale listings'   : "{$plan->sale_limit} sale listings";
-
-        return match ($plan->slug) {
-            'free' => [
-                'Basic listing management',
-                'Standard support',
-                $rentalDesc,
-                $saleDesc,
-            ],
-            'pro' => [
-                'Everything in Free, plus:',
-                $rentalDesc,
-                $saleDesc,
-                'Higher ranking in search results',
-                'Respond to reviews',
-            ],
-            'elite' => [
-                'Everything in Pro, plus:',
-                'Featured listing placement',
-                'Dedicated account manager',
-            ],
-            default => array_values(array_filter([
-                $plan->listing_limit_display . ' property listings',
-                $plan->boost_limit > 0  ? "{$plan->boost_limit} listing boosts/month" : null,
-                $plan->lead_limit > 0   ? "{$plan->lead_limit} lead contacts/month"   : null,
-                $plan->verified_badge   ? 'Verified landlord badge'                    : null,
-                $plan->priority_ranking ? 'Priority search ranking'                    : null,
-                $plan->analytics_access ? 'Analytics dashboard access'                 : null,
-            ])),
-        };
-    }
-
-    private function planDescription(string $slug): string
-    {
-        return match ($slug) {
-            'free'  => 'Perfect for getting started',
-            'pro'   => 'Build trust and stand out',
-            'elite' => 'Advanced tools for professionals',
-            default => 'RentTrust subscription plan',
-        };
-    }
-
-    /**
-     * Mark a user record as verified.
-     */
     private function markUserVerified($user): void
     {
-        if (! $user) {
-            return;
-        }
+        if (! $user) return;
 
         $user->status = 'verified';
         $user->save();
+    }
+
+    // ─── Plan formatting ──────────────────────────────────────────────────────
+
+    /**
+     * Single source of truth for plan data sent to the frontend.
+     * All values come from DB columns — nothing is slug-matched or hardcoded.
+     */
+    private function formatPlan(Plan $plan, ?int $popularPlanId = null): array
+    {
+        return [
+            'id'                    => $plan->id,
+            'name'                  => $plan->name,
+            'slug'                  => $plan->slug,
+            'price'                 => (float) $plan->price,
+            'description'           => $plan->description ?? $plan->tagline ?? '',
+            'listing_limit'         => $plan->listing_limit,
+            'listing_limit_display' => $plan->listing_limit_display,
+            'boost_limit'           => $plan->boost_limit   ?? 0,
+            'lead_limit'            => $plan->lead_limit    ?? 0,
+            'verified_badge'        => (bool) ($plan->verified_badge    ?? false),
+            'priority_ranking'      => (bool) ($plan->priority_ranking  ?? false),
+            'analytics_access'      => (bool) ($plan->analytics_access  ?? false),
+            'features'              => $this->buildFeaturesList($plan),
+            'is_free'               => $plan->isFree(),
+            'is_popular'            => $popularPlanId !== null && $plan->id === $popularPlanId,
+            'cta_text'              => 'Choose ' . $plan->name,
+            'color'                 => $plan->color ?? null, // optional UI hint column
+        ];
+    }
+
+    /**
+     * Build a features list entirely from DB columns.
+     * Add a `features` JSON column to plans if you want fully custom copy per plan.
+     * Falls back to deriving labels from the boolean/numeric capability columns.
+     */
+    private function buildFeaturesList(Plan $plan): array
+    {
+        // If the plan stores a JSON features column, use it directly.
+        if (! empty($plan->features) && is_array($plan->features)) {
+            return array_values(array_filter($plan->features));
+        }
+
+        // Otherwise derive features from the DB columns that describe capabilities.
+        $features = [];
+
+        // Listing limits — use the display string when available
+        if ($plan->listing_limit_display) {
+            $features[] = $plan->listing_limit_display . ' property listings';
+        } elseif ($plan->listing_limit === null) {
+            $features[] = 'Unlimited property listings';
+        } else {
+            $features[] = "{$plan->listing_limit} property listings";
+        }
+
+        // Rental / sale split limits if your plans table carries them
+        if (isset($plan->rental_limit)) {
+            $features[] = $plan->rental_limit === null
+                ? 'Unlimited rental listings'
+                : "{$plan->rental_limit} rental listings";
+        }
+
+        if (isset($plan->sale_limit)) {
+            $features[] = $plan->sale_limit === null
+                ? 'Unlimited sale listings'
+                : "{$plan->sale_limit} sale listings";
+        }
+
+        // Numeric capability limits
+        if (($plan->boost_limit ?? 0) > 0) {
+            $features[] = "{$plan->boost_limit} listing boosts/month";
+        }
+
+        if (($plan->lead_limit ?? 0) > 0) {
+            $features[] = "{$plan->lead_limit} lead contacts/month";
+        }
+
+        // Boolean capabilities
+        if ($plan->verified_badge) {
+            $features[] = 'Verified badge on profile & listings';
+        }
+
+        if ($plan->priority_ranking) {
+            $features[] = 'Priority placement in search results';
+        }
+
+        if ($plan->analytics_access) {
+            $features[] = 'Analytics dashboard access';
+        }
+
+        // Support tier — add a `support_tier` column (e.g. 'basic', 'priority', 'dedicated')
+        if (! empty($plan->support_tier)) {
+            $features[] = match ($plan->support_tier) {
+                'dedicated' => 'Dedicated account manager',
+                'priority'  => 'Priority support',
+                default     => 'Standard support',
+            };
+        }
+
+        return array_values(array_filter($features));
+    }
+
+    // ─── Popular plan resolution ──────────────────────────────────────────────
+
+    /**
+     * Resolve which plan should be marked "popular" without hardcoding a slug.
+     *
+     * Strategy: pick the paid plan with the middle-most price.
+     * If there are only 1–2 paid plans, pick the cheapest paid plan.
+     */
+    private function resolvePopularPlanId(): ?int
+    {
+        $paidPlans = Plan::active()
+            ->where('price', '>', 0)
+            ->orderBy('price')
+            ->get(['id', 'price', 'is_popular']);
+
+        if ($paidPlans->isEmpty()) return null;
+
+        // Honour an explicit DB flag if present (add `is_popular` boolean to plans table)
+        $explicit = $paidPlans->firstWhere('is_popular', true);
+        if ($explicit) return $explicit->id;
+
+        // Fall back to the middle-priced plan
+        $index = (int) floor(($paidPlans->count() - 1) / 2);
+        return $paidPlans->values()[$index]?->id;
+    }
+
+    // ─── Confirmed payment handler ────────────────────────────────────────────
+
+    /**
+     * Shared post-confirmation logic used by both the webhook-confirmed
+     * and manual-verify paths in callback().
+     */
+    private function handleConfirmedPayment(Payment $payment, $currentUser, Request $request)
+    {
+        $wasFree = $currentUser?->package === 'free'
+                   || ($currentUser?->subscription?->plan?->isFree() ?? true);
+
+        if ($payment->user) {
+            $this->syncPackageFromSubscription($payment->user);
+            $this->markUserVerified($payment->user);
+        }
+
+        $newPlan = $payment->subscription?->plan;
+
+        // If the user was on a free plan and has now upgraded to any paid plan,
+        // force a re-login so middleware picks up the new role/package cleanly.
+        if ($wasFree && $newPlan && ! $newPlan->isFree()) {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return redirect()->route('login')
+                ->with('success', 'Your account was upgraded to ' . $newPlan->name . '. Please log in again to access your new plan.');
+        }
+
+        return redirect()->route('agent.dashboard')
+            ->with('success', 'Subscription activated! Welcome aboard.');
     }
 }

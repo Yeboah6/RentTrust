@@ -1,68 +1,187 @@
-import React, { useState, useMemo } from 'react';
-import { usePage, Link, router } from '@inertiajs/react';
+import React, { useState } from 'react';
+import { router } from '@inertiajs/react';
 import SuperAdminLayout from '@/Layouts/SuperAdminLayout';
-import AdminKpiCard from '@/Components/Modules/AdminKpiCard';
 
-const CalendarIcon = ({ style }) => (
-    <svg style={style} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+// ─── Icons ────────────────────────────────────────────────────────────────────
+
+const Ico = ({ d, size = '1rem', sw = 1.8 }) => (
+    <svg style={{ width: size, height: size, flexShrink: 0 }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        {(Array.isArray(d) ? d : [d]).map((p, i) => (
+            <path key={i} strokeLinecap="round" strokeLinejoin="round" strokeWidth={sw} d={p} />
+        ))}
     </svg>
 );
 
-const ChartIcon = ({ style }) => (
-    <svg style={style} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-    </svg>
+const Icons = {
+    home:     () => <Ico d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />,
+    agent:    () => <Ico d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />,
+    eye:      () => <Ico d={["M15 12a3 3 0 11-6 0 3 3 0 016 0z","M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"]} />,
+    chat:     () => <Ico d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />,
+    pin:      () => <Ico d={["M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z","M15 11a3 3 0 11-6 0 3 3 0 016 0z"]} />,
+    chart:    () => <Ico d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />,
+    alert:    () => <Ico d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />,
+    calendar: () => <Ico d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />,
+    refresh:  () => <Ico d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" size="0.9rem" />,
+    x:        () => <Ico d="M6 18L18 6M6 6l12 12" size="0.85rem" />,
+    trending: () => <Ico d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />,
+    star:     () => <Ico d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />,
+};
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+const fmtDate = (v) => {
+    if (!v) return '—';
+    try { return new Date(v).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); }
+    catch { return v; }
+};
+
+const fmtNum = (v) => v != null ? Number(v).toLocaleString() : '—';
+
+// ─── Atoms ────────────────────────────────────────────────────────────────────
+
+const Card = ({ children, style: s }) => (
+    <div style={{ backgroundColor: 'white', border: '1px solid hsl(220 15% 91%)', borderRadius: '0.875rem', overflow: 'hidden', boxShadow: '0 1px 3px hsl(220 20% 15% / 0.04)', ...s }}>
+        {children}
+    </div>
 );
 
-const HomeIcon = ({ style }) => (
-    <svg style={style} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-    </svg>
+const CardHead = ({ title, sub, accent }) => (
+    <div style={{ padding: '0.875rem 1.25rem', borderBottom: '1px solid hsl(220 15% 94%)', backgroundColor: 'hsl(220 15% 98.5%)', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+        {accent && <div style={{ width: '3px', height: '1.1rem', borderRadius: '999px', backgroundColor: accent, flexShrink: 0 }} />}
+        <div>
+            <p style={{ margin: 0, fontSize: '0.82rem', fontWeight: '800', letterSpacing: '0.03em', color: 'hsl(220 25% 20%)' }}>{title}</p>
+            {sub && <p style={{ margin: '0.1rem 0 0', fontSize: '0.68rem', color: 'hsl(220 15% 52%)' }}>{sub}</p>}
+        </div>
+    </div>
 );
 
-const AgentIcon = ({ style }) => (
-    <svg style={style} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-    </svg>
+// ─── KPI Card ─────────────────────────────────────────────────────────────────
+
+const Kpi = ({ label, value, sub, accent, iconBg, iconColor, icon: Icon, bar }) => (
+    <div style={{ backgroundColor: 'white', border: '1px solid hsl(220 15% 91%)', borderRadius: '0.875rem', overflow: 'hidden', boxShadow: '0 1px 3px hsl(220 20% 15% / 0.04)', display: 'flex', flexDirection: 'column' }}>
+        {bar && <div style={{ height: '3px', background: `linear-gradient(90deg, ${bar}, ${bar}44)` }} />}
+        <div style={{ padding: '1.1rem 1.25rem', display: 'flex', alignItems: 'center', gap: '0.875rem', flex: 1 }}>
+            <div style={{ width: '2.5rem', height: '2.5rem', borderRadius: '0.65rem', backgroundColor: iconBg, color: iconColor, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <Icon />
+            </div>
+            <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: '1.45rem', fontWeight: '900', color: accent, lineHeight: 1, letterSpacing: '-0.02em' }}>{value}</div>
+                <div style={{ fontSize: '0.76rem', fontWeight: '700', color: 'hsl(220 25% 22%)', marginTop: '0.12rem' }}>{label}</div>
+                {sub && <div style={{ fontSize: '0.67rem', color: 'hsl(220 15% 55%)', marginTop: '0.05rem' }}>{sub}</div>}
+            </div>
+        </div>
+    </div>
 );
 
-const EyeIcon = ({ style }) => (
-    <svg style={style} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-    </svg>
+// ─── Section header ───────────────────────────────────────────────────────────
+
+const SectionHead = ({ title, accent }) => (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '0.875rem' }}>
+        <div style={{ width: '3px', height: '1.2rem', borderRadius: '999px', backgroundColor: accent, flexShrink: 0 }} />
+        <h2 style={{ margin: 0, fontSize: '0.95rem', fontWeight: '900', color: 'hsl(220 25% 14%)', letterSpacing: '-0.01em' }}>{title}</h2>
+    </div>
 );
 
-const ChatIcon = ({ style }) => (
-    <svg style={style} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-    </svg>
+// ─── Agent performance row ────────────────────────────────────────────────────
+
+const AgentPerfRow = ({ agent, rank, valueKey, valueSub, accentColor }) => {
+    const value = agent[valueKey];
+    return (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem', padding: '0.7rem 1.25rem', borderBottom: '1px solid hsl(220 15% 96%)', transition: 'background-color 0.12s' }}
+            onMouseEnter={e => e.currentTarget.style.backgroundColor = 'hsl(220 15% 98.5%)'}
+            onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}>
+            <div style={{ width: '1.5rem', textAlign: 'center', fontSize: '0.7rem', fontWeight: '900', color: rank <= 3 ? accentColor : 'hsl(220 15% 60%)', flexShrink: 0 }}>
+                {rank <= 3 ? ['🥇','🥈','🥉'][rank - 1] : `#${rank}`}
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: '0.82rem', fontWeight: '700', color: 'hsl(220 25% 14%)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{agent.name}</div>
+                <div style={{ fontSize: '0.68rem', color: 'hsl(220 15% 55%)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{agent.email || agent.company || '—'}</div>
+            </div>
+            <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                <div style={{ fontSize: '0.95rem', fontWeight: '900', color: accentColor }}>{fmtNum(value)}</div>
+                <div style={{ fontSize: '0.62rem', fontWeight: '700', letterSpacing: '0.05em', textTransform: 'uppercase', color: 'hsl(220 15% 55%)' }}>{valueSub}</div>
+            </div>
+        </div>
+    );
+};
+
+// ─── Location row ─────────────────────────────────────────────────────────────
+
+const LocationRow = ({ location, rank, value, valueSub, accentColor, max }) => {
+    const pct = max > 0 ? Math.round((value / max) * 100) : 0;
+    return (
+        <div style={{ padding: '0.75rem 1.25rem', borderBottom: '1px solid hsl(220 15% 96%)', transition: 'background-color 0.12s' }}
+            onMouseEnter={e => e.currentTarget.style.backgroundColor = 'hsl(220 15% 98.5%)'}
+            onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.35rem' }}>
+                <div style={{ fontSize: '0.68rem', fontWeight: '900', color: rank <= 3 ? accentColor : 'hsl(220 15% 58%)', width: '1.4rem', flexShrink: 0, textAlign: 'center' }}>
+                    {rank <= 3 ? ['🥇','🥈','🥉'][rank - 1] : `#${rank}`}
+                </div>
+                <div style={{ flex: 1, fontSize: '0.82rem', fontWeight: '700', color: 'hsl(220 25% 14%)' }}>{location}</div>
+                <div style={{ fontSize: '0.88rem', fontWeight: '900', color: accentColor }}>{fmtNum(value)}</div>
+                <div style={{ fontSize: '0.62rem', fontWeight: '700', letterSpacing: '0.05em', textTransform: 'uppercase', color: 'hsl(220 15% 55%)', width: '3.5rem', textAlign: 'right' }}>{valueSub}</div>
+            </div>
+            <div style={{ marginLeft: '2.15rem', height: '3px', borderRadius: '999px', backgroundColor: 'hsl(220 15% 93%)' }}>
+                <div style={{ height: '100%', borderRadius: '999px', backgroundColor: accentColor, width: `${pct}%`, transition: 'width 0.6s ease', opacity: 0.7 }} />
+            </div>
+        </div>
+    );
+};
+
+// ─── Listing table row ────────────────────────────────────────────────────────
+
+const ListingTableRow = ({ listing, valueKey, valueSub }) => {
+    const isRent = listing.purpose === 'rent';
+    return (
+        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 5rem 9rem 5.5rem', alignItems: 'center', gap: '0.75rem', padding: '0.65rem 1.25rem', borderBottom: '1px solid hsl(220 15% 96%)', transition: 'background-color 0.12s' }}
+            onMouseEnter={e => e.currentTarget.style.backgroundColor = 'hsl(220 15% 98.5%)'}
+            onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}>
+            <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '0.8rem', fontWeight: '700', color: 'hsl(220 25% 14%)' }}>{listing.title}</div>
+            <div>
+                <span style={{ display: 'inline-flex', alignItems: 'center', padding: '0.15rem 0.5rem', borderRadius: '999px', fontSize: '0.6rem', fontWeight: '800', letterSpacing: '0.06em', backgroundColor: isRent ? 'hsl(152 60% 93%)' : 'hsl(214 100% 95%)', color: isRent ? 'hsl(152 60% 28%)' : 'hsl(214 80% 38%)' }}>
+                    {isRent ? 'RENT' : 'SALE'}
+                </span>
+            </div>
+            <div style={{ fontSize: '0.75rem', color: 'hsl(220 15% 50%)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{listing.city || '—'}</div>
+            <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: '0.88rem', fontWeight: '900', color: 'hsl(220 25% 14%)' }}>{fmtNum(listing[valueKey])}</div>
+                <div style={{ fontSize: '0.6rem', fontWeight: '700', letterSpacing: '0.05em', textTransform: 'uppercase', color: 'hsl(220 15% 55%)' }}>{valueSub}</div>
+            </div>
+        </div>
+    );
+};
+
+// ─── Empty state ──────────────────────────────────────────────────────────────
+
+const Empty = ({ emoji = '📊', msg = 'No data available' }) => (
+    <div style={{ padding: '2.5rem', textAlign: 'center', color: 'hsl(220 15% 58%)' }}>
+        <div style={{ fontSize: '1.75rem', marginBottom: '0.5rem' }}>{emoji}</div>
+        <p style={{ margin: 0, fontSize: '0.8rem', fontWeight: '600' }}>{msg}</p>
+    </div>
 );
 
-const MapPinIcon = ({ style }) => (
-    <svg style={style} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-    </svg>
+// ─── Table header ─────────────────────────────────────────────────────────────
+
+const TableHead = ({ cols }) => (
+    <div style={{ display: 'grid', gridTemplateColumns: cols.map(c => c.width).join(' '), alignItems: 'center', gap: '0.75rem', padding: '0.55rem 1.25rem', backgroundColor: 'hsl(220 15% 97.5%)', borderBottom: '1px solid hsl(220 15% 92%)' }}>
+        {cols.map(c => (
+            <div key={c.label} style={{ fontSize: '0.65rem', fontWeight: '800', letterSpacing: '0.07em', textTransform: 'uppercase', color: 'hsl(220 15% 48%)', textAlign: c.right ? 'right' : 'left' }}>{c.label}</div>
+        ))}
+    </div>
 );
+
+// ─── Main ─────────────────────────────────────────────────────────────────────
 
 const Reports = ({ analytics, filters }) => {
     const [dateRange, setDateRange] = useState({
-        start_date: filters.start_date || '',
-        end_date: filters.end_date || '',
+        start_date: filters?.start_date || '',
+        end_date:   filters?.end_date   || '',
     });
-
-    const handleDateChange = (e) => {
-        const { name, value } = e.target;
-        setDateRange(prev => ({ ...prev, [name]: value }));
-    };
 
     const handleFilter = () => {
         const params = {};
         if (dateRange.start_date) params.start_date = dateRange.start_date;
-        if (dateRange.end_date) params.end_date = dateRange.end_date;
-        
+        if (dateRange.end_date)   params.end_date   = dateRange.end_date;
         router.get(route('super-admin.reports.index'), params);
     };
 
@@ -71,492 +190,283 @@ const Reports = ({ analytics, filters }) => {
         router.get(route('super-admin.reports.index'));
     };
 
-    // Overview KPIs
-    const overviewKpis = [
-        {
-            icon: HomeIcon,
-            iconBg: 'hsl(214 100% 95%)',
-            iconColor: 'hsl(214 80% 50%)',
-            badge: 'TOTAL',
-            value: analytics.overview.total_listings?.toLocaleString() ?? '—',
-            label: 'Total Listings',
-            subValue: `${analytics.overview.active_rentals ?? 0} rental · ${analytics.overview.active_sales ?? 0} sale`,
-        },
-        {
-            icon: HomeIcon,
-            iconBg: 'hsl(152 60% 93%)',
-            iconColor: 'hsl(152 60% 35%)',
-            badge: 'RENTAL',
-            value: analytics.overview.active_rentals?.toLocaleString() ?? '—',
-            label: 'Active Rentals',
-        },
-        {
-            icon: HomeIcon,
-            iconBg: 'hsl(40 90% 93%)',
-            iconColor: 'hsl(40 80% 40%)',
-            badge: 'SALES',
-            value: analytics.overview.active_sales?.toLocaleString() ?? '—',
-            label: 'Active Sales',
-        },
-        {
-            icon: AgentIcon,
-            iconBg: 'hsl(270 60% 95%)',
-            iconColor: 'hsl(270 60% 50%)',
-            badge: 'AGENTS',
-            value: analytics.overview.total_agents?.toLocaleString() ?? '—',
-            label: 'Total Agents',
-        },
-        {
-            icon: EyeIcon,
-            iconBg: 'hsl(200 60% 93%)',
-            iconColor: 'hsl(200 60% 40%)',
-            badge: 'VIEWS',
-            value: analytics.overview.total_views?.toLocaleString() ?? '—',
-            label: 'Total Views',
-        },
-        {
-            icon: ChatIcon,
-            iconBg: 'hsl(200 60% 93%)',
-            iconColor: 'hsl(200 60% 40%)',
-            badge: 'INQUIRIES',
-            value: analytics.overview.total_inquiries?.toLocaleString() ?? '—',
-            label: 'Total Inquiries',
-        },
-    ];
+    const ov  = analytics?.overview            ?? {};
+    const rvs = analytics?.rent_vs_sale        ?? {};
+    const pd  = analytics?.plan_distribution   ?? {};
+    const ap  = analytics?.agent_performance   ?? {};
+    const li  = analytics?.location_insights   ?? {};
+    const lp  = analytics?.listing_performance ?? {};
+    const dr  = analytics?.date_range          ?? {};
 
-    const rentVsSaleKpis = [
-        {
-            icon: HomeIcon,
-            iconBg: 'hsl(152 60% 93%)',
-            iconColor: 'hsl(152 60% 35%)',
-            badge: 'LISTINGS',
-            value: analytics.rent_vs_sale.rent_count?.toLocaleString() ?? '—',
-            label: 'Rental Listings',
-        },
-        {
-            icon: HomeIcon,
-            iconBg: 'hsl(40 90% 93%)',
-            iconColor: 'hsl(40 80% 40%)',
-            badge: 'LISTINGS',
-            value: analytics.rent_vs_sale.sale_count?.toLocaleString() ?? '—',
-            label: 'Sale Listings',
-        },
-        {
-            icon: EyeIcon,
-            iconBg: 'hsl(152 60% 93%)',
-            iconColor: 'hsl(152 60% 35%)',
-            badge: 'VIEWS',
-            value: analytics.rent_vs_sale.rent_views?.toLocaleString() ?? '—',
-            label: 'Rental Views',
-        },
-        {
-            icon: EyeIcon,
-            iconBg: 'hsl(40 90% 93%)',
-            iconColor: 'hsl(40 80% 40%)',
-            badge: 'VIEWS',
-            value: analytics.rent_vs_sale.sale_views?.toLocaleString() ?? '—',
-            label: 'Sale Views',
-        },
-        {
-            icon: ChatIcon,
-            iconBg: 'hsl(152 60% 93%)',
-            iconColor: 'hsl(152 60% 35%)',
-            badge: 'INQUIRIES',
-            value: analytics.rent_vs_sale.rent_inquiries?.toLocaleString() ?? '—',
-            label: 'Rental Inquiries',
-        },
-        {
-            icon: ChatIcon,
-            iconBg: 'hsl(40 90% 93%)',
-            iconColor: 'hsl(40 80% 40%)',
-            badge: 'INQUIRIES',
-            value: analytics.rent_vs_sale.sale_inquiries?.toLocaleString() ?? '—',
-            label: 'Sale Inquiries',
-        },
-    ];
+    const topByListings = ap.top_agents_by_listings ?? [];
+    const topByViews    = ap.top_agents_by_views    ?? [];
+    const topLocByList  = li.top_locations_by_listings ?? [];
+    const topLocByDem   = li.top_locations_by_demand   ?? [];
+    const mostViewed    = lp.most_viewed    ?? [];
+    const mostInquiries = lp.most_inquiries ?? [];
+    const zeroEngage    = lp.zero_engagement ?? [];
 
-    const planKpis = [
-        {
-            icon: AgentIcon,
-            iconBg: 'hsl(240 100% 93%)',
-            iconColor: 'hsl(240 100% 50%)',
-            badge: 'PLAN',
-            value: analytics.plan_distribution.free?.toLocaleString() ?? '—',
-            label: 'Free Plan Agents',
-        },
-        {
-            icon: AgentIcon,
-            iconBg: 'hsl(280 100% 93%)',
-            iconColor: 'hsl(280 100% 50%)',
-            badge: 'PLAN',
-            value: analytics.plan_distribution.pro?.toLocaleString() ?? '—',
-            label: 'Pro Plan Agents',
-        },
-        {
-            icon: AgentIcon,
-            iconBg: 'hsl(20 100% 93%)',
-            iconColor: 'hsl(20 100% 50%)',
-            badge: 'PLAN',
-            value: analytics.plan_distribution.elite?.toLocaleString() ?? '—',
-            label: 'Elite Plan Agents',
-        },
-    ];
+    const maxLocListings = Math.max(...topLocByList.map(l => l.total ?? 0), 1);
+    const maxLocViews    = Math.max(...topLocByDem.map(l => l.total_views ?? 0), 1);
+
+    const hasFilters = dateRange.start_date || dateRange.end_date;
 
     return (
-        <div className="space-y-8">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold text-gray-900">Analytics Dashboard</h1>
-                    <p className="text-gray-600 mt-1">Real-time platform analytics and insights</p>
-                </div>
-                <div className="text-right">
-                    <p className="text-sm text-gray-500">
-                        {analytics.date_range.start} to {analytics.date_range.end}
-                    </p>
-                </div>
-            </div>
-
-            {/* Date Range Filter */}
-            <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
-                <div className="flex items-end gap-4">
-                    <div className="flex-1">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
-                        <input
-                            type="date"
-                            name="start_date"
-                            value={dateRange.start_date}
-                            onChange={handleDateChange}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        />
-                    </div>
-                    <div className="flex-1">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">End Date</label>
-                        <input
-                            type="date"
-                            name="end_date"
-                            value={dateRange.end_date}
-                            onChange={handleDateChange}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        />
-                    </div>
-                    <button
-                        onClick={handleFilter}
-                        className="px-6 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
-                    >
-                        Filter
-                    </button>
-                    <button
-                        onClick={handleReset}
-                        className="px-6 py-2 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors"
-                    >
-                        Reset
-                    </button>
-                </div>
-            </div>
-
-            {/* Overview Section */}
+        <>
             <div>
-                <h2 className="text-xl font-bold text-gray-900 mb-4">Overview</h2>
-                <div
-                    style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
-                        gap: '1.25rem',
-                    }}
-                >
-                    {overviewKpis.map((kpi, index) => (
-                        <AdminKpiCard key={index} {...kpi} />
-                    ))}
-                </div>
-            </div>
-
-            {/* Rent vs Sale Comparison */}
-            <div>
-                <h2 className="text-xl font-bold text-gray-900 mb-4">Rent vs Sale Comparison</h2>
-                <div
-                    style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
-                        gap: '1.25rem',
-                    }}
-                >
-                    {rentVsSaleKpis.map((kpi, index) => (
-                        <AdminKpiCard key={index} {...kpi} />
-                    ))}
-                </div>
-            </div>
-
-            {/* Plan Distribution */}
-            <div>
-                <h2 className="text-xl font-bold text-gray-900 mb-4">Agent Plan Distribution</h2>
-                <div
-                    style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
-                        gap: '1.25rem',
-                    }}
-                >
-                    {planKpis.map((kpi, index) => (
-                        <AdminKpiCard key={index} {...kpi} />
-                    ))}
-                </div>
-            </div>
-
-            {/* Top Agents */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* Top Agents by Listings */}
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                    <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
-                        <h3 className="text-lg font-semibold text-gray-900">Top Agents by Listings</h3>
+                {/* ── Page header ── */}
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', marginBottom: '1.75rem' }}>
+                    <div>
+                        <h1 style={{ fontSize: '1.5rem', fontWeight: '900', color: 'hsl(220 25% 12%)', margin: '0 0 0.22rem', letterSpacing: '-0.02em' }}>Analytics</h1>
+                        <p style={{ fontSize: '0.82rem', color: 'hsl(220 15% 50%)', margin: 0 }}>
+                            {dr.start && dr.end ? `${dr.start} — ${dr.end}` : 'All time · Real-time platform insights'}
+                        </p>
                     </div>
-                    <div className="divide-y divide-gray-200">
-                        {analytics.agent_performance.top_agents_by_listings?.length > 0 ? (
-                            analytics.agent_performance.top_agents_by_listings.map((agent, idx) => (
-                                <div key={idx} className="px-6 py-4 hover:bg-gray-50">
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <p className="font-medium text-gray-900">{agent.name}</p>
-                                            <p className="text-sm text-gray-500">{agent.email}</p>
-                                        </div>
-                                        <div className="text-right">
-                                            <p className="text-lg font-semibold text-blue-600">{agent.rentals_count}</p>
-                                            <p className="text-xs text-gray-500">listings</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))
-                        ) : (
-                            <div className="px-6 py-8 text-center text-gray-500">
-                                No data available
-                            </div>
+
+                    {/* Date filter */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.38rem 0.75rem', borderRadius: '0.55rem', border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white', color: 'hsl(220 15% 42%)' }}>
+                            <Icons.calendar />
+                            <input type="date" value={dateRange.start_date} onChange={e => setDateRange(p => ({ ...p, start_date: e.target.value }))}
+                                style={{ border: 'none', outline: 'none', fontSize: '0.8rem', fontFamily: 'inherit', color: 'hsl(220 25% 22%)', backgroundColor: 'transparent', width: '8rem', cursor: 'pointer' }} />
+                        </div>
+                        <span style={{ fontSize: '0.75rem', color: 'hsl(220 15% 55%)' }}>to</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.38rem 0.75rem', borderRadius: '0.55rem', border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white', color: 'hsl(220 15% 42%)' }}>
+                            <Icons.calendar />
+                            <input type="date" value={dateRange.end_date} onChange={e => setDateRange(p => ({ ...p, end_date: e.target.value }))}
+                                style={{ border: 'none', outline: 'none', fontSize: '0.8rem', fontFamily: 'inherit', color: 'hsl(220 25% 22%)', backgroundColor: 'transparent', width: '8rem', cursor: 'pointer' }} />
+                        </div>
+                        <button onClick={handleFilter}
+                            style={{ padding: '0.5rem 1rem', borderRadius: '0.55rem', border: 'none', backgroundColor: 'hsl(220 25% 15%)', color: 'white', fontSize: '0.82rem', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit', transition: 'background-color 0.15s' }}
+                            onMouseEnter={e => e.currentTarget.style.backgroundColor = 'hsl(220 25% 22%)'}
+                            onMouseLeave={e => e.currentTarget.style.backgroundColor = 'hsl(220 25% 15%)'}>
+                            Apply
+                        </button>
+                        {hasFilters && (
+                            <button onClick={handleReset}
+                                style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', padding: '0.5rem 0.75rem', borderRadius: '0.55rem', border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white', color: 'hsl(220 15% 44%)', fontSize: '0.8rem', fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit' }}>
+                                <Icons.x /> Reset
+                            </button>
                         )}
                     </div>
                 </div>
 
-                {/* Top Agents by Views */}
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                    <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
-                        <h3 className="text-lg font-semibold text-gray-900">Top Agents by Views</h3>
+                {/* ── Accent bar ── */}
+                <div style={{ height: '4px', borderRadius: '999px', background: 'linear-gradient(90deg, hsl(214 80% 50%), hsl(152 55% 42%), hsl(40 80% 48%))', marginBottom: '1.5rem', opacity: 0.5 }} />
+
+                {/* ═══════════════════════════════════════════════════════════
+                    OVERVIEW
+                ══════════════════════════════════════════════════════════════ */}
+                <div style={{ marginBottom: '1.75rem' }}>
+                    <SectionHead title="Overview" accent="hsl(214 80% 50%)" />
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '0.875rem' }}>
+                        <Kpi label="Total Listings"   value={fmtNum(ov.total_listings)}   sub={`${fmtNum(ov.active_rentals)} rental · ${fmtNum(ov.active_sales)} sale`} accent="hsl(220 25% 15%)"  iconBg="hsl(220 20% 93%)"   iconColor="hsl(220 25% 30%)" icon={Icons.home}    bar="hsl(220 25% 30%)" />
+                        <Kpi label="Active Rentals"   value={fmtNum(ov.active_rentals)}   accent="hsl(152 55% 33%)"  iconBg="hsl(152 55% 92%)"  iconColor="hsl(152 55% 35%)" icon={Icons.home}    bar="hsl(152 55% 42%)" />
+                        <Kpi label="Active Sales"     value={fmtNum(ov.active_sales)}     accent="hsl(40 80% 36%)"   iconBg="hsl(40 90% 93%)"   iconColor="hsl(40 80% 40%)"  icon={Icons.home}    bar="hsl(40 80% 48%)" />
+                        <Kpi label="Total Agents"     value={fmtNum(ov.total_agents)}     accent="hsl(270 55% 40%)"  iconBg="hsl(270 60% 95%)"  iconColor="hsl(270 55% 45%)" icon={Icons.agent}   bar="hsl(270 55% 50%)" />
+                        <Kpi label="Total Views"      value={fmtNum(ov.total_views)}      accent="hsl(214 80% 44%)"  iconBg="hsl(214 100% 95%)" iconColor="hsl(214 80% 48%)" icon={Icons.eye}     bar="hsl(214 80% 52%)" />
+                        <Kpi label="Total Inquiries"  value={fmtNum(ov.total_inquiries)}  accent="hsl(200 65% 36%)"  iconBg="hsl(200 60% 93%)"  iconColor="hsl(200 60% 40%)" icon={Icons.chat}    bar="hsl(200 65% 44%)" />
                     </div>
-                    <div className="divide-y divide-gray-200">
-                        {analytics.agent_performance.top_agents_by_views?.length > 0 ? (
-                            analytics.agent_performance.top_agents_by_views.map((agent, idx) => (
-                                <div key={idx} className="px-6 py-4 hover:bg-gray-50">
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <p className="font-medium text-gray-900">{agent.name}</p>
-                                            <p className="text-sm text-gray-500">{agent.company || 'No company'}</p>
-                                        </div>
-                                        <div className="text-right">
-                                            <p className="text-lg font-semibold text-green-600">{agent.total_views?.toLocaleString() ?? 0}</p>
-                                            <p className="text-xs text-gray-500">views</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))
-                        ) : (
-                            <div className="px-6 py-8 text-center text-gray-500">
-                                No data available
+                </div>
+
+                {/* ═══════════════════════════════════════════════════════════
+                    RENT VS SALE
+                ══════════════════════════════════════════════════════════════ */}
+                <div style={{ marginBottom: '1.75rem' }}>
+                    <SectionHead title="Rent vs Sale" accent="hsl(152 55% 42%)" />
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+
+                        {/* Rent column */}
+                        <Card>
+                            <div style={{ padding: '0.875rem 1.25rem', borderBottom: '1px solid hsl(220 15% 94%)', display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'hsl(152 55% 98%)' }}>
+                                <div style={{ width: '3px', height: '1rem', borderRadius: '999px', backgroundColor: 'hsl(152 55% 42%)' }} />
+                                <p style={{ margin: 0, fontSize: '0.8rem', fontWeight: '800', color: 'hsl(152 55% 28%)' }}>Rentals</p>
                             </div>
-                        )}
-                    </div>
-                </div>
-            </div>
-
-            {/* Top Locations */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* Top Locations by Listings */}
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                    <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
-                        <h3 className="text-lg font-semibold text-gray-900">Top Locations by Listings</h3>
-                    </div>
-                    <div className="divide-y divide-gray-200">
-                        {analytics.location_insights.top_locations_by_listings?.length > 0 ? (
-                            analytics.location_insights.top_locations_by_listings.map((location, idx) => (
-                                <div key={idx} className="px-6 py-4 hover:bg-gray-50">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-3">
-                                            <div className="text-2xl font-bold text-gray-300">#{idx + 1}</div>
-                                            <div>
-                                                <p className="font-medium text-gray-900">{location.city}</p>
-                                            </div>
-                                        </div>
-                                        <div className="text-right">
-                                            <p className="text-lg font-semibold text-blue-600">{location.total}</p>
-                                            <p className="text-xs text-gray-500">listings</p>
-                                        </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 0 }}>
+                                {[
+                                    { label: 'Listings', value: fmtNum(rvs.rent_count) },
+                                    { label: 'Views',    value: fmtNum(rvs.rent_views) },
+                                    { label: 'Inquiries',value: fmtNum(rvs.rent_inquiries) },
+                                ].map(({ label, value }, i, arr) => (
+                                    <div key={label} style={{ padding: '1rem', textAlign: 'center', borderRight: i < arr.length - 1 ? '1px solid hsl(220 15% 93%)' : 'none' }}>
+                                        <div style={{ fontSize: '1.3rem', fontWeight: '900', color: 'hsl(152 55% 33%)', lineHeight: 1 }}>{value}</div>
+                                        <div style={{ fontSize: '0.63rem', fontWeight: '700', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'hsl(220 15% 52%)', marginTop: '0.25rem' }}>{label}</div>
                                     </div>
-                                </div>
-                            ))
-                        ) : (
-                            <div className="px-6 py-8 text-center text-gray-500">
-                                No data available
-                            </div>
-                        )}
-                    </div>
-                </div>
-
-                {/* Top Locations by Demand */}
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                    <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
-                        <h3 className="text-lg font-semibold text-gray-900">Top Locations by Demand</h3>
-                    </div>
-                    <div className="divide-y divide-gray-200">
-                        {analytics.location_insights.top_locations_by_demand?.length > 0 ? (
-                            analytics.location_insights.top_locations_by_demand.map((location, idx) => (
-                                <div key={idx} className="px-6 py-4 hover:bg-gray-50">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-3">
-                                            <div className="text-2xl font-bold text-gray-300">#{idx + 1}</div>
-                                            <div>
-                                                <p className="font-medium text-gray-900">{location.city}</p>
-                                            </div>
-                                        </div>
-                                        <div className="text-right">
-                                            <p className="text-lg font-semibold text-purple-600">{location.total_views?.toLocaleString() ?? 0}</p>
-                                            <p className="text-xs text-gray-500">views</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))
-                        ) : (
-                            <div className="px-6 py-8 text-center text-gray-500">
-                                No data available
-                            </div>
-                        )}
-                    </div>
-                </div>
-            </div>
-
-            {/* Most Viewed Listings */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
-                    <h3 className="text-lg font-semibold text-gray-900">Most Viewed Listings</h3>
-                </div>
-                <div className="overflow-x-auto">
-                    <table className="w-full">
-                        <thead className="bg-gray-50 border-b border-gray-200">
-                            <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Listing</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
-                                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Views</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-200">
-                            {analytics.listing_performance.most_viewed?.length > 0 ? (
-                                analytics.listing_performance.most_viewed.map((listing, idx) => (
-                                    <tr key={idx} className="hover:bg-gray-50">
-                                        <td className="px-6 py-4">
-                                            <p className="font-medium text-gray-900 truncate max-w-xs">{listing.title}</p>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span className={`px-3 py-1 text-xs font-semibold rounded-full ${
-                                                listing.purpose === 'rent' 
-                                                    ? 'bg-green-100 text-green-800' 
-                                                    : 'bg-blue-100 text-blue-800'
-                                            }`}>
-                                                {listing.purpose === 'rent' ? 'Rent' : 'Sale'}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-sm text-gray-600">{listing.city}</td>
-                                        <td className="px-6 py-4 text-right font-semibold text-gray-900">{listing.views?.toLocaleString() ?? 0}</td>
-                                    </tr>
-                                ))
-                            ) : (
-                                <tr>
-                                    <td colSpan="4" className="px-6 py-8 text-center text-gray-500">
-                                        No data available
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            {/* Most Inquiries */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
-                    <h3 className="text-lg font-semibold text-gray-900">Most Inquiries</h3>
-                </div>
-                <div className="overflow-x-auto">
-                    <table className="w-full">
-                        <thead className="bg-gray-50 border-b border-gray-200">
-                            <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Listing</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
-                                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Inquiries</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-200">
-                            {analytics.listing_performance.most_inquiries?.length > 0 ? (
-                                analytics.listing_performance.most_inquiries.map((listing, idx) => (
-                                    <tr key={idx} className="hover:bg-gray-50">
-                                        <td className="px-6 py-4">
-                                            <p className="font-medium text-gray-900 truncate max-w-xs">{listing.title}</p>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span className={`px-3 py-1 text-xs font-semibold rounded-full ${
-                                                listing.purpose === 'rent' 
-                                                    ? 'bg-green-100 text-green-800' 
-                                                    : 'bg-blue-100 text-blue-800'
-                                            }`}>
-                                                {listing.purpose === 'rent' ? 'Rent' : 'Sale'}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-sm text-gray-600">{listing.city}</td>
-                                        <td className="px-6 py-4 text-right font-semibold text-gray-900">{listing.inquiries_count ?? 0}</td>
-                                    </tr>
-                                ))
-                            ) : (
-                                <tr>
-                                    <td colSpan="4" className="px-6 py-8 text-center text-gray-500">
-                                        No data available
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            {/* Zero Engagement Listings */}
-            {analytics.listing_performance.zero_engagement?.length > 0 && (
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                    <div className="px-6 py-4 border-b border-gray-200 bg-yellow-50">
-                        <h3 className="text-lg font-semibold text-gray-900">⚠️ Zero Engagement Listings</h3>
-                        <p className="text-sm text-gray-600 mt-1">Listings with no views and no inquiries</p>
-                    </div>
-                    <div className="overflow-x-auto">
-                        <table className="w-full">
-                            <thead className="bg-gray-50 border-b border-gray-200">
-                                <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Listing</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-200">
-                                {analytics.listing_performance.zero_engagement.slice(0, 10).map((listing, idx) => (
-                                    <tr key={idx} className="hover:bg-gray-50">
-                                        <td className="px-6 py-4">
-                                            <p className="font-medium text-gray-900 truncate max-w-xs">{listing.title}</p>
-                                        </td>
-                                        <td className="px-6 py-4 text-sm text-gray-600">{listing.city}</td>
-                                        <td className="px-6 py-4 text-sm text-gray-600">
-                                            {new Date(listing.created_at).toLocaleDateString()}
-                                        </td>
-                                    </tr>
                                 ))}
-                            </tbody>
-                        </table>
+                            </div>
+                        </Card>
+
+                        {/* Sale column */}
+                        <Card>
+                            <div style={{ padding: '0.875rem 1.25rem', borderBottom: '1px solid hsl(220 15% 94%)', display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'hsl(214 80% 98%)' }}>
+                                <div style={{ width: '3px', height: '1rem', borderRadius: '999px', backgroundColor: 'hsl(214 80% 50%)' }} />
+                                <p style={{ margin: 0, fontSize: '0.8rem', fontWeight: '800', color: 'hsl(214 80% 32%)' }}>Sales</p>
+                            </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 0 }}>
+                                {[
+                                    { label: 'Listings', value: fmtNum(rvs.sale_count) },
+                                    { label: 'Views',    value: fmtNum(rvs.sale_views) },
+                                    { label: 'Inquiries',value: fmtNum(rvs.sale_inquiries) },
+                                ].map(({ label, value }, i, arr) => (
+                                    <div key={label} style={{ padding: '1rem', textAlign: 'center', borderRight: i < arr.length - 1 ? '1px solid hsl(220 15% 93%)' : 'none' }}>
+                                        <div style={{ fontSize: '1.3rem', fontWeight: '900', color: 'hsl(214 80% 44%)', lineHeight: 1 }}>{value}</div>
+                                        <div style={{ fontSize: '0.63rem', fontWeight: '700', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'hsl(220 15% 52%)', marginTop: '0.25rem' }}>{label}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        </Card>
                     </div>
                 </div>
-            )}
-        </div>
+
+                {/* ═══════════════════════════════════════════════════════════
+                    PLAN DISTRIBUTION
+                ══════════════════════════════════════════════════════════════ */}
+                <div style={{ marginBottom: '1.75rem' }}>
+                    <SectionHead title="Agent Plan Distribution" accent="hsl(270 55% 50%)" />
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '0.875rem' }}>
+                        <Kpi label="Free Plan"  value={fmtNum(pd.free)}  accent="hsl(220 25% 30%)"  iconBg="hsl(220 15% 93%)"  iconColor="hsl(220 25% 40%)"  icon={Icons.agent} bar="hsl(220 25% 50%)" />
+                        <Kpi label="Pro Plan"   value={fmtNum(pd.pro)}   accent="hsl(270 55% 40%)"  iconBg="hsl(270 60% 95%)"  iconColor="hsl(270 55% 45%)"  icon={Icons.agent} bar="hsl(270 55% 50%)" />
+                        <Kpi label="Elite Plan" value={fmtNum(pd.elite)} accent="hsl(40 80% 36%)"   iconBg="hsl(40 90% 93%)"   iconColor="hsl(40 80% 40%)"   icon={Icons.star}  bar="hsl(40 80% 48%)" />
+                    </div>
+                </div>
+
+                {/* ═══════════════════════════════════════════════════════════
+                    TOP AGENTS
+                ══════════════════════════════════════════════════════════════ */}
+                <div style={{ marginBottom: '1.75rem' }}>
+                    <SectionHead title="Agent Performance" accent="hsl(40 80% 48%)" />
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+
+                        <Card>
+                            <CardHead title="Top Agents by Listings" accent="hsl(214 80% 50%)" />
+                            {topByListings.length > 0
+                                ? topByListings.map((a, i) => (
+                                    <AgentPerfRow key={i} agent={a} rank={i + 1} valueKey="rentals_count" valueSub="listings" accentColor="hsl(214 80% 44%)" />
+                                ))
+                                : <Empty emoji="🏢" msg="No agent data" />
+                            }
+                        </Card>
+
+                        <Card>
+                            <CardHead title="Top Agents by Views" accent="hsl(152 55% 42%)" />
+                            {topByViews.length > 0
+                                ? topByViews.map((a, i) => (
+                                    <AgentPerfRow key={i} agent={a} rank={i + 1} valueKey="total_views" valueSub="views" accentColor="hsl(152 55% 33%)" />
+                                ))
+                                : <Empty emoji="👁" msg="No view data" />
+                            }
+                        </Card>
+                    </div>
+                </div>
+
+                {/* ═══════════════════════════════════════════════════════════
+                    LOCATION INSIGHTS
+                ══════════════════════════════════════════════════════════════ */}
+                <div style={{ marginBottom: '1.75rem' }}>
+                    <SectionHead title="Location Insights" accent="hsl(200 65% 44%)" />
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+
+                        <Card>
+                            <CardHead title="Top Locations by Listings" accent="hsl(214 80% 50%)" />
+                            {topLocByList.length > 0
+                                ? topLocByList.map((l, i) => (
+                                    <LocationRow key={i} location={l.city} rank={i + 1} value={l.total ?? 0} valueSub="listings" accentColor="hsl(214 80% 44%)" max={maxLocListings} />
+                                ))
+                                : <Empty emoji="📍" msg="No location data" />
+                            }
+                        </Card>
+
+                        <Card>
+                            <CardHead title="Top Locations by Demand" accent="hsl(270 55% 50%)" />
+                            {topLocByDem.length > 0
+                                ? topLocByDem.map((l, i) => (
+                                    <LocationRow key={i} location={l.city} rank={i + 1} value={l.total_views ?? 0} valueSub="views" accentColor="hsl(270 55% 44%)" max={maxLocViews} />
+                                ))
+                                : <Empty emoji="📍" msg="No demand data" />
+                            }
+                        </Card>
+                    </div>
+                </div>
+
+                {/* ═══════════════════════════════════════════════════════════
+                    LISTING PERFORMANCE
+                ══════════════════════════════════════════════════════════════ */}
+                <div style={{ marginBottom: '1.75rem' }}>
+                    <SectionHead title="Listing Performance" accent="hsl(152 55% 42%)" />
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+
+                        <Card>
+                            <CardHead title="Most Viewed Listings" accent="hsl(214 80% 50%)" />
+                            <TableHead cols={[
+                                { label: 'Listing',   width: 'minmax(0,1fr)' },
+                                { label: 'Type',      width: '5rem' },
+                                { label: 'Location',  width: '9rem' },
+                                { label: 'Views',     width: '5.5rem', right: true },
+                            ]} />
+                            {mostViewed.length > 0
+                                ? mostViewed.map((l, i) => <ListingTableRow key={i} listing={l} valueKey="views" valueSub="views" />)
+                                : <Empty emoji="👁" msg="No view data" />
+                            }
+                        </Card>
+
+                        <Card>
+                            <CardHead title="Most Inquiries" accent="hsl(200 65% 44%)" />
+                            <TableHead cols={[
+                                { label: 'Listing',    width: 'minmax(0,1fr)' },
+                                { label: 'Type',       width: '5rem' },
+                                { label: 'Location',   width: '9rem' },
+                                { label: 'Inquiries',  width: '5.5rem', right: true },
+                            ]} />
+                            {mostInquiries.length > 0
+                                ? mostInquiries.map((l, i) => <ListingTableRow key={i} listing={l} valueKey="inquiries_count" valueSub="inquiries" />)
+                                : <Empty emoji="💬" msg="No inquiry data" />
+                            }
+                        </Card>
+                    </div>
+                </div>
+
+                {/* ═══════════════════════════════════════════════════════════
+                    ZERO ENGAGEMENT
+                ══════════════════════════════════════════════════════════════ */}
+                {zeroEngage.length > 0 && (
+                    <div style={{ marginBottom: '1.75rem' }}>
+                        <SectionHead title="Zero Engagement" accent="hsl(40 80% 48%)" />
+                        <Card>
+                            <div style={{ padding: '0.75rem 1.25rem', borderBottom: '1px solid hsl(220 15% 94%)', backgroundColor: 'hsl(40 80% 98%)', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                                <Icons.alert />
+                                <div>
+                                    <p style={{ margin: 0, fontSize: '0.8rem', fontWeight: '800', color: 'hsl(40 80% 28%)' }}>Listings with no views or inquiries</p>
+                                    <p style={{ margin: '0.1rem 0 0', fontSize: '0.68rem', color: 'hsl(40 60% 44%)' }}>These may need attention or removal</p>
+                                </div>
+                            </div>
+                            <TableHead cols={[
+                                { label: 'Listing',  width: 'minmax(0,1fr)' },
+                                { label: 'Location', width: '10rem' },
+                                { label: 'Created',  width: '8rem', right: true },
+                            ]} />
+                            {zeroEngage.slice(0, 10).map((l, i) => (
+                                <div key={i} style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 10rem 8rem', alignItems: 'center', gap: '0.75rem', padding: '0.65rem 1.25rem', borderBottom: '1px solid hsl(220 15% 96%)', transition: 'background-color 0.12s' }}
+                                    onMouseEnter={e => e.currentTarget.style.backgroundColor = 'hsl(220 15% 98.5%)'}
+                                    onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}>
+                                    <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '0.8rem', fontWeight: '700', color: 'hsl(220 25% 14%)' }}>{l.title}</div>
+                                    <div style={{ fontSize: '0.75rem', color: 'hsl(220 15% 50%)' }}>{l.city || '—'}</div>
+                                    <div style={{ fontSize: '0.73rem', fontWeight: '600', color: 'hsl(220 25% 35%)', textAlign: 'right' }}>{fmtDate(l.created_at)}</div>
+                                </div>
+                            ))}
+                            {zeroEngage.length > 10 && (
+                                <div style={{ padding: '0.75rem 1.25rem', textAlign: 'center', fontSize: '0.75rem', color: 'hsl(220 15% 52%)', fontWeight: '600', borderTop: '1px solid hsl(220 15% 94%)' }}>
+                                    + {zeroEngage.length - 10} more listings
+                                </div>
+                            )}
+                        </Card>
+                    </div>
+                )}
+            </div>
+
+            <style>{`
+                input[type="date"]::-webkit-calendar-picker-indicator { opacity: 0.5; cursor: pointer; }
+            `}</style>
+        </>
     );
 };
 

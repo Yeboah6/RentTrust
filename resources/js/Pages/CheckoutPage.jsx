@@ -121,10 +121,6 @@ const OrderSummary = ({ plan, provider }) => {
               GHS {plan.price.toFixed(2)}
             </span>
           </div>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span style={{ color: "hsl(200 15% 45%)", fontSize: "clamp(0.875rem, 2vw, 0.9375rem)" }}>Tax</span>
-            <span className="font-semibold" style={{ color: "hsl(200 25% 15%)", fontSize: "clamp(0.875rem, 2vw, 0.9375rem)" }}>GHS 0.00</span>
-          </div>
         </div>
 
         {/* Total */}
@@ -268,17 +264,19 @@ const FailureState = ({ error, onRetry, onCancel }) => (
  *     boost_limit, lead_limit,
  *     verified_badge, priority_ranking, analytics_access
  *   }
+ *   allPlans: [...]              ← all available plans from plansForModal()
  *
  * Reached via:
  *   router.visit('/checkout/plan=' + encodeURIComponent(pkg))   ← PricingModal
  *   router.visit('/checkout/' + plan.id)                        ← any other caller
  */
-const CheckoutPage = ({ plan }) => {
+const CheckoutPage = ({ plan, allPlans = [] }) => {
   const { flash } = usePage().props;
 
   const [paymentState, setPaymentState] = useState("form");
   const [selectedProvider, setSelectedProvider] = useState("paystack");
   const [error, setError] = useState(null);
+  const [selectedPlan, setSelectedPlan] = useState(plan);
 
   // Handle flash from callback redirect
   useEffect(() => {
@@ -286,13 +284,18 @@ const CheckoutPage = ({ plan }) => {
     if (flash?.error) { setError(flash.error); setPaymentState("failure"); }
   }, [flash]);
 
+  const handleSwitchPlan = (newPlan) => {
+    setSelectedPlan(newPlan);
+    router.get(`/checkout/${newPlan.id}`, {}, { preserveState: true });
+  };
+
   const handlePayment = () => {
     setPaymentState("loading");
     setError(null);
 
     router.post(
       "/checkout/start",
-      { plan_id: plan.id, provider: selectedProvider },
+      { plan_id: selectedPlan.id, provider: selectedProvider },
       {
         onError: (errors) => {
           setError(
@@ -316,6 +319,65 @@ const CheckoutPage = ({ plan }) => {
       </div>
     );
   }
+
+  // Plan selector for switching plans
+  const PlansComparison = ({ plans, current }) => {
+    const filteredPlans = plans.filter(p => !p.is_free); // Only show paid plans in checkout
+
+    return (
+      <div className="overflow-hidden border rounded-xl bg-white" style={{ borderColor: "hsl(40 20% 88%)", boxShadow: "0 2px 8px -2px hsl(200 25% 15% / 0.1), 0 1px 3px -1px hsl(200 25% 15% / 0.06)" }}>
+        <div style={{ padding: "clamp(1.5rem, 4vw, 2rem)" }}>
+          <h2 className="font-bold tracking-tight" style={{ color: "hsl(200 25% 15%)", fontSize: "clamp(1.25rem, 3vw, 1.5rem)", marginBottom: "clamp(1.25rem, 3vw, 1.75rem)", lineHeight: "1.2" }}>
+            Select Your Plan
+          </h2>
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1rem" }}>
+            {filteredPlans.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => handleSwitchPlan(p)}
+                style={{
+                  padding: "clamp(1rem, 3vw, 1.5rem)",
+                  border: current.id === p.id ? "2px solid hsl(174 62% 32%)" : "1px solid hsl(40 20% 88%)",
+                  borderRadius: "0.75rem",
+                  backgroundColor: current.id === p.id ? "hsl(174 62% 32% / 0.05)" : "white",
+                  cursor: "pointer",
+                  transition: "all 0.2s ease",
+                  textAlign: "left",
+                  position: "relative",
+                }}
+                onMouseEnter={e => {
+                  if (current.id !== p.id) {
+                    e.currentTarget.style.borderColor = "hsl(174 62% 32% / 0.5)";
+                  }
+                }}
+                onMouseLeave={e => {
+                  if (current.id !== p.id) {
+                    e.currentTarget.style.borderColor = "hsl(40 20% 88%)";
+                  }
+                }}
+              >
+                {current.id === p.id && (
+                  <div style={{ position: "absolute", top: "0.75rem", right: "0.75rem" }}>
+                    <CheckCircle2 style={{ height: "1rem", width: "1rem", color: "hsl(174 62% 32%)" }} />
+                  </div>
+                )}
+                <h3 className="font-semibold" style={{ color: "hsl(200 25% 15%)", fontSize: "clamp(0.9375rem, 2.5vw, 1.0625rem)", marginBottom: "0.5rem" }}>
+                  {p.name}
+                </h3>
+                <p style={{ color: "hsl(38 92% 50%)", fontSize: "clamp(1rem, 2.5vw, 1.25rem)", fontWeight: "700", margin: 0 }}>
+                  GHS {p.price.toFixed(2)}<span style={{ fontSize: "0.75rem", fontWeight: "400", color: "hsl(200 15% 45%)" }}>/month</span>
+                </p>
+                <p style={{ color: "hsl(200 15% 45%)", fontSize: "clamp(0.75rem, 1.8vw, 0.8125rem)", margin: "0.5rem 0 0", lineHeight: "1.4" }}>
+                  {p.description}
+                </p>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <>
@@ -341,8 +403,8 @@ const CheckoutPage = ({ plan }) => {
                 </h1>
                 <p style={{ color: "hsl(200 15% 45%)", fontSize: "clamp(0.875rem, 2.5vw, 1rem)", margin: 0 }}>
                   Subscribe to the{" "}
-                  <strong style={{ color: "hsl(174 62% 32%)" }}>RentTrust {plan.name} Plan</strong>
-                  {" "}— GHS {plan.price.toFixed(2)}/month
+                  <strong style={{ color: "hsl(174 62% 32%)" }}>RentTrustGh {selectedPlan.name} Plan</strong>
+                  {" "}— GHS {selectedPlan.price.toFixed(2)}/month
                 </p>
               </div>
             </div>
@@ -352,7 +414,7 @@ const CheckoutPage = ({ plan }) => {
           <div style={{ maxWidth: "1000px", margin: "0 auto", paddingLeft: "clamp(0.75rem, 3vw, 1rem)", paddingRight: "clamp(0.75rem, 3vw, 1rem)", paddingTop: paymentState === "form" ? "clamp(2rem, 5vw, 3rem)" : 0, paddingBottom: "clamp(2rem, 5vw, 3rem)" }}>
 
             {paymentState === "loading" && <LoadingState />}
-            {paymentState === "success" && <SuccessState plan={plan} />}
+            {paymentState === "success" && <SuccessState plan={selectedPlan} />}
             {paymentState === "failure" && (
               <FailureState
                 error={error}
@@ -364,8 +426,11 @@ const CheckoutPage = ({ plan }) => {
             {paymentState === "form" && (
               <div style={{ display: "grid", gap: "clamp(1.5rem, 4vw, 2rem)", maxWidth: "900px", margin: "0 auto" }}>
 
-                {/* 1. Order Summary — receives full plan from controller */}
-                <OrderSummary plan={plan} provider={selectedProvider} />
+                {/* 0. Plans comparison — allows switching between paid plans */}
+                {allPlans.length > 0 && <PlansComparison plans={allPlans} current={selectedPlan} />}
+
+                {/* 1. Order Summary — receives selected plan from state */}
+                <OrderSummary plan={selectedPlan} provider={selectedProvider} />
 
                 {/* 2. Gateway selector */}
                 <PaymentProviderSelector
@@ -384,7 +449,7 @@ const CheckoutPage = ({ plan }) => {
                       onMouseLeave={e => e.currentTarget.style.backgroundColor = "hsl(174 62% 32%)"}
                     >
                       <Shield style={{ height: "1.25rem", width: "1.25rem" }} />
-                      Pay GHS {plan.price.toFixed(2)}/month via {selectedProvider === "paystack" ? "Paystack" : "Flutterwave"}
+                      Pay GHS {selectedPlan.price.toFixed(2)}/month via {selectedProvider === "paystack" ? "Paystack" : "Flutterwave"}
                     </button>
 
                     <p style={{ color: "hsl(200 15% 45%)", fontSize: "clamp(0.75rem, 1.8vw, 0.8125rem)", textAlign: "center", marginTop: "1rem", lineHeight: "1.5" }}>

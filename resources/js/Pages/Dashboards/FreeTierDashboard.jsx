@@ -114,7 +114,7 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
         rent_min: rental.rent_min || 0,
         rent_max: rental.rent_max || 0,
         sale_price: rental.sale_price || 0,
-        listing_status: rental.status || "unverified",
+        listing_status: rental?.status ? rental.status : "unverified",
         views: rental.views_count || 0,
         inquiries: rental.inquiries_count || 0,
       }))
@@ -153,7 +153,7 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
   };
 
   const getStatusBadge = (status) => {
-    if (status === "verified") {
+    if (status === "approved") {
       return (
         <span style={{
           display: 'inline-flex',
@@ -260,7 +260,7 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
             grid-template-columns: 1fr !important;
           }
           .stats-grid {
-            grid-template-columns: repeat(2, 1fr) !important;
+            grid-template-columns: repeat(3, 1fr) !important;
           }
 
           .listing-grid {
@@ -508,12 +508,12 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
 
               {/* Overview Tab */}
               {activeTab === 'overview' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(1.5rem, 4vw, 2rem)' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(1.5rem, 3vw, 2rem)' }}> 
                   
                   {/* Stats Grid */}
                   <div className="stats-grid" style={{
                     display: 'grid',
-                    gap: 'clamp(0.75rem, 2vw, 1.25rem)'
+                    gap: 'clamp(0.75rem, 3vw, 1.25rem)'
                   }}>
                     <div style={{
                       backgroundColor: 'white',
@@ -569,31 +569,11 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
                         }}>
                           <Eye style={{ width: '1.125rem', height: '1.125rem', color: 'hsl(174 62% 32%)' }} />
                         </div>
-                        {/* <span style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '0.25rem',
-                          padding: '0.3rem 0.7rem',
-                          background: 'hsl(38 92% 50% / 0.1)',
-                          color: 'hsl(38 92% 50%)',
-                          borderRadius: '9999px',
-                          fontSize: '0.75rem',
-                          fontWeight: '600',
-                        }}>
-                          <Lock style={{ width: '0.75rem', height: '0.75rem' }} />
-                          Pro
-                        </span> */}
                       </div>
                       <p style={{ fontSize: 'clamp(1.5rem, 4vw, 1.875rem)', fontWeight: '700', color: 'hsl(200 25% 15%)', margin: 0, lineHeight: 1 }}>
                         {totalViews}
                       </p>
                       <p style={{ fontSize: '0.8125rem', color: 'hsl(200 15% 45%)', margin: '0.25rem 0 0' }}>Views Across all listings</p>
-                      {/* <p style={{ fontSize: '0.75rem', color: 'hsl(200 15% 45%)', marginTop: '0.25rem' }}>
-                        Across all listings
-                      </p> */}
-                      {/* <p style={{ fontSize: '0.75rem', color: 'hsl(38 92% 50%)', marginTop: '0.25rem', fontWeight: 600 }}>
-                        🔒 Detailed breakdown
-                      </p> */}
                     </div>
 
                     <div style={{
@@ -619,9 +599,6 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
                         {monthlyInquiries}
                       </p>
                       <p style={{ fontSize: '0.8125rem', color: 'hsl(200 15% 45%)', margin: '0.25rem 0 0' }}>Inquiries</p>
-                      {/* <p style={{ fontSize: '0.75rem', color: monthlyInquiries >= INQUIRY_LIMIT ? 'hsl(0 65% 51%)' : 'hsl(200 15% 45%)', marginTop: '0.25rem', fontWeight: monthlyInquiries >= INQUIRY_LIMIT ? 600 : 400 }}>
-                        {monthlyInquiries >= INQUIRY_LIMIT ? 'Limit reached' : `${INQUIRY_LIMIT - monthlyInquiries} remaining`}
-                      </p> */}
                     </div>
 
                     <div style={{
@@ -640,31 +617,14 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
                           alignItems: 'center',
                           justifyContent: 'center',
                         }}>
-                          <Star style={{ width: '1.125rem', height: '1.125rem', color: 'hsl(174 62% 32%)' }} />
+                          <MessageSquare style={{ width: '1.125rem', height: '1.125rem', color: 'hsl(174 62% 32%)' }} />
                         </div>
-                        <span style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '0.25rem',
-                          padding: '0.3rem 0.7rem',
-                          background: 'hsl(38 92% 50% / 0.1)',
-                          color: 'hsl(38 92% 50%)',
-                          borderRadius: '9999px',
-                          fontSize: '0.75rem',
-                          fontWeight: '600',
-                        }}>
-                          <Lock style={{ width: '0.75rem', height: '0.75rem' }} />
-                          Pro
-                        </span>
                       </div>
-                      <p style={{ fontSize: 'clamp(1.5rem, 4vw, 1.875rem)', fontWeight: '700', color: 'hsl(200 25% 15%)', margin: 0, lineHeight: 1 }}>
-                        0
+                       <p style={{ fontSize: 'clamp(1.5rem, 4vw, 1.875rem)', fontWeight: '700', color: 'hsl(200 25% 15%)', margin: 0, lineHeight: 1 }}>
+                        {reviews.length}
                       </p>
-                      <p style={{ fontSize: '0.8125rem', color: 'hsl(200 15% 45%)', margin: '0.25rem 0 0' }}>Featured Listings</p>
-                      <p style={{ fontSize: '0.75rem', color: 'hsl(38 92% 50%)', marginTop: '0.25rem', fontWeight: 600 }}>
-                        🔒 Upgrade required
-                      </p>
-                    </div>
+                      <p style={{ fontSize: '0.8125rem', color: 'hsl(200 15% 45%)', margin: '0.25rem 0 0' }}>Reviews</p>
+                     </div>
                   </div>
 
                   {/* Upgrade CTA */}

@@ -44,7 +44,6 @@ class SaleSearchController extends Controller
 
         try {
             $listings = Rental::where('purpose', 'sale')
-                ->where('status', 'approved')
                 ->where('is_sold', false)
                 ->latest()
                 ->paginate($perPage, ['*'], 'page', $page);
@@ -202,6 +201,7 @@ class SaleSearchController extends Controller
             $ip = $request->ip();
             if (!ListingView::hasViewInWindow($rent->id, $ip)) {
                 ListingView::create([
+                    'listing_view_id' => ListingView::generateUUID(),
                     'rental_id'  => $rent->id,
                     'user_id'    => Auth::id(),
                     'ip'         => $ip,
@@ -239,6 +239,7 @@ class SaleSearchController extends Controller
             $ip = $request->ip();
             if (!\App\Models\ListingView::hasViewInWindow($rental->id, $ip)) {
                 \App\Models\ListingView::create([
+                    'listing_view_id' => ListingView::generateUUID(),
                     'rental_id' => $rental->id,
                     'user_id' => auth()->id(),
                     'ip' => $ip,

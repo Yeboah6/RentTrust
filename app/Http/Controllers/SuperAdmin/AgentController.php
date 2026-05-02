@@ -150,7 +150,10 @@ class AgentController extends Controller
             'rentals as listings_count',
             'rentals as active_listings' => fn ($q) => $q->where('status', 'approved'),
             'rentals as sold_count'      => fn ($q) => $q->where('is_sold', true),
+            'reviews as reviews_count',          // ← add this
         ]);
+
+        $agent->loadAvg('reviews as rating', 'overall_rating');
  
         // Load recent listings for the show page sidebar
         $listings = Rental::where('user_id', $agent->user_id ?? $agent->id)
@@ -407,8 +410,8 @@ class AgentController extends Controller
             'listings_count' => $agent->listings_count ?? 0,
             'active_listings'=> $agent->active_listings ?? 0,
             'sold_count'     => $agent->sold_count      ?? $agent->properties_sold ?? 0,
-            'rating'         => $agent->rating          ?? $agent->average_rating,
-            'reviews_count'  => $agent->reviews_count   ?? 0,
+            'rating'        => $agent->rating ? round($agent->rating, 1) : null,
+            'reviews_count' => $agent->reviews_count ?? 0,
             'total_revenue'  => $agent->total_revenue   ?? null,
             'avatar'         => $agent->avatar
                 ? (str_starts_with($agent->avatar, 'http') ? $agent->avatar : asset('storage/' . $agent->avatar))

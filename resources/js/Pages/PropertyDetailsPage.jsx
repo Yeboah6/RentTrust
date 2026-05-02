@@ -5,6 +5,7 @@ import { Link, usePage, useForm } from "@inertiajs/react";
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import ReportListingDialog from "../Components/Modules/ReportListingDialog";
 import ReviewForm from "../Components/Modules/ReviewForm";
+import InquiryModal from "../Components/Modules/InquiryForm";
 import AgentProfileModal from '../Components/Modules/AgentProfileModal';
 
 // ─── Icon Components ───────────────────────────────────────────────────────────
@@ -93,8 +94,6 @@ export default function PropertyDetailsPage({ rental, reviews }) {
     const [showInquiry,       setShowInquiry]        = useState(false);
     const [toast,             setToast]              = useState(null);
 
-    const { data: inqData, setData: setInqData, post: postInq, processing: inqLoading, reset: resetInq, errors: inqErrors } = useForm({ type: 'form', message: '' });
-
     const images    = rental.images ?? [];
     const amenities = typeof rental.amenities === 'string' ? JSON.parse(rental.amenities || '[]') : (rental.amenities ?? []);
     const advance   = rental.advance_duration ?? rental.advance_months ?? 0;
@@ -133,19 +132,6 @@ export default function PropertyDetailsPage({ rental, reviews }) {
     const handleNextImage = (e) => {
         e.stopPropagation();
         setCurrentImageIndex((prev) => prev === images.length - 1 ? 0 : prev + 1);
-    };
-
-    const handleInquiry = (e) => {
-        e.preventDefault();
-        if (!inqData.message.trim()) return;
-        postInq(`/api/listings/${rental.id}/track-inquiry`, {
-            onSuccess: () => {
-                setShowInquiry(false);
-                resetInq();
-                showToast('Inquiry Sent', 'Your inquiry has been sent to the agent successfully!', 'success');
-            },
-            onError: () => showToast('Submission Failed', 'Failed to send inquiry. Please try again.', 'error'),
-        });
     };
 
     const renderStars = (rating) => {
@@ -620,51 +606,7 @@ export default function PropertyDetailsPage({ rental, reviews }) {
 
                 {/* Inquiry */}
                 {showInquiry && (
-                    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: 'clamp(0.5rem, 2vw, 1rem)' }}>
-                        <div className="modal-content" style={{ backgroundColor: 'white', borderRadius: 'clamp(0.75rem, 2vw, 1rem)', maxHeight: '90vh', overflow: 'auto', maxWidth: 'clamp(90%, 95vw, 60%)', width: '100%', position: 'relative', padding: '1.5rem' }} onClick={e => e.stopPropagation()}>
-                            <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '600', color: 'hsl(200 25% 15%)', marginBottom: '0.375rem' }}>Send an Inquiry</h2>
-                            <p style={{ fontSize: '0.8rem', color: 'hsl(200 15% 52%)', marginBottom: '1rem' }}>Your message will be sent to the listing agent.</p>
-
-                            {/* Listing reference */}
-                            <div style={{ padding: '0.75rem', borderRadius: '0.625rem', background: 'hsl(174 62% 32% / 0.06)', border: '1px solid hsl(174 62% 32% / 0.18)', marginBottom: '1rem' }}>
-                                <div style={{ fontSize: '0.72rem', fontWeight: '700', color: 'hsl(174 62% 28%)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 3 }}>Regarding</div>
-                                <div style={{ fontSize: '0.875rem', fontWeight: '600', color: 'hsl(200 25% 18%)' }}>{rental.title}</div>
-                                <div style={{ fontSize: '0.75rem', color: 'hsl(200 15% 52%)', marginTop: 2 }}>{[rental.area, rental.city].filter(Boolean).join(', ')}</div>
-                            </div>
-
-                            <form onSubmit={handleInquiry} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                                <textarea
-                                    value={inqData.message}
-                                    onChange={e => setInqData('message', e.target.value)}
-                                    placeholder="Hi, I'm interested in this property. Could you provide more details about availability and viewing times?"
-                                    rows={5}
-                                    style={{ width: '100%', padding: '0.75rem', border: '1.5px solid hsl(40 20% 86%)', borderRadius: '0.625rem', resize: 'vertical', fontSize: '0.875rem', color: 'hsl(200 25% 18%)', outline: 'none', fontFamily: 'inherit', lineHeight: 1.6, transition: 'border-color 0.15s' }}
-                                    onFocus={e => e.target.style.borderColor = 'hsl(174 62% 32%)'}
-                                    onBlur={e => e.target.style.borderColor = 'hsl(40 20% 86%)'}
-                                />
-                                {inqErrors.message && <p style={{ color: 'hsl(0 65% 50%)', fontSize: '0.75rem' }}>{inqErrors.message}</p>}
-
-                                <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-                                    <button
-                                        type="submit"
-                                        disabled={inqLoading || !inqData.message.trim()}
-                                        className="action-button"
-                                        style={{ flex: 2, padding: '0.75rem', backgroundColor: inqLoading ? 'hsl(174 62% 32% / 0.5)' : 'hsl(174 62% 32%)', color: 'white', border: 'none', borderRadius: '0.5rem', fontWeight: '600', cursor: inqLoading ? 'not-allowed' : 'pointer', fontFamily: 'inherit', fontSize: '0.875rem' }}
-                                    >
-                                        {inqLoading ? 'Sending…' : 'Send Inquiry'}
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowInquiry(false)}
-                                        className="action-button"
-                                        style={{ flex: 1, padding: '0.75rem', backgroundColor: 'white', color: 'hsl(200 25% 35%)', border: '1.5px solid hsl(40 20% 86%)', borderRadius: '0.5rem', fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.875rem' }}
-                                    >
-                                        Cancel
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
+                    <InquiryModal rental={rental} onClose={() => setShowInquiry(false)} />
                 )}
 
                 {/* Toast */}

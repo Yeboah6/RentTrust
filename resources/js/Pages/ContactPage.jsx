@@ -506,8 +506,8 @@ export default function ContactPage() {
                                         Stay updated on new listings and tips.
                                     </p>
                                     <div style={{ display: 'flex', gap: '0.625rem' }}>
-                                        {['Twitter / X', 'Facebook', 'Instagram'].map(s => (
-                                            <a key={s} href="https://www.instagram.com/renttrust2026" style={{
+                                        {['Instagram'].map(s => (
+                                            <a key={s} href="https://www.instagram.com/renttrustgh" style={{
                                                 padding: '0.4rem 0.75rem',
                                                 borderRadius: '0.375rem',
                                                 backgroundColor: 'rgba(255,255,255,0.15)',

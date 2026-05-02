@@ -45,17 +45,26 @@ class ListingView extends Model
     }
 
     /**
-     * Check if a view already exists for this rental, IP, and time window.
+     * Check if a view already exists for this rental, IP, user, and time window.
+     * Tracks by IP + User combination to allow multiple users from same network
+     * while preventing duplicates from the same user/IP pair.
      */
-    public static function hasViewInWindow(int $rentalId, ?string $ip, int $windowHours = 24): bool
+    public static function hasViewInWindow(int $rentalId, ?string $ip, ?int $userId = null, int $windowHours = 24): bool
     {
         if (!$ip) {
             return false;
         }
 
-        return self::where('rental_id', $rentalId)
+        $query = self::where('rental_id', $rentalId)
             ->where('ip', $ip)
-            ->where('created_at', '>=', now()->subHours($windowHours))
-            ->exists();
+            ->where('created_at', '>=', now()->subHours($windowHours));
+        
+        // If user is authenticated, check by IP + User combination
+        // If not authenticated, check by IP alone
+        if ($userId) {
+            $query->where('user_id', $userId);
+        }
+
+        return $query->exists();
     }
 }
