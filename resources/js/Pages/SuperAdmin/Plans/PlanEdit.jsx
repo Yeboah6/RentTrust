@@ -324,7 +324,7 @@ const PlanEdit = ({ plan, inline = false, onClose } = {}) => {
         paystack_plan_code: plan.paystack_plan_code ?? '',
         flutterwave_plan_id: plan.flutterwave_plan_id ?? '',
         sort_order:    plan.sort_order    ?? 0,
-        // features: [],
+        features:      Array.isArray(plan.features) ? plan.features : [],
     };
 
     const { data, setData, put, processing, errors, isDirty, reset } = useForm({ ...normalisedPlan });
@@ -342,7 +342,7 @@ const PlanEdit = ({ plan, inline = false, onClose } = {}) => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        put(`/super-admin/plans/${plan.id}`, {
+        put(`/super-admin/plans/${plan.plan_id}`, {
             preserveScroll: true,
             onSuccess: () => {
                 showToast('Plan updated successfully.');
@@ -354,7 +354,7 @@ const PlanEdit = ({ plan, inline = false, onClose } = {}) => {
 
     const confirmDelete = () => {
         setDeleting(true);
-        router.delete(`/super-admin/plans/${plan.id}`, {
+        router.delete(`/super-admin/plans/${plan.plan_id}`, {
             onSuccess: () => {
                 if (inline) {
                     onClose?.();

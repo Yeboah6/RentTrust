@@ -54,15 +54,15 @@ const BASE_STYLE = `
 
 export default function TermsPage() {
     const terms = [
-        { n:'01', title:'Using the platform', body:'RentTrust is a property listing marketplace. You may browse, search and contact agents, but you must act responsibly and provide accurate information at all times.',
+        { n:'01', title:'Using the platform', body:'RentTrustGh is a property listing marketplace. You may browse, search and contact agents, but you must act responsibly and provide accurate information at all times.',
           items:['No creating false accounts or listings','Treat all users with respect','No scraping or copying our content'] },
         { n:'02', title:'Listing accuracy', body:'Agents and landlords must provide truthful details. If a listing is false or misleading, report it immediately so we can remove it.',
           items:['Photos must match the actual property','Prices must reflect what is charged','Location must be correct and verifiable'] },
         { n:'03', title:'Responsible behaviour', body:'Do not harass other users, post fraudulent information, or misrepresent yourself. Abusive or illegal activity may lead to account suspension.',
           items:['No threats or harassment','No impersonation of agents or landlords','No illegal listing content'] },
-        { n:'04', title:'Payments and fees', body:'RentTrust does not process rental payments directly. You are responsible for all payments agreed with the landlord or agent outside the platform.',
-          items:['Always get a receipt for payments made','Confirm payment terms in writing','RentTrust is not liable for off-platform transactions'] },
-        { n:'05', title:'Intellectual property', body:'All content on RentTrust, including logos, text, and design, is owned by RentTrust and may not be reused without written permission.',
+        { n:'04', title:'Payments and fees', body:'RentTrustGh does not process rental payments directly. You are responsible for all payments agreed with the landlord or agent outside the platform.',
+          items:['Always get a receipt for payments made','Confirm payment terms in writing','RentTrustGh is not liable for off-platform transactions'] },
+        { n:'05', title:'Intellectual property', body:'All content on RentTrustGh, including logos, text, and design, is owned by RentTrustGh and may not be reused without written permission.',
           items:['Do not copy or reproduce our content','Do not use our brand without permission','User-submitted content remains your own'] },
         { n:'06', title:'Changes to these terms', body:'We may update these terms from time to time. Continued use of the platform after changes means you accept the new terms.',
           items:['Changes are announced on the platform','Major changes are communicated by email','Last updated: April 2026'] },
@@ -76,9 +76,9 @@ export default function TermsPage() {
                 <main style={{ flex:1 }}>
                     <MosaicHero
                         badge="Terms of Service"
-                        title="How RentTrust works"
+                        title="How RentTrustGh works"
                         highlight="and what you agree to."
-                        sub="These terms explain your rights, responsibilities and the rules for using RentTrust to browse, list, verify and report rental properties."
+                        sub="These terms explain your rights, responsibilities and the rules for using RentTrustGh to browse, list, verify and report rental properties."
                     />
                     <div style={{ maxWidth:'1080px', margin:'0 auto', padding:'clamp(2rem,6vw,4rem) clamp(0.75rem,3vw,1rem)' }}>
                         <div className="sp-grid" style={{ display:'flex', gap:'clamp(1.5rem,4vw,3rem)', alignItems:'flex-start' }}>
@@ -88,7 +88,7 @@ export default function TermsPage() {
                                 <Card>
                                     <div style={{ marginBottom:'1.5rem' }}>
                                         <h2 style={{ fontSize:'clamp(1.25rem,3vw,1.5rem)', fontWeight:'700', color:'hsl(200 25% 15%)', marginBottom:'0.375rem' }}>Terms of Service</h2>
-                                        <p style={{ color:'hsl(200 15% 50%)', fontSize:'0.9rem' }}>By using RentTrust you agree to the following terms. Please read them carefully.</p>
+                                        <p style={{ color:'hsl(200 15% 50%)', fontSize:'0.9rem' }}>By using RentTrustGh you agree to the following terms. Please read them carefully.</p>
                                     </div>
                                     <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))', gap:'1rem' }}>
                                         {terms.map(t => (
@@ -109,7 +109,7 @@ export default function TermsPage() {
                                 <div style={{ display:'flex', gap:'1rem', alignItems:'flex-start', padding:'1.25rem 1.5rem', borderRadius:'1rem', background:'hsl(174 62% 32% / 0.07)', border:'1px solid hsl(174 62% 32% / 0.18)' }}>
                                     <span style={{ fontSize:'1.25rem', flexShrink:0 }}>⚖</span>
                                     <div>
-                                        <div style={{ fontWeight:700, fontSize:'0.9375rem', color:'hsl(174 62% 22%)', marginBottom:4 }}>By using RentTrust, you agree to these terms.</div>
+                                        <div style={{ fontWeight:700, fontSize:'0.9375rem', color:'hsl(174 62% 22%)', marginBottom:4 }}>By using RentTrustGh, you agree to these terms.</div>
                                         <p style={{ color:'hsl(200 15% 40%)', fontSize:'0.875rem', lineHeight:1.65 }}>
                                             If you disagree with any part of these terms, please stop using the platform and <Link href="/contact" style={{ color:'hsl(174 62% 30%)', fontWeight:600 }}>contact our support team</Link>. We're happy to answer any questions about our policies.
                                         </p>
@@ -121,7 +121,7 @@ export default function TermsPage() {
                             <div className="sp-side" style={{ flex:'0 0 clamp(260px,30%,320px)', display:'flex', flexDirection:'column', gap:'1.5rem' }}>
                                 <SmallCard>
                                     <h3 style={{ fontSize:'1rem', fontWeight:'700', color:'hsl(200 25% 15%)', marginBottom:'0.25rem' }}>Your key rights</h3>
-                                    <p style={{ fontSize:'0.8375rem', color:'hsl(200 15% 50%)', marginBottom:'1.25rem' }}>As a RentTrust user, you are always entitled to:</p>
+                                    <p style={{ fontSize:'0.8375rem', color:'hsl(200 15% 50%)', marginBottom:'1.25rem' }}>As a RentTrustGh user, you are always entitled to:</p>
                                     {[
                                         { icon:'✓', t:'Browse listings for free', col:'hsl(152 55% 35%)' },
                                         { icon:'✓', t:'Read all agent reviews', col:'hsl(152 55% 35%)' },
@@ -139,9 +139,9 @@ export default function TermsPage() {
                                 <SmallCard>
                                     <h3 style={{ fontSize:'1rem', fontWeight:'700', color:'hsl(200 25% 15%)', marginBottom:'1rem' }}>Common questions</h3>
                                     {[
-                                        { q:'Can I use RentTrust content?', a:'Personal and non-commercial use is fine. Reproducing or redistributing our content commercially requires written permission.' },
+                                        { q:'Can I use RentTrustGh content?', a:'Personal and non-commercial use is fine. Reproducing or redistributing our content commercially requires written permission.' },
                                         { q:'What happens if I break the rules?', a:'We may suspend or permanently remove accounts that violate our terms, with or without prior notice.' },
-                                        { q:'How are disputes handled?', a:"Disputes between tenants and landlords are handled outside of RentTrust. We're here to help facilitate, not adjudicate." },
+                                        { q:'How are disputes handled?', a:"Disputes between tenants and landlords are handled outside of RentTrustGh. We're here to help facilitate, not adjudicate." },
                                     ].map(({q,a}) => <FaqItem key={q} q={q} a={a} />)}
                                 </SmallCard>
 

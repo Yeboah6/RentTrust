@@ -309,10 +309,11 @@ class RentController extends Controller
         }
 
         $validated = $request->validate([
-            'property_id' => 'required',
+            'property_id' => 'required|exists:rentals,id',
             'description' => 'required|max:255',
             'report_type' => 'required|string|max:255',
-            'name' => 'string|max:255',
+            'name' => 'nullable|string|max:255',
+            'evidence' => 'nullable|array',
             'evidence.*' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
         ]);
 
@@ -323,7 +324,7 @@ class RentController extends Controller
             foreach ($request->file('evidence') as $file) {
                 if ($file->isValid()) {
                     $fileName = 'report_'.time().'_'.uniqid().'.'.$file->getClientOriginalExtension();
-                    $path = $file->storeAs('report_files', $fileName, 'public');
+                    $file->storeAs('report_files', $fileName, 'public');
                     $filePaths[] = $fileName;
                 }
             }
@@ -337,7 +338,7 @@ class RentController extends Controller
             'report_description' => $validated['description'],
             'report_type' => $validated['report_type'],
             'full_name' => $name,
-            'evidence' => ! empty($filePaths) ? json_encode($filePaths) : '[]',
+            'evidence' => $filePaths,
             'status' => 'pending',
         ]);
 
@@ -726,16 +727,6 @@ class RentController extends Controller
             });
 
         return inertia('AreasPage', ['areas' => $areas]);
-    }
-
-    public function calculate()
-    {
-        return inertia('CalculatorPage');
-    }
-
-    public function claimListings()
-    {
-        return inertia('ClaimListingPage');
     }
 
     public function reviews()
@@ -1170,5 +1161,40 @@ class RentController extends Controller
                 'message' => $e->getMessage()
             ], 400);
         }
+    }
+
+    /**
+     * Download report evidence file
+     */
+    public function downloadReportEvidence(Request $request, Report $report, string $filename)
+    {
+        // URL decode the filename parameter if needed
+        $filename = urldecode($filename);
+
+        // Check if the evidence file exists in the report's evidence array
+        $evidence = $report->evidence ?? [];
+        $foundFile = null;
+
+        foreach ($evidence as $evidenceItem) {
+            if (is_string($evidenceItem) && ($evidenceItem === $filename || basename($evidenceItem) === $filename)) {
+                $foundFile = $evidenceItem;
+                break;
+            }
+        }
+
+        if (!$foundFile) {
+            abort(404, 'Evidence file not found');
+        }
+
+        // Construct the full path
+        $filePath = 'report_files/' . basename($foundFile);
+
+        // Check if file exists in storage
+        if (!Storage::disk('public')->exists($filePath)) {
+            abort(404, 'Evidence file not found on disk');
+        }
+
+        // Return the file for download
+        return Storage::disk('public')->download($filePath, $filename);
     }
 }

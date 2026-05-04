@@ -11,39 +11,42 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('verification_requests', function (Blueprint $table) {
-            $table->id();
-            $table->uuid('verification_request_id')->unique();
-            $table->foreignId('rental_id')->constrained('rentals')->onDelete('cascade');
-            $table->unsignedBigInteger('user_id');
-            $table->string('agent_name');
-            $table->enum('request_type', ['initial_verification', 're_verification'])->default('initial_verification');
-            $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
-            
-            // Document storage (JSON)
-            $table->text('proof_documents')->nullable(); // Property ownership/authorization docs
-            $table->text('ownership_documents')->nullable(); // Property photos
-            $table->text('license_documents')->nullable(); // Agent license (if applicable)
-            $table->text('utility_bills')->nullable(); // Utility bills
-            
-            // Additional information
-            $table->text('additional_notes')->nullable();
-            $table->text('admin_notes')->nullable(); // Admin review notes
-            $table->string('rejection_reason', 500)->nullable();
-            
-            // Timestamps
-            $table->timestamp('submitted_at')->nullable();
-            $table->timestamp('reviewed_at')->nullable();
-            $table->unsignedBigInteger('reviewed_by')->nullable(); // Admin who reviewed
-            
-            $table->timestamps();
-            
-            // Indexes
-            $table->index('rental_id');
-            $table->index('user_id');
-            $table->index('status');
-            $table->index('created_at');
-        });
+        if (!Schema::hasTable('verification_requests')) {
+            Schema::create('verification_requests', function (Blueprint $table) {
+                $table->id();
+                $table->uuid('verification_request_id')->unique();
+                $table->foreignId('rental_id')->constrained('rentals')->onDelete('cascade');
+                $table->unsignedBigInteger('user_id');
+                $table->unsignedBigInteger('agent_id');
+                $table->string('agent_name');
+                $table->enum('request_type', ['initial_verification', 're_verification'])->default('initial_verification');
+                $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
+                
+                // Document storage (JSON)
+                $table->text('proof_documents')->nullable(); // Property ownership/authorization docs
+                $table->text('ownership_documents')->nullable(); // Property photos
+                $table->text('license_documents')->nullable(); // Agent license (if applicable)
+                $table->text('utility_bills')->nullable(); // Utility bills
+                
+                // Additional information
+                $table->text('additional_notes')->nullable();
+                $table->text('admin_notes')->nullable(); // Admin review notes
+                $table->string('rejection_reason', 500)->nullable();
+                
+                // Timestamps
+                $table->timestamp('submitted_at')->nullable();
+                $table->timestamp('reviewed_at')->nullable();
+                $table->unsignedBigInteger('reviewed_by')->nullable(); // Admin who reviewed
+                
+                $table->timestamps();
+                
+                // Indexes
+                $table->index('rental_id');
+                $table->index('user_id');
+                $table->index('status');
+                $table->index('created_at');
+            });
+        }
 
         // Add verification columns to rentals table if they don't exist
         Schema::table('rentals', function (Blueprint $table) {

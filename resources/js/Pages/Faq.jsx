@@ -53,9 +53,9 @@ const BASE_STYLE = `
 
 export default function FaqPage() {
     const faqs = [
-        { icon:'🛡', q:'How do I know a listing is verified?', a:'Verified listings on RentTrust are reviewed for accuracy and identity. Look for the green verification badge and always ask for the exact address before committing.' },
+        { icon:'🛡', q:'How do I know a listing is verified?', a:'Verified listings on RentTrustGh are reviewed for accuracy and identity. Look for the green verification badge and always ask for the exact address before committing.' },
         { icon:'🚩', q:'What if I suspect a fake or duplicate listing?', a:"Use the Report button on the listing page. We investigate every report and remove listings that don't meet our standards within 24 hours." },
-        { icon:'💳', q:'Can I pay rent through RentTrust?', a:'RentTrust is a listing platform, not a payment processor. Always pay only after inspection and with a signed receipt from the landlord or agent.' },
+        { icon:'💳', q:'Can I pay rent through RentTrustGh?', a:'RentTrustGh is a listing platform, not a payment processor. Always pay only after inspection and with a signed receipt from the landlord or agent.' },
         { icon:'📄', q:'What should I do before signing a tenancy agreement?', a:'Read every clause carefully. Confirm the rent, advance payment, notice period, and agreement duration. Never sign under pressure.' },
         { icon:'📣', q:'How do I report a problem with a listing or agent?', a:'Use our Report Issue page or contact support. Provide the listing ID, agent details, and any messages or receipts so our team can act fast.' },
         { icon:'🏠', q:'Can I list my property as an agent?', a:'Yes. Agents can create listings after registering and selecting a plan. Contact support if you need help with onboarding.' },
@@ -73,7 +73,7 @@ export default function FaqPage() {
                         badge="FAQs"
                         title="Frequently asked"
                         highlight="questions."
-                        sub="Common questions answered clearly so you can make safer decisions, avoid scams, and understand how RentTrust protects you."
+                        sub="Common questions answered clearly so you can make safer decisions, avoid scams, and understand how RentTrustGh protects you."
                     />
                     <div style={{ maxWidth:'1080px', margin:'0 auto', padding:'clamp(2rem,6vw,4rem) clamp(0.75rem,3vw,1rem)' }}>
                         <div className="sp-grid" style={{ display:'flex', gap:'clamp(1.5rem,4vw,3rem)', alignItems:'flex-start' }}>
@@ -125,7 +125,7 @@ export default function FaqPage() {
                                 <SmallCard>
                                     <h3 style={{ fontSize:'1rem', fontWeight:'700', color:'hsl(200 25% 15%)', marginBottom:'1rem' }}>About our platform</h3>
                                     {[
-                                        { q:'Is RentTrust free to use?', a:'Free to browse and enquire. Pro plans unlock unlimited listings for agents.' },
+                                        { q:'Is RentTrustGh free to use?', a:'Free to browse and enquire. Pro plans unlock unlimited listings for agents.' },
                                         { q:'How do you verify listings?', a:'Our team physically confirms each property before it goes live on the platform.' },
                                         { q:'What areas do you cover?', a:'We cover all major cities in Ghana including Accra, Kumasi, Takoradi and Tamale.' },
                                     ].map(({q,a}) => <FaqItemSide key={q} q={q} a={a} />)}

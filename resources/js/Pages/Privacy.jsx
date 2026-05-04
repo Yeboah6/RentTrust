@@ -57,7 +57,7 @@ export default function PrivacyPage() {
         { icon:'📋', title:'What we collect', accent:'hsl(174 62% 28%)',
           items:['Name, email, and phone number when you register','Listing information you submit as an agent','Device and browser data for security','Messages sent through our platform'] },
         { icon:'⚙', title:'How we use your data', accent:'hsl(174 62% 28%)',
-          items:['Deliver and improve the RentTrust service','Verify agent and listing accuracy','Send relevant notifications and updates','Detect and prevent fraud or abuse'] },
+          items:['Deliver and improve the RentTrustGh service','Verify agent and listing accuracy','Send relevant notifications and updates','Detect and prevent fraud or abuse'] },
         { icon:'🤝', title:'Sharing and disclosure', accent:'hsl(174 62% 28%)',
           items:['Trusted service providers under strict agreements','Authorities only when required by law','No advertising networks or data brokers','No selling of personal information — ever'] },
         { icon:'⭐', title:'Your rights', accent:'hsl(174 62% 28%)',
@@ -78,7 +78,7 @@ export default function PrivacyPage() {
                         badge="Privacy Policy"
                         title="How we collect, use"
                         highlight="and protect your data."
-                        sub="We only use the information required to keep listings accurate, protect users, and improve the RentTrust experience."
+                        sub="We only use the information required to keep listings accurate, protect users, and improve the RentTrustGh experience."
                     />
                     <div style={{ maxWidth:'1080px', margin:'0 auto', padding:'clamp(2rem,6vw,4rem) clamp(0.75rem,3vw,1rem)' }}>
                         <div className="sp-grid" style={{ display:'flex', gap:'clamp(1.5rem,4vw,3rem)', alignItems:'flex-start' }}>

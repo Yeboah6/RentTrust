@@ -19,11 +19,6 @@ class PlanController extends Controller
         return inertia('SuperAdmin/Plans/Index', ['plans' => $plans]);
     }
 
-    // public function create()
-    // {
-    //     return inertia('SuperAdmin/Plans/Create');
-    // }
-
     public function store(Request $request)
     {
         $data = $request->validate([
@@ -45,18 +40,16 @@ class PlanController extends Controller
             'flutterwave_plan_id'=> 'nullable|string|max:255',
             'is_active'          => 'boolean',
             'sort_order'         => 'required|integer|min:0',
-            'features'           => 'required'
+            'features'           => 'required|array'
         ]);
+
+        // Filter out empty features
+        $data['features'] = array_filter($data['features'], fn($feature) => !empty(trim($feature)));
 
         $data['plan_id'] = Plan::generateUUID();
         Plan::create($data);
         return redirect()->back()->with('success', 'Plan created');
     }
-
-    // public function edit(Plan $plan)
-    // {
-    //     return inertia('SuperAdmin/Plans/Edit', ['plan' => $plan]);
-    // }
 
     public function update(Request $request, Plan $plan)
     {
@@ -79,8 +72,11 @@ class PlanController extends Controller
             'flutterwave_plan_id'=> 'nullable|string|max:255',
             'is_active'          => 'boolean',
             'sort_order'         => 'required|integer|min:0',
-            'features'           => 'required'
+            'features'           => 'required|array'
         ]);
+
+        // Filter out empty features
+        $data['features'] = array_filter($data['features'], fn($feature) => !empty(trim($feature)));
 
         $plan->update($data);
         return redirect()->back()->with('success', 'Plan updated');

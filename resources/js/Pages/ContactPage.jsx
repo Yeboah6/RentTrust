@@ -485,7 +485,7 @@ export default function ContactPage() {
                                     {[
                                         { q: 'How do I list a property?', a: 'Sign up as an agent and use the dashboard to add your first listing.' },
                                         { q: 'How long does verification take?', a: 'Typically 1–2 business days after documents are submitted.' },
-                                        { q: 'Is RentTrust free to use?', a: 'Basic listings are free. Pro plans unlock unlimited listings and analytics.' },
+                                        { q: 'Is RentTrustGh free to use?', a: 'Basic listings are free. Pro plans unlock unlimited listings and analytics.' },
                                     ].map(({ q, a }) => (
                                         <div key={q} className="faq-item">
                                             <p style={{ fontWeight: '600', fontSize: '0.875rem', color: 'hsl(200 25% 20%)', marginBottom: '0.375rem' }}>{q}</p>

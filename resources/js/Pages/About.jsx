@@ -231,7 +231,7 @@ export default function AboutPage({ totalListings = 0, totalVerifiedAgents = 0, 
                                 <span style={{ color: 'hsl(40 90% 70%)' }}>should be safer.</span>
                             </h1>
                             <p style={{ color: 'rgba(255,255,255,0.72)', fontSize: 'clamp(0.9rem,2.2vw,1.1rem)', lineHeight: 1.6, maxWidth: 420 }}>
-                                RentTrust was built to end rental scams, inflated prices, and unverified listings. We're always on the side of tenants.
+                                RentTrustGh was built to end rental scams, inflated prices, and unverified listings. We're always on the side of tenants.
                             </p>
                         </div>
                     </div>
@@ -252,7 +252,7 @@ export default function AboutPage({ totalListings = 0, totalVerifiedAgents = 0, 
                                         A small team with a big mission.
                                     </p>
                                     <p style={{ color: 'hsl(200 15% 38%)', lineHeight: 1.75, fontSize: '0.9375rem', marginBottom: '1rem' }}>
-                                        Too many Ghanaians have lost their savings to rental fraud. Fake listings, ghost landlords, and inflated advance payments are not a fact of life — they're a problem we can fix. RentTrust is the platform that fights back.
+                                        Too many Ghanaians have lost their savings to rental fraud. Fake listings, ghost landlords, and inflated advance payments are not a fact of life — they're a problem we can fix. RentTrustGh is the platform that fights back.
                                     </p>
                                     <p style={{ color: 'hsl(200 15% 38%)', lineHeight: 1.75, fontSize: '0.9375rem' }}>
                                         We verify agents, confirm listings exist, publish real tenant reviews, and show actual market prices. No pay-to-rank, no hidden ads, no favouritism.
@@ -374,7 +374,7 @@ export default function AboutPage({ totalListings = 0, totalVerifiedAgents = 0, 
                                 <div style={{ backgroundColor: 'white', borderRadius: '1.25rem', border: '1px solid hsl(40 20% 88%)', padding: '1.5rem', boxShadow: '0 4px 32px hsl(200 25% 15% / 0.06)' }}>
                                     <h3 style={{ fontSize: '1rem', fontWeight: 700, color: 'hsl(200 25% 15%)', marginBottom: '1rem' }}>Common questions</h3>
                                     {[
-                                        { q: 'Is RentTrust free to use?',         a: 'Free to browse and enquire. Pro plans unlock unlimited listings and analytics for agents.' },
+                                        { q: 'Is RentTrustGh free to use?',         a: 'Free to browse and enquire. Pro plans unlock unlimited listings and analytics for agents.' },
                                         { q: 'How do you verify listings?',       a: 'Our team physically confirms each property before it goes live on the platform.' },
                                         { q: 'How do I list a property?',         a: 'Sign up as an agent and use your dashboard to add your first listing in minutes.' },
                                         { q: 'What if I spot a fake listing?',    a: 'Use the Report button on any listing and our team will investigate within 24 hours.' },

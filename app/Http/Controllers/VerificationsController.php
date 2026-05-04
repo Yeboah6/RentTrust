@@ -73,7 +73,11 @@ class VerificationsController extends Controller
 
         // Validation
         $validator = Validator::make($request->all(), [
-            'rental_id' => 'required|uuid|exists:rentals,rental_id',
+            'rental_id' => ['required', function ($attribute, $value, $fail) {
+                if (!Rental::where('rental_id', $value)->orWhere('id', $value)->exists()) {
+                    $fail('The selected rental property does not exist');
+                }
+            }],
             'request_type' => 'required|in:initial_verification,re_verification',
             'additional_notes' => 'nullable|string|max:1000',
             'agent_id' => 'required|exists:users,id',
@@ -86,7 +90,6 @@ class VerificationsController extends Controller
             'utility_bills.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:10240',
         ], [
             'rental_id.required' => 'Please select a rental property',
-            'rental_id.uuid' => 'Invalid rental property ID format',
             'rental_id.exists' => 'The selected rental property does not exist',
             'agent_id.required' => 'Agent ID is required',
             'agent_id.exists' => 'The selected agent does not exist',

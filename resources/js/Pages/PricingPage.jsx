@@ -378,10 +378,10 @@ const Pricing = () => {
       question: "Can I cancel my subscription anytime?",
       answer: "Yes! You can cancel your subscription at any time. Your plan will remain active until the end of your current billing period, and you won't be charged for the next month."
     },
-    {
-      question: "What are lead unlock credits?",
-      answer: "Lead unlock credits allow you to view full contact information for interested tenants. Each credit unlocks one tenant's contact details, making it easier to connect with serious prospects."
-    },
+    // {
+    //   question: "What are lead unlock credits?",
+    //   answer: "Lead unlock credits allow you to view full contact information for interested tenants. Each credit unlocks one tenant's contact details, making it easier to connect with serious prospects."
+    // },
     {
       question: "Do verified badges really make a difference?",
       answer: "Absolutely! Our data shows that verified listings receive 3x more inquiries than non-verified listings. Tenants trust verified landlords more, leading to faster rentals and higher quality applicants."

@@ -31,6 +31,10 @@ class VerificationRequest extends Model
     ];
 
     protected $casts = [
+        'proof_documents' => 'array',
+        'ownership_documents' => 'array',
+        'license_documents' => 'array',
+        'utility_bills' => 'array',
         'submitted_at' => 'datetime',
         'reviewed_at' => 'datetime',
     ];

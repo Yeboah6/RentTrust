@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Upload, X } from "lucide-react";
 import { useForm, usePage } from "@inertiajs/react";
 
@@ -18,6 +18,18 @@ const ReportListingDialog = ({ setShowAddListingModal, rental, auth }) => {
   // Get auth from page props (agent/tenant/super)
   // const { auth } = usePage().props;
   const userFullName = auth?.agent?.name || auth?.tenant?.name || auth?.super?.name || "";
+
+  useEffect(() => {
+    if (userFullName && !data.name) {
+      setData('name', userFullName);
+    }
+  }, [userFullName]);
+
+  useEffect(() => {
+    if (rental?.id) {
+      setData('property_id', rental.id);
+    }
+  }, [rental?.id]);
 
   const subjectOptions = [
     "Misleading listing information",
@@ -158,6 +170,7 @@ const ReportListingDialog = ({ setShowAddListingModal, rental, auth }) => {
                   <input
                     type="file"
                     id="evidence-upload"
+                    name="evidence[]"
                     style={{ display: 'none' }}
                     accept="image/*,.pdf"
                     multiple

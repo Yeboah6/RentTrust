@@ -18,6 +18,10 @@ class Report extends Model
         'status'
     ];
 
+    protected $casts = [
+        'evidence' => 'array',
+    ];
+
     public function rental()
     {
         return $this->belongsTo(Rental::class);

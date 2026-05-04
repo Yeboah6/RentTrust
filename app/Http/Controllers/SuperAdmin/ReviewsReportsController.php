@@ -7,6 +7,7 @@ use App\Models\Review;
 use App\Models\Report;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 class ReviewsReportsController extends Controller
@@ -155,6 +156,7 @@ class ReviewsReportsController extends Controller
     {
         return [
             'id'                 => $r->id,
+            'report_id'          => $r->report_id,
             'full_name'          => $r->full_name ?? $r->reporter_name ?? 'Anonymous',
             'report_type'        => $r->report_type,
             'title'              => $r->title,
@@ -165,8 +167,44 @@ class ReviewsReportsController extends Controller
                                  ?? optional($r->listing)->title
                                  ?? $r->listing_title
                                  ?? $r->property_title,
+            'evidence'           => $r->evidence,
             'created_at'         => $r->created_at?->toISOString(),
         ];
+    }
+
+    /**
+     * Download report evidence file
+     */
+    public function downloadReportEvidence(Request $request, Report $report, string $filename)
+    {
+        // URL decode the filename parameter if needed
+        $filename = urldecode($filename);
+
+        // Check if the evidence file exists in the report's evidence array
+        $evidence = $report->evidence ?? [];
+        $foundFile = null;
+
+        foreach ($evidence as $evidenceItem) {
+            if (is_string($evidenceItem) && ($evidenceItem === $filename || basename($evidenceItem) === $filename)) {
+                $foundFile = $evidenceItem;
+                break;
+            }
+        }
+
+        if (!$foundFile) {
+            abort(404, 'Evidence file not found');
+        }
+
+        // Construct the full path
+        $filePath = 'report_files/' . basename($foundFile);
+
+        // Check if file exists in storage
+        if (!Storage::disk('public')->exists($filePath)) {
+            abort(404, 'Evidence file not found on disk');
+        }
+
+        // Return the file for download
+        return Storage::disk('public')->download($filePath, $filename);
     }
 
     private function formatAppReview($r): array

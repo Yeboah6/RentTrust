@@ -60,7 +60,7 @@ const VerificationRequestModal = ({ isOpen, onClose, agentData, selectedRental }
   });
 
   const { data, setData, post, processing, errors, reset, clearErrors } = useForm({
-    rental_id: selectedRental?.id || "",
+    rental_id: selectedRental?.rental_id || selectedRental?.id || "",
     rental_title: selectedRental?.title || "",
     request_type: "initial_verification",
     additional_notes: "",
@@ -77,7 +77,7 @@ const VerificationRequestModal = ({ isOpen, onClose, agentData, selectedRental }
   useEffect(() => {
     if (isOpen && selectedRental) {
       setData({
-        rental_id: selectedRental.id,
+        rental_id: selectedRental.rental_id || selectedRental.id,
         rental_title: selectedRental.title,
         request_type: "initial_verification",
         additional_notes: "",
@@ -232,7 +232,7 @@ const VerificationRequestModal = ({ isOpen, onClose, agentData, selectedRental }
         formData.append('utility_bills[]', file);
     });
 
-    router.post('/verification-requests', formData, {
+    router.post('/api/verification-requests', formData, {
         forceFormData: true,
         onSuccess: () => {
             showToast('Verification request submitted successfully!', 'success', 3000);

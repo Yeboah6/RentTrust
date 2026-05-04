@@ -132,6 +132,8 @@ Route::middleware(['auth','verified','throttle:60,1','role:admin'])->group(funct
     // Report management
     Route::put('/admin/reports/{id}/status', [RentController::class, 'updateReportStatus'])
         ->name('admin.reports.status');
+    Route::get('/admin/reports/{report}/evidence/{filename}', [RentController::class, 'downloadReportEvidence'])
+        ->name('admin.reports.evidence.download');
     
     // Agent verification and management
     Route::put('/admin/agents/{id}/verify', [VerificationsController::class, 'verifyAgent'])

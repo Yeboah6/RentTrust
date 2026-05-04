@@ -287,6 +287,59 @@ const DetailDrawer = ({ item, type, onClose, onAction, processing }) => {
                                 <p style={{ margin: 0, fontSize: '0.83rem', color: 'hsl(220 15% 35%)', lineHeight: 1.65 }}>{item.report_description ?? item.description}</p>
                             </div>
 
+                            {(function() {
+                                const reportId = item.report_id || item.id;
+                                let evidence = item.evidence || [];
+                                if (typeof evidence === 'string') {
+                                    try {
+                                        evidence = JSON.parse(evidence);
+                                    } catch {
+                                        evidence = [evidence];
+                                    }
+                                }
+                                if (!Array.isArray(evidence)) {
+                                    evidence = [evidence];
+                                }
+                                const evidenceItems = evidence.filter(Boolean);
+                                if (evidenceItems.length === 0) return null;
+                                return (
+                                    <div style={{ marginBottom: '1.25rem', padding: '0.75rem', borderRadius: '0.65rem', backgroundColor: 'hsl(40 30% 97%)', border: '1px solid hsl(40 20% 88%)' }}>
+                                        <p style={{ margin: '0 0 0.4rem', fontSize: '0.68rem', fontWeight: '800', letterSpacing: '0.07em', textTransform: 'uppercase', color: 'hsl(200 15% 45%)' }}>Evidence</p>
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
+                                            {evidenceItems.map((evidenceItem, idx) => {
+                                                const filename = typeof evidenceItem === 'string' ? evidenceItem.split('/').pop() : (evidenceItem.name ?? `Evidence ${idx + 1}`);
+                                                return (
+                                                    <a
+                                                        key={idx}
+                                                        href={`/super-admin/reports/${reportId}/evidence/${encodeURIComponent(filename)}`}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        style={{
+                                                            padding: '0.35rem 0.65rem',
+                                                            borderRadius: '0.45rem',
+                                                            backgroundColor: 'white',
+                                                            color: 'hsl(214 100% 40%)',
+                                                            border: '1px solid hsl(40 20% 88%)',
+                                                            textDecoration: 'none',
+                                                            fontSize: '0.78rem',
+                                                            fontWeight: '600',
+                                                            display: 'inline-flex',
+                                                            alignItems: 'center',
+                                                            gap: '0.35rem',
+                                                        }}
+                                                        onMouseEnter={e => e.currentTarget.style.backgroundColor = 'hsl(214 100% 40% / 0.07)'}
+                                                        onMouseLeave={e => e.currentTarget.style.backgroundColor = 'white'}
+                                                    >
+                                                        <span style={{ display: 'inline-flex' }}>📎</span>
+                                                        {filename}
+                                                    </a>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                );
+                            })()}
+
                             {/* Reported listing — clickable link */}
                             {(item.listing_title ?? item.property_title) && (
                                 <div style={{ marginBottom: '1.25rem', padding: '0.75rem', borderRadius: '0.65rem', backgroundColor: 'hsl(0 70% 97%)', border: '1px solid hsl(0 65% 88%)' }}>

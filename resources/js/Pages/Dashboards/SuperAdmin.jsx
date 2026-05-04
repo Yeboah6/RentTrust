@@ -476,9 +476,32 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, verif
                             <div style={{ backgroundColor: 'hsl(40 30% 97%)', padding: '0.875rem', borderRadius: '0.5rem', marginBottom: '1rem' }}>
                               <p style={{ fontSize: '0.72rem', fontWeight: '600', color: 'hsl(200 15% 45%)', marginBottom: '0.5rem' }}>Evidence Attached ({evidence.length})</p>
                               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
-                                {evidence.map((item, idx) => (
-                                  <span key={idx} style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem', backgroundColor: 'white', color: 'hsl(200 25% 15%)', borderRadius: '0.375rem', border: '1px solid hsl(40 20% 88%)' }}>📎 {item.name ?? `Evidence ${idx + 1}`}</span>
-                                ))}
+                                {evidence.map((item, idx) => {
+                                  const filename = item.name ?? `Evidence ${idx + 1}`;
+                                  return (
+                                    <a
+                                      key={idx}
+                                      href={`/super-admin/reports/${report.id}/evidence/${encodeURIComponent(filename)}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      style={{
+                                        padding: '0.2rem 0.5rem',
+                                        fontSize: '0.75rem',
+                                        backgroundColor: 'white',
+                                        color: 'hsl(214 100% 40%)',
+                                        borderRadius: '0.375rem',
+                                        border: '1px solid hsl(40 20% 88%)',
+                                        textDecoration: 'none',
+                                        cursor: 'pointer',
+                                        display: 'inline-block'
+                                      }}
+                                      onMouseEnter={e => e.currentTarget.style.backgroundColor = 'hsl(214 100% 40% / 0.05)'}
+                                      onMouseLeave={e => e.currentTarget.style.backgroundColor = 'white'}
+                                    >
+                                      📎 {filename}
+                                    </a>
+                                  );
+                                })}
                               </div>
                             </div>
                           )}

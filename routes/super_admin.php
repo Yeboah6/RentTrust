@@ -127,4 +127,6 @@ Route::prefix('super-admin')
     Route::delete('reviews/{review}',          [ReviewsReportsController::class, 'deleteReview'])    ->name('reviews.destroy');
     Route::delete('app-reviews/{review}',      [ReviewsReportsController::class, 'deleteAppReview'])->name('app-reviews.destroy');
     Route::delete('reports/{report}',          [ReviewsReportsController::class, 'deleteReport'])    ->name('reports.destroy');
+    Route::get('/reports/{report}/evidence/{filename}', [ReviewsReportsController::class, 'downloadReportEvidence'])
+        ->name('reports.evidence.download');
 });
