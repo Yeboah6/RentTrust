@@ -284,7 +284,7 @@ const CardHead = ({ title, sub }) => (
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
-const ListingShow = ({ listing: rawListing }) => {
+const ListingShow = ({ listing: rawListing, property_types = [], regions = [] }) => {
     const listing = normalise(rawListing ?? {});
     const stCfg   = STATUS_CFG[listing.status_key] ?? STATUS_CFG.draft;
 

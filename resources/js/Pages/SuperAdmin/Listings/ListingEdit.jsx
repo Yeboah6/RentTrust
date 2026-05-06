@@ -249,7 +249,7 @@ const ReviewRow = ({ label, value }) => (
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
-const ListingEdit = ({ listing, agents = [], property_types = [], amenities = [] }) => {
+const ListingEdit = ({ listing, agents = [], property_types = [], amenities = [], regions = [] }) => {
     const l         = listing ?? {};
     // FIX: normalise status — 'approved' maps to 'active'
     const statusKey = (() => { const s = (l.status ?? 'pending').toLowerCase(); return s === 'approved' ? 'active' : s; })();
@@ -474,9 +474,12 @@ const ListingEdit = ({ listing, agents = [], property_types = [], amenities = []
 
     // ── Derived ───────────────────────────────────────────────────────────────
     // FIX: property_types may be objects {id,name,slug} or plain strings — normalise both
-    const allPropTypes = (property_types ?? []).map(pt =>
-        typeof pt === 'string' ? { value: pt.toLowerCase(), label: pt } : { value: pt.slug ?? pt.name?.toLowerCase() ?? '', label: pt.name ?? '' }
-    ).filter(pt => pt.value);
+    const allPropTypes = (property_types ?? []).map(pt => {
+        if (typeof pt === 'string') return { value: pt.toLowerCase(), label: pt };
+        // Always prefer slug — formatListing now normalises property_type to slug
+        const value = pt.slug ?? pt.name?.toLowerCase().replace(/\s+/g, '-') ?? '';
+        return { value, label: pt.name ?? '' };
+    }).filter(pt => pt.value);
 
     const titleStr = form.title || 'Listing';
     const hue      = [...titleStr].reduce((a, c) => a + c.charCodeAt(0), 0) % 360;
@@ -579,7 +582,7 @@ const ListingEdit = ({ listing, agents = [], property_types = [], amenities = []
                                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.875rem' }}>
                                             {/* FIX: property_types normalised — works for both strings and objects */}
                                             <FField label="Property Type" error={errors.property_type}>
-                                                <FSelect value={form.property_type} onChange={e => set('property_type', e.target.value)}>
+                                                <FSelect value={form.property_type} onChange={e => set('property_type', e.target.value)} hasError={!!errors.property_type}>
                                                     <option value="">Select type…</option>
                                                     {allPropTypes.map(pt => (
                                                         <option key={pt.value} value={pt.value}>{pt.label}</option>
@@ -587,7 +590,7 @@ const ListingEdit = ({ listing, agents = [], property_types = [], amenities = []
                                                 </FSelect>
                                             </FField>
                                             <FField label="Status" error={errors.status}>
-                                                <FSelect value={form.status} onChange={e => set('status', e.target.value)}>
+                                                <FSelect value={form.status} onChange={e => set('status', e.target.value)} hasError={!!errors.status}>
                                                     {ALL_STATUSES.map(s => <option key={s} value={s}>{STATUS_CFG[s]?.label ?? s}</option>)}
                                                 </FSelect>
                                             </FField>
@@ -595,7 +598,7 @@ const ListingEdit = ({ listing, agents = [], property_types = [], amenities = []
 
                                         {agents.length > 0 && (
                                             <FField label="Assigned Agent" error={errors.agent_id}>
-                                                <FSelect value={form.agent_id} onChange={e => set('agent_id', e.target.value)}>
+                                                <FSelect value={form.agent_id} onChange={e => set('agent_id', e.target.value)} hasError={!!errors.agent_id}>
                                                     <option value="">Unassigned</option>
                                                     {agents.map(a => <option key={a.id} value={a.id}>{a.name}{a.agency ? ` — ${a.agency}` : ''}</option>)}
                                                 </FSelect>
@@ -605,10 +608,22 @@ const ListingEdit = ({ listing, agents = [], property_types = [], amenities = []
 
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                                         <SectionLabel>Location</SectionLabel>
-                                        {/* FIX: two separate fields — location = city/region, area = neighbourhood */}
+                                        {/* FIX: two separate fields — location = city/region (dropdown), area = neighbourhood */}
                                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.875rem' }}>
                                             <FField label="Region / City" required error={errors.location}>
-                                                <FInput value={form.location} onChange={e => set('location', e.target.value)} placeholder="e.g. Accra" hasError={!!errors.location} />
+                                                <FSelect value={form.location} onChange={e => set('location', e.target.value)} hasError={!!errors.location}>
+                                                    <option value="">Select region or city…</option>
+                                                    {regions.map(region => (
+                                                        <React.Fragment key={region.id}>
+                                                            <option value={region.name} style={{ fontWeight: 'bold' }}>{region.name}</option>
+                                                            {region.children && region.children.map(child => (
+                                                                <option key={child.id} value={child.name} style={{ paddingLeft: '20px' }}>
+                                                                    — {child.name}
+                                                                </option>
+                                                            ))}
+                                                        </React.Fragment>
+                                                    ))}
+                                                </FSelect>
                                             </FField>
                                             {/* FIX: was calling set('location', ...) — now correctly calls set('area', ...) */}
                                             <FField label="Area / Neighbourhood" required error={errors.area}>
@@ -695,7 +710,7 @@ const ListingEdit = ({ listing, agents = [], property_types = [], amenities = []
                                         <SectionLabel>Pricing</SectionLabel>
                                         <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', gap: '0.875rem' }}>
                                             <FField label="Currency">
-                                                <FSelect value={form.currency} onChange={e => set('currency', e.target.value)}>
+                                                <FSelect value={form.currency} onChange={e => set('currency', e.target.value)} hasError={!!errors.currency}>
                                                     {CURRENCIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
                                                 </FSelect>
                                             </FField>
@@ -716,7 +731,7 @@ const ListingEdit = ({ listing, agents = [], property_types = [], amenities = []
                                         </div>
                                         {!isSale && (
                                             <FField label="Advance Duration (months)" hint="Number of months required upfront" error={errors.advance_duration}>
-                                                <FSelect value={form.advance_duration} onChange={e => set('advance_duration', e.target.value)}>
+                                                <FSelect value={form.advance_duration} onChange={e => set('advance_duration', e.target.value)} hasError={!!errors.advance_duration}>
                                                     <option value="">Select…</option>
                                                     {[1,2,3,4,5,6,12].map(n => <option key={n} value={n}>{n} month{n > 1 ? 's' : ''}</option>)}
                                                 </FSelect>

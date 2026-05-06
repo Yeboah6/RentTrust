@@ -251,26 +251,53 @@ class ListingController extends Controller
             'user:id,name,email,phone,avatar,company',
         ]);
         $listing->loadCount(['inquiries', 'reports as flagged_count', 'views']);
- 
+
+        $regions = Location::where('type', 'region')
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->select('id', 'name', 'slug')
+            ->with([
+                'children' => fn ($q) => $q
+                    ->where('is_active', true)
+                    ->orderBy('name')
+                    ->select('id', 'parent_id', 'name', 'slug', 'type'),
+            ])
+            ->get();
+
         return Inertia::render('SuperAdmin/Listings/ListingShow', [
-            'listing' => $listing,
+            'listing'        => $listing,
+            'property_types' => PropertyType::active()->select('id', 'name', 'slug')->orderBy('name')->get(),
+            'regions'        => $regions,
         ]);
     }
 
     // ─── Edit ─────────────────────────────────────────────────────────────────
- 
+
     public function edit(Rental $listing)
-    {
-        $listing->load(['user:id,name,email,company']);
-        $listing->loadCount(['inquiries', 'reports as flagged_count']);
-    
-        return Inertia::render('SuperAdmin/Listings/ListingEdit', [
-            'listing'        => $this->formatListing($listing),
-            'agents'         => User::select('id', 'name', 'company as agency')->orderBy('name')->get(),
-            'amenities'      => Amenity::active()->select('id', 'name', 'icon', 'category')->orderBy('name')->get(),
-            'property_types' => PropertyType::active()->select('id', 'name', 'slug')->orderBy('name')->get(),
-        ]);
-    }
+{
+    $listing->load(['user:id,name,email,company']);
+    $listing->loadCount(['inquiries', 'reports as flagged_count', 'views']); // ← add views
+
+    $regions = Location::where('type', 'region')
+        ->where('is_active', true)
+        ->orderBy('name')
+        ->select('id', 'name', 'slug')
+        ->with([
+            'children' => fn ($q) => $q
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->select('id', 'parent_id', 'name', 'slug', 'type'),
+        ])
+        ->get();
+
+    return Inertia::render('SuperAdmin/Listings/ListingEdit', [
+        'listing'        => $this->formatListing($listing, $regions), // ← pass regions
+        'agents'         => User::select('id', 'name', 'company as agency')->orderBy('name')->get(),
+        'amenities'      => Amenity::active()->select('id', 'name', 'icon', 'category')->orderBy('name')->get(),
+        'property_types' => PropertyType::active()->select('id', 'name', 'slug')->orderBy('name')->get(),
+        'regions'        => $regions,
+    ]);
+}
 
     // ─── Update ───────────────────────────────────────────────────────────────
  
@@ -604,7 +631,7 @@ class ListingController extends Controller
         //     'reason' => ['nullable', 'string', 'max:1000'],
         // ]);
  
-        if ($listing->status === 'approved' || $listing->status === 'pending') {
+        if ($listing->status === 'suspended') {
             return back()->with('error', 'Listing is already suspended.');
         }
  
@@ -675,46 +702,71 @@ class ListingController extends Controller
 
     // ─── Private helpers ──────────────────────────────────────────────────────
  
-    private function formatListing(Rental $listing): array
-    {
-        return [
-            'id'               => $listing->id,
-            'title'            => $listing->title,
-            'description'      => $listing->description,
-            'purpose'          => $listing->purpose,
-            'listing_type'     => $listing->purpose,   // alias for frontend compatibility
-            'property_type'    => $listing->property_type,
-            'sale_price'       => $listing->sale_price,
-            'rent_min'         => $listing->rent_min,
-            'rent_max'         => $listing->rent_max,
-            'advance_duration' => $listing->advance_duration,
-            'currency'         => $listing->currency ?? 'GH₵',
-            'status'           => $listing->status,
-            // FIX: expose city and area separately — frontend needs both
-            'city'             => $listing->city     ?? $listing->location,
-            'area'             => $listing->area,
-            'location'         => $listing->city     ?? $listing->location,
-            'address'          => $listing->address,
-            'bedrooms'         => $listing->bedrooms,
-            'bathrooms'        => $listing->bathrooms,
-            'is_featured'      => (bool) $listing->is_featured,
-            'is_verified'      => (bool) $listing->is_verified,
-            'is_sold'          => (bool) ($listing->is_sold ?? false),
-            'views_count'      => $listing->views_count  ?? $listing->views  ?? 0,
-            'inquiries_count'  => $listing->inquiries_count ?? 0,
-            'flagged_count'    => $listing->flagged_count ?? 0,
-            'images'           => $this->resolveImages($listing),
-            'amenities'        => is_array($listing->amenities)
-                ? $listing->amenities
-                : [],
-            'agent_id'         => $listing->user_id,
-            'agent_name'       => $listing->agent_name ?? $listing->user?->name,
-            'agent_phone'      => $listing->agent_phone,
-            'agent_email'      => $listing->agent_email,
-            'created_at'       => $listing->created_at?->toISOString(),
-            'updated_at'       => $listing->updated_at?->toISOString(),
-        ];
+    private function formatListing(Rental $listing, $regions = null): array
+{
+    // ── Resolve property_type to slug so frontend <FSelect> matches ──────────
+    // DB may store name ("Apartment") or slug ("apartment") — normalise to slug
+    $rawPropType    = $listing->property_type ?? '';
+    $propertyTypeSlug = \App\Models\PropertyType::where('name', $rawPropType)
+                            ->orWhere('slug', $rawPropType)
+                            ->value('slug') ?? \Illuminate\Support\Str::slug($rawPropType);
+
+    // ── Resolve city string → matched region/child name for the select ────────
+    // The select options are region.name and child.name strings.
+    // We store city in the DB — find the matching location name if regions passed.
+    $cityValue = $listing->city ?? $listing->location ?? '';
+    if ($regions && $cityValue) {
+        $matched = null;
+        foreach ($regions as $region) {
+            if (strcasecmp($region->name, $cityValue) === 0) {
+                $matched = $region->name;
+                break;
+            }
+            foreach ($region->children ?? [] as $child) {
+                if (strcasecmp($child->name, $cityValue) === 0) {
+                    $matched = $child->name;
+                    break 2;
+                }
+            }
+        }
+        $cityValue = $matched ?? $cityValue; // fall back to raw value if no match
     }
+
+    return [
+        'id'               => $listing->id,
+        'title'            => $listing->title,
+        'description'      => $listing->description,
+        'purpose'          => $listing->purpose,
+        'listing_type'     => $listing->purpose,
+        'property_type'    => $propertyTypeSlug,          // ← normalised to slug
+        'sale_price'       => $listing->sale_price,
+        'rent_min'         => $listing->rent_min,
+        'rent_max'         => $listing->rent_max,
+        'advance_duration' => $listing->advance_duration,
+        'currency'         => $listing->currency ?? 'GH₵',
+        'status'           => $listing->status,
+        'city'             => $cityValue,                 // ← matched to select option
+        'area'             => $listing->area,
+        'location'         => $cityValue,                 // ← same resolved value
+        'address'          => $listing->address,
+        'bedrooms'         => $listing->bedrooms,
+        'bathrooms'        => $listing->bathrooms,
+        'is_featured'      => (bool) $listing->is_featured,
+        'is_verified'      => (bool) $listing->is_verified,
+        'is_sold'          => (bool) ($listing->is_sold ?? false),
+        'views_count'      => $listing->views_count ?? 0, // ← now populated via loadCount
+        'inquiries_count'  => $listing->inquiries_count ?? 0,
+        'flagged_count'    => $listing->flagged_count ?? 0,
+        'images'           => $this->resolveImages($listing),
+        'amenities'        => is_array($listing->amenities) ? $listing->amenities : [],
+        'agent_id'         => $listing->user_id,
+        'agent_name'       => $listing->agent_name ?? $listing->user?->name,
+        'agent_phone'      => $listing->agent_phone,
+        'agent_email'      => $listing->agent_email,
+        'created_at'       => $listing->created_at?->toISOString(),
+        'updated_at'       => $listing->updated_at?->toISOString(),
+    ];
+}
 
     private function resolveImages(Rental $listing): array
     {
