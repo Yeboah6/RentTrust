@@ -1039,7 +1039,7 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
           <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: 'clamp(0.5rem, 2vw, 1rem)' }}>
             <div className="modal-content" style={{ backgroundColor: 'white', borderRadius: 'clamp(0.75rem, 2vw, 1rem)', maxHeight: '90vh', overflow: 'auto', maxWidth: 'clamp(90%, 95vw, 60%)', width: '100%', position: 'relative' }}>
               <button onClick={() => { setShowEditListingModal(false); setSelectedRental(null); }} className="action-button" style={{ position: 'sticky', top: 0, right: 0, padding: 'clamp(0.75rem, 2vw, 1rem)', border: 'none', background: 'transparent', fontSize: 'clamp(1.25rem, 4vw, 1.5rem)', cursor: 'pointer', color: 'hsl(200 15% 45%)', float: 'right', zIndex: 10 }}>✕</button>
-              <EditRentals agentData={agentData} setShowEditListingModal={setShowEditListingModal} rental={selectedRental} />
+              <EditRentals agentData={agentData} setShowEditListingModal={setShowEditListingModal} rental={selectedRental} locations={locations} propertyTypes={propertyTypes} amenities={amenities} />
             </div>
           </div>
         )}

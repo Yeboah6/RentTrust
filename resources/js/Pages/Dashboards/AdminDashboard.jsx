@@ -94,7 +94,7 @@ const PlanBadge = ({ plan }) => {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, verifications, plans }) => {
+const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, verifications, plans, locations, propertyTypes, amenities }) => {
   const { auth } = usePage().props;
   const findPlan = (packageSlug) => plans?.find(p => p.slug === packageSlug) ?? null;
   const [activeTab, setActiveTab] = useState("agents");
@@ -375,9 +375,6 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, verif
                   <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: 'hsl(200 15% 45%)' }}><MessageSquare style={{ height: '1rem', width: '1rem' }} />{reviews.length} Reviews</span>
                 </div>
               </div>
-              {/* <Link href="/admin/payments/dashboard" style={{ padding: '0.5rem 1rem', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.5rem', backgroundColor: 'white', color: 'hsl(174 62% 32%)', fontWeight: '500', cursor: 'pointer', textDecoration: 'none', alignSelf: 'flex-start' }}>
-                Payment Dashboard
-              </Link> */}
               <Link href="/settings" style={{ padding: '0.5rem 1rem', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.5rem', backgroundColor: 'white', color: 'hsl(174 62% 32%)', fontWeight: '500', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none', alignSelf: 'flex-start' }}>
                 <Settings style={{ height: '1rem', width: '1rem' }} />Settings
               </Link>
@@ -806,7 +803,14 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, verif
           <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: '1rem' }}>
             <div style={{ backgroundColor: 'white', borderRadius: '1rem', maxHeight: '90vh', overflow: 'auto', maxWidth: '60%', width: '100%', position: 'relative' }}>
               <button onClick={() => setShowAddListingModal(false)} style={{ position: 'sticky', top: 0, right: 0, padding: '1rem', border: 'none', background: 'transparent', fontSize: '1.5rem', cursor: 'pointer', color: 'hsl(200 15% 45%)', float: 'right', zIndex: 10 }}>✕</button>
-              <AddRentalPage agentData={agentData} setShowAddListingModal={setShowAddListingModal} adminData={adminData} />
+              <AddRentalPage
+                agentData={agentData}
+                setShowAddListingModal={setShowAddListingModal}
+                adminData={adminData}
+                locations={locations}
+                propertyTypes={propertyTypes}
+                amenities={amenities}
+              />
             </div>
           </div>
         )}
@@ -815,7 +819,7 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, verif
           <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: '1rem' }}>
             <div style={{ backgroundColor: 'white', borderRadius: '1rem', maxHeight: '90vh', overflow: 'auto', maxWidth: '60%', width: '100%', position: 'relative' }}>
               <button onClick={() => { setShowEditListingModal(false); setSelectedRental(null); }} style={{ position: 'sticky', top: 0, right: 0, padding: '1rem', border: 'none', background: 'transparent', fontSize: '1.5rem', cursor: 'pointer', color: 'hsl(200 15% 45%)', float: 'right', zIndex: 10 }}>✕</button>
-              <EditRentals agentData={agentData} setShowEditListingModal={setShowEditListingModal} rental={selectedRental} />
+              <EditRentals agentData={agentData} setShowEditListingModal={setShowEditListingModal} rental={selectedRental} locations={locations} propertyTypes={propertyTypes} amenities={amenities} />
             </div>
           </div>
         )}

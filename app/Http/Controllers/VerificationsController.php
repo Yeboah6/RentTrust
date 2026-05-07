@@ -83,10 +83,14 @@ class VerificationsController extends Controller
             'agent_id' => 'required|exists:users,id',
             'agent_name' => 'required|string|max:255',
 
-            // File validations - updated field names to match frontend
+            // File validations - all now optional but at least one required
+            'proof_docs' => 'nullable|array',
             'proof_docs.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:10240',
+            'ownership_documents' => 'nullable|array',
             'ownership_documents.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:10240',
+            'license_documents' => 'nullable|array',
             'license_documents.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:10240',
+            'utility_bills' => 'nullable|array',
             'utility_bills.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:10240',
         ], [
             'rental_id.required' => 'Please select a rental property',
@@ -98,6 +102,18 @@ class VerificationsController extends Controller
             'license_documents.*.max' => 'Each license document must not exceed 10MB',
             'utility_bills.*.max' => 'Each utility bill must not exceed 10MB',
         ]);
+
+        // Custom validation: ensure at least one document is uploaded
+        $validator->after(function ($validator) use ($request) {
+            $hasProofDocs = $request->hasFile('proof_docs') && count($request->file('proof_docs', [])) > 0;
+            $hasOwnershipDocs = $request->hasFile('ownership_documents') && count($request->file('ownership_documents', [])) > 0;
+            $hasLicenseDocs = $request->hasFile('license_documents') && count($request->file('license_documents', [])) > 0;
+            $hasUtilityBills = $request->hasFile('utility_bills') && count($request->file('utility_bills', [])) > 0;
+
+            if (!$hasProofDocs && !$hasOwnershipDocs && !$hasLicenseDocs && !$hasUtilityBills) {
+                $validator->errors()->add('documents', 'Please upload at least one document to verify your listing');
+            }
+        });
 
         if ($validator->fails()) {
             return redirect()->back()
@@ -179,13 +195,53 @@ class VerificationsController extends Controller
                 'user_id' => Auth::id(),
             ]);
 
-            // Update rental status to indicate verification is pending
-            $rental->update([
-                'verification_status' => 'pending',
-                'verification_requested_at' => now(),
-                'verification_rejected_at' => null,
-                'verification_rejection_reason' => null
-            ]);
+            // Auto-approve for trusted agents (3+ successful verifications)
+            $successfulVerifications = VerificationRequest::where('agent_id', $request->agent_id)
+                ->where('status', 'approved')
+                ->count();
+
+            if ($successfulVerifications >= 3) {
+                // Auto-approve the request
+                $verificationRequest->update([
+                    'status' => 'approved',
+                    'admin_notes' => 'Auto-approved: Trusted agent with proven verification history',
+                    'reviewed_at' => now(),
+                    'reviewed_by' => 1, // System user ID
+                ]);
+
+                // Update rental to verified status
+                $rental->update([
+                    'verification_status' => 'verified',
+                    'is_verified' => true,
+                    'verified_at' => now(),
+                    'status' => 'approved',
+                    'verification_rejected_at' => null,
+                    'verification_rejection_reason' => null
+                ]);
+
+                // Audit log for auto-approval
+                AdminAuditLog::record('verification', "Listing verification auto-approved: {$rental->title}", [
+                    'affected_user' => $rental->user->name ?? 'Unknown',
+                    'affected_id' => $rental->id,
+                    'notes' => "Auto-approved for trusted agent {$request->agent_name} with {$successfulVerifications} previous successful verifications",
+                    'properties' => ['status' => 'auto_approved', 'listing_id' => $rental->id, 'verification_request_id' => $verificationRequest->verification_request_id],
+                ]);
+
+                Log::info('Verification auto-approved for trusted agent', [
+                    'rental_id' => $rental->rental_id,
+                    'agent_id' => $request->agent_id,
+                    'successful_verifications' => $successfulVerifications,
+                    'verification_request_id' => $verificationRequest->verification_request_id
+                ]);
+            } else {
+                // Update rental status to indicate verification is pending
+                $rental->update([
+                    'verification_status' => 'pending',
+                    'verification_requested_at' => now(),
+                    'verification_rejected_at' => null,
+                    'verification_rejection_reason' => null
+                ]);
+            }
 
             DB::commit();
 
@@ -198,8 +254,13 @@ class VerificationsController extends Controller
                 'submitted_by' => Auth::id()
             ]);
 
+            // Return appropriate success message
+            $successMessage = $verificationRequest->status === 'approved'
+                ? 'Verification request auto-approved! Your listing is now verified and published.'
+                : 'Verification request submitted successfully! It will be reviewed soon.';
+
             return redirect()->back()
-                ->with('success', 'Verification request submitted successfully! It will be reviewed soon.');
+                ->with('success', $successMessage);
 
         } catch (\Exception $e) {
             DB::rollBack();

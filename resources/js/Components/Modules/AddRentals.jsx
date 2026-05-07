@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useForm, usePage } from '@inertiajs/react';
 import { Home, MapPin, DollarSign, Calendar, Image, FileText, CheckCircle2, AlertCircle, Upload, X } from 'lucide-react';
 
-const AddRentalPage = ({ agentData, setShowAddListingModal, adminData, locations, propertyTypes, amenities }) => {
+const AddRentalPage = ({ agentData, setShowAddListingModal, adminData, locations = [], propertyTypes = [], amenities = [] }) => {
 
   const { data, setData, post, transform, processing, errors, reset } = useForm({
     purpose: 'rent', // rent or sale
@@ -27,9 +27,9 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData, locations
 
   const { flash } = usePage().props;
 
-  const names = locations.map(l => l?.name)
-  const PropertyNames = propertyTypes.map(p => p?.name)
-  const AmenityNames = amenities.map(a => a?.name)
+  const names = (locations || []).map(l => l?.name)
+  const PropertyNames = (propertyTypes || []).map(p => p?.name)
+  const AmenityNames = (amenities || []).map(a => a?.name)
 
   useEffect(() => {
       if (flash?.toast) {

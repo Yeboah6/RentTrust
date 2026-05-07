@@ -34,10 +34,16 @@ class DashboardController extends Controller
 
         // include view/inquiry/review counts for each rental and fetch status from DB
         $rentals = Rental::where('user_id', $agentData->id)
-            ->select('id', 'rental_id', 'title', 'property_type', 'purpose', 'city', 'area', 'address', 'rent_min', 'rent_max', 'sale_price', 'status', 'is_verified', 'is_featured', 'images', 'created_at', 'updated_at')
-            ->withCount(['views', 'inquiries', 'reviews'])
-            ->latest()
-            ->get();
+        ->select(
+            'id', 'rental_id', 'title', 'property_type', 'purpose',
+            'city', 'area', 'address', 'rent_min', 'rent_max', 'sale_price',
+            'status', 'is_verified', 'is_featured', 'images', 'created_at', 'updated_at',
+            'bedrooms', 'bathrooms', 'description', 'amenities',
+            'verification_status', 'advance_duration', 'agent_name', 'agent_phone', 'agent_email'
+        )
+        ->withCount(['views', 'inquiries', 'reviews'])
+        ->latest()
+        ->get();
         $rentalIds = $rentals->pluck('id');
         $reviews = Review::whereIn('rental_id', $rentalIds)->latest()->get();
         
@@ -133,6 +139,10 @@ class DashboardController extends Controller
         $reviews = Review::with('rental')->get();
         // $verifications = VerificationRequest::with(['rental', 'agent'])->orderBy('created_at', 'desc')->get();
         $verifications = VerificationRequest::all();
+
+        $locations = Location::all();
+        $propertyTypes = PropertyType::all();
+        $amenities = Amenity::all();
         
         return inertia('Dashboards/AdminDashboard', [
             'adminData' => $adminData,
@@ -141,6 +151,9 @@ class DashboardController extends Controller
             'reports' => $reports,
             'reviews' => $reviews,
             'verifications' => $verifications,
+            'locations' => $locations,
+            'propertyTypes' => $propertyTypes,
+            'amenities' => $amenities,
             'plans' => app(\App\Http\Controllers\CheckoutController::class)->plansForModal(),
             'open_plan_modal' => is_null($adminData->package)
                 || session()->pull('show_plan_modal', false),

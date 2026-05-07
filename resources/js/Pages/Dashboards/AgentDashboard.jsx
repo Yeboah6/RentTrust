@@ -205,6 +205,7 @@ const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views
       rent_max: rental.rent_max || 0,
       sale_price: rental.sale_price || 0,
       listing_status: rental.status || "unverified",
+      verification_status: rental.verification_status || null,
       total_reviews: rental.reviews_count || 0,
       views: rental.views_count || 0,
       inquiries: rental.inquiries_count || 0,
@@ -531,12 +532,11 @@ const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views
                               <button onClick={() => handleViewClick(property)} className="action-button" style={{ padding: 'clamp(0.375rem, 2vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem)', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.25rem, 1.5vw, 0.375rem)', backgroundColor: 'white', color: 'hsl(174 62% 32%)', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', fontWeight: '500', cursor: 'pointer', textAlign: 'center' }}>View</button>
                               <button onClick={() => handleEditClick(property)} className="action-button" style={{ padding: 'clamp(0.375rem, 2vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem)', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.25rem, 1.5vw, 0.375rem)', backgroundColor: 'white', color: 'hsl(174 62% 32%)', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', fontWeight: '500', cursor: 'pointer', textAlign: 'center' }}>Edit</button>
                             </div>
-                            <button onClick={() => { setSelectedRentalForVerification(property); setShowVerificationModal(true); }} className="action-button mobile-full-width" style={{ width: '100%', padding: 'clamp(0.375rem, 2vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem)', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.25rem, 1.5vw, 0.375rem)', backgroundColor: 'white', color: 'hsl(174 62% 32%)', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', fontWeight: '500', cursor: 'pointer' }}>
-                              Request Verification
-                            </button>
-                            <button onClick={() => handleFeatureClick(property)} className="action-button mobile-full-width" style={{ width: '100%', padding: 'clamp(0.375rem, 2vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem)', border: '1px solid hsl(38 92% 50%)', borderRadius: 'clamp(0.25rem, 1.5vw, 0.375rem)', backgroundColor: 'hsl(38 92% 50%)', color: 'white', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', fontWeight: '500', cursor: 'pointer' }}>
-                              ⭐ Feature Listing
-                            </button>
+                            {property.listing_status !== 'approved' && (
+                              <button onClick={() => { if (property.verification_status !== 'pending') { setSelectedRentalForVerification(property); setShowVerificationModal(true); } }} className="action-button mobile-full-width" style={{ width: '100%', padding: 'clamp(0.375rem, 2vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem)', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.25rem, 1.5vw, 0.375rem)', backgroundColor: property.verification_status === 'pending' ? 'hsl(48 96% 89%)' : 'white', color: property.verification_status === 'pending' ? 'hsl(48 96% 30%)' : 'hsl(174 62% 32%)', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', fontWeight: '500', cursor: property.verification_status === 'pending' ? 'default' : 'pointer', opacity: property.verification_status === 'pending' ? 0.7 : 1 }}>
+                                {property.verification_status === 'pending' ? '⏳ Verification Pending' : 'Request Verification'}
+                              </button>
+                            )}
                           </div>
                         ))}
                       </div>
@@ -566,9 +566,11 @@ const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views
                               <button onClick={() => handleViewClick(property)} className="action-button" style={{ padding: 'clamp(0.375rem, 2vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem)', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.25rem, 1.5vw, 0.375rem)', backgroundColor: 'white', color: 'hsl(174 62% 32%)', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', fontWeight: '500', cursor: 'pointer', textAlign: 'center' }}>View</button>
                               <button onClick={() => handleEditClick(property)} className="action-button" style={{ padding: 'clamp(0.375rem, 2vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem)', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.25rem, 1.5vw, 0.375rem)', backgroundColor: 'white', color: 'hsl(174 62% 32%)', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', fontWeight: '500', cursor: 'pointer', textAlign: 'center' }}>Edit</button>
                             </div>
-                            <button onClick={() => { setSelectedRentalForVerification(property); setShowVerificationModal(true); }} className="action-button" style={{ width: '100%', padding: 'clamp(0.375rem, 2vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem)', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.25rem, 1.5vw, 0.375rem)', backgroundColor: 'white', color: 'hsl(38 92% 50%)', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', fontWeight: '500', cursor: 'pointer' }}>
-                              Request Verification
-                            </button>
+                            {property.listing_status !== 'approved' && (
+                              <button onClick={() => { if (property.verification_status !== 'pending') { setSelectedRentalForVerification(property); setShowVerificationModal(true); } }} className="action-button" style={{ width: '100%', padding: 'clamp(0.375rem, 2vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem)', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.25rem, 1.5vw, 0.375rem)', backgroundColor: property.verification_status === 'pending' ? 'hsl(48 96% 89%)' : 'white', color: property.verification_status === 'pending' ? 'hsl(48 96% 30%)' : 'hsl(38 92% 50%)', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', fontWeight: '500', cursor: property.verification_status === 'pending' ? 'default' : 'pointer', opacity: property.verification_status === 'pending' ? 0.7 : 1 }}>
+                                {property.verification_status === 'pending' ? '⏳ Verification Pending' : 'Request Verification'}
+                              </button>
+                            )}
                             <button onClick={() => handleFeatureClick(property)} className="action-button" style={{ width: '100%', padding: 'clamp(0.375rem, 2vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem)', border: '1px solid hsl(38 92% 50%)', borderRadius: 'clamp(0.25rem, 1.5vw, 0.375rem)', backgroundColor: 'hsl(38 92% 50%)', color: 'white', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', fontWeight: '500', cursor: 'pointer' }}>
                               ⭐ Feature Listing
                             </button>
@@ -819,7 +821,7 @@ const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views
           <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: 'clamp(0.5rem, 2vw, 1rem)' }}>
             <div className="modal-content" style={{ backgroundColor: 'white', borderRadius: 'clamp(0.75rem, 2vw, 1rem)', maxHeight: '90vh', overflow: 'auto', maxWidth: 'clamp(90%, 95vw, 60%)', width: '100%', position: 'relative' }}>
               <button onClick={() => { setShowEditListingModal(false); setSelectedRental(null); }} className="action-button" style={{ position: 'sticky', top: 0, right: 0, padding: 'clamp(0.75rem, 2vw, 1rem)', border: 'none', background: 'transparent', fontSize: 'clamp(1.25rem, 4vw, 1.5rem)', cursor: 'pointer', color: 'hsl(200 15% 45%)', float: 'right', zIndex: 10 }}>✕</button>
-              <EditRentals agentData={agentData} setShowEditListingModal={setShowEditListingModal} rental={selectedRental} />
+              <EditRentals agentData={agentData} setShowEditListingModal={setShowEditListingModal} rental={selectedRental} locations={locations} propertyTypes={propertyTypes} amenities={amenities} />
             </div>
           </div>
         )}

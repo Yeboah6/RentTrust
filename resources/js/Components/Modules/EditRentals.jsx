@@ -1,9 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { useForm } from '@inertiajs/react';
+import { useForm, usePage } from '@inertiajs/react';
 import axios from 'axios';
 import { Home, MapPin, DollarSign, Calendar, Image, FileText, CheckCircle2, AlertCircle, Upload, X } from 'lucide-react';
 
-const EditRentals = ({ agentData, setShowEditListingModal, rental }) => {
+const EditRentals = ({ agentData, setShowEditListingModal, rental, locations = [], propertyTypes = [], amenities = [] }) => {
+  const { flash, locations: pageLocations = [], propertyTypes: pagePropertyTypes = [], amenities: pageAmenities = [] } = usePage().props;
+
+  const locationsData = locations.length ? locations : pageLocations;
+  const propertyTypesData = propertyTypes.length ? propertyTypes : pagePropertyTypes;
+  const amenitiesData = amenities.length ? amenities : pageAmenities;
+
   // Use form for data management
   const { data, setData, processing, errors, reset } = useForm({
     purpose: 'rent',
@@ -34,6 +40,17 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [toast, setToast] = useState(null);
 
+  // Extract names from DB objects
+  const cityNames = locationsData?.map(l => l?.name) || [];
+  const propertyTypeNames = propertyTypesData?.map(p => p?.name) || [];
+  const amenityNames = amenitiesData?.map(a => a?.name) || [];
+
+  useEffect(() => {
+    if (flash?.toast) {
+      showToast(flash.toast.type, flash.toast.title, flash.toast.message);
+    }
+  }, [flash?.toast]);
+
   const parseImages = (imagesData) => {
     if (!imagesData) return [];
     
@@ -52,7 +69,7 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental }) => {
 
   useEffect(() => {
     if (rental) {
-      console.log('Rental data received:', rental);
+      // console.log('Rental data received:', rental);
       
       // Parse amenities
       let parsedAmenities = [];
@@ -69,7 +86,7 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental }) => {
 
       // Parse and set existing images
       const imagesArray = parseImages(rental.images);
-      console.log('Parsed images array:', imagesArray);
+      // console.log('Parsed images array:', imagesArray);
       
       const existingImagesList = imagesArray.map((img, index) => {
         // Handle different image formats
@@ -123,12 +140,7 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental }) => {
     }
   }, [rental]);
 
-  console.log('EditRentals received rental prop:', rental);
-
-
-  const propertyTypes = ['Apartment', 'House', 'Studio', 'Chamber and Hall', 'Self-Contained', 'Condo', 'Townhouse'];
-  const cities = ['Accra', 'Kumasi', 'Tema', 'Takoradi', 'Cape Coast', 'Tamale'];
-  const amenitiesList = ['Wi-Fi', 'Parking', 'Security', 'Water Supply', 'Backup Generator', 'Air Conditioning', 'Furnished', 'Gym', 'Swimming Pool', 'Garden'];
+  // console.log('EditRentals received rental prop:', rental);
 
   const handleAmenityToggle = (amenity) => {
     const updatedAmenities = data.amenities.includes(amenity)
@@ -290,12 +302,12 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental }) => {
       formData.append(`newImages[${index}]`, imageObj.file);
     });
 
-    console.log('Submitting update with:', {
-      id: data.id,
-      existingImagesCount: data.existingImages.length,
-      removedImagesCount: data.removedImages.length,
-      newImagesCount: newImages.length
-    });
+    // console.log('Submitting update with:', {
+    //   id: data.id,
+    //   existingImagesCount: data.existingImages.length,
+    //   removedImagesCount: data.removedImages.length,
+    //   newImagesCount: newImages.length
+    // });
     
     // Submit using FormData with axios (includes _method for PUT spoofing)
     const url = data.purpose === 'rent' ? `/rent/${data.id}` : `/sale/${data.id}`;
@@ -343,7 +355,7 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental }) => {
     { number: 4, title: 'Review & Submit', icon: CheckCircle2 }
   ];
 
-  console.log(data.status);
+  // console.log(data.status);
 
   const allImages = [...existingImages, ...newImages];
 
@@ -734,7 +746,7 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental }) => {
                           }}
                         >
                           <option value="">Select type</option>
-                          {propertyTypes.map(type => (
+                          {propertyTypeNames.map(type => (
                             <option key={type} value={type}>{type}</option>
                           ))}
                         </select>
@@ -790,7 +802,7 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental }) => {
                           }}
                         >
                           <option value="">Select city</option>
-                          {cities.map(city => (
+                          {cityNames.map(city => (
                             <option key={city} value={city}>{city}</option>
                           ))}
                         </select>
@@ -1304,7 +1316,7 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental }) => {
                         display: 'grid',
                         gap: 'clamp(0.5rem, 2vw, 0.75rem)'
                       }}>
-                        {amenitiesList.map(amenity => (
+                        {amenityNames.map(amenity => (
                           <button
                             key={amenity}
                             type="button"

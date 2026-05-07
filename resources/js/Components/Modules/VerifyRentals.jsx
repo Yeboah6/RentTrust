@@ -184,13 +184,13 @@ const VerificationRequestModal = ({ isOpen, onClose, agentData, selectedRental }
   };
 
   const validateForm = () => {
-    // Check if at least one document is uploaded
+    // Check if at least one document is uploaded (simplified requirement)
     const totalDocs = (data.proof_docs?.length || 0) + 
                      (data.ownership_documents?.length || 0) +
                      (data.utility_bills?.length || 0);
 
     if (totalDocs === 0) {
-      alert('Please upload at least one document');
+      alert('Please upload at least one document to verify your listing');
       return false;
     }
 
@@ -235,7 +235,7 @@ const VerificationRequestModal = ({ isOpen, onClose, agentData, selectedRental }
     router.post('/api/verification-requests', formData, {
         forceFormData: true,
         onSuccess: () => {
-            showToast('Verification request submitted successfully!', 'success', 3000);
+            showToast('Verification request processed successfully!', 'success', 3000);
             setTimeout(() => {
                 router.reload({ only: ['rentals'] });
                 handleClose();
@@ -284,9 +284,9 @@ const VerificationRequestModal = ({ isOpen, onClose, agentData, selectedRental }
     {
       key: 'property_ownership_docs',
       formKey: 'ownership_documents',
-      title: 'Property Photos',
+      title: 'Property Photos (Optional)',
       description: 'Clear photos of property exterior, interior, and address',
-      required: true
+      required: false
     },
     {
       key: 'utility_bills',
@@ -500,6 +500,25 @@ const VerificationRequestModal = ({ isOpen, onClose, agentData, selectedRental }
                   {errors.rental_id}
                 </p>
               )}
+            </div>
+
+            {/* Simplified Requirements Note */}
+            <div style={{
+              backgroundColor: 'hsl(48 96% 89%)',
+              border: '1px solid hsl(48 96% 70%)',
+              borderRadius: '0.5rem',
+              padding: '1rem',
+              marginBottom: '1.5rem'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+                <CheckCircle style={{ height: '1.25rem', width: '1.25rem', color: 'hsl(48 96% 30%)' }} />
+                <h3 style={{ fontSize: '0.875rem', fontWeight: '600', color: 'hsl(48 96% 20%)' }}>
+                  Simplified Verification Process
+                </h3>
+              </div>
+              <p style={{ fontSize: '0.875rem', color: 'hsl(48 96% 25%)', margin: 0 }}>
+                Upload at least one document to get your listing verified. All document types are now optional - choose what you have available.
+              </p>
             </div>
 
             {/* Request Type */}
