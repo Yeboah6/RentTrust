@@ -181,6 +181,17 @@ const parseImages = (imagesData) => {
 };
 
 const PropertyCard = ({ listing }) => {
+  <style dangerouslySetInnerHTML={{__html: `
+    @media (max-width: 768px) {
+      .property-card-content { display: flex; flex-direction: column; }
+      .details-section { order: 1; }
+      .reviews-section { order: 2; }
+      .agent-section { order: 3; }
+    }
+    @media (min-width: 769px) {
+      .property-card-content { display: block; }
+    }
+  `}} />
   const [isHovered, setIsHovered] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   
@@ -367,7 +378,7 @@ const PropertyCard = ({ listing }) => {
       </div>
 
       {/* Card Content Section */}
-      <div className="p-4">
+      <div className="p-4 property-card-content">
         {/* Status badge - only show for verified/approved listings */}
         {(listing.status === "available" || listing.status === "approved" || listing.status === "verified") && (
           <div style={{ marginBottom: '0.75rem' }}>
@@ -386,7 +397,7 @@ const PropertyCard = ({ listing }) => {
               }}
             >
               <CheckCircle2 className="h-3 w-3" />
-              {listing.status === "verified" ? "Verified" : listing.status}
+              {listing.status === "available" || listing.status === "approved" || listing.status === "verified" ? "Verified" : listing.status}
             </span>
           </div>
         )}
@@ -401,7 +412,7 @@ const PropertyCard = ({ listing }) => {
           </span>
         </div>
 
-        <div style={{ marginBottom: '0.75rem' }}>
+        <div className="details-section" style={{ marginBottom: '0.75rem' }}>
           <div className="font-bold" style={{ color: 'hsl(174 62% 32%)', fontSize: '1.25rem' }}>
             GH₵{listing.rentMin.toLocaleString()} - {listing.rentMax.toLocaleString()}
           </div>
@@ -416,7 +427,7 @@ const PropertyCard = ({ listing }) => {
         </div>
 
         {listing.agentName && (
-          <div style={{ 
+          <div className="agent-section" style={{ 
             paddingTop: '0.75rem', 
             borderTop: '1px solid hsl(40 20% 88%)',
             marginBottom: '0.75rem'
@@ -441,7 +452,7 @@ const PropertyCard = ({ listing }) => {
         )}
 
         {listing.reviewCount > 0 && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <div className="reviews-section" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
               <Star style={{ height: '1rem', width: '1rem', color: 'hsl(38 92% 50%)', fill: 'hsl(38 92% 50%)' }} />
               <span style={{ fontWeight: '500', fontSize: '0.875rem', color: 'hsl(200 25% 15%)' }}>
