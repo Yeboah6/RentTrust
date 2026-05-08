@@ -204,13 +204,16 @@ const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views
       rent_min: rental.rent_min || 0,
       rent_max: rental.rent_max || 0,
       sale_price: rental.sale_price || 0,
-      listing_status: rental.status || "unverified",
+      // listing_status: rental.status || "unverified",
+      effective_listing_status: rental.status === 'verified' ? 'approved' : (rental.status || 'unverified'),
       verification_status: rental.verification_status || null,
       total_reviews: rental.reviews_count || 0,
       views: rental.views_count || 0,
       inquiries: rental.inquiries_count || 0,
     }))
     : [];
+
+    console.log(properties.effective_listing_status);
 
   const renderStars = (rating) => {
     const ratingValue = Math.floor(rating || 0);
@@ -266,6 +269,26 @@ const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views
         </span>
       );
     }
+  };
+
+  const getVerificationButtonText = (listingStatus, verificationStatus) => {
+    if (verificationStatus === 'pending') {
+      return '⏳ Verification Pending';
+    }
+
+    if (listingStatus === 'pending') {
+      return 'Request Verification';
+    }
+
+    if ((listingStatus === 'approved' || listingStatus === 'verified') && verificationStatus === 'verified') {
+      return 'Approved';
+    }
+
+    return 'Request Verification';
+  };
+
+  const isVerificationButtonDisabled = (listingStatus, verificationStatus) => {
+    return verificationStatus === 'pending' || ((listingStatus === 'approved' || listingStatus === 'verified') && verificationStatus === 'verified');
   };
 
   return (
@@ -478,7 +501,7 @@ const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views
                         <div key={property.id} style={{ padding: '0.875rem', backgroundColor: 'hsl(40 33% 98%)', borderRadius: '0.625rem', border: '1px solid hsl(40 20% 88%)' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '0.5rem' }}>
                             <h3 style={{ margin: 0, fontSize: '0.875rem', fontWeight: '600', color: 'hsl(200 25% 15%)' }}>{property.title}</h3>
-                            {getStatusBadge(property.listing_status)}
+                            {getStatusBadge(property.effective_listing_status)}
                           </div>
                           <p style={{ margin: '0 0 0.5rem', fontSize: '0.75rem', color: 'hsl(200 15% 45%)' }}>{property.address}, {property.city}</p>
                           <div style={{ display: 'flex', gap: '1rem', fontSize: '0.75rem', color: 'hsl(200 15% 45%)' }}>
@@ -526,17 +549,21 @@ const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views
                                   }
                                 </p>
                               </div>
-                              {getStatusBadge(property.listing_status)}
+                              {getStatusBadge(property.effective_listing_status)}
                             </div>
                             <div className="mobile-button-group" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'clamp(0.375rem, 1.5vw, 0.5rem)', marginBottom: 'clamp(0.375rem, 1.5vw, 0.5rem)' }}>
                               <button onClick={() => handleViewClick(property)} className="action-button" style={{ padding: 'clamp(0.375rem, 2vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem)', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.25rem, 1.5vw, 0.375rem)', backgroundColor: 'white', color: 'hsl(174 62% 32%)', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', fontWeight: '500', cursor: 'pointer', textAlign: 'center' }}>View</button>
                               <button onClick={() => handleEditClick(property)} className="action-button" style={{ padding: 'clamp(0.375rem, 2vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem)', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.25rem, 1.5vw, 0.375rem)', backgroundColor: 'white', color: 'hsl(174 62% 32%)', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', fontWeight: '500', cursor: 'pointer', textAlign: 'center' }}>Edit</button>
                             </div>
-                            {property.listing_status !== 'approved' && (
-                              <button onClick={() => { if (property.verification_status !== 'pending') { setSelectedRentalForVerification(property); setShowVerificationModal(true); } }} className="action-button mobile-full-width" style={{ width: '100%', padding: 'clamp(0.375rem, 2vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem)', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.25rem, 1.5vw, 0.375rem)', backgroundColor: property.verification_status === 'pending' ? 'hsl(48 96% 89%)' : 'white', color: property.verification_status === 'pending' ? 'hsl(48 96% 30%)' : 'hsl(174 62% 32%)', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', fontWeight: '500', cursor: property.verification_status === 'pending' ? 'default' : 'pointer', opacity: property.verification_status === 'pending' ? 0.7 : 1 }}>
-                                {property.verification_status === 'pending' ? '⏳ Verification Pending' : 'Request Verification'}
-                              </button>
-                            )}
+                            <button onClick={() => {
+                                const disabled = isVerificationButtonDisabled(property.effective_listing_status, property.verification_status);
+                                if (!disabled) {
+                                  setSelectedRentalForVerification(property);
+                                  setShowVerificationModal(true);
+                                }
+                              }} className="action-button mobile-full-width" style={{ width: '100%', padding: 'clamp(0.375rem, 2vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem)', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.25rem, 1.5vw, 0.375rem)', backgroundColor: property.verification_status === 'pending' ? 'hsl(48 96% 89%)' : 'white', color: isVerificationButtonDisabled(property.effective_listing_status, property.verification_status) ? 'hsl(48 96% 30%)' : 'hsl(174 62% 32%)', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', fontWeight: '500', cursor: isVerificationButtonDisabled(property.effective_listing_status, property.verification_status) ? 'default' : 'pointer', opacity: isVerificationButtonDisabled(property.effective_listing_status, property.verification_status) ? 0.7 : 1 }}>
+                              {getVerificationButtonText(property.effective_listing_status, property.verification_status)}
+                            </button>
                           </div>
                         ))}
                       </div>
@@ -560,20 +587,24 @@ const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views
                                   GH₵{Math.round(property.sale_price).toLocaleString()}
                                 </p>
                               </div>
-                              {getStatusBadge(property.listing_status)}
+                              {getStatusBadge(property.effective_listing_status)}
                             </div>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'clamp(0.375rem, 1.5vw, 0.5rem)', marginBottom: 'clamp(0.375rem, 1.5vw, 0.5rem)' }}>
                               <button onClick={() => handleViewClick(property)} className="action-button" style={{ padding: 'clamp(0.375rem, 2vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem)', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.25rem, 1.5vw, 0.375rem)', backgroundColor: 'white', color: 'hsl(174 62% 32%)', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', fontWeight: '500', cursor: 'pointer', textAlign: 'center' }}>View</button>
                               <button onClick={() => handleEditClick(property)} className="action-button" style={{ padding: 'clamp(0.375rem, 2vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem)', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.25rem, 1.5vw, 0.375rem)', backgroundColor: 'white', color: 'hsl(174 62% 32%)', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', fontWeight: '500', cursor: 'pointer', textAlign: 'center' }}>Edit</button>
                             </div>
-                            {property.listing_status !== 'approved' && (
-                              <button onClick={() => { if (property.verification_status !== 'pending') { setSelectedRentalForVerification(property); setShowVerificationModal(true); } }} className="action-button" style={{ width: '100%', padding: 'clamp(0.375rem, 2vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem)', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.25rem, 1.5vw, 0.375rem)', backgroundColor: property.verification_status === 'pending' ? 'hsl(48 96% 89%)' : 'white', color: property.verification_status === 'pending' ? 'hsl(48 96% 30%)' : 'hsl(38 92% 50%)', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', fontWeight: '500', cursor: property.verification_status === 'pending' ? 'default' : 'pointer', opacity: property.verification_status === 'pending' ? 0.7 : 1 }}>
-                                {property.verification_status === 'pending' ? '⏳ Verification Pending' : 'Request Verification'}
-                              </button>
-                            )}
-                            <button onClick={() => handleFeatureClick(property)} className="action-button" style={{ width: '100%', padding: 'clamp(0.375rem, 2vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem)', border: '1px solid hsl(38 92% 50%)', borderRadius: 'clamp(0.25rem, 1.5vw, 0.375rem)', backgroundColor: 'hsl(38 92% 50%)', color: 'white', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', fontWeight: '500', cursor: 'pointer' }}>
-                              ⭐ Feature Listing
+                            <button onClick={() => {
+                                const disabled = isVerificationButtonDisabled(property.effective_listing_status, property.verification_status);
+                                if (!disabled) {
+                                  setSelectedRentalForVerification(property);
+                                  setShowVerificationModal(true);
+                                }
+                              }} className="action-button" style={{ width: '100%', padding: 'clamp(0.375rem, 2vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem)', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.25rem, 1.5vw, 0.375rem)', backgroundColor: property.verification_status === 'pending' ? 'hsl(48 96% 89%)' : 'white', color: isVerificationButtonDisabled(property.effective_listing_status, property.verification_status) ? 'hsl(48 96% 30%)' : 'hsl(38 92% 50%)', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', fontWeight: '500', cursor: isVerificationButtonDisabled(property.effective_listing_status, property.verification_status) ? 'default' : 'pointer', opacity: isVerificationButtonDisabled(property.effective_listing_status, property.verification_status) ? 0.7 : 1 }}>
+                              {getVerificationButtonText(property.effective_listing_status, property.verification_status)}
                             </button>
+                            {/* <button onClick={() => handleFeatureClick(property)} className="action-button" style={{ width: '100%', padding: 'clamp(0.375rem, 2vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem)', border: '1px solid hsl(38 92% 50%)', borderRadius: 'clamp(0.25rem, 1.5vw, 0.375rem)', backgroundColor: 'hsl(38 92% 50%)', color: 'white', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', fontWeight: '500', cursor: 'pointer' }}>
+                              ⭐ Feature Listing
+                            </button> */}
                           </div>
                         ))}
                       </div>
@@ -741,7 +772,7 @@ const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views
                                 }
                               </p>
                             </div>
-                            {getStatusBadge(property.listing_status)}
+                            {getStatusBadge(property.effective_listing_status)}
                           </div>
 
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 'clamp(0.75rem, 2vw, 1rem)', borderTop: '1px solid hsl(40 20% 88%)' }}>
