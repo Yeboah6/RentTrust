@@ -14,7 +14,7 @@ const Home = ({ featuredRentals, featuredSales, rentalAreas, saleAreas, totalLis
       <Header />
 
       <main className="flex-1">
-         <HeroSearch totalAreas={totalAreas} totalListings={totalListings} totalVerifiedAgents={totalVerifiedAgents} users={users} />
+        <HeroSearch totalAreas={totalAreas} totalListings={totalListings} totalVerifiedAgents={totalVerifiedAgents} users={users} />
         <FeaturedListings featuredRentals={featuredRentals} featuredSales={featuredSales} />
         <PopularAreas rentalAreas={rentalAreas} saleAreas={saleAreas} />
         <RentCalculator />

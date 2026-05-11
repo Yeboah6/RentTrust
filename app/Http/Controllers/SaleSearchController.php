@@ -72,6 +72,32 @@ class SaleSearchController extends Controller
     }
 
     /**
+     * Get sale cities
+     */
+    public function cities()
+    {
+        try {
+            $cities = Rental::where('purpose', 'sale')
+                ->where('is_sold', false)
+                ->whereNotNull('area')
+                ->where('area', '<>', '')
+                ->distinct()
+                ->orderBy('area')
+                ->pluck('area');
+
+            return response()->json([
+                'cities' => $cities,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to fetch sale cities', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json(['cities' => []], 500);
+        }
+    }
+
+    /**
      * Get sale areas
      */
     public function areas()

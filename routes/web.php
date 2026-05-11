@@ -36,7 +36,8 @@ Route::prefix('rent')->group(function () {
     Route::get('/areas/{city}/{area}', [RentalSearchController::class, 'showArea'])->name('areas.show');
     Route::get('/api/more', [RentalSearchController::class, 'getMore'])->name('rent.more');
     Route::get('/listings', [RentalSearchController::class, 'listings']);
-    Route::get('/calculator', [RentController::class, 'calculate']);
+    Route::get('/api/cities', [RentalSearchController::class, 'cities'])->name('rent.cities');
+    // Route::get('/calculator', [RentController::class, 'calculate']);
 });
 
 // ── Sale Search Routes ────────────────────────────────────────────────────────
@@ -46,6 +47,7 @@ Route::prefix('buy')->group(function () {
     Route::get('/areas/{city}/{area}', [SaleSearchController::class, 'showArea'])->name('buy.areas.show');
     Route::get('/{rent}', [SaleSearchController::class, 'show'])->where(['rent' => '[0-9]+']);
     Route::get('/api/more', [SaleSearchController::class, 'getMore'])->name('buy.more');
+    Route::get('/api/cities', [SaleSearchController::class, 'cities'])->name('buy.cities');
 });
 
 // tracking endpoints

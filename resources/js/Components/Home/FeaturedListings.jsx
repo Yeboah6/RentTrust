@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 import { Link } from "@inertiajs/react";
-import { ArrowRight, MapPin, CheckCircle2, Shield, Sparkles } from 'lucide-react';
+import { ArrowRight, MapPin, Shield, Sparkles, BedDouble, Bath } from 'lucide-react';
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
 
 const parseImages = (images) => {
   try {
@@ -16,6 +20,24 @@ const parseImages = (images) => {
   }
 };
 
+/**
+ * Resolve an image src: if the value already looks like an absolute URL or a
+ * root-relative path (starts with / or http), use it as-is; otherwise prefix
+ * the storage path.
+ */
+const resolveImageSrc = (value) => {
+  if (!value) return null;
+  if (/^https?:\/\//i.test(value) || value.startsWith('/')) return value;
+  return `/storage/rental_images/${value}`;
+};
+
+const formatPrice = (price) =>
+  `GH₵${Number(price).toLocaleString()}`;
+
+// ---------------------------------------------------------------------------
+// PropertyCard
+// ---------------------------------------------------------------------------
+
 const PropertyCard = ({
   id,
   title,
@@ -29,18 +51,17 @@ const PropertyCard = ({
   agent_name,
   status,
   is_featured,
+  bedrooms,
+  bathrooms,
   images = [],
 }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [imageError, setImageError] = useState(false);
 
   const imagesArray = parseImages(images);
-  const firstImage = imagesArray.length > 0 ? imagesArray[0] : null;
-  const isAgentVerified = status === 'verified';
-  const linkHref = purpose === 'sale' ? `/buy/${id}` : `/rent/${id}`;
-
-  const formatPrice = (price) =>
-    `GH₵${Number(price).toLocaleString()}`;
+  const firstImage  = imagesArray.length > 0 ? resolveImageSrc(imagesArray[0]) : null;
+  const isVerified  = status === 'verified';
+  const linkHref    = purpose === 'sale' ? `/buy/${id}` : `/rent/${id}`;
 
   return (
     <Link
@@ -100,7 +121,7 @@ const PropertyCard = ({
       }}>
         {firstImage && !imageError ? (
           <img
-            src={`/storage/rental_images/${firstImage}`}
+            src={firstImage}
             alt={title || 'Property'}
             onError={() => setImageError(true)}
             style={{
@@ -128,7 +149,7 @@ const PropertyCard = ({
           </div>
         )}
 
-        {/* Image count */}
+        {/* Image count badge */}
         {imagesArray.length > 1 && !imageError && (
           <div style={{
             position: 'absolute',
@@ -165,7 +186,7 @@ const PropertyCard = ({
         </div>
       </div>
 
-      {/* Content */}
+      {/* Card body */}
       <div style={{ padding: '1rem' }}>
         {/* Title */}
         <h3 style={{
@@ -186,13 +207,41 @@ const PropertyCard = ({
           display: 'flex',
           alignItems: 'center',
           gap: '0.2rem',
-          marginBottom: '0.75rem',
+          marginBottom: '0.65rem',
         }}>
           <MapPin style={{ height: '0.8rem', width: '0.8rem', color: 'hsl(200 15% 50%)', flexShrink: 0 }} />
-          <span style={{ fontSize: '0.8rem', color: 'hsl(200 15% 50%)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            {area}, {city}
+          <span style={{
+            fontSize: '0.8rem',
+            color: 'hsl(200 15% 50%)',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+          }}>
+            {[area, city].filter(Boolean).join(', ')}
           </span>
         </div>
+
+        {/* Bed / Bath */}
+        {(bedrooms != null || bathrooms != null) && (
+          <div style={{
+            display: 'flex',
+            gap: '0.75rem',
+            marginBottom: '0.65rem',
+          }}>
+            {bedrooms != null && (
+              <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.78rem', color: 'hsl(200 15% 45%)' }}>
+                <BedDouble style={{ width: '0.85rem', height: '0.85rem' }} />
+                {bedrooms} bed{bedrooms !== 1 ? 's' : ''}
+              </span>
+            )}
+            {bathrooms != null && (
+              <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.78rem', color: 'hsl(200 15% 45%)' }}>
+                <Bath style={{ width: '0.85rem', height: '0.85rem' }} />
+                {bathrooms} bath{bathrooms !== 1 ? 's' : ''}
+              </span>
+            )}
+          </div>
+        )}
 
         {/* Price */}
         <div style={{ marginBottom: '0.85rem' }}>
@@ -204,14 +253,13 @@ const PropertyCard = ({
           <div style={{ fontSize: '0.7rem', color: 'hsl(200 15% 55%)', marginTop: '0.1rem' }}>
             {purpose === 'sale'
               ? 'asking price'
-              : `per month · ${advance_duration} ${advance_duration === 1 ? 'yr' : 'yrs'} advance`}
+              : `per month · ${advance_duration} ${Number(advance_duration) === 1 ? 'yr' : 'yrs'} advance`}
           </div>
         </div>
 
-        {/* Divider */}
+        {/* Footer: agent + verified */}
         <div style={{ borderTop: '1px solid hsl(40 20% 90%)', paddingTop: '0.75rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
-            {/* Agent */}
             {agent_name ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', minWidth: 0 }}>
                 <div style={{
@@ -243,8 +291,7 @@ const PropertyCard = ({
               <span style={{ fontSize: '0.78rem', color: 'hsl(200 15% 60%)' }}>No agent</span>
             )}
 
-            {/* Verified badge */}
-            {isAgentVerified && (
+            {isVerified && (
               <span style={{
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -267,6 +314,10 @@ const PropertyCard = ({
     </Link>
   );
 };
+
+// ---------------------------------------------------------------------------
+// SectionHeader
+// ---------------------------------------------------------------------------
 
 const SectionHeader = ({ title, subtitle, viewAllHref, viewAllLabel }) => (
   <div style={{
@@ -309,8 +360,8 @@ const SectionHeader = ({ title, subtitle, viewAllHref, viewAllLabel }) => (
         transition: 'background-color 0.15s',
         whiteSpace: 'nowrap',
       }}
-      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(174 62% 32% / 0.06)'}
-      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'hsl(174 62% 32% / 0.06)')}
+      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
     >
       {viewAllLabel}
       <ArrowRight style={{ width: '0.9rem', height: '0.9rem' }} />
@@ -318,9 +369,40 @@ const SectionHeader = ({ title, subtitle, viewAllHref, viewAllLabel }) => (
   </div>
 );
 
+// ---------------------------------------------------------------------------
+// ListingGrid
+// ---------------------------------------------------------------------------
+
+const ListingGrid = ({ listings, purpose }) => (
+  <div style={{
+    display: 'grid',
+    /*
+     * Cap at 4 columns so cards don't become excessively wide on large screens.
+     * minmax(220px, 1fr) alone would let 2 cards fill a 1400px container at
+     * ~700px each; the repeat(auto-fill, ...) + max-width on the container
+     * handles the rest, but an explicit clamp keeps things tighter.
+     */
+    gridTemplateColumns: 'repeat(auto-fill, minmax(min(220px, 100%), 1fr))',
+    maxWidth: '1200px', // aligns with container but prevents runaway widths
+    gap: '1.25rem',
+  }}>
+    {listings.map((listing) => (
+      <PropertyCard
+        key={`${purpose}-${listing.id}`}
+        {...listing}
+        purpose={purpose}
+      />
+    ))}
+  </div>
+);
+
+// ---------------------------------------------------------------------------
+// FeaturedListings (main export)
+// ---------------------------------------------------------------------------
+
 const FeaturedListings = ({ featuredRentals = [], featuredSales = [] }) => {
   const hasRentals = featuredRentals?.length > 0;
-  const hasSales = featuredSales?.length > 0;
+  const hasSales   = featuredSales?.length  > 0;
 
   if (!hasRentals && !hasSales) {
     return (
@@ -344,55 +426,94 @@ const FeaturedListings = ({ featuredRentals = [], featuredSales = [] }) => {
       <section className="featured-section" style={{ padding: '4rem 0', backgroundColor: 'hsl(40 33% 98%)' }}>
         <div className="container mx-auto px-4">
 
+          {/* Hero header */}
+          <div style={{ marginBottom: '3rem' }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              justifyContent: 'space-between',
+              gap: '1rem',
+              flexWrap: 'wrap',
+            }}>
+              <div>
+                <h2 style={{
+                  margin: '0 0 0.5rem',
+                  fontSize: 'clamp(2rem, 3.5vw, 2.6rem)',
+                  fontWeight: '700',
+                  color: 'hsl(200 25% 13%)',
+                  letterSpacing: '-0.03em',
+                  lineHeight: '1.05',
+                }}>
+                  Featured Listings
+                </h2>
+                <p style={{
+                  margin: 0,
+                  fontSize: '1rem',
+                  color: 'hsl(200 15% 48%)',
+                  maxWidth: '40rem',
+                }}>
+                  Discover the best rental and sale properties on the platform, highlighted for their quality, value, and agent trust.
+                </p>
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                {hasRentals && (
+                  <span style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.4rem',
+                    padding: '0.65rem 1rem',
+                    borderRadius: '9999px',
+                    backgroundColor: 'hsl(174 62% 32% / 0.08)',
+                    color: 'hsl(174 62% 32%)',
+                    fontSize: '0.9rem',
+                    fontWeight: '600',
+                  }}>
+                    {featuredRentals.length} Rentals
+                  </span>
+                )}
+                {hasSales && (
+                  <span style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.4rem',
+                    padding: '0.65rem 1rem',
+                    borderRadius: '9999px',
+                    backgroundColor: 'hsl(38 92% 55% / 0.08)',
+                    color: 'hsl(28 80% 40%)',
+                    fontSize: '0.9rem',
+                    fontWeight: '600',
+                  }}>
+                    {featuredSales.length} For Sale
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Rentals */}
           {hasRentals && (
             <div style={{ marginBottom: hasSales ? '4rem' : 0 }}>
               <SectionHeader
-                title="Latest Rentals"
-                subtitle="Transparent pricing, no hidden fees"
+                title="Featured Rentals"
+                subtitle="Recommended rental listings from verified agents"
                 viewAllHref="/rent/listings"
                 viewAllLabel="View all rentals"
               />
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
-                gap: '1.25rem',
-              }}>
-                {featuredRentals.map((listing) => (
-                  <PropertyCard
-                    key={`rental-${listing.id}`}
-                    {...listing}
-                    purpose="rent"
-                    is_featured={listing.is_featured}
-                    status={listing.status}
-                  />
-                ))}
-              </div>
+              <ListingGrid listings={featuredRentals} purpose="rent" />
             </div>
           )}
 
+          {/* Sales */}
           {hasSales && (
             <div>
               <SectionHeader
-                title="Properties for Sale"
-                subtitle="Homes and land across Ghana's major cities"
+                title="Featured Properties for Sale"
+                subtitle="High-priority sale listings from top agents"
                 viewAllHref="/buy/listings"
                 viewAllLabel="View all for sale"
               />
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
-                gap: '1.25rem',
-              }}>
-                {featuredSales.map((listing) => (
-                  <PropertyCard
-                    key={`sale-${listing.id}`}
-                    {...listing}
-                    purpose="sale"
-                    is_featured={listing.is_featured}
-                    status={listing.status}
-                  />
-                ))}
-              </div>
+              <ListingGrid listings={featuredSales} purpose="sale" />
             </div>
           )}
 

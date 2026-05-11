@@ -477,6 +477,7 @@ const RentalListingsPage = ({ listings: initialListingsData = {} }) => {
   const [lastId, setLastId] = useState(null);
   const [hasMore, setHasMore] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+  const [cityOptions, setCityOptions] = useState([{ value: "", label: "All Cities" }]);
 
   // Initialize listings on component mount
   useEffect(() => {
@@ -497,6 +498,29 @@ const RentalListingsPage = ({ listings: initialListingsData = {} }) => {
       setHasMore(initialListingsData.has_more !== false);
     }
   }, [initialListingsData]);
+
+  useEffect(() => {
+    const loadCities = async () => {
+      try {
+        const response = await fetch('/rent/api/cities');
+        if (!response.ok) {
+          throw new Error(`Failed to fetch cities: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const options = [
+          { value: '', label: 'All Cities' },
+          ...data.cities.map((city) => ({ value: city.toLowerCase(), label: city }))
+        ];
+
+        setCityOptions(options);
+      } catch (error) {
+        console.error('Failed to load rental cities:', error);
+      }
+    };
+
+    loadCities();
+  }, []);
 
   const formatListings = (dbListings) => {
     return dbListings.map(listing => ({
@@ -579,14 +603,6 @@ const RentalListingsPage = ({ listings: initialListingsData = {} }) => {
       setIsLoading(false);
     }
   };
-
-  const cityOptions = [
-    { value: "", label: "All Cities" },
-    { value: "accra", label: "Accra" },
-    { value: "kumasi", label: "Kumasi" },
-    { value: "tema", label: "Tema" },
-    { value: "tamale", label: "Tamale" }
-  ];
 
   const sortOptions = [
     { value: "recent", label: "Most Recent" },

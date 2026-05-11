@@ -68,6 +68,31 @@ class RentalSearchController extends Controller
     }
 
     /**
+     * Get rental cities
+     */
+    public function cities()
+    {
+        try {
+            $cities = Rental::where('purpose', 'rent')
+                ->whereNotNull('area')
+                ->where('area', '<>', '')
+                ->distinct()
+                ->orderBy('area')
+                ->pluck('area');
+
+            return response()->json([
+                'cities' => $cities,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to fetch rental cities', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json(['cities' => []], 500);
+        }
+    }
+
+    /**
      * Get rental areas
      */
 

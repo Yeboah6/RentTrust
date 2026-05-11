@@ -507,6 +507,7 @@ const SaleListingsPage = ({ listings: initialListingsData = {}, filters = {} }) 
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+  const [cityOptions, setCityOptions] = useState([{ value: "", label: "All Cities" }]);
 
   // Initialize listings and filters on component mount
   useEffect(() => {
@@ -531,12 +532,35 @@ const SaleListingsPage = ({ listings: initialListingsData = {}, filters = {} }) 
 
     // apply filters passed from server
     if (filters.city) {
-      setSelectedCity(filters.city);
+      setSelectedCity(filters.city.toLowerCase());
     }
     if (filters.area) {
       setSelectedArea(filters.area.replace(/-/g, ' '));
     }
   }, [initialListingsData, filters]);
+
+  useEffect(() => {
+    const loadCities = async () => {
+      try {
+        const response = await fetch('/buy/api/cities');
+        if (!response.ok) {
+          throw new Error(`Failed to fetch cities: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const options = [
+          { value: '', label: 'All Cities' },
+          ...data.cities.map((city) => ({ value: city.toLowerCase(), label: city }))
+        ];
+
+        setCityOptions(options);
+      } catch (error) {
+        console.error('Failed to load sale cities:', error);
+      }
+    };
+
+    loadCities();
+  }, []);
 
 
   const formatListings = (dbListings) => {
@@ -617,14 +641,6 @@ const SaleListingsPage = ({ listings: initialListingsData = {}, filters = {} }) 
       setIsLoading(false);
     }
   };
-
-  const cityOptions = [
-    { value: "", label: "All Cities" },
-    { value: "accra", label: "Accra" },
-    { value: "kumasi", label: "Kumasi" },
-    { value: "tema", label: "Tema" },
-    { value: "tamale", label: "Tamale" }
-  ];
 
   const sortOptions = [
     { value: "recent", label: "Most Recent" },
