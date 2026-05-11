@@ -449,13 +449,6 @@ const PropertyCard = ({ listing }) => {
           </div>
         </div>
 
-        {/* <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}> */}
-          {/* <Calendar style={{ height: '1rem', width: '1rem', color: 'hsl(200 15% 45%)' }} /> */}
-          {/* <span style={{ fontSize: '0.875rem', color: 'hsl(200 15% 45%)' }}>
-            {listing.advanceDuration} {listing.advanceDuration === 1 ? 'year' : 'years'} advance
-          </span> */}
-        {/* </div> */}
-
         {listing.agentName && (
           <div className="agent-section" style={{ 
             paddingTop: '0.75rem', 

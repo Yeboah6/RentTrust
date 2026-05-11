@@ -88,6 +88,13 @@ Route::prefix('super-admin')
     Route::post('listings/{listing}/suspend', [ListingController::class, 'suspend'])
         ->name('listings.suspend');
 
+    // Verification action routes
+    Route::post('listings/verification/{verification_request_id}/approve', [ListingController::class, 'approveVerification'])
+        ->name('listings.verification.approve');
+
+    Route::post('listings/verification/{verification_request_id}/reject',  [ListingController::class, 'rejectVerification'])
+        ->name('listings.verification.reject');
+
     // ── Admin accounts ────────────────────────────────────────────────────────
     Route::resource('admins', AdminController::class)
         ->parameters(['admins' => 'user']);

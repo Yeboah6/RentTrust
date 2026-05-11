@@ -602,9 +602,6 @@ const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views
                               }} className="action-button" style={{ width: '100%', padding: 'clamp(0.375rem, 2vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem)', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.25rem, 1.5vw, 0.375rem)', backgroundColor: property.verification_status === 'pending' ? 'hsl(48 96% 89%)' : 'white', color: isVerificationButtonDisabled(property.effective_listing_status, property.verification_status) ? 'hsl(48 96% 30%)' : 'hsl(38 92% 50%)', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', fontWeight: '500', cursor: isVerificationButtonDisabled(property.effective_listing_status, property.verification_status) ? 'default' : 'pointer', opacity: isVerificationButtonDisabled(property.effective_listing_status, property.verification_status) ? 0.7 : 1 }}>
                               {getVerificationButtonText(property.effective_listing_status, property.verification_status)}
                             </button>
-                            {/* <button onClick={() => handleFeatureClick(property)} className="action-button" style={{ width: '100%', padding: 'clamp(0.375rem, 2vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem)', border: '1px solid hsl(38 92% 50%)', borderRadius: 'clamp(0.25rem, 1.5vw, 0.375rem)', backgroundColor: 'hsl(38 92% 50%)', color: 'white', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', fontWeight: '500', cursor: 'pointer' }}>
-                              ⭐ Feature Listing
-                            </button> */}
                           </div>
                         ))}
                       </div>

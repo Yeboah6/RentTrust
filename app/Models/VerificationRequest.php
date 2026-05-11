@@ -93,11 +93,37 @@ class VerificationRequest extends Model
     }
 
     /**
-     * Scope to get rejected requests
+     * Get all documents as a combined array with URLs
      */
-    public function scopeRejected($query)
+    public function getDocumentsAttribute()
     {
-        return $query->where('status', 'rejected');
+        $documents = [];
+
+        $documentTypes = [
+            'proof_documents' => 'Proof Documents',
+            'ownership_documents' => 'Ownership Documents',
+            'license_documents' => 'License Documents',
+            'utility_bills' => 'Utility Bills',
+        ];
+
+        foreach ($documentTypes as $field => $label) {
+            $docs = $this->$field;
+            if (is_string($docs)) {
+                $docs = json_decode($docs, true);
+            }
+            if ($docs && is_array($docs)) {
+                foreach ($docs as $doc) {
+                    if (is_array($doc) && isset($doc['url'])) {
+                        $documents[] = [
+                            'original_name' => $doc['original_name'] ?? basename($doc['path'] ?? ''),
+                            'url' => $doc['url'],
+                        ];
+                    }
+                }
+            }
+        }
+
+        return $documents;
     }
 
     /**

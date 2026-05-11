@@ -50,20 +50,126 @@ class ListingController extends Controller
 
     public function verification()
     {
-        $pendingListings = Rental::where('status', 'pending')
-            ->with(['user'])
-            ->withCount(['views', 'inquiries', 'reviews'])
-            ->latest()
+        $verificationRequests = \App\Models\VerificationRequest::with(['rental', 'agent'])
+            ->orderBy('created_at', 'desc')
             ->paginate(20);
 
+        // Append documents to each request
+        $verificationRequests->getCollection()->transform(function ($request) {
+            $request->documents = $request->documents;
+            return $request;
+        });
+
         $metrics = [
-            'pending' => $pendingListings->total(),
+            'pending' => $verificationRequests->total(),
         ];
 
         return Inertia::render('SuperAdmin/Listings/Verification', [
-            'listings' => $pendingListings,
+            'listings' => $verificationRequests,
             'metrics'  => $metrics,
         ]);
+    }
+
+    // ─── Approve Verification ──────────────────────────────────────────────────
+
+    public function approveVerification(\App\Models\VerificationRequest $verification_request)
+    {
+        if ($verification_request->status === 'approved') {
+            return back()->with('error', 'This verification request is already approved.');
+        }
+
+        $oldStatus = $verification_request->status;
+        $verification_request->update([
+            'status' => 'approved',
+            'reviewed_at' => now(),
+            'reviewed_by' => auth()->id(),
+        ]);
+
+        // Update the associated rental's verification status
+        if ($verification_request->rental) {
+            $verification_request->rental->update([
+                'is_verified' => true,
+                'verification_status' => 'verified',
+                'verified_at' => now(),
+            ]);
+        }
+
+        // Audit log
+        $listingTitle = $verification_request->rental ? $verification_request->rental->title : 'Unknown Listing';
+        $agentName = $verification_request->agent ? $verification_request->agent->name : 'Unknown Agent';
+        \App\Models\AdminAuditLog::record('verification', "Verification request approved: {$listingTitle}", [
+            'affected_user' => $agentName,
+            'affected_id' => $verification_request->id,
+            'notes' => "Status changed from {$oldStatus} to approved",
+            'properties' => [
+                'old_status' => $oldStatus,
+                'new_status' => 'approved',
+                'verification_request_id' => $verification_request->id,
+                'rental_id' => $verification_request->rental_id,
+            ],
+        ]);
+
+        Log::info('SuperAdmin approved verification request', [
+            'verification_request_id' => $verification_request->id,
+            'rental_id' => $verification_request->rental_id,
+            'admin_id' => auth()->id(),
+        ]);
+
+        return back()->with('success', "Verification request for \"{$listingTitle}\" approved successfully.");
+    }
+
+    // ─── Reject Verification ───────────────────────────────────────────────────
+
+    public function rejectVerification(Request $request, \App\Models\VerificationRequest $verification_request)
+    {
+        $request->validate([
+            'rejection_reason' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        if ($verification_request->status === 'rejected') {
+            return back()->with('error', 'This verification request is already rejected.');
+        }
+
+        $oldStatus = $verification_request->status;
+        $verification_request->update([
+            'status' => 'rejected',
+            'rejection_reason' => $request->input('rejection_reason'),
+            'reviewed_at' => now(),
+            'reviewed_by' => auth()->id(),
+        ]);
+
+        // Update the associated rental's verification status
+        if ($verification_request->rental) {
+            $verification_request->rental->update([
+                'verification_status' => 'rejected',
+                'verification_rejection_reason' => $request->input('rejection_reason'),
+            ]);
+        }
+
+        // Audit log
+        $listingTitle = $verification_request->rental ? $verification_request->rental->title : 'Unknown Listing';
+        $agentName = $verification_request->agent ? $verification_request->agent->name : 'Unknown Agent';
+        \App\Models\AdminAuditLog::record('verification', "Verification request rejected: {$listingTitle}", [
+            'affected_user' => $agentName,
+            'affected_id' => $verification_request->id,
+            'notes' => "Status changed from {$oldStatus} to rejected",
+            'properties' => [
+                'old_status' => $oldStatus,
+                'new_status' => 'rejected',
+                'rejection_reason' => $request->input('rejection_reason'),
+                'verification_request_id' => $verification_request->id,
+                'rental_id' => $verification_request->rental_id,
+            ],
+        ]);
+
+        Log::info('SuperAdmin rejected verification request', [
+            'verification_request_id' => $verification_request->id,
+            'rental_id' => $verification_request->rental_id,
+            'reason' => $request->input('rejection_reason'),
+            'admin_id' => auth()->id(),
+        ]);
+
+        return back()->with('success', "Verification request for \"{$listingTitle}\" has been rejected.");
     }
 
     // ─── Create ───────────────────────────────────────────────────────────────
@@ -703,70 +809,70 @@ class ListingController extends Controller
     // ─── Private helpers ──────────────────────────────────────────────────────
  
     private function formatListing(Rental $listing, $regions = null): array
-{
-    // ── Resolve property_type to slug so frontend <FSelect> matches ──────────
-    // DB may store name ("Apartment") or slug ("apartment") — normalise to slug
-    $rawPropType    = $listing->property_type ?? '';
-    $propertyTypeSlug = \App\Models\PropertyType::where('name', $rawPropType)
-                            ->orWhere('slug', $rawPropType)
-                            ->value('slug') ?? \Illuminate\Support\Str::slug($rawPropType);
-
-    // ── Resolve city string → matched region/child name for the select ────────
-    // The select options are region.name and child.name strings.
-    // We store city in the DB — find the matching location name if regions passed.
-    $cityValue = $listing->city ?? $listing->location ?? '';
-    if ($regions && $cityValue) {
-        $matched = null;
-        foreach ($regions as $region) {
-            if (strcasecmp($region->name, $cityValue) === 0) {
-                $matched = $region->name;
-                break;
-            }
-            foreach ($region->children ?? [] as $child) {
-                if (strcasecmp($child->name, $cityValue) === 0) {
-                    $matched = $child->name;
-                    break 2;
+    {
+        // ── Resolve property_type to slug so frontend <FSelect> matches ──────────
+        // DB may store name ("Apartment") or slug ("apartment") — normalise to slug
+        $rawPropType    = $listing->property_type ?? '';
+        $propertyTypeSlug = \App\Models\PropertyType::where('name', $rawPropType)
+                                ->orWhere('slug', $rawPropType)
+                                ->value('slug') ?? \Illuminate\Support\Str::slug($rawPropType);
+    
+        // ── Resolve city string → matched region/child name for the select ────────
+        // The select options are region.name and child.name strings.
+        // We store city in the DB — find the matching location name if regions passed.
+        $cityValue = $listing->city ?? $listing->location ?? '';
+        if ($regions && $cityValue) {
+            $matched = null;
+            foreach ($regions as $region) {
+                if (strcasecmp($region->name, $cityValue) === 0) {
+                    $matched = $region->name;
+                    break;
+                }
+                foreach ($region->children ?? [] as $child) {
+                    if (strcasecmp($child->name, $cityValue) === 0) {
+                        $matched = $child->name;
+                        break 2;
+                    }
                 }
             }
+            $cityValue = $matched ?? $cityValue; // fall back to raw value if no match
         }
-        $cityValue = $matched ?? $cityValue; // fall back to raw value if no match
+    
+        return [
+            'id'               => $listing->id,
+            'title'            => $listing->title,
+            'description'      => $listing->description,
+            'purpose'          => $listing->purpose,
+            'listing_type'     => $listing->purpose,
+            'property_type'    => $propertyTypeSlug,          // ← normalised to slug
+            'sale_price'       => $listing->sale_price,
+            'rent_min'         => $listing->rent_min,
+            'rent_max'         => $listing->rent_max,
+            'advance_duration' => $listing->advance_duration,
+            'currency'         => $listing->currency ?? 'GH₵',
+            'status'           => $listing->status,
+            'city'             => $cityValue,                 // ← matched to select option
+            'area'             => $listing->area,
+            'location'         => $cityValue,                 // ← same resolved value
+            'address'          => $listing->address,
+            'bedrooms'         => $listing->bedrooms,
+            'bathrooms'        => $listing->bathrooms,
+            'is_featured'      => (bool) $listing->is_featured,
+            'is_verified'      => (bool) $listing->is_verified,
+            'is_sold'          => (bool) ($listing->is_sold ?? false),
+            'views_count'      => $listing->views_count ?? 0, // ← now populated via loadCount
+            'inquiries_count'  => $listing->inquiries_count ?? 0,
+            'flagged_count'    => $listing->flagged_count ?? 0,
+            'images'           => $this->resolveImages($listing),
+            'amenities'        => is_array($listing->amenities) ? $listing->amenities : [],
+            'agent_id'         => $listing->user_id,
+            'agent_name'       => $listing->agent_name ?? $listing->user?->name,
+            'agent_phone'      => $listing->agent_phone,
+            'agent_email'      => $listing->agent_email,
+            'created_at'       => $listing->created_at?->toISOString(),
+            'updated_at'       => $listing->updated_at?->toISOString(),
+        ];
     }
-
-    return [
-        'id'               => $listing->id,
-        'title'            => $listing->title,
-        'description'      => $listing->description,
-        'purpose'          => $listing->purpose,
-        'listing_type'     => $listing->purpose,
-        'property_type'    => $propertyTypeSlug,          // ← normalised to slug
-        'sale_price'       => $listing->sale_price,
-        'rent_min'         => $listing->rent_min,
-        'rent_max'         => $listing->rent_max,
-        'advance_duration' => $listing->advance_duration,
-        'currency'         => $listing->currency ?? 'GH₵',
-        'status'           => $listing->status,
-        'city'             => $cityValue,                 // ← matched to select option
-        'area'             => $listing->area,
-        'location'         => $cityValue,                 // ← same resolved value
-        'address'          => $listing->address,
-        'bedrooms'         => $listing->bedrooms,
-        'bathrooms'        => $listing->bathrooms,
-        'is_featured'      => (bool) $listing->is_featured,
-        'is_verified'      => (bool) $listing->is_verified,
-        'is_sold'          => (bool) ($listing->is_sold ?? false),
-        'views_count'      => $listing->views_count ?? 0, // ← now populated via loadCount
-        'inquiries_count'  => $listing->inquiries_count ?? 0,
-        'flagged_count'    => $listing->flagged_count ?? 0,
-        'images'           => $this->resolveImages($listing),
-        'amenities'        => is_array($listing->amenities) ? $listing->amenities : [],
-        'agent_id'         => $listing->user_id,
-        'agent_name'       => $listing->agent_name ?? $listing->user?->name,
-        'agent_phone'      => $listing->agent_phone,
-        'agent_email'      => $listing->agent_email,
-        'created_at'       => $listing->created_at?->toISOString(),
-        'updated_at'       => $listing->updated_at?->toISOString(),
-    ];
-}
 
     private function resolveImages(Rental $listing): array
     {

@@ -137,8 +137,7 @@ class DashboardController extends Controller
         $agentData = User::where('role', 'agent')->get();
         $reports = Report::with('rental', 'rental.user')->get();
         $reviews = Review::with('rental')->get();
-        // $verifications = VerificationRequest::with(['rental', 'agent'])->orderBy('created_at', 'desc')->get();
-        $verifications = VerificationRequest::all();
+        $verifications = VerificationRequest::with(['rental', 'agent'])->orderBy('created_at', 'desc')->get();
 
         $locations = Location::all();
         $propertyTypes = PropertyType::all();
