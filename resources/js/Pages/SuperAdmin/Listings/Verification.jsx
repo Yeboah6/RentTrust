@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { router, Link } from "@inertiajs/react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { router, Link, usePage } from "@inertiajs/react";
 import SuperAdminLayout from "@/Layouts/SuperAdminLayout";
 
 // ─── Shared styles injected once ─────────────────────────────────────────────
@@ -62,10 +62,11 @@ const GLOBAL_CSS = `
     border: 1px solid rgba(255,255,255,0.08);
     border-radius: 2px;
     overflow: hidden;
-    transition: border-color 0.2s;
+    transition: border-color 0.2s, opacity 0.2s;
     margin-bottom: 0.75rem;
   }
   .lv-card:hover { border-color: rgba(232,160,32,0.22); }
+  .lv-card.updating { opacity: 0.6; pointer-events: none; }
 
   .lv-card-stripe { height: 3px; background: linear-gradient(90deg,#e8a020 0%,#f0c060 50%,#e8a020 100%); }
 
@@ -191,7 +192,7 @@ const GLOBAL_CSS = `
     cursor: pointer; transition: background 0.15s, opacity 0.15s;
     display: flex; align-items: center; justify-content: center; gap: 0.4rem;
   }
-  .lv-btn-approve:hover { background: #5bc272; }
+  .lv-btn-approve:hover:not(:disabled) { background: #5bc272; }
   .lv-btn-approve:disabled { opacity: 0.45; cursor: not-allowed; }
 
   .lv-btn-reject {
@@ -202,7 +203,7 @@ const GLOBAL_CSS = `
     cursor: pointer; transition: all 0.15s;
     display: flex; align-items: center; justify-content: center; gap: 0.4rem;
   }
-  .lv-btn-reject:hover { background: rgba(220,60,60,0.2); }
+  .lv-btn-reject:hover:not(:disabled) { background: rgba(220,60,60,0.2); }
   .lv-btn-reject:disabled { opacity: 0.45; cursor: not-allowed; }
 
   .lv-btn-view {
@@ -213,7 +214,7 @@ const GLOBAL_CSS = `
     cursor: pointer; transition: all 0.15s; text-decoration: none;
     display: flex; align-items: center; justify-content: center; gap: 0.4rem;
   }
-  .lv-btn-view:hover { background: rgba(255,255,255,0.08); color: #f5f0e8; }
+  .lv-btn-view:hover:not(:disabled) { background: rgba(255,255,255,0.08); color: #f5f0e8; }
 
   /* ── review history block ── */
   .lv-history-panel {
@@ -225,6 +226,38 @@ const GLOBAL_CSS = `
   .lv-history-title { font-size: 0.7rem; font-weight: 700; color: rgba(74,175,100,0.7); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 0.75rem; }
   .lv-history-note { background: rgba(255,255,255,0.03); border-left: 2px solid rgba(232,160,32,0.4); padding: 0.6rem 0.75rem; border-radius: 0 2px 2px 0; font-size: 0.8125rem; color: rgba(245,240,232,0.7); line-height: 1.5; }
   .lv-history-reject { background: rgba(220,60,60,0.07); border-left: 2px solid rgba(220,60,60,0.4); padding: 0.6rem 0.75rem; border-radius: 0 2px 2px 0; font-size: 0.8125rem; color: rgba(245,240,232,0.7); line-height: 1.5; margin-top: 0.5rem; }
+
+  /* ── document section ── */
+  .lv-doc-section { margin-bottom: 1rem; }
+  .lv-doc-section-title { 
+    font-size: 0.75rem; 
+    font-weight: 600; 
+    color: rgba(245,240,232,0.4); 
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .lv-doc-empty { 
+    font-size: 0.875rem; 
+    color: rgba(245,240,232,0.3); 
+    font-style: italic; 
+  }
+  .lv-doc-list { display: flex; flex-direction: column; gap: 0.5rem; }
+  .lv-doc-link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    background: rgba(232,160,32,0.08);
+    border: 1px solid rgba(232,160,32,0.15);
+    border-radius: 0.375rem;
+    text-decoration: none;
+    color: rgba(232,160,32,0.85);
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+  .lv-doc-link:hover { background: rgba(232,160,32,0.15); border-color: rgba(232,160,32,0.25); }
 
   /* ── empty state ── */
   .lv-empty {
@@ -303,6 +336,19 @@ const fmtPrice = (v, currency = "GH₵") => {
   return `${currency}${n.toLocaleString()}`;
 };
 
+/**
+ * Validate and sanitize URLs to prevent malicious links
+ */
+const isValidUrl = (url) => {
+  if (!url || typeof url !== 'string') return false;
+  try {
+    const u = new URL(url);
+    return u.protocol === 'http:' || u.protocol === 'https:';
+  } catch {
+    return false;
+  }
+};
+
 const resolveImages = (raw) => {
   if (!raw) return [];
   const arr = typeof raw === "string" ? (() => { try { return JSON.parse(raw); } catch { return []; } })() : raw;
@@ -330,18 +376,20 @@ const normalizeDocs = (docs) =>
   parseDocumentArray(docs)
     .map((doc) => {
       if (!doc || typeof doc !== "object") return null;
+      const url = doc.url || (doc.path ? `/storage/${doc.path}` : null);
       return {
         original_name: doc.original_name || doc.filename || basename(doc.path || ""),
-        url: doc.url || (doc.path ? `/storage/${doc.path}` : "#"),
+        url: url && isValidUrl(url) ? url : null,
       };
     })
-    .filter(Boolean);
+    .filter(doc => doc && doc.url);
 
 const normalise = (v) => {
   const rental = v.rental;
   return {
     ...v,
     _id: rental?.id ?? v.id,
+    verification_request_id: v.verification_request_id || v.id,
     title: rental?.title ?? "Untitled",
     status_key: (v.status ?? "pending").toLowerCase(),
     listing_type: (rental?.purpose ?? "sale").toLowerCase(),
@@ -431,48 +479,30 @@ const Toast = ({ toast }) =>
     </div>
   ) : null;
 
+/**
+ * Document section component with proper structure
+ */
 const DocumentSection = ({ title, documents }) => {
   if (!documents || documents.length === 0) {
     return (
-      <div style={{ marginBottom: '1rem' }}>
-        <p style={{ fontSize: '0.75rem', fontWeight: '600', color: 'hsl(200 15% 45%)', marginBottom: '0.5rem' }}>
-          {title}
-        </p>
-        <p style={{ fontSize: '0.875rem', color: 'hsl(200 15% 45%)', fontStyle: 'italic' }}>
-          No documents provided
-        </p>
+      <div className="lv-doc-section">
+        <p className="lv-doc-section-title">{title}</p>
+        <p className="lv-doc-empty">No documents provided</p>
       </div>
     );
   }
 
   return (
-    <div style={{ marginBottom: '1rem' }}>
-      <p style={{ fontSize: '0.75rem', fontWeight: '600', color: 'hsl(200 15% 45%)', marginBottom: '0.5rem' }}>
-        {title}
-      </p>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+    <div className="lv-doc-section">
+      <p className="lv-doc-section-title">{title}</p>
+      <div className="lv-doc-list">
         {documents.map((doc, idx) => (
           <a
             key={idx}
-            href={doc.url || '#'}
+            href={doc.url}
             target="_blank"
             rel="noopener noreferrer"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              padding: '0.5rem',
-              backgroundColor: 'hsl(40 30% 97%)',
-              borderRadius: '0.375rem',
-              border: '1px solid hsl(40 20% 88%)',
-              textDecoration: 'none',
-              color: 'hsl(174 62% 32%)',
-              fontSize: '0.875rem',
-              fontWeight: '500',
-              transition: 'all 0.2s'
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(174 62% 32% / 0.05)'}
-            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'hsl(40 30% 97%)'}
+            className="lv-doc-link"
           >
             <Download style={{ height: '0.875rem', width: '0.875rem' }} />
             {doc.original_name || `Document ${idx + 1}`}
@@ -520,8 +550,19 @@ const ConfirmModal = ({ modal, onConfirm, onClose, processing }) => {
     : "linear-gradient(90deg,#4caf65,#4caf65aa)";
 
   return (
-    <div className="lv-overlay" onClick={onClose}>
-      <div className="lv-modal" onClick={(e) => e.stopPropagation()}>
+    <div 
+      className="lv-overlay" 
+      onClick={() => onClose(null)}
+      role="presentation"
+      aria-hidden="true"
+    >
+      <div 
+        className="lv-modal" 
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-labelledby="modal-title"
+        aria-modal="true"
+      >
         <div style={{ height: "3px", background: stripeColor }} />
         <div className="lv-modal-body">
           <div style={{ display: "flex", alignItems: "flex-start", gap: "0.875rem", marginBottom: "1.125rem" }}>
@@ -529,7 +570,9 @@ const ConfirmModal = ({ modal, onConfirm, onClose, processing }) => {
               {isReject ? <XIco /> : <CheckIco />}
             </div>
             <div>
-              <div className="lv-modal-title">{isReject ? "Reject verification" : "Approve verification"}</div>
+              <div id="modal-title" className="lv-modal-title">
+                {isReject ? "Reject verification" : "Approve verification"}
+              </div>
               <div className="lv-modal-sub">
                 {isReject ? "This will reject the verification request and notify the agent." : "This will approve the verification request and make the listing verified."}
               </div>
@@ -573,10 +616,11 @@ const ListingCard = ({ listing: raw, onAction }) => {
   const l = normalise(raw);
   const [open, setOpen] = useState(false);
   const [adminNote, setAdminNote] = useState("");
+  const [isUpdating, setIsUpdating] = useState(false);
   const initials = l.title.charAt(0).toUpperCase();
 
   return (
-    <div className="lv-card">
+    <div className={`lv-card${isUpdating ? " updating" : ""}`}>
       <div className="lv-card-stripe" />
 
       {/* Header — click to expand */}
@@ -648,10 +692,24 @@ const ListingCard = ({ listing: raw, onAction }) => {
               </div>
 
               <div className="lv-action-row">
-                <button className="lv-btn-approve" onClick={() => onAction(l, "approve", adminNote)}>
+                <button 
+                  className="lv-btn-approve" 
+                  onClick={() => {
+                    setIsUpdating(true);
+                    onAction(l, "approve", adminNote, () => setIsUpdating(false));
+                  }}
+                  disabled={isUpdating}
+                >
                   <CheckIco /> Approve
                 </button>
-                <button className="lv-btn-reject" onClick={() => onAction(l, "reject", adminNote)}>
+                <button 
+                  className="lv-btn-reject" 
+                  onClick={() => {
+                    setIsUpdating(true);
+                    onAction(l, "reject", adminNote, () => setIsUpdating(false));
+                  }}
+                  disabled={isUpdating}
+                >
                   <XIco /> Reject
                 </button>
                 <Link href={`/super-admin/listings/${l._id}`} className="lv-btn-view">
@@ -684,26 +742,43 @@ const ListingCard = ({ listing: raw, onAction }) => {
           )}
 
           {l.additional_notes && (
-            <div style={{ marginBottom: '1.25rem', padding: '1rem', borderRadius: '0.375rem', backgroundColor: 'hsl(40 30% 97%)', borderLeft: '3px solid hsl(40 80% 50%)' }}>
-              <p style={{ fontSize: '0.75rem', fontWeight: '600', color: 'hsl(200 15% 45%)', marginBottom: '0.5rem' }}>
-                Agent's Additional Notes
-              </p>
-              <p style={{ fontSize: '0.875rem', color: 'hsl(200 25% 15%)', margin: 0, lineHeight: 1.6 }}>
+            <div style={{ marginBottom: '1.25rem', padding: '1rem', borderRadius: '0.375rem', backgroundColor: 'rgba(232,160,32,0.08)', borderLeft: '3px solid rgba(232,160,32,0.4)' }}>
+              <p className="lv-doc-section-title">Agent's Additional Notes</p>
+              <p style={{ fontSize: '0.875rem', color: 'rgba(245,240,232,0.7)', margin: 0, lineHeight: 1.6 }}>
                 {l.additional_notes}
               </p>
             </div>
           )}
 
-          <div style={{ marginBottom: '1.5rem', paddingBottom: '1rem', borderBottom: '1px solid hsl(200 15% 90%)' }}>
-            <p style={{ fontSize: '0.875rem', fontWeight: '600', color: 'hsl(200 25% 15%)', marginBottom: '1rem' }}>
-              Uploaded Documents
-            </p>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem' }}>
-              <DocumentSection title="Proof Documents" documents={l.proof_documents} />
-              <DocumentSection title="Ownership Documents" documents={l.ownership_documents} />
-              <DocumentSection title="Utility Bills" documents={l.utility_bills} />
-            </div>
-          </div>
+          {/* Unified document section with proper empty state */}
+          {(() => {
+            const allDocs = [
+              ...l.proof_documents,
+              ...l.ownership_documents,
+              ...l.license_documents,
+              ...l.utility_bills
+            ];
+            
+            return (
+              <div style={{ marginBottom: '1.5rem', paddingBottom: '1rem', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                <p style={{ fontSize: '0.875rem', fontWeight: '600', color: 'rgba(245,240,232,0.4)', marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Uploaded Documents
+                </p>
+                {allDocs.length === 0 ? (
+                  <p style={{ fontSize: '0.8rem', color: 'rgba(245,240,232,0.3)', fontStyle: 'italic' }}>
+                    No documents provided
+                  </p>
+                ) : (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem' }}>
+                    <DocumentSection title="Proof Documents" documents={l.proof_documents} />
+                    <DocumentSection title="Ownership Documents" documents={l.ownership_documents} />
+                    <DocumentSection title="License Documents" documents={l.license_documents} />
+                    <DocumentSection title="Utility Bills" documents={l.utility_bills} />
+                  </div>
+                )}
+              </div>
+            );
+          })()}
 
           {/* View link when approved/rejected and no history panel */}
           {l.status_key !== "pending" && !l.reviewed_at && (
@@ -719,19 +794,46 @@ const ListingCard = ({ listing: raw, onAction }) => {
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 
-export default function ListingsVerification({ listings, metrics }) {
+export default function ListingsVerification({ listings, metrics, filter: initialFilter }) {
+  const { url } = usePage().props;
   const [toast, setToast]         = useState(null);
   const [modal, setModal]         = useState(null);
   const [processing, setProcessing] = useState(false);
-  const [filter, setFilter]       = useState("all");
+  const [filter, setFilter]       = useState(() => {
+    if (initialFilter) return initialFilter;
+    if (typeof window === 'undefined') return 'all';
+    const queryFilter = new URL(window.location.href).searchParams.get('filter');
+    return queryFilter || 'all';
+  });
+  const toastTimerRef = useRef(null);
 
-  const showToast = (title, desc, type = "success") => {
+  /**
+   * Show toast notification with automatic cleanup
+   */
+  const showToast = useCallback((title, desc, type = "success") => {
+    if (toastTimerRef.current) {
+      clearTimeout(toastTimerRef.current);
+    }
     setToast({ title, desc, type });
-    setTimeout(() => setToast(null), 4000);
-  };
+    toastTimerRef.current = setTimeout(() => {
+      setToast(null);
+      toastTimerRef.current = null;
+    }, 4000);
+  }, []);
 
-  const handleAction = (listing, action, adminNote) => {
-    setModal({ listing, action, adminNote, reason: "" });
+  /**
+   * Cleanup timer on unmount
+   */
+  useEffect(() => {
+    return () => {
+      if (toastTimerRef.current) {
+        clearTimeout(toastTimerRef.current);
+      }
+    };
+  }, []);
+
+  const handleAction = (listing, action, adminNote, onFinish) => {
+    setModal({ listing, action, adminNote, reason: "", onFinish });
   };
 
   const handleModalUpdate = (updatedModal, isUpdate) => {
@@ -739,13 +841,20 @@ export default function ListingsVerification({ listings, metrics }) {
     setModal(null);
   };
 
-  const confirmAction = () => {
-    const { listing, action, adminNote, reason } = modal;
+  /**
+   * Confirm action with guard against double-submission
+   */
+  const confirmAction = useCallback(() => {
+    if (processing) return; // Guard against double-click
+    
+    const { listing, action, adminNote, reason, onFinish } = modal;
     setProcessing(true);
+    
     const routes = {
       approve: `/super-admin/listings/verification/${listing.verification_request_id}/approve`,
       reject:  `/super-admin/listings/verification/${listing.verification_request_id}/reject`,
     };
+    
     const data = action === "reject"
       ? { rejection_reason: reason, admin_notes: adminNote }
       : { admin_notes: adminNote };
@@ -758,12 +867,19 @@ export default function ListingsVerification({ listings, metrics }) {
           `"${listing.title}" has been ${action}d successfully.`
         );
         setModal(null);
+        if (onFinish) onFinish();
         router.reload({ only: ["listings", "metrics"] });
       },
-      onError: () => showToast("Action failed", "Please try again.", "error"),
+      onError: (errors) => {
+        const errorMsg = errors.message || errors.current_status 
+          ? `This listing was already reviewed. Please refresh.`
+          : "Please try again.";
+        showToast("Action failed", errorMsg, "error");
+        if (onFinish) onFinish();
+      },
       onFinish: () => setProcessing(false),
     });
-  };
+  }, [modal, processing, showToast]);
 
   const allListings = listings.data.map(normalise);
   const filtered = filter === "all" ? allListings : allListings.filter((l) => l.status_key === filter);
@@ -788,13 +904,16 @@ export default function ListingsVerification({ listings, metrics }) {
           </div>
         </div>
 
-        {/* Filter bar */}
+        {/* Filter bar — now preserves state in URL */}
         <div className="lv-filters">
           {["all", "pending", "approved", "rejected"].map((s) => (
             <button
               key={s}
               className={`lv-filter-btn${filter === s ? " active" : ""}`}
-              onClick={() => setFilter(s)}
+              onClick={() => {
+                setFilter(s);
+                router.visit(`/super-admin/listings/verification?filter=${s}`);
+              }}
             >
               {s === "all" ? "All" : s.charAt(0).toUpperCase() + s.slice(1)}
             </button>
@@ -827,7 +946,7 @@ export default function ListingsVerification({ listings, metrics }) {
             <Pagination
               page={listings.current_page}
               total={listings.last_page}
-              onChange={(p) => router.visit(`/super-admin/listings/verification?page=${p}`)}
+              onChange={(p) => router.visit(`/super-admin/listings/verification?page=${p}&filter=${filter}`)}
             />
           </div>
         )}

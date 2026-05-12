@@ -48,11 +48,18 @@ class ListingController extends Controller
         ]);
     }
 
-    public function verification()
+    public function verification(Request $request)
     {
-        $verificationRequests = \App\Models\VerificationRequest::with(['rental', 'agent'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(20);
+        $filter = $request->query('filter', 'all');
+
+        $query = \App\Models\VerificationRequest::with(['rental', 'agent'])
+            ->orderBy('created_at', 'desc');
+
+        if (in_array($filter, ['pending', 'approved', 'rejected'], true)) {
+            $query->where('status', $filter);
+        }
+
+        $verificationRequests = $query->paginate(20)->appends(['filter' => $filter]);
 
         // Append documents to each request
         $verificationRequests->getCollection()->transform(function ($request) {
@@ -61,12 +68,16 @@ class ListingController extends Controller
         });
 
         $metrics = [
-            'pending' => $verificationRequests->total(),
+            'total' => \App\Models\VerificationRequest::count(),
+            'pending' => \App\Models\VerificationRequest::where('status', 'pending')->count(),
+            'approved' => \App\Models\VerificationRequest::where('status', 'approved')->count(),
+            'rejected' => \App\Models\VerificationRequest::where('status', 'rejected')->count(),
         ];
 
         return Inertia::render('SuperAdmin/Listings/Verification', [
             'listings' => $verificationRequests,
             'metrics'  => $metrics,
+            'filter'   => $filter,
         ]);
     }
 
@@ -177,6 +188,7 @@ class ListingController extends Controller
     public function create()
     {
         $regions = Location::where('type', 'region')
+            ->orWhere('type', 'city')
             ->where('is_active', true)
             ->orderBy('name')
             ->select('id', 'name', 'slug')
@@ -359,6 +371,7 @@ class ListingController extends Controller
         $listing->loadCount(['inquiries', 'reports as flagged_count', 'views']);
 
         $regions = Location::where('type', 'region')
+            ->orWhere('type', 'city')
             ->where('is_active', true)
             ->orderBy('name')
             ->select('id', 'name', 'slug')
@@ -385,6 +398,7 @@ class ListingController extends Controller
     $listing->loadCount(['inquiries', 'reports as flagged_count', 'views']); // ← add views
 
     $regions = Location::where('type', 'region')
+        ->orWhere('type', 'city')
         ->where('is_active', true)
         ->orderBy('name')
         ->select('id', 'name', 'slug')

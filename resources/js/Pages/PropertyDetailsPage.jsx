@@ -613,12 +613,12 @@ export default function PropertyDetailsPage({ rental, reviews }) {
                             onClick={(e) => e.stopPropagation()}
                             style={{
                                 position: 'relative',
-                                width: '100%',
+                                width: '50%',
                                 maxWidth: 'calc(100% - 2rem)',
                                 maxHeight: 'calc(100% - 2rem)',
-                                borderRadius: '1rem',
+                                // borderRadius: '1rem',
                                 overflow: 'hidden',
-                                backgroundColor: 'rgba(0,0,0,0.9)',
+                                // backgroundColor: 'rgba(0,0,0,0.9)',
                             }}
                         >
                             <button
@@ -644,10 +644,11 @@ export default function PropertyDetailsPage({ rental, reviews }) {
                                 src={`/storage/rental_images/${images[currentImageIndex]}`}
                                 alt={`Property image ${currentImageIndex + 1}`}
                                 style={{
-                                    width: '100%',
-                                    height: '100%',
+                                    width: '75%',
+                                    // height: '80%',
                                     objectFit: 'contain',
                                     backgroundColor: 'black',
+                                    borderRadius: '1rem',
                                 }}
                             />
                         </div>

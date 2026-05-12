@@ -6,6 +6,9 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Rental;
 use App\Models\VerificationRequest;
+use App\Notifications\VerificationApprovedNotification;
+use App\Notifications\VerificationRejectedNotification;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use App\Models\AdminAuditLog;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -427,125 +430,107 @@ class VerificationsController extends Controller
 
     public function updateStatus(Request $request, $id)
     {
-        // Check if user is admin or super_admin
+        // ──── Authorization Check ────
         if (!Auth::check() || !in_array(Auth::user()->role, ['admin', 'super_admin'])) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized. Admin access required.'
             ], 403);
         }
-
+ 
+        // ──── Input Validation ────
         $validator = Validator::make($request->all(), [
             'status' => 'required|in:approved,rejected,pending',
             'admin_notes' => 'nullable|string|max:1000',
             'rejection_reason' => 'required_if:status,rejected|string|max:500'
         ]);
-
+ 
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
                 'errors' => $validator->errors()
             ], 422);
         }
-
+ 
         try {
             DB::beginTransaction();
-
+ 
+            // ──── Fetch and Lock Record ────
             $verificationRequest = VerificationRequest::findOrFail($id);
+            
+            // ──── Idempotency Check: Prevent duplicate processing ────
+            if ($verificationRequest->status !== 'pending') {
+                DB::rollBack();
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Verification already reviewed by another admin. Please refresh and try again.',
+                    'current_status' => $verificationRequest->status
+                ], 409);
+            }
+ 
             $oldStatus = $verificationRequest->status;
-
-            // Log the status update action
+ 
+            // ──── Sanitize Input ────
+            $adminNotes = $request->admin_notes 
+                ? strip_tags($request->admin_notes) 
+                : null;
+            
+            $rejectionReason = $request->status === 'rejected' && $request->rejection_reason
+                ? strip_tags($request->rejection_reason)
+                : null;
+ 
+            // ──── Log Technical Details (for debugging) ────
             Log::info('Admin updating verification request status', [
                 'request_id' => $verificationRequest->verification_request_id,
-                'old_status' => $verificationRequest->status,
+                'old_status' => $oldStatus,
                 'new_status' => $request->status,
                 'admin_id' => Auth::id()
             ]);
-
-            // Update verification request
+ 
+            // ──── Update Verification Request ────
             $verificationRequest->update([
                 'status' => $request->status,
-                'admin_notes' => $request->admin_notes,
-                'rejection_reason' => $request->status === 'rejected' ? $request->rejection_reason : null,
+                'admin_notes' => $adminNotes,
+                'rejection_reason' => $rejectionReason,
                 'reviewed_at' => now(),
                 'reviewed_by' => Auth::id()
             ]);
-
-            // Update rental verification status based on verification decision
+ 
+            // ──── Fetch and Update Related Rental ────
             $rental = Rental::findOrFail($verificationRequest->rental_id);
             
+            // ──── Process Based on Status ────
             if ($request->status === 'approved') {
-                $rental->update([
-                    'verification_status' => 'verified',
-                    'is_verified' => true,
-                    'verified_at' => now(),
-                    'status' => 'approved',
-                    'verification_rejected_at' => null,
-                    'verification_rejection_reason' => null
-                ]);
-                
-                // Audit log
-                AdminAuditLog::record('verification', "Listing verification approved: {$rental->title}", [
-                    'affected_user' => $rental->user->name ?? 'Unknown',
-                    'affected_id' => $rental->id,
-                    'notes' => "Verification request {$verificationRequest->verification_request_id} approved",
-                    'properties' => ['status' => 'approved', 'listing_id' => $rental->id, 'verification_request_id' => $verificationRequest->verification_request_id],
-                ]);
-                
-                Log::info('Rental verification approved', [
-                    'rental_id' => $rental->rental_id,
-                    'verification_request_id' => $verificationRequest->verification_request_id
-                ]);
+                $this->handleApproval($rental, $verificationRequest);
             } elseif ($request->status === 'rejected') {
-                $rental->update([
-                    'verification_status' => 'rejected',
-                    'is_verified' => false,
-                    'verification_rejected_at' => now(),
-                    'verification_rejection_reason' => $request->rejection_reason,
-                    'status' => 'rejected'
-                ]);
-                
-                // Audit log
-                AdminAuditLog::record('verification', "Listing verification rejected: {$rental->title}", [
-                    'affected_user' => $rental->user->name ?? 'Unknown',
-                    'affected_id' => $rental->id,
-                    'notes' => "Verification request {$verificationRequest->verification_request_id} rejected. Reason: {$request->rejection_reason}",
-                    'properties' => ['status' => 'rejected', 'reason' => $request->rejection_reason, 'listing_id' => $rental->id, 'verification_request_id' => $verificationRequest->verification_request_id],
-                ]);
-                
-                Log::warning('Rental verification rejected', [
-                    'rental_id' => $rental->rental_id,
-                    'reason' => $request->rejection_reason,
-                    'verification_request_id' => $verificationRequest->verification_request_id
-                ]);
+                $this->handleRejection($rental, $verificationRequest, $rejectionReason);
             } else {
-                // If status changed back to pending
-                $rental->update([
-                    'verification_status' => 'pending',
-                    'status' => 'pending',
-                    'verified_at' => null
-                ]);
-                
-                // Audit log
-                AdminAuditLog::record('verification', "Listing verification reverted to pending: {$rental->title}", [
-                    'affected_user' => $rental->user->name ?? 'Unknown',
-                    'affected_id' => $rental->id,
-                    'notes' => "Verification request {$verificationRequest->verification_request_id} status changed back to pending",
-                    'properties' => ['status' => 'pending', 'listing_id' => $rental->id, 'verification_request_id' => $verificationRequest->verification_request_id],
+                $this->handlePending($rental, $verificationRequest);
+            }
+ 
+            DB::commit();
+ 
+            // ──── Send Notifications ────
+            try {
+                $this->sendNotifications($rental, $request->status, $rejectionReason);
+            } catch (\Exception $e) {
+                // Log notification failure but don't fail the entire request
+                Log::warning('Failed to send verification notification', [
+                    'rental_id' => $rental->id,
+                    'status' => $request->status,
+                    'error' => $e->getMessage()
                 ]);
             }
-
-            DB::commit();
-
+ 
             return response()->json([
                 'success' => true,
                 'message' => "Verification request {$request->status} successfully",
                 'data' => $verificationRequest->refresh()
             ]);
-
-        } catch (\ModelNotFoundException $e) {
+ 
+        } catch (ModelNotFoundException $e) {
             DB::rollBack();
-            Log::error('Verification request not found', ['id' => $id]);
+            Log::warning('Verification request not found', ['id' => $id, 'admin_id' => Auth::id()]);
             
             return response()->json([
                 'success' => false,
@@ -553,17 +538,168 @@ class VerificationsController extends Controller
             ], 404);
         } catch (\Exception $e) {
             DB::rollBack();
-
-            Log::error('Failed to update verification status', [
+ 
+            // ──── Environment-aware logging ────
+            $logData = [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'request_id' => $id
-            ]);
-
+                'request_id' => $id,
+                'admin_id' => Auth::id()
+            ];
+            
+            // Only log full trace in non-production or if needed for debugging
+            if (!app()->environment('production')) {
+                $logData['trace'] = $e->getTraceAsString();
+            }
+            
+            Log::error('Failed to update verification status', $logData);
+ 
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to update verification status'
             ], 500);
+        }
+    }
+
+    /**
+     * Handle approval workflow
+     */
+    private function handleApproval(Rental $rental, VerificationRequest $verificationRequest)
+    {
+        $rental->update([
+            'verification_status' => 'verified',
+            'is_verified' => true,
+            'verified_at' => now(),
+            'status' => 'approved',
+            'verification_rejected_at' => null,
+            'verification_rejection_reason' => null
+        ]);
+        
+        // ──── Audit Log with Structured Data ────
+        $this->recordAuditLog(
+            'verification_approved',
+            "Listing verification approved: {$rental->title}",
+            [
+                'affected_user' => $rental->user->name ?? 'Unknown',
+                'affected_id' => $rental->id,
+                'verification_request_id' => $verificationRequest->verification_request_id,
+                'status' => 'approved',
+                'listing_id' => $rental->id
+            ]
+        );
+        
+        Log::info('Rental verification approved', [
+            'rental_id' => $rental->id,
+            'verification_request_id' => $verificationRequest->verification_request_id
+        ]);
+    }
+
+    /**
+     * Handle rejection workflow
+     */
+    private function handleRejection(Rental $rental, VerificationRequest $verificationRequest, $rejectionReason)
+    {
+        $rental->update([
+            'verification_status' => 'rejected',
+            'is_verified' => false,
+            'verification_rejected_at' => now(),
+            'verification_rejection_reason' => $rejectionReason,
+            'status' => 'rejected'
+        ]);
+        
+        // ──── Audit Log with Structured Data ────
+        $this->recordAuditLog(
+            'verification_rejected',
+            "Listing verification rejected: {$rental->title}",
+            [
+                'affected_user' => $rental->user->name ?? 'Unknown',
+                'affected_id' => $rental->id,
+                'verification_request_id' => $verificationRequest->verification_request_id,
+                'status' => 'rejected',
+                'reason' => $rejectionReason,
+                'listing_id' => $rental->id
+            ]
+        );
+        
+        Log::warning('Rental verification rejected', [
+            'rental_id' => $rental->id,
+            'reason' => $rejectionReason,
+            'verification_request_id' => $verificationRequest->verification_request_id
+        ]);
+    }
+ 
+    /**
+     * Handle pending status revert
+     */
+    private function handlePending(Rental $rental, VerificationRequest $verificationRequest)
+    {
+        $rental->update([
+            'verification_status' => 'pending',
+            'status' => 'pending',
+            'verified_at' => null
+        ]);
+        
+        // ──── Audit Log with Structured Data ────
+        $this->recordAuditLog(
+            'verification_reverted',
+            "Listing verification reverted to pending: {$rental->title}",
+            [
+                'affected_user' => $rental->user->name ?? 'Unknown',
+                'affected_id' => $rental->id,
+                'verification_request_id' => $verificationRequest->verification_request_id,
+                'status' => 'pending',
+                'listing_id' => $rental->id
+            ]
+        );
+    }
+ 
+    /**
+     * Record audit log with proper error handling
+     */
+    private function recordAuditLog($action, $description, $properties)
+    {
+        try {
+            // Ensure transaction is active
+            if (DB::transactionLevel() === 0) {
+                DB::beginTransaction();
+            }
+            
+            AdminAuditLog::create([
+                'action' => $action,
+                'description' => $description,
+                'admin_id' => Auth::id(),
+                'affected_user' => $properties['affected_user'] ?? null,
+                'affected_id' => $properties['affected_id'] ?? null,
+                'properties' => $properties,
+                'ip_address' => request()->ip(),
+                'user_agent' => request()->header('User-Agent'),
+                'created_at' => now()
+            ]);
+        } catch (\Exception $e) {
+            // Don't let audit log failure break the main transaction
+            Log::error('Failed to record audit log', [
+                'error' => $e->getMessage(),
+                'action' => $action
+            ]);
+            throw $e; // Re-throw so main transaction is rolled back
+        }
+    }
+ 
+    /**
+     * Send appropriate notifications to agent/user
+     */
+    private function sendNotifications(Rental $rental, $status, $rejectionReason = null)
+    {
+        $agent = $rental->agent;
+        
+        if (!$agent) {
+            Log::warning('No agent found for rental', ['rental_id' => $rental->id]);
+            return;
+        }
+ 
+        if ($status === 'approved') {
+            $agent->notify(new VerificationApprovedNotification($rental));
+        } elseif ($status === 'rejected') {
+            $agent->notify(new VerificationRejectedNotification($rental, $rejectionReason));
         }
     }
 
