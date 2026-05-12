@@ -28,7 +28,10 @@ class FeaturedListingService
 
         $activeFeaturedCount = Rental::where('user_id', $user->id)
             ->where('is_featured', true)
-            ->where('featured_expires_at', '>', now())
+            ->where(function ($q) {
+                $q->whereNull('featured_expires_at')
+                  ->orWhere('featured_expires_at', '>', now());
+            })
             ->count();
 
         if ($activeFeaturedCount >= $plan->featured_limit) {
@@ -64,30 +67,41 @@ class FeaturedListingService
     }
 
     /**
-     * Select featured listings with plan-aware weighted rotation,
-     * padded with recent approved listings when not enough featured ones exist.
+     * Statuses that count as a publicly visible / live listing.
+     * Adjust this list to match whatever values your DB actually uses.
      */
+    private const ACTIVE_STATUSES = ['approved', 'active', 'verified'];
+
     private function selectFeaturedListings(string $purpose, int $limit): Collection
     {
-        // 1. Fetch only active featured listings
-        $featured = Rental::where('purpose', $purpose)
-            ->where('status', 'approved')
+        // 1. Fetch active featured listings.
+        //    - Accept any status considered "live" (approved, active, verified).
+        //    - Treat NULL featured_expires_at as "never expires" so manually
+        //      featured / admin-seeded listings are always included.
+        $featured = Rental::with('user')
+            ->where('purpose', $purpose)
+            ->whereIn('status', self::ACTIVE_STATUSES)
             ->where('is_featured', true)
-            ->where('featured_expires_at', '>', now())
+            ->where(function ($q) {
+                $q->whereNull('featured_expires_at')
+                  ->orWhere('featured_expires_at', '>', now());
+            })
             ->orderByDesc('featured_priority')
             ->orderBy('featured_at')
             ->get();
 
-        // 2. Apply weighted rotation so higher-priority plans appear more often
+        // 2. Apply weighted rotation so higher-priority plans appear more often.
         $rotated = $this->weightedFeaturedRotation($featured, $limit);
 
-        // 3. If we still need more cards, pad with recent approved (non-featured) listings
+        // 3. Pad with recent live (non-featured) listings when the featured pool
+        //    is smaller than $limit.
         if ($rotated->count() < $limit) {
-            $needed        = $limit - $rotated->count();
-            $excludeIds    = $rotated->pluck('id');
+            $needed     = $limit - $rotated->count();
+            $excludeIds = $rotated->pluck('id');
 
-            $padding = Rental::where('purpose', $purpose)
-                ->where('status', 'approved')
+            $padding = Rental::with('user')
+                ->where('purpose', $purpose)
+                ->whereIn('status', self::ACTIVE_STATUSES)
                 ->whereNotIn('id', $excludeIds)
                 ->orderByDesc('created_at')
                 ->limit($needed)
@@ -145,7 +159,10 @@ class FeaturedListingService
     {
         return Rental::where('user_id', $user->id)
             ->where('is_featured', true)
-            ->where('featured_expires_at', '>', now())
+            ->where(function ($q) {
+                $q->whereNull('featured_expires_at')
+                  ->orWhere('featured_expires_at', '>', now());
+            })
             ->count();
     }
 

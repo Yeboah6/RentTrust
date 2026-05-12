@@ -82,19 +82,34 @@ const Money = ({ style }) => (
 const fmt = (n) => `GH₵${Number(n || 0).toLocaleString()}`;
 const hue = (s = '') => [...s].reduce((a, c) => a + c.charCodeAt(0), 0) % 360;
 
+const parseImages = (imagesData) => {
+    if (!imagesData) return [];
+    if (Array.isArray(imagesData)) return imagesData;
+    if (typeof imagesData === 'string') {
+        try {
+            const parsed = JSON.parse(imagesData);
+            return Array.isArray(parsed) ? parsed : [];
+        } catch {
+            return [];
+        }
+    }
+    return [];
+};
+
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 export default function PropertyDetailsPage({ rental, reviews }) {
     const { auth } = usePage().props;
 
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
+    const [showImageModal,    setShowImageModal]     = useState(false);
     const [showReport,        setShowReport]         = useState(false);
     const [showReview,        setShowReview]         = useState(false);
     const [showAgent,         setShowAgent]          = useState(false);
     const [showInquiry,       setShowInquiry]        = useState(false);
     const [toast,             setToast]              = useState(null);
 
-    const images    = rental.images ?? [];
+    const images    = parseImages(rental.images);
     const amenities = typeof rental.amenities === 'string' ? JSON.parse(rental.amenities || '[]') : (rental.amenities ?? []);
     const advance   = rental.advance_duration ?? rental.advance_months ?? 0;
     const agentFee  = (rental.rent_max ?? 0) * ((rental.user?.fee ?? 0) / 100);
@@ -209,7 +224,8 @@ export default function PropertyDetailsPage({ rental, reviews }) {
                                 <img
                                     src={`/storage/rental_images/${images[currentImageIndex]}`}
                                     alt={`Property image ${currentImageIndex + 1}`}
-                                    style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', transition: 'opacity 0.3s ease-in-out' }}
+                                    onClick={() => setShowImageModal(true)}
+                                    style={{ display: 'block', width: '100%', height: '100%', minWidth: '100%', minHeight: '100%', objectFit: 'cover', objectPosition: 'center', transition: 'opacity 0.3s ease-in-out', cursor: 'zoom-in' }}
                                 />
                             ) : (
                                 <MapPin style={{ height: 'clamp(3rem, 10vw, 4rem)', width: 'clamp(3rem, 10vw, 4rem)', color: 'hsl(200 25% 15% / 0.2)' }} />
@@ -578,6 +594,65 @@ export default function PropertyDetailsPage({ rental, reviews }) {
                         </div>
                     </div>
                 </main>
+
+                {showImageModal && (
+                    <div
+                        onClick={() => setShowImageModal(false)}
+                        style={{
+                            position: 'fixed',
+                            inset: 0,
+                            zIndex: 1000,
+                            backgroundColor: 'rgba(0,0,0,0.85)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            padding: '1rem',
+                        }}
+                    >
+                        <div
+                            onClick={(e) => e.stopPropagation()}
+                            style={{
+                                position: 'relative',
+                                width: '100%',
+                                maxWidth: 'calc(100% - 2rem)',
+                                maxHeight: 'calc(100% - 2rem)',
+                                borderRadius: '1rem',
+                                overflow: 'hidden',
+                                backgroundColor: 'rgba(0,0,0,0.9)',
+                            }}
+                        >
+                            <button
+                                onClick={() => setShowImageModal(false)}
+                                style={{
+                                    position: 'absolute',
+                                    top: '1rem',
+                                    right: '1rem',
+                                    background: 'rgba(255,255,255,0.12)',
+                                    border: 'none',
+                                    borderRadius: '9999px',
+                                    width: '2.5rem',
+                                    height: '2.5rem',
+                                    color: 'white',
+                                    fontSize: '1.25rem',
+                                    cursor: 'pointer',
+                                    zIndex: 2,
+                                }}
+                            >
+                                ×
+                            </button>
+                            <img
+                                src={`/storage/rental_images/${images[currentImageIndex]}`}
+                                alt={`Property image ${currentImageIndex + 1}`}
+                                style={{
+                                    width: '100%',
+                                    height: '100%',
+                                    objectFit: 'contain',
+                                    backgroundColor: 'black',
+                                }}
+                            />
+                        </div>
+                    </div>
+                )}
 
                 <Footer />
 
