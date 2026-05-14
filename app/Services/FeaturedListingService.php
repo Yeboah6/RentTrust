@@ -2,178 +2,83 @@
 
 namespace App\Services;
 
-use App\Models\Plan;
 use App\Models\Rental;
-use App\Models\User;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Collection;
-use Exception;
 
 class FeaturedListingService
 {
-    /**
-     * Feature a listing for a user
-     */
-    public function featureListing(User $user, Rental $listing): void
-    {
-        if ($listing->user_id !== $user->id) {
-            throw new Exception('You can only feature your own listings.');
-        }
-
-        if ($listing->status !== 'approved') {
-            throw new Exception('Only approved listings can be featured.');
-        }
-
-        $plan = $user->subscription?->plan ?? Plan::where('slug', 'free')->firstOrFail();
-
-        $activeFeaturedCount = Rental::where('user_id', $user->id)
-            ->where('is_featured', true)
-            ->where(function ($q) {
-                $q->whereNull('featured_expires_at')
-                  ->orWhere('featured_expires_at', '>', now());
-            })
-            ->count();
-
-        if ($activeFeaturedCount >= $plan->featured_limit) {
-            throw new Exception(
-                "You have reached your featured listing limit of {$plan->featured_limit}. Upgrade your plan to feature more listings."
-            );
-        }
-
-        $listing->update([
-            'is_featured'          => true,
-            'featured_at'          => now(),
-            'featured_expires_at'  => now()->addDays($plan->featured_duration_days),
-            'featured_priority'    => $this->resolveFeaturedPriority($plan),
-        ]);
-
-        $this->clearCache();
-    }
+    private const LISTING_FIELDS = [
+        'id', 'title', 'area', 'city', 'purpose',
+        'rent_min', 'rent_max', 'sale_price', 'advance_duration',
+        'status', 'is_featured', 'images', 'bedrooms', 'bathrooms', 'user_id',
+    ];
 
     /**
-     * Get featured listings for homepage display.
-     * Returns active featured listings; falls back to recent approved listings
-     * when fewer than $limit featured ones exist.
+     * Get listings for homepage display.
+     * Qualifies when: is_featured = true OR status is active / approved / verified.
+     *
+     * @return array<int, array<string, mixed>>
      */
-    public function getFeaturedListings(string $purpose, int $limit = 8): Collection
+    public function getFeaturedListings(string $purpose, int $limit = 8): array
     {
-        $cacheKey = "homepage_featured_{$purpose}";
-
         return Cache::remember(
-            $cacheKey,
+            "homepage_featured_{$purpose}",
             now()->addHour(),
-            fn () => $this->selectFeaturedListings($purpose, $limit)
+            fn () => $this->fetch($purpose, $limit)
         );
     }
 
-    /**
-     * Statuses that count as a publicly visible / live listing.
-     * Adjust this list to match whatever values your DB actually uses.
-     */
-    private const ACTIVE_STATUSES = ['approved', 'active', 'verified'];
-
-    private function selectFeaturedListings(string $purpose, int $limit): Collection
-    {
-        // 1. Fetch active featured listings.
-        //    - Accept any status considered "live" (approved, active, verified).
-        //    - Treat NULL featured_expires_at as "never expires" so manually
-        //      featured / admin-seeded listings are always included.
-        $featured = Rental::with('user')
-            ->where('purpose', $purpose)
-            ->whereIn('status', self::ACTIVE_STATUSES)
-            ->where('is_featured', true)
-            ->where(function ($q) {
-                $q->whereNull('featured_expires_at')
-                  ->orWhere('featured_expires_at', '>', now());
-            })
-            ->orderByDesc('featured_priority')
-            ->orderBy('featured_at')
-            ->get();
-
-        // 2. Apply weighted rotation so higher-priority plans appear more often.
-        $rotated = $this->weightedFeaturedRotation($featured, $limit);
-
-        // 3. Pad with recent live (non-featured) listings when the featured pool
-        //    is smaller than $limit.
-        if ($rotated->count() < $limit) {
-            $needed     = $limit - $rotated->count();
-            $excludeIds = $rotated->pluck('id');
-
-            $padding = Rental::with('user')
-                ->where('purpose', $purpose)
-                ->whereIn('status', self::ACTIVE_STATUSES)
-                ->whereNotIn('id', $excludeIds)
-                ->orderByDesc('created_at')
-                ->limit($needed)
-                ->get();
-
-            $rotated = $rotated->concat($padding);
-        }
-
-        return $rotated->values();
-    }
-
-    /**
-     * De-duplicate first, then weight-shuffle so the pool isn't skewed.
-     */
-    private function weightedFeaturedRotation(Collection $listings, int $limit): Collection
-    {
-        // De-duplicate before expanding weights to keep pool size predictable
-        $unique = $listings->unique('id')->values();
-
-        $weighted = $unique->flatMap(function (Rental $listing) {
-            $weight = max(1, (int) $listing->featured_priority);
-            return array_fill(0, $weight, $listing);
-        });
-
-        // Shuffle the weighted pool, then pick unique items up to $limit
-        return $weighted
-            ->shuffle()
-            ->unique('id')
-            ->values()
-            ->take($limit);
-    }
-
-    private function resolveFeaturedPriority(Plan $plan): int
-    {
-        return match (strtolower($plan->slug)) {
-            'elite' => 3,
-            'pro'   => 2,
-            default => $plan->priority_ranking ? 2 : 1,
-        };
-    }
-
-    /**
-     * Clear featured listings cache for both purposes.
-     */
+    /** Call after any listing change to ensure fresh results on next load. */
     public function clearCache(): void
     {
         Cache::forget('homepage_featured_rent');
         Cache::forget('homepage_featured_sale');
     }
 
-    /**
-     * Get user's active featured listings count.
-     */
-    public function getActiveFeaturedCount(User $user): int
+    // -------------------------------------------------------------------------
+
+    /** @return array<int, array<string, mixed>> */
+    private function fetch(string $purpose, int $limit): array
     {
-        return Rental::where('user_id', $user->id)
-            ->where('is_featured', true)
+        return Rental::with('user:id,name')
+            ->select(self::LISTING_FIELDS)
+            ->where('purpose', $purpose)
+            // ->when($purpose === 'sale', fn ($query) => $query->where('is_sold', false))
             ->where(function ($q) {
-                $q->whereNull('featured_expires_at')
-                  ->orWhere('featured_expires_at', '>', now());
+                $q->where('is_featured', true)
+                  ->orWhereIn('status', ['active', 'approved', 'verified']);
             })
-            ->count();
+            ->orderByDesc('is_featured')  // featured ones rise to the top
+            ->orderByDesc('featured_priority')
+            ->orderByDesc('featured_at')
+            ->orderByDesc('created_at')
+            ->limit($limit)
+            ->get()
+            ->map(fn (Rental $r) => [
+                'id'               => $r->id,
+                'title'            => $r->title,
+                'area'             => $r->area,
+                'city'             => $r->city,
+                'purpose'          => $r->purpose,
+                'rent_min'         => $r->rent_min,
+                'rent_max'         => $r->rent_max,
+                'sale_price'       => $r->sale_price,
+                'advance_duration' => $r->advance_duration,
+                'status'           => $r->status,
+                'is_featured'      => (bool) $r->is_featured,
+                'images'           => $this->normaliseImages($r->images),
+                'bedrooms'         => $r->bedrooms,
+                'bathrooms'        => $r->bathrooms,
+                'agent_name'       => $r->user?->name,
+            ])
+            ->all();
     }
 
-    /**
-     * Check if user can feature more listings.
-     */
-    public function canFeatureMore(User $user): bool
+    private function normaliseImages(mixed $images): array
     {
-        $plan        = $user->subscription?->plan ?? Plan::where('slug', 'free')->first();
-        $activeCount = $this->getActiveFeaturedCount($user);
-
-        return $activeCount < $plan->featured_limit;
+        if (is_string($images)) {
+            $images = json_decode($images, true) ?? [];
+        }
+        return array_values(is_array($images) ? $images : []);
     }
 }

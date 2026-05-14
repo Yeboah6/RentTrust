@@ -79,11 +79,11 @@ class SaleSearchController extends Controller
         try {
             $cities = Rental::where('purpose', 'sale')
                 ->where('is_sold', false)
-                ->whereNotNull('area')
-                ->where('area', '<>', '')
+                ->whereNotNull('city')
+                ->where('city', '<>', '')
                 ->distinct()
-                ->orderBy('area')
-                ->pluck('area');
+                ->orderBy('city')
+                ->pluck('city');
 
             return response()->json([
                 'cities' => $cities,
@@ -94,6 +94,32 @@ class SaleSearchController extends Controller
             ]);
 
             return response()->json(['cities' => []], 500);
+        }
+    }
+
+    /**
+     * Get sale areas
+     */
+    public function getAreas()
+    {
+        try {
+            $areas = Rental::where('purpose', 'sale')
+                ->where('is_sold', false)
+                ->whereNotNull('area')
+                ->where('area', '<>', '')
+                ->distinct()
+                ->orderBy('area')
+                ->pluck('area');
+
+            return response()->json([
+                'areas' => $areas,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to fetch sale areas', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json(['areas' => []], 500);
         }
     }
 

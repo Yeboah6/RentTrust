@@ -507,7 +507,8 @@ const SaleListingsPage = ({ listings: initialListingsData = {}, filters = {} }) 
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
-  const [cityOptions, setCityOptions] = useState([{ value: "", label: "All Cities" }]);
+  const [cityOptions, setCityOptions] = useState([{ value: "", label: "All Regions" }]);
+  const [areaOptions, setAreaOptions] = useState([{ value: "", label: "All Areas" }]);
 
   // Initialize listings and filters on component mount
   useEffect(() => {
@@ -549,7 +550,7 @@ const SaleListingsPage = ({ listings: initialListingsData = {}, filters = {} }) 
 
         const data = await response.json();
         const options = [
-          { value: '', label: 'All Cities' },
+          { value: '', label: 'All Regions' },
           ...data.cities.map((city) => ({ value: city.toLowerCase(), label: city }))
         ];
 
@@ -560,6 +561,29 @@ const SaleListingsPage = ({ listings: initialListingsData = {}, filters = {} }) 
     };
 
     loadCities();
+  }, []);
+
+  useEffect(() => {
+    const loadAreas = async () => {
+      try {
+        const response = await fetch('/buy/api/areas');
+        if (!response.ok) {
+          throw new Error(`Failed to fetch areas: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const options = [
+          { value: '', label: 'All Areas' },
+          ...data.areas.map((area) => ({ value: area.toLowerCase(), label: area }))
+        ];
+
+        setAreaOptions(options);
+      } catch (error) {
+        console.error('Failed to load sale areas:', error);
+      }
+    };
+
+    loadAreas();
   }, []);
 
 
@@ -740,7 +764,15 @@ const SaleListingsPage = ({ listings: initialListingsData = {}, filters = {} }) 
                     value={selectedCity}
                     options={cityOptions}
                     onChange={setSelectedCity}
-                    placeholder="All Cities"
+                    placeholder="All Regions"
+                  />
+
+                  {/* Area Dropdown */}
+                  <Dropdown
+                    value={selectedArea}
+                    options={areaOptions}
+                    onChange={setSelectedArea}
+                    placeholder="All Areas"
                   />
 
                   {/* Sort By Dropdown */}

@@ -25,135 +25,64 @@ class RentController extends Controller
      * Display homepage with featured listings
      */
 
-// Paste this method into your HomeController (or whichever controller serves
-// the Home Inertia page). The key changes vs the original:
-//
-//  1. getFeaturedListings() results are mapped to plain arrays via
-//     ->map(fn($r) => [...]) so Inertia always receives a JSON array,
-//     never a keyed Collection object.
-//  2. agent_name is resolved from the eager-loaded user relationship
-//     (the Rental model has no agent_name column directly).
-//  3. images is cast to an array in case it is stored as a JSON string.
-//  4. rentalAreas / saleAreas are also converted with ->toArray() so
-//     nested Collections don't bleed through as plain objects.
-
 public function index()
 {
-    $featuredService = app(\App\Services\FeaturedListingService::class);
-
+    $service = app(FeaturedListingService::class);
+ 
     // ── Featured listings ────────────────────────────────────────────────
-    // The service returns a Collection of Rental Eloquent models (with the
-    // user relationship already eager-loaded). We serialise each model to
-    // a plain array so Inertia sends a proper JSON array to React.
-
-    $featuredRentals = $featuredService
-        ->getFeaturedListings('rent', 8)
-        ->map(fn (\App\Models\Rental $r) => [
-            'id'               => $r->id,
-            'title'            => $r->title,
-            'area'             => $r->area,
-            'city'             => $r->city,
-            'rent_min'         => $r->rent_min,
-            'rent_max'         => $r->rent_max,
-            'sale_price'       => $r->sale_price,
-            'purpose'          => $r->purpose,
-            'advance_duration' => $r->advance_duration,
-            'status'           => $r->status,
-            'is_featured'      => (bool) $r->is_featured,   // cast int→bool for JS
-            'featured_priority'=> $r->featured_priority,
-            'images'           => is_array($r->images)       // normalise images
-                                    ? $r->images
-                                    : (json_decode($r->images, true) ?? []),
-            'bedrooms'         => $r->bedrooms,
-            'bathrooms'        => $r->bathrooms,
-            // agent_name comes from the related User, not a direct column
-            'agent_name'       => $r->user?->name,
-        ])
-        ->values()
-        ->all();   // ->all() converts Collection → plain PHP array → JSON array
-
-    $featuredSales = $featuredService
-        ->getFeaturedListings('sale', 8)
-        ->map(fn (\App\Models\Rental $r) => [
-            'id'               => $r->id,
-            'title'            => $r->title,
-            'area'             => $r->area,
-            'city'             => $r->city,
-            'rent_min'         => $r->rent_min,
-            'rent_max'         => $r->rent_max,
-            'sale_price'       => $r->sale_price,
-            'purpose'          => $r->purpose,
-            'advance_duration' => $r->advance_duration,
-            'status'           => $r->status,
-            'is_featured'      => (bool) $r->is_featured,
-            'featured_priority'=> $r->featured_priority,
-            'images'           => is_array($r->images)
-                                    ? $r->images
-                                    : (json_decode($r->images, true) ?? []),
-            'bedrooms'         => $r->bedrooms,
-            'bathrooms'        => $r->bathrooms,
-            'agent_name'       => $r->user?->name,
-        ])
-        ->values()
-        ->all();
-
+    $featuredRentals = $service->getFeaturedListings('rent', 8);
+    $featuredSales   = $service->getFeaturedListings('sale', 8);
+ 
     // ── Area market data ─────────────────────────────────────────────────
     $sixMonthsAgo = now()->subMonths(6);
-
-    $rentalAreas = \App\Models\Rental::where('purpose', 'rent')
+ 
+    // Fetch raw rental rows once — used for both aggregates and trend calculation.
+    $rawRentals = Rental::where('purpose', 'rent')
         ->where('created_at', '>', $sixMonthsAgo)
         ->select('city', 'area', 'rent_min', 'rent_max', 'created_at')
-        ->get()
+        ->get();
+ 
+    // Group in PHP so calculateRealTrend() still receives a Collection of rows.
+    $rentalAreas = $rawRentals
         ->groupBy('city')
-        ->map(function ($cityAreas) {
-            return $cityAreas->groupBy('area')->map(function ($areaRentals) {
-                $avgRent = $areaRentals->avg(
-                    fn ($rental) => ($rental->rent_min + $rental->rent_max) / 2
-                );
-                return [
-                    'name'         => $areaRentals->first()->area,
-                    'listingCount' => $areaRentals->count(),
-                    'avgRent'      => round($avgRent),
-                    'trend'        => $this->calculateRealTrend($areaRentals),
-                ];
-            })->values()->all();  // plain array per city
-        })
-        ->toArray();  // plain associative array keyed by city
-
-    $saleAreas = \App\Models\Rental::where('purpose', 'sale')
+        ->map(fn ($cityRows) => $cityRows
+            ->groupBy('area')
+            ->map(fn ($areaRows) => [
+                'name'         => $areaRows->first()->area,
+                'listingCount' => $areaRows->count(),
+                'avgRent'      => (int) round($areaRows->avg(fn ($r) => ($r->rent_min + $r->rent_max) / 2)),
+                'trend'        => $this->calculateRealTrend($areaRows),
+            ])
+            ->values()
+            ->all()
+        )
+        ->toArray();
+ 
+    $saleAreas = Rental::where('purpose', 'sale')
         ->where('is_sold', false)
         ->where('created_at', '>', $sixMonthsAgo)
-        ->select('city', 'area', 'sale_price', 'created_at')
+        ->select('city', 'area', DB::raw('COUNT(*) as listing_count, ROUND(AVG(sale_price)) as avg_price'))
+        ->groupBy('city', 'area')
+        ->orderBy('city')
         ->get()
         ->groupBy('city')
-        ->map(function ($cityAreas) {
-            return $cityAreas->groupBy('area')->map(function ($areaSales) {
-                return [
-                    'name'         => $areaSales->first()->area,
-                    'listingCount' => $areaSales->count(),
-                    'avgPrice'     => round($areaSales->avg('sale_price')),
-                ];
-            })->values()->all();
-        })
+        ->map(fn ($areas) => $areas->map(fn ($row) => [
+            'name'         => $row->area,
+            'listingCount' => $row->listing_count,
+            'avgPrice'     => (int) $row->avg_price,
+        ])->values()->all())
         ->toArray();
-
+ 
     // ── Stats ────────────────────────────────────────────────────────────
-    $totalAreas          = \App\Models\Rental::distinct()->count('area');
-    $totalVerifiedAgents = \App\Models\User::where('status', 'verified')
-                                           ->where('role', 'agent')
-                                           ->count();
-    $totalListings       = \App\Models\Rental::count();
-    $users               = \App\Models\User::count();
-
     return inertia('Home', [
         'featuredRentals'     => $featuredRentals,
         'featuredSales'       => $featuredSales,
         'rentalAreas'         => $rentalAreas,
         'saleAreas'           => $saleAreas,
-        'totalAreas'          => $totalAreas,
-        'totalVerifiedAgents' => $totalVerifiedAgents,
-        'totalListings'       => $totalListings,
-        'users'               => $users,
+        'totalAreas'          => Rental::distinct()->count('area'),
+        'totalVerifiedAgents' => User::where('status', 'verified')->where('role', 'agent')->count(),
+        'totalListings'       => Rental::count(),
+        'users'               => User::count(),
     ]);
 }
 

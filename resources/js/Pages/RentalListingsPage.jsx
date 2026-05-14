@@ -472,12 +472,14 @@ const PropertyCard = ({ listing }) => {
 const RentalListingsPage = ({ listings: initialListingsData = {} }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
+  const [selectedArea, setSelectedArea] = useState("");
   const [sortBy, setSortBy] = useState("recent");
   const [listings, setListings] = useState([]);
   const [lastId, setLastId] = useState(null);
   const [hasMore, setHasMore] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
-  const [cityOptions, setCityOptions] = useState([{ value: "", label: "All Cities" }]);
+  const [cityOptions, setCityOptions] = useState([{ value: "", label: "All Regions" }]);
+  const [areaOptions, setAreaOptions] = useState([{ value: "", label: "All Areas" }]);
 
   // Initialize listings on component mount
   useEffect(() => {
@@ -509,7 +511,7 @@ const RentalListingsPage = ({ listings: initialListingsData = {} }) => {
 
         const data = await response.json();
         const options = [
-          { value: '', label: 'All Cities' },
+          { value: '', label: 'All Regions' },
           ...data.cities.map((city) => ({ value: city.toLowerCase(), label: city }))
         ];
 
@@ -520,6 +522,29 @@ const RentalListingsPage = ({ listings: initialListingsData = {} }) => {
     };
 
     loadCities();
+  }, []);
+
+  useEffect(() => {
+    const loadAreas = async () => {
+      try {
+        const response = await fetch('/rent/api/areas');
+        if (!response.ok) {
+          throw new Error(`Failed to fetch areas: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const options = [
+          { value: '', label: 'All Areas' },
+          ...data.areas.map((area) => ({ value: area.toLowerCase(), label: area }))
+        ];
+
+        setAreaOptions(options);
+      } catch (error) {
+        console.error('Failed to load rental areas:', error);
+      }
+    };
+
+    loadAreas();
   }, []);
 
   const formatListings = (dbListings) => {
@@ -616,7 +641,8 @@ const RentalListingsPage = ({ listings: initialListingsData = {} }) => {
                          listing.area.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          listing.city.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCity = !selectedCity || listing.city.toLowerCase() === selectedCity.toLowerCase();
-    return matchesSearch && matchesCity;
+    const matchesArea = !selectedArea || listing.area.toLowerCase() === selectedArea.toLowerCase();
+    return matchesSearch && matchesCity && matchesArea;
   });
 
   const sortedListings = [...filteredListings].sort((a, b) => {
@@ -701,7 +727,15 @@ const RentalListingsPage = ({ listings: initialListingsData = {} }) => {
                     value={selectedCity}
                     options={cityOptions}
                     onChange={setSelectedCity}
-                    placeholder="All Cities"
+                    placeholder="All Regions"
+                  />
+
+                  {/* Area Dropdown */}
+                  <Dropdown
+                    value={selectedArea}
+                    options={areaOptions}
+                    onChange={setSelectedArea}
+                    placeholder="All Areas"
                   />
 
                   {/* Sort By Dropdown */}

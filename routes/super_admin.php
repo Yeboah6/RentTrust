@@ -89,11 +89,14 @@ Route::prefix('super-admin')
         ->name('listings.suspend');
 
     // Verification action routes
-    Route::post('listings/verification/{verification_request_id}/approve', [ListingController::class, 'approveVerification'])
+    Route::post('/listings/verification/{verificationRequest}/approve', [ListingController::class, 'approveVerification'])
         ->name('listings.verification.approve');
 
-    Route::post('listings/verification/{verification_request_id}/reject',  [ListingController::class, 'rejectVerification'])
+    Route::post('/listings/verification/{verificationRequest}/reject',  [ListingController::class, 'rejectVerification'])
         ->name('listings.verification.reject');
+
+    Route::post('/listings/verification/bulk-approve', [ListingController::class, 'bulkApprove'])
+        ->name('verification.bulk-approve');
 
     // ── Admin accounts ────────────────────────────────────────────────────────
     Route::resource('admins', AdminController::class)

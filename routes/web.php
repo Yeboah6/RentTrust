@@ -37,6 +37,7 @@ Route::prefix('rent')->group(function () {
     Route::get('/api/more', [RentalSearchController::class, 'getMore'])->name('rent.more');
     Route::get('/listings', [RentalSearchController::class, 'listings']);
     Route::get('/api/cities', [RentalSearchController::class, 'cities'])->name('rent.cities');
+    Route::get('/api/areas', [RentalSearchController::class, 'getAreas'])->name('rent.api.areas');
     // Route::get('/calculator', [RentController::class, 'calculate']);
 });
 
@@ -48,6 +49,7 @@ Route::prefix('buy')->group(function () {
     Route::get('/{rent}', [SaleSearchController::class, 'show'])->where(['rent' => '[0-9]+']);
     Route::get('/api/more', [SaleSearchController::class, 'getMore'])->name('buy.more');
     Route::get('/api/cities', [SaleSearchController::class, 'cities'])->name('buy.cities');
+    Route::get('/api/areas', [SaleSearchController::class, 'getAreas'])->name('buy.api.areas');
 });
 
 // tracking endpoints
@@ -90,13 +92,13 @@ Route::middleware(['auth', 'verified', 'throttle:60,1', 'role:agent'])->group(fu
     Route::put('/response', [RentController::class, 'response']);
     
     // Verification request routes for agents
-    Route::post('/api/verification-requests', [VerificationsController::class, 'store'])
+    Route::post('/verification-requests', [VerificationsController::class, 'store'])
         ->name('verification.store');
     Route::delete('/api/verification-requests/{id}', [VerificationsController::class, 'destroy'])
         ->name('verification.destroy');
     Route::get('/api/verification-requests', [VerificationsController::class, 'index'])
         ->name('agent.verification.index');
-    Route::get('/api/verification-requests/{id}', [VerificationsController::class, 'show'])
+    Route::get('/verification-requests/{verificationRequest}', [VerificationsController::class, 'show'])
         ->name('agent.verification.show');
     Route::get('/api/rentals/{rentalId}/verification-requests', [VerificationsController::class, 'getRentalRequests'])
         ->name('rental.verification.requests');

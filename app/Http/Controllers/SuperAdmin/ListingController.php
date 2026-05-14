@@ -9,6 +9,7 @@ use App\Models\PropertyType;
 use App\Models\Amenity;
 use App\Models\User;
 use App\Models\AdminAuditLog;
+use App\Models\VerificationRequest;
 use App\Models\Location;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -50,138 +51,120 @@ class ListingController extends Controller
 
     public function verification(Request $request)
     {
-        $filter = $request->query('filter', 'all');
-
-        $query = \App\Models\VerificationRequest::with(['rental', 'agent'])
+        $filter = $request->get('filter', 'all');
+        
+        $query = VerificationRequest::with(['rental', 'agent'])
             ->orderBy('created_at', 'desc');
 
-        if (in_array($filter, ['pending', 'approved', 'rejected'], true)) {
+        // Apply filter
+        if ($filter !== 'all' && in_array($filter, ['pending', 'approved', 'rejected'])) {
             $query->where('status', $filter);
         }
 
-        $verificationRequests = $query->paginate(20)->appends(['filter' => $filter]);
+        $listings = $query->paginate(15)->withQueryString();
 
-        // Append documents to each request
-        $verificationRequests->getCollection()->transform(function ($request) {
-            $request->documents = $request->documents;
-            return $request;
-        });
-
+        // Calculate metrics
         $metrics = [
-            'total' => \App\Models\VerificationRequest::count(),
-            'pending' => \App\Models\VerificationRequest::where('status', 'pending')->count(),
-            'approved' => \App\Models\VerificationRequest::where('status', 'approved')->count(),
-            'rejected' => \App\Models\VerificationRequest::where('status', 'rejected')->count(),
+            'pending' => VerificationRequest::where('status', 'pending')->count(),
+            'approved' => VerificationRequest::where('status', 'approved')->count(),
+            'rejected' => VerificationRequest::where('status', 'rejected')->count(),
+            'total' => VerificationRequest::count(),
         ];
 
         return Inertia::render('SuperAdmin/Listings/Verification', [
-            'listings' => $verificationRequests,
-            'metrics'  => $metrics,
-            'filter'   => $filter,
+            'listings' => $listings,
+            'metrics' => $metrics,
+            'filter' => $filter,
         ]);
     }
 
     // ─── Approve Verification ──────────────────────────────────────────────────
 
-    public function approveVerification(\App\Models\VerificationRequest $verification_request)
+    public function approve(Request $request, $verificationRequestId)
     {
-        if ($verification_request->status === 'approved') {
-            return back()->with('error', 'This verification request is already approved.');
+        $verificationRequest = VerificationRequest::where('verification_request_id', $verificationRequestId)
+            ->firstOrFail();
+
+        // Prevent double approval/rejection
+        if ($verificationRequest->status !== 'pending') {
+            return back()->with('error', 'This verification request has already been reviewed.');
         }
 
-        $oldStatus = $verification_request->status;
-        $verification_request->update([
+        $adminNotes = $request->input('admin_notes', '');
+
+        // Update verification request
+        $verificationRequest->update([
             'status' => 'approved',
+            'admin_notes' => $adminNotes,
             'reviewed_at' => now(),
-            'reviewed_by' => auth()->id(),
+            'reviewed_by' => Auth::id(),
         ]);
 
-        // Update the associated rental's verification status
-        if ($verification_request->rental) {
-            $verification_request->rental->update([
-                'is_verified' => true,
-                'verification_status' => 'verified',
-                'verified_at' => now(),
-            ]);
-        }
-
-        // Audit log
-        $listingTitle = $verification_request->rental ? $verification_request->rental->title : 'Unknown Listing';
-        $agentName = $verification_request->agent ? $verification_request->agent->name : 'Unknown Agent';
-        \App\Models\AdminAuditLog::record('verification', "Verification request approved: {$listingTitle}", [
-            'affected_user' => $agentName,
-            'affected_id' => $verification_request->id,
-            'notes' => "Status changed from {$oldStatus} to approved",
-            'properties' => [
-                'old_status' => $oldStatus,
-                'new_status' => 'approved',
-                'verification_request_id' => $verification_request->id,
-                'rental_id' => $verification_request->rental_id,
-            ],
+        // Update the associated rental
+        Rental::where('id', $verificationRequest->rental_id)->update([
+            'verification_status' => 'verified',
+            'verified_at' => now(),
+            'verified_by' => Auth::id(),
         ]);
 
-        Log::info('SuperAdmin approved verification request', [
-            'verification_request_id' => $verification_request->id,
-            'rental_id' => $verification_request->rental_id,
-            'admin_id' => auth()->id(),
-        ]);
+        // Optional: Send notification to agent
+        // event(new VerificationApproved($verificationRequest));
 
-        return back()->with('success', "Verification request for \"{$listingTitle}\" approved successfully.");
+        return back()->with('success', 'Verification request approved successfully.');
     }
 
     // ─── Reject Verification ───────────────────────────────────────────────────
 
-    public function rejectVerification(Request $request, \App\Models\VerificationRequest $verification_request)
+     public function reject(Request $request, $verificationRequestId)
     {
         $request->validate([
-            'rejection_reason' => ['nullable', 'string', 'max:1000'],
+            'rejection_reason' => 'nullable|string|max:2000',
+            'admin_notes' => 'nullable|string|max:2000',
         ]);
 
-        if ($verification_request->status === 'rejected') {
-            return back()->with('error', 'This verification request is already rejected.');
+        $verificationRequest = VerificationRequest::where('verification_request_id', $verificationRequestId)
+            ->firstOrFail();
+
+        // Prevent double approval/rejection
+        if ($verificationRequest->status !== 'pending') {
+            return back()->with('error', 'This verification request has already been reviewed.');
         }
 
-        $oldStatus = $verification_request->status;
-        $verification_request->update([
+        // Update verification request
+        $verificationRequest->update([
             'status' => 'rejected',
-            'rejection_reason' => $request->input('rejection_reason'),
+            'rejection_reason' => $request->input('rejection_reason', ''),
+            'admin_notes' => $request->input('admin_notes', ''),
             'reviewed_at' => now(),
-            'reviewed_by' => auth()->id(),
+            'reviewed_by' => Auth::id(),
         ]);
 
-        // Update the associated rental's verification status
-        if ($verification_request->rental) {
-            $verification_request->rental->update([
-                'verification_status' => 'rejected',
-                'verification_rejection_reason' => $request->input('rejection_reason'),
-            ]);
-        }
-
-        // Audit log
-        $listingTitle = $verification_request->rental ? $verification_request->rental->title : 'Unknown Listing';
-        $agentName = $verification_request->agent ? $verification_request->agent->name : 'Unknown Agent';
-        \App\Models\AdminAuditLog::record('verification', "Verification request rejected: {$listingTitle}", [
-            'affected_user' => $agentName,
-            'affected_id' => $verification_request->id,
-            'notes' => "Status changed from {$oldStatus} to rejected",
-            'properties' => [
-                'old_status' => $oldStatus,
-                'new_status' => 'rejected',
-                'rejection_reason' => $request->input('rejection_reason'),
-                'verification_request_id' => $verification_request->id,
-                'rental_id' => $verification_request->rental_id,
-            ],
+        // Update the associated rental
+        Rental::where('id', $verificationRequest->rental_id)->update([
+            'verification_status' => 'rejected',
         ]);
 
-        Log::info('SuperAdmin rejected verification request', [
-            'verification_request_id' => $verification_request->id,
-            'rental_id' => $verification_request->rental_id,
-            'reason' => $request->input('rejection_reason'),
-            'admin_id' => auth()->id(),
-        ]);
+        // Optional: Send notification to agent
+        // event(new VerificationRejected($verificationRequest));
 
-        return back()->with('success', "Verification request for \"{$listingTitle}\" has been rejected.");
+        return back()->with('success', 'Verification request rejected.');
     }
+
+        public function bulkApprove(Request $request)
+        {
+            $request->validate([
+                'verification_request_ids' => 'required|array',
+                'verification_request_ids.*' => 'exists:verification_requests,verification_request_id',
+            ]);
+    
+            $verificationRequestIds = $request->input('verification_request_ids');
+    
+            foreach ($verificationRequestIds as $id) {
+                $this->approve($request, $id);
+            }
+    
+            return back()->with('success', 'Selected verification requests approved successfully.');
+        }
 
     // ─── Create ───────────────────────────────────────────────────────────────
 

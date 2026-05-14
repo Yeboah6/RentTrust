@@ -428,13 +428,13 @@ const ListingGrid = ({ listings, purpose }) => (
 // ---------------------------------------------------------------------------
 
 const FeaturedListings = ({ featuredRentals, featuredSales }) => {
-  const rentals = Array.isArray(featuredRentals)
+  const rentals = (featuredRentals && Array.isArray(featuredRentals))
     ? featuredRentals
-    : Object.values(featuredRentals ?? {});
+    : Object.values(featuredRentals ?? {}).filter(Boolean);
 
-  const sales = Array.isArray(featuredSales)
+  const sales = (featuredSales && Array.isArray(featuredSales))
     ? featuredSales
-    : Object.values(featuredSales ?? {});
+    : Object.values(featuredSales ?? {}).filter(Boolean);
 
   const hasRentals = rentals.length > 0;
   const hasSales   = sales.length   > 0;
