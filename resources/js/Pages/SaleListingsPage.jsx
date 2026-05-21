@@ -443,6 +443,14 @@ const PropertyCard = ({ listing }) => {
           </span>
         </div>
 
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', fontSize: '0.875rem', color: 'hsl(200 15% 45%)', marginBottom: '0.75rem' }}>
+          <span style={{ fontWeight: '600' }}>{listing.bedrooms ?? 0} bed{listing.bedrooms === 1 ? '' : 's'}</span>
+          <span style={{ fontWeight: '600' }}>{listing.bathrooms ?? 0} bath{listing.bathrooms === 1 ? '' : 's'}</span>
+          {listing.property_type && (
+            <span style={{ fontWeight: '600' }}>{String(listing.property_type).replace(/\b\w/g, c => c.toUpperCase())}</span>
+          )}
+        </div>
+
         <div className="details-section" style={{ marginBottom: '0.75rem' }}>
           <div className="font-bold" style={{ color: 'hsl(174 62% 32%)', fontSize: '1.25rem' }}>
             GH₵{listing.salePrice.toLocaleString()}

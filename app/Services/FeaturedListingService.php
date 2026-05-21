@@ -15,7 +15,7 @@ class FeaturedListingService
 
     /**
      * Get listings for homepage display.
-     * Qualifies when: is_featured = true OR status is active / approved / verified.
+     * Qualifies only when: is_featured = true.
      *
      * @return array<int, array<string, mixed>>
      */
@@ -23,7 +23,7 @@ class FeaturedListingService
     {
         return Cache::remember(
             "homepage_featured_{$purpose}",
-            now()->addHour(),
+            now()->addMinutes(30),
             fn () => $this->fetch($purpose, $limit)
         );
     }
@@ -43,12 +43,8 @@ class FeaturedListingService
         return Rental::with('user:id,name')
             ->select(self::LISTING_FIELDS)
             ->where('purpose', $purpose)
-            // ->when($purpose === 'sale', fn ($query) => $query->where('is_sold', false))
-            ->where(function ($q) {
-                $q->where('is_featured', true)
-                  ->orWhereIn('status', ['active', 'approved', 'verified']);
-            })
-            ->orderByDesc('is_featured')  // featured ones rise to the top
+            ->when($purpose === 'sale', fn ($query) => $query->where('is_sold', false))
+            ->where('is_featured', true)
             ->orderByDesc('featured_priority')
             ->orderByDesc('featured_at')
             ->orderByDesc('created_at')

@@ -10,6 +10,7 @@ use App\Models\Amenity;
 use App\Models\User;
 use App\Models\AdminAuditLog;
 use App\Models\VerificationRequest;
+use App\Http\Requests\AdminVerificationActionRequest;
 use App\Models\Location;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -51,27 +52,27 @@ class ListingController extends Controller
 
     public function verification(Request $request)
     {
-        $filter = $request->get('filter', 'all');
+        $filter = request('filter', 'all');
         
-        $query = VerificationRequest::with(['rental', 'agent'])
+        $query = VerificationRequest::with(['rental', 'agent:id,name,email,phone', 'reviewer:id,name'])
             ->orderBy('created_at', 'desc');
 
-        // Apply filter
-        if ($filter !== 'all' && in_array($filter, ['pending', 'approved', 'rejected'])) {
+        // Apply status filter
+        if ($filter !== 'all') {
             $query->where('status', $filter);
         }
 
-        $listings = $query->paginate(15)->withQueryString();
+        $listings = $query->paginate(20)->withQueryString();
 
         // Calculate metrics
         $metrics = [
-            'pending' => VerificationRequest::where('status', 'pending')->count(),
-            'approved' => VerificationRequest::where('status', 'approved')->count(),
+            'pending' => VerificationRequest::pending()->count(),
+            'approved' => VerificationRequest::approved()->count(),
             'rejected' => VerificationRequest::where('status', 'rejected')->count(),
             'total' => VerificationRequest::count(),
         ];
 
-        return Inertia::render('SuperAdmin/Listings/Verification', [
+        return inertia('SuperAdmin/Listings/Verification', [
             'listings' => $listings,
             'metrics' => $metrics,
             'filter' => $filter,
@@ -80,74 +81,103 @@ class ListingController extends Controller
 
     // ─── Approve Verification ──────────────────────────────────────────────────
 
-    public function approve(Request $request, $verificationRequestId)
+    public function verificationApprove(AdminVerificationActionRequest $request, string $verificationRequestId): RedirectResponse
     {
-        $verificationRequest = VerificationRequest::where('verification_request_id', $verificationRequestId)
-            ->firstOrFail();
+        try {
+            DB::beginTransaction();
 
-        // Prevent double approval/rejection
-        if ($verificationRequest->status !== 'pending') {
-            return back()->with('error', 'This verification request has already been reviewed.');
+            $verificationRequest = VerificationRequest::where('verification_request_id', $verificationRequestId)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            // Validate current status
+            if ($verificationRequest->status !== 'pending') {
+                return back()->with('error', 'This verification request has already been processed.');
+            }
+
+            // Update verification request
+            $verificationRequest->update([
+                'status' => 'approved',
+                'admin_notes' => $request->admin_notes,
+                'reviewed_at' => now(),
+                'reviewed_by' => auth()->id(),
+            ]);
+
+            // Update rental status
+            $rental = Rental::findOrFail($verificationRequest->rental_id);
+            $rental->update([
+                'is_verified' => true,
+                'verification_status' => 'approved',
+                'verified_at' => now(),
+                'verified_by' => auth()->id(),
+            ]);
+
+            // Dispatch events or notifications
+            // event(new VerificationApproved($verificationRequest));
+
+            DB::commit();
+
+            return back()->with('success', 'Verification request approved successfully.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Verification approval failed: ' . $e->getMessage());
+
+            return back()->with('error', 'Failed to approve verification request. Please try again.');
         }
-
-        $adminNotes = $request->input('admin_notes', '');
-
-        // Update verification request
-        $verificationRequest->update([
-            'status' => 'approved',
-            'admin_notes' => $adminNotes,
-            'reviewed_at' => now(),
-            'reviewed_by' => Auth::id(),
-        ]);
-
-        // Update the associated rental
-        Rental::where('id', $verificationRequest->rental_id)->update([
-            'verification_status' => 'verified',
-            'verified_at' => now(),
-            'verified_by' => Auth::id(),
-        ]);
-
-        // Optional: Send notification to agent
-        // event(new VerificationApproved($verificationRequest));
-
-        return back()->with('success', 'Verification request approved successfully.');
     }
 
     // ─── Reject Verification ───────────────────────────────────────────────────
 
-     public function reject(Request $request, $verificationRequestId)
+     public function verificationReject(AdminVerificationActionRequest $request, string $verificationRequestId): RedirectResponse
     {
-        $request->validate([
-            'rejection_reason' => 'nullable|string|max:2000',
-            'admin_notes' => 'nullable|string|max:2000',
-        ]);
+        try {
+            DB::beginTransaction();
 
-        $verificationRequest = VerificationRequest::where('verification_request_id', $verificationRequestId)
-            ->firstOrFail();
+            $verificationRequest = VerificationRequest::where('verification_request_id', $verificationRequestId)
+                ->lockForUpdate()
+                ->firstOrFail();
 
-        // Prevent double approval/rejection
-        if ($verificationRequest->status !== 'pending') {
-            return back()->with('error', 'This verification request has already been reviewed.');
+            // Validate current status
+            if ($verificationRequest->status !== 'pending') {
+                return back()->with('error', 'This verification request has already been processed.');
+            }
+
+            // Validate rejection reason
+            $rejectionReason = $request->rejection_reason;
+            if (empty($rejectionReason)) {
+                $rejectionReason = 'Documents incomplete or insufficient verification evidence.';
+            }
+
+            // Update verification request
+            $verificationRequest->update([
+                'status' => 'rejected',
+                'rejection_reason' => $rejectionReason,
+                'admin_notes' => $request->admin_notes,
+                'reviewed_at' => now(),
+                'reviewed_by' => auth()->id(),
+            ]);
+
+            // Update rental status
+            $rental = Rental::findOrFail($verificationRequest->rental_id);
+            $rental->update([
+                'is_verified' => false,
+                'verification_status' => 'rejected',
+            ]);
+
+            // Dispatch events or notifications
+            // event(new VerificationRejected($verificationRequest));
+
+            DB::commit();
+
+            return back()->with('success', 'Verification request rejected successfully.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Verification rejection failed: ' . $e->getMessage());
+
+            return back()->with('error', 'Failed to reject verification request. Please try again.');
         }
-
-        // Update verification request
-        $verificationRequest->update([
-            'status' => 'rejected',
-            'rejection_reason' => $request->input('rejection_reason', ''),
-            'admin_notes' => $request->input('admin_notes', ''),
-            'reviewed_at' => now(),
-            'reviewed_by' => Auth::id(),
-        ]);
-
-        // Update the associated rental
-        Rental::where('id', $verificationRequest->rental_id)->update([
-            'verification_status' => 'rejected',
-        ]);
-
-        // Optional: Send notification to agent
-        // event(new VerificationRejected($verificationRequest));
-
-        return back()->with('success', 'Verification request rejected.');
     }
 
         public function bulkApprove(Request $request)

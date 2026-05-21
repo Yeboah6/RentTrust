@@ -110,7 +110,7 @@ const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views
     router.put('/response', {
       review_id: reviewId,
       response: responseText,
-      response_person: agentData.fullName
+      response_name: agentData?.fullName || 'Agent'
     }, {
       onSuccess: () => {
         setShowToast({ 
@@ -189,7 +189,7 @@ const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views
       comments: review.comments || null,
       full_name: review.full_name || "Anonymous",
       response: review.response || null,
-      response_person: review.response_person || null,
+      response_name: review.response_name || null,
       created_at: review.created_at || new Date().toISOString()
     }))
     : [];
@@ -204,16 +204,13 @@ const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views
       rent_min: rental.rent_min || 0,
       rent_max: rental.rent_max || 0,
       sale_price: rental.sale_price || 0,
-      // listing_status: rental.status || "unverified",
-      effective_listing_status: rental.status === 'verified' ? 'approved' : (rental.status || 'unverified'),
+      effective_listing_status: rental.status || 'unverified',
       verification_status: rental.verification_status || null,
       total_reviews: rental.reviews_count || 0,
       views: rental.views_count || 0,
       inquiries: rental.inquiries_count || 0,
     }))
     : [];
-
-    console.log(properties.effective_listing_status);
 
   const renderStars = (rating) => {
     const ratingValue = Math.floor(rating || 0);
@@ -247,7 +244,7 @@ const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views
   const conversionRate = totalViews > 0 ? ((totalInquiries / totalViews) * 100).toFixed(1) : 0;
 
   const getStatusBadge = (status) => {
-    if (status === "verified") {
+    if (status === "approved" || status === "verified" || status === "active") {
       return (
         <span style={{ display: 'inline-flex', alignItems: 'center', padding: 'clamp(0.25rem, 1vw, 0.25rem) clamp(0.5rem, 2vw, 0.625rem)', fontSize: 'clamp(0.75rem, 2vw, 0.75rem)', fontWeight: '500', backgroundColor: 'hsl(152 60% 40%)', color: 'white', borderRadius: '9999px', gap: 'clamp(0.25rem, 1vw, 0.25rem)' }}>
           <CheckCircle style={{ height: 'clamp(0.75rem, 2vw, 0.75rem)', width: 'clamp(0.75rem, 2vw, 0.75rem)' }} />
@@ -261,14 +258,42 @@ const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views
           Pending
         </span>
       );
-    } else {
+    } else if (status === "rejected") {
       return (
-        <span style={{ display: 'inline-flex', alignItems: 'center', padding: 'clamp(0.25rem, 1vw, 0.25rem) clamp(0.5rem, 2vw, 0.625rem)', fontSize: 'clamp(0.75rem, 2vw, 0.75rem)', fontWeight: '500', backgroundColor: 'white', color: 'hsl(200 15% 45%)', borderRadius: '9999px', gap: 'clamp(0.25rem, 1vw, 0.25rem)', border: '1px solid hsl(40 20% 88%)' }}>
+        <span style={{ display: 'inline-flex', alignItems: 'center', padding: 'clamp(0.25rem, 1vw, 0.25rem) clamp(0.5rem, 2vw, 0.625rem)', fontSize: 'clamp(0.75rem, 2vw, 0.75rem)', fontWeight: '500', backgroundColor: 'hsl(0 70% 50%)', color: 'white', borderRadius: '9999px', gap: 'clamp(0.25rem, 1vw, 0.25rem)' }}>
           <AlertCircle style={{ height: 'clamp(0.75rem, 2vw, 0.75rem)', width: 'clamp(0.75rem, 2vw, 0.75rem)' }} />
-          Unverified
+          Rejected
+        </span>
+      );
+    } else if (status === "rented") {
+      return (
+        <span style={{ display: 'inline-flex', alignItems: 'center', padding: 'clamp(0.25rem, 1vw, 0.25rem) clamp(0.5rem, 2vw, 0.625rem)', fontSize: 'clamp(0.75rem, 2vw, 0.75rem)', fontWeight: '500', backgroundColor: 'hsl(252 60% 40%)', color: 'white', borderRadius: '9999px', gap: 'clamp(0.25rem, 1vw, 0.25rem)' }}>
+          <CheckCircle style={{ height: 'clamp(0.75rem, 2vw, 0.75rem)', width: 'clamp(0.75rem, 2vw, 0.75rem)' }} />
+          Rented
+        </span>
+      );
+    } else if (status === "sold") {
+      return (
+        <span style={{ display: 'inline-flex', alignItems: 'center', padding: 'clamp(0.25rem, 1vw, 0.25rem) clamp(0.5rem, 2vw, 0.625rem)', fontSize: 'clamp(0.75rem, 2vw, 0.75rem)', fontWeight: '500', backgroundColor: 'hsl(240 20% 93%)', color: 'hsl(240 16% 20%)', borderRadius: '9999px', gap: 'clamp(0.25rem, 1vw, 0.25rem)', border: '1px solid hsl(40 20% 88%)' }}>
+          <CheckCircle style={{ height: 'clamp(0.75rem, 2vw, 0.75rem)', width: 'clamp(0.75rem, 2vw, 0.75rem)' }} />
+          Sold
+        </span>
+      );
+    } else if (status === "inactive") {
+      return (
+        <span style={{ display: 'inline-flex', alignItems: 'center', padding: 'clamp(0.25rem, 1vw, 0.25rem) clamp(0.5rem, 2vw, 0.625rem)', fontSize: 'clamp(0.75rem, 2vw, 0.75rem)', fontWeight: '500', backgroundColor: 'hsl(206 16% 94%)', color: 'hsl(200 15% 45%)', borderRadius: '9999px', gap: 'clamp(0.25rem, 1vw, 0.25rem)', border: '1px solid hsl(40 20% 88%)' }}>
+          <AlertCircle style={{ height: 'clamp(0.75rem, 2vw, 0.75rem)', width: 'clamp(0.75rem, 2vw, 0.75rem)' }} />
+          Inactive
         </span>
       );
     }
+
+    return (
+      <span style={{ display: 'inline-flex', alignItems: 'center', padding: 'clamp(0.25rem, 1vw, 0.25rem) clamp(0.5rem, 2vw, 0.625rem)', fontSize: 'clamp(0.75rem, 2vw, 0.75rem)', fontWeight: '500', backgroundColor: 'white', color: 'hsl(200 15% 45%)', borderRadius: '9999px', gap: 'clamp(0.25rem, 1vw, 0.25rem)', border: '1px solid hsl(40 20% 88%)' }}>
+        <AlertCircle style={{ height: 'clamp(0.75rem, 2vw, 0.75rem)', width: 'clamp(0.75rem, 2vw, 0.75rem)' }} />
+        Unverified
+      </span>
+    );
   };
 
   const getVerificationButtonText = (listingStatus, verificationStatus) => {
@@ -653,7 +678,7 @@ const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views
                           {review.comments && <p style={{ color: 'hsl(200 15% 45%)', marginBottom: 'clamp(0.75rem, 2vw, 1rem)', fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)', lineHeight: '1.5' }}>"{review.comments}"</p>}
                           {review.response ? (
                             <div style={{ backgroundColor: 'hsl(210 20% 98%)', padding: 'clamp(0.5rem, 2vw, 0.75rem)', borderRadius: 'clamp(0.375rem, 2vw, 0.5rem)', borderLeft: '3px solid hsl(174 62% 32%)', marginTop: 'clamp(0.5rem, 2vw, 0.5rem)' }}>
-                              <p style={{ fontSize: 'clamp(0.6875rem, 2vw, 0.75rem)', fontWeight: '600', color: 'hsl(174 62% 32%)', marginBottom: 'clamp(0.125rem, 1vw, 0.25rem)' }}>Your Response {review.response_person && `by ${review.response_person}`}</p>
+                              <p style={{ fontSize: 'clamp(0.6875rem, 2vw, 0.75rem)', fontWeight: '600', color: 'hsl(174 62% 32%)', marginBottom: 'clamp(0.125rem, 1vw, 0.25rem)' }}>Your Response {review.response_name && `by ${review.response_name}`}</p>
                               <p style={{ fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', color: 'hsl(200 25% 15%)', lineHeight: '1.5' }}>{review.response}</p>
                             </div>
                           ) : respondingTo === review.id ? (
