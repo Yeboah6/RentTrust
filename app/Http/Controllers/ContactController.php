@@ -32,8 +32,8 @@ class ContactController extends Controller
     
         if ($recipient) {
             $subject = isset($data['subject']) && $data['subject']
-                ? "[RentTrust Contact] {$data['subject']}"
-                : '[RentTrust Contact] New Message';
+                ? "[RentTrustGh Contact] {$data['subject']}"
+                : '[RentTrustGh Contact] New Message';
     
             Mail::send([], [], function ($message) use ($data, $recipient, $subject) {
                 $message->to($recipient)

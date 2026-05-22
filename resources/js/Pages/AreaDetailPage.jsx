@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from '@inertiajs/react';
-import { MapPin, Home, TrendingUp, TrendingDown, ArrowLeft, Building, DollarSign, Calendar } from 'lucide-react';
+import { MapPin, Home, TrendingUp, TrendingDown, ArrowLeft, Building, DollarSign, Calendar, BedDouble, Bath } from 'lucide-react';
 import Header from "../Components/Layouts/Header";
 import Footer from "../Components/Layouts/Footer";
 
@@ -109,10 +109,19 @@ const PropertyCard = ({ property }) => {
             <MapPin className="h-4 w-4" />
             <span>{property.area}</span>
           </div>
-          <div className="flex items-center gap-2" style={{ color: 'hsl(200 15% 45%)' }}>
-            <Home className="h-4 w-4" />
-            <span>{property.bedrooms} bed • {property.bathrooms} bath</span>
-          </div>
+            <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '0.75rem', color: 'hsl(200 15% 45%)', fontSize: '0.875rem' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '0.22rem', fontSize: '0.76rem', color: 'hsl(200 15% 46%)' }}>
+                <BedDouble style={{ width: '0.82rem', height: '0.82rem' }} />
+                {property.bedrooms ?? 0} bed{property.bedrooms === 1 ? '' : 's'}
+              </span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '0.22rem', fontSize: '0.76rem', color: 'hsl(200 15% 46%)' }}>
+                <Bath style={{ width: '0.82rem', height: '0.82rem' }} />
+                {property.bathrooms ?? 0} bath{property.bathrooms === 1 ? '' : 's'}
+              </span>
+              {property.property_type && (
+                <span style={{ fontWeight: '600' }}>{String(property.property_type).replace(/\b\w/g, c => c.toUpperCase())}</span>
+              )}
+            </div>
         </div>
 
         <div className="flex items-center justify-between">

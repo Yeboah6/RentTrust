@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import Header from '../Components/Layouts/Header';
 import Footer from '../Components/Layouts/Footer';
 import { Link, usePage, useForm } from "@inertiajs/react";
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, BedDouble, Bath } from 'lucide-react';
 import ReportListingDialog from "../Components/Modules/ReportListingDialog";
 import ReviewForm from "../Components/Modules/ReviewForm";
 import InquiryModal from "../Components/Modules/InquiryForm";
@@ -14,18 +14,6 @@ const MapPin = ({ style }) => (
     <svg style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-    </svg>
-);
-
-const Bed = ({ style }) => (
-    <svg style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-    </svg>
-);
-
-const Bath = ({ style }) => (
-    <svg style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 12H20M4 12a8 8 0 0016 0M4 12a8 8 0 0116 0M12 4v8" />
     </svg>
 );
 
@@ -317,7 +305,7 @@ export default function PropertyDetailsPage({ rental, reviews }) {
                                             )}
                                             {rental.property_type && (
                                                 <span style={{ padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: '600', backgroundColor: 'hsl(40 30% 94%)', color: 'hsl(200 25% 28%)', border: '1px solid hsl(40 20% 86%)' }}>
-                                                    {rental.property_type}
+                                                    {rental.property_type.charAt(0).toUpperCase() + rental.property_type.slice(1)}
                                                 </span>
                                             )}
                                         </div>
@@ -325,7 +313,7 @@ export default function PropertyDetailsPage({ rental, reviews }) {
 
                                     <div className="feature-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 'clamp(0.75rem, 2vw, 1rem)', fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)', color: 'hsl(200 15% 45%)' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
-                                            <Bed style={{ height: 'clamp(0.875rem, 2.5vw, 1rem)', width: 'clamp(0.875rem, 2.5vw, 1rem)', flexShrink: 0, color: 'hsl(174 62% 36%)' }} />
+                                            <BedDouble style={{ height: 'clamp(0.875rem, 2.5vw, 1rem)', width: 'clamp(0.875rem, 2.5vw, 1rem)', flexShrink: 0, color: 'hsl(174 62% 36%)' }} />
                                             {rental.bedrooms ?? '—'} Bedrooms
                                         </div>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>

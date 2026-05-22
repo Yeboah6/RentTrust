@@ -506,22 +506,28 @@ export default function ContactPage() {
                                         Stay updated on new listings and tips.
                                     </p>
                                     <div style={{ display: 'flex', gap: '0.625rem' }}>
-                                        {['Instagram'].map(s => (
-                                            <a key={s} href="https://www.instagram.com/renttrustgh" style={{
-                                                padding: '0.4rem 0.75rem',
-                                                borderRadius: '0.375rem',
-                                                backgroundColor: 'rgba(255,255,255,0.15)',
-                                                border: '1px solid rgba(255,255,255,0.2)',
-                                                color: 'white',
-                                                fontSize: '0.75rem',
-                                                fontWeight: '600',
-                                                textDecoration: 'none',
-                                                transition: 'background 0.2s',
-                                            }}
-                                            onMouseEnter={e => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.25)'}
-                                            onMouseLeave={e => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.15)'}
+                                        {[
+                                            { name: 'Instagram', url: 'https://www.instagram.com/renttrustgh' },
+                                            { name: 'TikTok', url: 'https://www.tiktok.com/@renttrustgh' }
+                                        ].map(social => (
+                                            <a 
+                                                key={social.name} 
+                                                href={social.url} 
+                                                style={{
+                                                    padding: '0.4rem 0.75rem',
+                                                    borderRadius: '0.375rem',
+                                                    backgroundColor: 'rgba(255,255,255,0.15)',
+                                                    border: '1px solid rgba(255,255,255,0.2)',
+                                                    color: 'white',
+                                                    fontSize: '0.75rem',
+                                                    fontWeight: '600',
+                                                    textDecoration: 'none',
+                                                    transition: 'background 0.2s',
+                                                }}
+                                                onMouseEnter={e => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.25)'}
+                                                onMouseLeave={e => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.15)'}
                                             >
-                                                {s}
+                                                {social.name}
                                             </a>
                                         ))}
                                     </div>

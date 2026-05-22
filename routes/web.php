@@ -132,6 +132,8 @@ Route::middleware(['auth','verified'])->group(function () {
 // ── Admin Routes ──────────────────────────────────────────────────────────────
 Route::middleware(['auth','verified','throttle:60,1','role:admin'])->group(function () {
     Route::get('/admin', [DashboardController::class, 'adminDashboard'])->name('admin.dashboard');
+    // Allow admins to create listings via a dedicated admin endpoint
+    Route::post('/admin/rent', [RentController::class, 'store'])->name('admin.rent.store');
     
     // Report management
     Route::put('/admin/reports/{id}/status', [RentController::class, 'updateReportStatus'])

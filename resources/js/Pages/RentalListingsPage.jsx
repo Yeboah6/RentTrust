@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Link } from "@inertiajs/react";
 import Header from "../Components/Layouts/Header";
 import Footer from "../Components/Layouts/Footer";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, BedDouble, Bath } from "lucide-react";
 
 // Icon components
 const Search = ({ className, style }) => (
@@ -413,8 +413,14 @@ const PropertyCard = ({ listing }) => {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '0.75rem', color: 'hsl(200 15% 45%)', fontSize: '0.875rem' }}>
-          <span style={{ fontWeight: '600' }}>{listing.bedrooms ?? 0} bed{listing.bedrooms === 1 ? '' : 's'}</span>
-          <span style={{ fontWeight: '600' }}>{listing.bathrooms ?? 0} bath{listing.bathrooms === 1 ? '' : 's'}</span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '0.22rem', fontSize: '0.76rem', color: 'hsl(200 15% 46%)' }}>
+            <BedDouble style={{ width: '0.82rem', height: '0.82rem' }} />
+            {listing.bedrooms ?? 0} bed{listing.bedrooms === 1 ? '' : 's'}
+          </span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '0.22rem', fontSize: '0.76rem', color: 'hsl(200 15% 46%)' }}>
+            <Bath style={{ width: '0.82rem', height: '0.82rem' }} />
+            {listing.bathrooms ?? 0} bath{listing.bathrooms === 1 ? '' : 's'}
+          </span>
           {listing.property_type && (
             <span style={{ fontWeight: '600' }}>{String(listing.property_type).replace(/\b\w/g, c => c.toUpperCase())}</span>
           )}
@@ -422,7 +428,7 @@ const PropertyCard = ({ listing }) => {
 
         <div className="details-section" style={{ marginBottom: '0.75rem' }}>
           <div className="font-bold" style={{ color: 'hsl(174 62% 32%)', fontSize: '1.25rem' }}>
-            GH₵{listing.rentMin.toLocaleString()} - {listing.rentMax.toLocaleString()}
+            GH₵{listing.rentMin.toLocaleString()} - GH₵{listing.rentMax.toLocaleString()}
           </div>
           <div style={{ fontSize: '0.75rem', color: 'hsl(200 15% 45%)' }}>per month</div>
         </div>
@@ -430,7 +436,7 @@ const PropertyCard = ({ listing }) => {
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
           <Calendar style={{ height: '1rem', width: '1rem', color: 'hsl(200 15% 45%)' }} />
           <span style={{ fontSize: '0.875rem', color: 'hsl(200 15% 45%)' }}>
-            {listing.advanceDuration} {listing.advanceDuration === 1 ? 'year' : 'years'} advance
+            {listing.advanceDuration} {listing.advanceDuration === 1 ? 'month' : 'months'} advance
           </span>
         </div>
 

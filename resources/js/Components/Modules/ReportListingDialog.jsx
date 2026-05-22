@@ -456,8 +456,8 @@ const ReportListingDialog = ({ setShowAddListingModal, rental, auth }) => {
 
         .rf-select {
           width: 100%;
-          background: rgba(255,255,255,0.03);
-          border: 1px solid rgba(255,255,255,0.08);
+          background: #00000008;
+          border: 1px solid rgba(5, 5, 5, 0.08);
           border-radius: 2px;
           padding: 0.6rem 0.75rem;
           font-size: 0.8125rem;
@@ -469,7 +469,7 @@ const ReportListingDialog = ({ setShowAddListingModal, rental, auth }) => {
         }
         .rf-select:focus {
           border-color: rgba(232,160,32,0.5);
-          background: rgba(232,160,32,0.03);
+          background: #00000008;
         }
         .rf-select.err {
           border-color: rgba(220,60,60,0.5);

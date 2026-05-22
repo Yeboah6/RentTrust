@@ -2,53 +2,51 @@ import { useState, useRef, useEffect } from "react";
 import { Link } from "@inertiajs/react";
 import Header from "../Components/Layouts/Header";
 import Footer from "../Components/Layouts/Footer";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, BedDouble, Bath, Search as SearchIcon, MapPin as MapPinIcon, ChevronDown } from "lucide-react";
 
-// Icon components
-const Search = ({ className, style }) => (
-  <svg className={className} style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-  </svg>
-);
+// ─── Icon Components ───────────────────────────────────────────────────────────
 
-const MapPin = ({ className, style }) => (
-  <svg className={className} style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+const MapPin = ({ style }) => (
+  <svg style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
   </svg>
 );
 
-const Clock = ({ style }) => (
-  <svg style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-  </svg>
-);
-
-const Star = ({ className, style }) => (
-  <svg className={className} style={style} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+const Star = ({ style }) => (
+  <svg style={style} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
     <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
   </svg>
 );
 
-const CheckCircle2 = ({ className, style }) => (
-  <svg className={className} style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+const Shield = ({ style }) => (
+  <svg style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
   </svg>
 );
 
-const Calendar = ({ className, style }) => (
-  <svg className={className} style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-  </svg>
-);
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const ChevronDown = ({ className, style }) => (
-  <svg className={className} style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-  </svg>
-);
+const fmt = (n) => `GH₵${Number(n || 0).toLocaleString()}`;
+const hue = (s = '') => [...s].reduce((a, c) => a + c.charCodeAt(0), 0) % 360;
 
-const Dropdown = ({ value, options, onChange, placeholder }) => {
+const parseImages = (imagesData) => {
+  if (!imagesData) return [];
+  if (Array.isArray(imagesData)) return imagesData;
+  if (typeof imagesData === 'string') {
+    try {
+      const parsed = JSON.parse(imagesData);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+  return [];
+};
+
+// ─── Dropdown Component ────────────────────────────────────────────────────────
+
+const Dropdown = ({ value, options, onChange, placeholder, label }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -67,16 +65,21 @@ const Dropdown = ({ value, options, onChange, placeholder }) => {
 
   return (
     <div ref={dropdownRef} style={{ position: 'relative' }}>
+      {label && (
+        <label style={{ display: 'block', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', fontWeight: '500', color: 'hsl(200 25% 15%)', marginBottom: '0.375rem' }}>
+          {label}
+        </label>
+      )}
       <button
         onClick={() => setIsOpen(!isOpen)}
         style={{
           width: '100%',
-          height: '3rem',
+          height: 'clamp(2.5rem, 10vw, 3rem)',
           border: '1px solid hsl(40 20% 88%)',
           borderRadius: '0.75rem',
           paddingLeft: '1rem',
           paddingRight: '2.5rem',
-          fontSize: '1rem',
+          fontSize: 'clamp(0.875rem, 2vw, 1rem)',
           outline: 'none',
           backgroundColor: 'white',
           color: 'hsl(200 25% 15%)',
@@ -84,9 +87,10 @@ const Dropdown = ({ value, options, onChange, placeholder }) => {
           textAlign: 'left',
           display: 'flex',
           alignItems: 'center',
-          transition: 'border-color 0.2s'
+          transition: 'border-color 0.2s',
+          fontWeight: '500'
         }}
-        onMouseEnter={(e) => e.currentTarget.style.borderColor = 'hsl(174 62% 32%)'}
+        onMouseEnter={(e) => !isOpen && (e.currentTarget.style.borderColor = 'hsl(174 62% 32%)')}
         onMouseLeave={(e) => !isOpen && (e.currentTarget.style.borderColor = 'hsl(40 20% 88%)')}
       >
         {selectedOption ? selectedOption.label : placeholder}
@@ -94,11 +98,12 @@ const Dropdown = ({ value, options, onChange, placeholder }) => {
           style={{ 
             position: 'absolute',
             right: '0.75rem',
-            height: '1.25rem',
-            width: '1.25rem',
+            height: 'clamp(1rem, 3vw, 1.25rem)',
+            width: 'clamp(1rem, 3vw, 1.25rem)',
             color: 'hsl(200 15% 45%)',
             transition: 'transform 0.2s',
-            transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)'
+            transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+            pointerEvents: 'none'
           }} 
         />
       </button>
@@ -113,9 +118,11 @@ const Dropdown = ({ value, options, onChange, placeholder }) => {
             backgroundColor: 'white',
             border: '1px solid hsl(40 20% 88%)',
             borderRadius: '0.75rem',
-            boxShadow: '0 8px 20px -4px hsl(200 25% 15% / 0.12)',
+            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)',
             zIndex: 50,
-            overflow: 'hidden'
+            overflow: 'hidden',
+            maxHeight: '250px',
+            overflowY: 'auto'
           }}
         >
           {options.map((option, index) => (
@@ -127,17 +134,16 @@ const Dropdown = ({ value, options, onChange, placeholder }) => {
               }}
               style={{
                 width: '100%',
-                padding: '0.75rem 1rem',
+                padding: 'clamp(0.5rem, 2vw, 0.75rem) 1rem',
                 border: 'none',
-                backgroundColor: option.value === value ? 'hsl(38 92% 50%)' : 'white',
+                backgroundColor: option.value === value ? 'hsl(174 62% 32%)' : 'white',
                 color: option.value === value ? 'white' : 'hsl(200 25% 15%)',
                 textAlign: 'left',
                 cursor: 'pointer',
-                fontSize: '0.875rem',
-                fontWeight: option.value === value ? '500' : '400',
+                fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)',
+                fontWeight: option.value === value ? '600' : '400',
                 transition: 'background-color 0.15s',
-                borderTop: index > 0 ? '1px solid hsl(40 20% 92%)' : 'none',
-                borderRadius: '10px'
+                borderTop: index > 0 ? '1px solid hsl(40 20% 92%)' : 'none'
               }}
               onMouseEnter={(e) => {
                 if (option.value !== value) {
@@ -159,123 +165,59 @@ const Dropdown = ({ value, options, onChange, placeholder }) => {
   );
 };
 
-// Parse images from database (handles both string and array formats)
-const parseImages = (imagesData) => {
-  if (!imagesData) return [];
-  
-  try {
-    // If it's already an array, return it
-    if (Array.isArray(imagesData)) return imagesData;
-    
-    // If it's a string, parse it as JSON
-    if (typeof imagesData === 'string') {
-      const parsed = JSON.parse(imagesData);
-      return Array.isArray(parsed) ? parsed : [];
-    }
-    
-    return [];
-  } catch (e) {
-    console.error('Error parsing images:', e);
-    return [];
-  }
-};
-
-const getStatusBadge = (status) => {
-  const normalized = String(status || 'pending').toLowerCase();
-
-  const meta = {
-    approved: {
-      label: 'Approved',
-      bg: 'hsl(174 62% 32% / 0.1)',
-      color: 'hsl(174 62% 32%)',
-      icon: 'check',
-    },
-    pending: {
-      label: 'Pending',
-      bg: '#efece7',
-      color: '#627884',
-      icon: 'clock',
-    },
-    rejected: {
-      label: 'Rejected',
-      bg: 'hsl(0 65% 51% / 0.1)',
-      color: 'hsl(0 65% 51%)',
-      icon: 'clock',
-    },
-  };
-
-  return meta[normalized] || {
-    label: String(status || 'Unknown').replace(/^(.)/, (m) => m.toUpperCase()),
-    bg: 'hsl(40 20% 88%)',
-    color: 'hsl(200 15% 45%)',
-    icon: 'clock',
-  };
-};
+// ─── Property Card Component ───────────────────────────────────────────────────
 
 const PropertyCard = ({ listing }) => {
-  <style dangerouslySetInnerHTML={{__html: `
-    @media (max-width: 768px) {
-      .property-card-content { display: flex; flex-direction: column; }
-      .details-section { order: 1; }
-      .reviews-section { order: 2; }
-      .agent-section { order: 3; }
-    }
-    @media (min-width: 769px) {
-      .property-card-content { display: block; }
-    }
-  `}} />
   const [isHovered, setIsHovered] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   
-  // Parse images from listing
   const imagesArray = parseImages(listing.images);
 
   const handlePrevImage = (e) => {
-    e.stopPropagation(); // Prevent card click when clicking arrow
-    setCurrentImageIndex((prev) => 
-      prev === 0 ? imagesArray.length - 1 : prev - 1
-    );
+    e.stopPropagation();
+    setCurrentImageIndex((prev) => prev === 0 ? imagesArray.length - 1 : prev - 1);
   };
 
   const handleNextImage = (e) => {
-    e.stopPropagation(); // Prevent card click when clicking arrow
-    setCurrentImageIndex((prev) => 
-      prev === imagesArray.length - 1 ? 0 : prev + 1
-    );
+    e.stopPropagation();
+    setCurrentImageIndex((prev) => prev === imagesArray.length - 1 ? 0 : prev + 1);
   };
 
   return (
     <div
-      className="overflow-hidden cursor-pointer border rounded-xl bg-white transition-all duration-300"
       style={{
-        borderColor: 'hsl(40 20% 88%)',
-        transform: isHovered ? 'translateY(-4px)' : 'translateY(0)',
+        overflow: 'hidden',
+        cursor: 'pointer',
+        border: '1px solid hsl(40 20% 88%)',
+        borderRadius: '0.875rem',
+        backgroundColor: 'white',
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        transform: isHovered ? 'translateY(-6px)' : 'translateY(0)',
         boxShadow: isHovered 
-          ? '0 8px 20px -4px hsl(200 25% 15% / 0.12), 0 4px 8px -2px hsl(200 25% 15% / 0.08)'
-          : '0 2px 8px -2px hsl(200 25% 15% / 0.1), 0 1px 3px -1px hsl(200 25% 15% / 0.06)'
+          ? '0 12px 24px -6px rgba(0, 0, 0, 0.12)'
+          : '0 4px 6px -2px rgba(0, 0, 0, 0.05)',
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Image Carousel Section */}
+      {/* Image Carousel */}
       <div style={{ 
-        height: '12rem',
+        height: 'clamp(10rem, 35vw, 14rem)',
         position: 'relative',
         overflow: 'hidden',
         backgroundColor: 'hsl(174 62% 32% / 0.05)'
       }}>
-        {/* Image */}
         {imagesArray.length > 0 ? (
           <img 
             src={`/storage/rental_images/${imagesArray[currentImageIndex]}`}
-            alt={`${listing.title || 'Property'} image ${currentImageIndex + 1}`}
+            alt={`${listing.title} image ${currentImageIndex + 1}`}
             style={{
               width: '100%',
               height: '100%',
               objectFit: 'cover',
               objectPosition: 'center',
               transition: 'transform 0.3s ease-in-out',
-              transform: isHovered ? 'scale(1.05)' : 'scale(1)'
+              transform: isHovered ? 'scale(1.08)' : 'scale(1)'
             }}
           />
         ) : (
@@ -287,29 +229,28 @@ const PropertyCard = ({ listing }) => {
             height: '100%',
             flexDirection: 'column'
           }}>
-            <MapPin style={{ height: '3rem', width: '3rem', color: 'hsl(200 25% 15% / 0.2)' }} />
-            <div style={{ fontSize: '12px', color: '#666', marginTop: '8px' }}>
-              No image available
+            <MapPin style={{ height: 'clamp(2.5rem, 8vw, 3rem)', width: 'clamp(2.5rem, 8vw, 3rem)', color: 'hsl(200 25% 15% / 0.15)' }} />
+            <div style={{ fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', color: 'hsl(200 15% 45%)', marginTop: '0.5rem' }}>
+              No image
             </div>
           </div>
         )}
 
-        {/* Carousel Controls - Only show if there are multiple images */}
+        {/* Carousel Controls */}
         {imagesArray.length > 1 && (
           <>
-            {/* Previous Button */}
             <button
               onClick={handlePrevImage}
               style={{
                 position: 'absolute',
-                left: '0.5rem',
+                left: 'clamp(0.5rem, 2vw, 0.75rem)',
                 top: '50%',
                 transform: 'translateY(-50%)',
                 backgroundColor: 'rgba(255, 255, 255, 0.9)',
                 border: 'none',
                 borderRadius: '50%',
-                width: '2rem',
-                height: '2rem',
+                width: 'clamp(2rem, 8vw, 2.5rem)',
+                height: 'clamp(2rem, 8vw, 2.5rem)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -318,11 +259,11 @@ const PropertyCard = ({ listing }) => {
                 zIndex: 10,
                 transition: 'all 0.2s'
               }}
-              onMouseEnter={(e) => {
+              onMouseEnter={(e) => { 
                 e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 1)';
                 e.currentTarget.style.transform = 'translateY(-50%) scale(1.1)';
               }}
-              onMouseLeave={(e) => {
+              onMouseLeave={(e) => { 
                 e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
                 e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
               }}
@@ -330,19 +271,18 @@ const PropertyCard = ({ listing }) => {
               <ChevronLeft size={20} style={{ color: '#374151' }} />
             </button>
 
-            {/* Next Button */}
             <button
               onClick={handleNextImage}
               style={{
                 position: 'absolute',
-                right: '0.5rem',
+                right: 'clamp(0.5rem, 2vw, 0.75rem)',
                 top: '50%',
                 transform: 'translateY(-50%)',
                 backgroundColor: 'rgba(255, 255, 255, 0.9)',
                 border: 'none',
                 borderRadius: '50%',
-                width: '2rem',
-                height: '2rem',
+                width: 'clamp(2rem, 8vw, 2.5rem)',
+                height: 'clamp(2rem, 8vw, 2.5rem)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -351,11 +291,11 @@ const PropertyCard = ({ listing }) => {
                 zIndex: 10,
                 transition: 'all 0.2s'
               }}
-              onMouseEnter={(e) => {
+              onMouseEnter={(e) => { 
                 e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 1)';
                 e.currentTarget.style.transform = 'translateY(-50%) scale(1.1)';
               }}
-              onMouseLeave={(e) => {
+              onMouseLeave={(e) => { 
                 e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
                 e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
               }}
@@ -366,12 +306,12 @@ const PropertyCard = ({ listing }) => {
             {/* Dot Indicators */}
             <div style={{
               position: 'absolute',
-              bottom: '0.75rem',
+              bottom: 'clamp(0.5rem, 2vw, 0.75rem)',
               left: '50%',
               transform: 'translateX(-50%)',
               display: 'flex',
-              gap: '0.375rem',
-              padding: '0.375rem 0.625rem',
+              gap: 'clamp(0.25rem, 1vw, 0.375rem)',
+              padding: 'clamp(0.25rem, 1vw, 0.375rem) clamp(0.5rem, 2vw, 0.625rem)',
               backgroundColor: 'rgba(0, 0, 0, 0.6)',
               borderRadius: '9999px',
               zIndex: 10
@@ -380,26 +320,28 @@ const PropertyCard = ({ listing }) => {
                 <div
                   key={index}
                   style={{
-                    width: '0.375rem',
-                    height: '0.375rem',
+                    width: index === currentImageIndex ? 'clamp(0.75rem, 2vw, 1rem)' : 'clamp(0.25rem, 1vw, 0.375rem)',
+                    height: 'clamp(0.25rem, 1vw, 0.375rem)',
                     borderRadius: '50%',
                     backgroundColor: index === currentImageIndex ? 'white' : 'rgba(255, 255, 255, 0.5)',
-                    transition: 'all 0.2s'
+                    transition: 'all 0.2s',
+                    cursor: 'pointer'
                   }}
+                  onClick={() => setCurrentImageIndex(index)}
                 />
               ))}
             </div>
 
-            {/* Image Counter Badge */}
+            {/* Image Counter */}
             <div style={{
               position: 'absolute',
-              top: '0.75rem',
-              right: '0.75rem',
+              top: 'clamp(0.5rem, 2vw, 0.75rem)',
+              right: 'clamp(0.5rem, 2vw, 0.75rem)',
               backgroundColor: 'rgba(0, 0, 0, 0.7)',
               color: 'white',
-              padding: '0.25rem 0.5rem',
+              padding: 'clamp(0.125rem, 0.5vw, 0.25rem) clamp(0.375rem, 1.5vw, 0.5rem)',
               borderRadius: '0.375rem',
-              fontSize: '0.75rem',
+              fontSize: 'clamp(0.6875rem, 2vw, 0.75rem)',
               fontWeight: '500',
               zIndex: 10
             }}>
@@ -407,104 +349,79 @@ const PropertyCard = ({ listing }) => {
             </div>
           </>
         )}
-      </div>
 
-      {/* Card Content Section */}
-      <div className="p-4 property-card-content">
-        {/* Status badge - only show for verified/approved listings */}
-        {(listing.status === "available" || listing.status === "approved" || listing.status === "verified") && (
-          <div style={{ marginBottom: '0.75rem' }}>
-            <span
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '0.25rem',
-                padding: '0.25rem 0.625rem',
-                fontSize: '0.75rem',
-                fontWeight: '500',
-                borderRadius: '9999px',
-                backgroundColor: 'hsl(174 62% 32% / 0.1)',
-                color: '#1f847a'
-              }}
-            >
-              <CheckCircle2 style={{ height: '0.75rem', width: '0.75rem' }} />
-              {listing.status === "available" || listing.status === "approved" || listing.status === "verified" ? "Verified" : listing.status}
+        {/* Verified Badge */}
+        {listing.isVerified && (
+          <div style={{ position: 'absolute', top: 'clamp(0.5rem, 2vw, 0.75rem)', left: 'clamp(0.5rem, 2vw, 0.75rem)' }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', padding: 'clamp(0.25rem, 1vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem)', fontSize: 'clamp(0.7rem, 2vw, 0.825rem)', fontWeight: '600', backgroundColor: 'hsl(152 60% 40%)', color: 'white', borderRadius: '9999px', gap: '0.375rem', backdropFilter: 'blur(8px)' }}>
+              <Shield style={{ height: 'clamp(0.7rem, 2vw, 0.825rem)', width: 'clamp(0.7rem, 2vw, 0.825rem)' }} />
+              Verified
             </span>
           </div>
         )}
+      </div>
 
-        <h3 className="font-semibold tracking-tight mb-1" style={{ color: 'hsl(200 25% 15%)', fontSize: '1.125rem' }}>
+      {/* Card Content */}
+      <div style={{ padding: 'clamp(1rem, 3vw, 1.25rem)', display: 'flex', flexDirection: 'column', gap: 'clamp(0.5rem, 2vw, 0.75rem)' }}>
+        
+        {/* Title */}
+        <h3 style={{ color: 'hsl(200 25% 15%)', fontSize: 'clamp(0.975rem, 2.5vw, 1.1rem)', fontWeight: '700', lineHeight: '1.3', margin: 0 }}>
           {listing.title}
         </h3>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', marginBottom: '0.75rem' }}>
-          <MapPin style={{ height: '0.875rem', width: '0.875rem', color: 'hsl(200 15% 45%)' }} />
-          <span style={{ fontSize: '0.875rem', color: 'hsl(200 15% 45%)' }}>
-            {listing.area}, {listing.city}
-          </span>
+
+        {/* Location */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', color: 'hsl(200 15% 45%)', fontSize: 'clamp(0.8rem, 2vw, 0.875rem)' }}>
+          <MapPin style={{ height: 'clamp(0.8rem, 2vw, 0.875rem)', width: 'clamp(0.8rem, 2vw, 0.875rem)', flexShrink: 0 }} />
+          {listing.area}, {listing.city}
         </div>
 
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', fontSize: '0.875rem', color: 'hsl(200 15% 45%)', marginBottom: '0.75rem' }}>
-          <span style={{ fontWeight: '600' }}>{listing.bedrooms ?? 0} bed{listing.bedrooms === 1 ? '' : 's'}</span>
-          <span style={{ fontWeight: '600' }}>{listing.bathrooms ?? 0} bath{listing.bathrooms === 1 ? '' : 's'}</span>
+        {/* Features */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.5rem, 2vw, 0.75rem)', flexWrap: 'wrap', fontSize: 'clamp(0.8rem, 2vw, 0.875rem)', color: 'hsl(200 15% 45%)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+            <BedDouble style={{ height: 'clamp(0.875rem, 2.5vw, 1rem)', width: 'clamp(0.875rem, 2.5vw, 1rem)', color: 'hsl(174 62% 36%)' }} />
+            {listing.bedrooms ?? '—'} bed{listing.bedrooms === 1 ? '' : 's'}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+            <Bath style={{ height: 'clamp(0.875rem, 2.5vw, 1rem)', width: 'clamp(0.875rem, 2.5vw, 1rem)', color: 'hsl(174 62% 36%)' }} />
+            {listing.bathrooms ?? '—'} bath{listing.bathrooms === 1 ? '' : 's'}
+          </div>
           {listing.property_type && (
-            <span style={{ fontWeight: '600' }}>{String(listing.property_type).replace(/\b\w/g, c => c.toUpperCase())}</span>
+            <span style={{ fontWeight: '600', color: 'hsl(174 62% 32%)' }}>
+              {String(listing.property_type).replace(/\b\w/g, c => c.toUpperCase())}
+            </span>
           )}
         </div>
 
-        <div className="details-section" style={{ marginBottom: '0.75rem' }}>
-          <div className="font-bold" style={{ color: 'hsl(174 62% 32%)', fontSize: '1.25rem' }}>
-            GH₵{listing.salePrice.toLocaleString()}
-          </div>
+        {/* Price */}
+        <div style={{ padding: 'clamp(0.625rem, 2vw, 0.75rem)', backgroundColor: 'hsl(174 62% 32% / 0.07)', border: '1px solid hsl(174 62% 32% / 0.15)', borderRadius: '0.5rem', textAlign: 'center', marginTop: 'clamp(0.25rem, 1vw, 0.5rem)' }}>
+          <p style={{ fontSize: 'clamp(0.7rem, 2vw, 0.775rem)', color: 'hsl(200 15% 45%)', margin: 0, marginBottom: '0.125rem' }}>Sale Price</p>
+          <p style={{ fontSize: 'clamp(1.1rem, 4vw, 1.3rem)', fontWeight: '800', color: 'hsl(174 62% 28%)', margin: 0 }}>
+            {fmt(listing.salePrice)}
+          </p>
         </div>
 
-        {listing.agentName && (
-          <div className="agent-section" style={{ 
-            paddingTop: '0.75rem', 
-            borderTop: '1px solid hsl(40 20% 88%)',
-            marginBottom: '0.75rem'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: '0.875rem', color: 'hsl(200 15% 45%)' }}>
-                {listing.agentName}
-              </span>
-              {listing.status === "verified" && (
-                <span
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    padding: '0.125rem 0.5rem',
-                    fontSize: '0.75rem',
-                    fontWeight: '500',
-                    backgroundColor: 'hsl(152 60% 40% / 0.1)',
-                    color: 'hsl(152 60% 40%)',
-                    borderRadius: '9999px'
-                  }}
-                >
-                  <CheckCircle2 style={{ height: '0.75rem', width: '0.75rem', marginRight: '0.25rem' }} />
-                  Verified
-                </span>
-              )}
-            </div>
-          </div>
-        )}
-
-        {listing.reviewCount > 0 && (
-          <div className="reviews-section" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-              <Star style={{ height: '1rem', width: '1rem', color: 'hsl(38 92% 50%)', fill: 'hsl(38 92% 50%)' }} />
-              <span style={{ fontWeight: '500', fontSize: '0.875rem', color: 'hsl(200 25% 15%)' }}>
+        {/* Agent & Reviews */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 'clamp(0.5rem, 2vw, 0.75rem)', borderTop: '1px solid hsl(40 20% 90%)', fontSize: 'clamp(0.8rem, 2vw, 0.875rem)' }}>
+          {listing.agentName && (
+            <span style={{ color: 'hsl(200 15% 45%)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {listing.agentName}
+            </span>
+          )}
+          {listing.reviewCount > 0 && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', marginLeft: 'auto', paddingLeft: '0.5rem' }}>
+              <Star style={{ height: 'clamp(0.875rem, 2.5vw, 1rem)', width: 'clamp(0.875rem, 2.5vw, 1rem)', color: 'hsl(38 92% 50%)', fill: 'hsl(38 92% 50%)' }} />
+              <span style={{ fontWeight: '600', color: 'hsl(200 25% 15%)' }}>
                 {listing.rating}
               </span>
             </div>
-            <span style={{ fontSize: '0.875rem', color: 'hsl(200 15% 45%)' }}>
-              ({listing.reviewCount} {listing.reviewCount === 1 ? 'review' : 'reviews'})
-            </span>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );
 };
+
+// ─── Main Component ───────────────────────────────────────────────────────────
 
 const SaleListingsPage = ({ listings: initialListingsData = {}, filters = {} }) => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -518,152 +435,99 @@ const SaleListingsPage = ({ listings: initialListingsData = {}, filters = {} }) 
   const [cityOptions, setCityOptions] = useState([{ value: "", label: "All Regions" }]);
   const [areaOptions, setAreaOptions] = useState([{ value: "", label: "All Areas" }]);
 
-  // Initialize listings and filters on component mount
+  // Initialize listings
   useEffect(() => {
-    // Handle different response formats
     const data = initialListingsData.data || initialListingsData;
-    
     if (data && Array.isArray(data)) {
       const formattedInitialListings = formatListings(data);
       setListings(formattedInitialListings);
-      
-      // Set current page from initial response
-      if (initialListingsData.current_page) {
-        setCurrentPage(initialListingsData.current_page);
-      }
-      
-      // Check if there are more items (Laravel uses has_more or next_page_url)
+      setCurrentPage(initialListingsData.current_page || 1);
       setHasMore(
         initialListingsData.has_more !== false &&
         (initialListingsData.next_page_url || initialListingsData.current_page < initialListingsData.last_page)
       );
     }
 
-    // apply filters passed from server
-    if (filters.city) {
-      setSelectedCity(filters.city.toLowerCase());
-    }
-    if (filters.area) {
-      setSelectedArea(filters.area.replace(/-/g, ' '));
-    }
+    if (filters.city) setSelectedCity(filters.city.toLowerCase());
+    if (filters.area) setSelectedArea(filters.area.replace(/-/g, ' '));
   }, [initialListingsData, filters]);
 
+  // Load cities
   useEffect(() => {
     const loadCities = async () => {
       try {
         const response = await fetch('/buy/api/cities');
-        if (!response.ok) {
-          throw new Error(`Failed to fetch cities: ${response.status}`);
-        }
-
+        if (!response.ok) throw new Error('Failed to fetch cities');
         const data = await response.json();
         const options = [
           { value: '', label: 'All Regions' },
           ...data.cities.map((city) => ({ value: city.toLowerCase(), label: city }))
         ];
-
         setCityOptions(options);
       } catch (error) {
-        console.error('Failed to load sale cities:', error);
+        console.error('Failed to load cities:', error);
       }
     };
-
     loadCities();
   }, []);
 
+  // Load areas
   useEffect(() => {
     const loadAreas = async () => {
       try {
         const response = await fetch('/buy/api/areas');
-        if (!response.ok) {
-          throw new Error(`Failed to fetch areas: ${response.status}`);
-        }
-
+        if (!response.ok) throw new Error('Failed to fetch areas');
         const data = await response.json();
         const options = [
           { value: '', label: 'All Areas' },
           ...data.areas.map((area) => ({ value: area.toLowerCase(), label: area }))
         ];
-
         setAreaOptions(options);
       } catch (error) {
-        console.error('Failed to load sale areas:', error);
+        console.error('Failed to load areas:', error);
       }
     };
-
     loadAreas();
   }, []);
-
 
   const formatListings = (dbListings) => {
     return dbListings.map(listing => ({
       id: listing.id,
       title: listing.title || `${listing.bedrooms} Bedroom ${listing.property_type}`,
-      area: listing.area || listing.location,
+      area: listing.area || listing.location || 'Unknown',
       city: listing.city || "Accra",
       salePrice: parseFloat(listing.sale_price) || 0,
-      advanceDuration: parseInt(listing.advance_duration) || 1,
       bedrooms: listing.bedrooms,
       bathrooms: listing.bathrooms,
       property_type: listing.property_type,
       agentName: listing.agent_name || null,
       status: listing.status || 'pending',
       isVerified: Boolean(listing.is_verified),
-      isClaimed: Boolean(listing.is_verified), 
       reviewCount: parseInt(listing.review_count) || 0,
       rating: parseFloat(listing.rating) || 0,
       images: listing.images || [],
-      amenities: listing.amenities || [],
-      description: listing.description || '',
       created_at: listing.created_at
     }));
   };
 
   const loadMoreListings = async () => {
-    // Prevent duplicate requests
     if (isLoading || !hasMore) return;
     
     setIsLoading(true);
     try {
-      // Compute next page number
       const nextPage = currentPage + 1;
-      const url = `/buy/api/more?page=${nextPage}`;
+      const response = await fetch(`/buy/api/more?page=${nextPage}`);
       
-      const response = await fetch(url);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       
       const data = await response.json();
       
-      // Debug logging (remove in production)
-      console.log('Loaded listings:', {
-        count: data.listings?.length,
-        has_more: data.has_more,
-        last_id: data.last_id,
-        current_total: listings.length
-      });
-      
       if (data.listings && Array.isArray(data.listings) && data.listings.length > 0) {
         const formattedNewListings = formatListings(data.listings);
-        
-        // Check for duplicates (development only)
-        const existingIds = new Set(listings.map(l => l.id));
-        const duplicates = formattedNewListings.filter(l => existingIds.has(l.id));
-        
-        if (duplicates.length > 0) {
-          console.warn('⚠️ Duplicate listings detected:', duplicates.map(d => d.id));
-        }
-        
-        // Add new listings
         setListings(prev => [...prev, ...formattedNewListings]);
-        
-        // Update current page and hasMore
         setCurrentPage(data.current_page || nextPage);
         setHasMore(data.has_more);
       } else {
-        // No more listings available
         setHasMore(false);
       }
     } catch (error) {
@@ -718,100 +582,125 @@ const SaleListingsPage = ({ listings: initialListingsData = {}, filters = {} }) 
         h1, h2, h3, h4, h5, h6 {
           font-weight: 600;
         }
+
+        @media (max-width: 768px) {
+          .search-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .filter-section {
+            grid-template-columns: 1fr 1fr !important;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .filter-section {
+            grid-template-columns: 1fr !important;
+          }
+        }
+
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(8px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        .listing-card {
+          animation: fadeIn 0.4s ease-out;
+        }
       `}</style>
 
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'hsl(40 33% 98%)' }}>
         <Header />
 
         <main style={{ flex: 1 }}>
-          {/* Search Header */}
-          <div style={{ backgroundColor: 'hsl(0 0% 100%)', borderBottom: '1px solid hsl(40 20% 88%)', padding: '1.5rem 0' }}>
-            <div className="container mx-auto px-4">
-              <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-4" style={{ color: 'hsl(200 25% 15%)' }}>
-                Find Properties for Sale in Ghana
-              </h1>
+          
+          {/* Search & Filter Header */}
+          <div style={{ backgroundColor: 'white', borderBottom: '1px solid hsl(40 20% 88%)', paddingTop: 'clamp(1.5rem, 4vw, 2rem)', paddingBottom: 'clamp(1.5rem, 4vw, 2rem)' }}>
+            <div className="container mx-auto" style={{ padding: '0 clamp(0.75rem, 3vw, 1rem)' }}>
               
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '0.75rem' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.75rem' }}>
-                  {/* Search Input */}
-                  <div style={{ position: 'relative', gridColumn: 'span 2' }}>
-                    <MapPin 
-                      style={{ 
-                        position: 'absolute', 
-                        left: '0.75rem', 
-                        top: '50%', 
-                        transform: 'translateY(-50%)', 
-                        height: '1.25rem', 
-                        width: '1.25rem', 
-                        color: 'hsl(200 15% 45%)' 
-                      }} 
-                    />
-                    <input
-                      type="text"
-                      placeholder="Search by area or city..."
-                      style={{
-                        width: '100%',
-                        paddingLeft: '2.5rem',
-                        height: '3rem',
-                        border: '1px solid hsl(40 20% 88%)',
-                        borderRadius: '0.75rem',
-                        fontSize: '1rem',
-                        outline: 'none',
-                        backgroundColor: 'white',
-                        color: 'hsl(200 25% 15%)'
-                      }}
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      onFocus={(e) => e.currentTarget.style.borderColor = 'hsl(174 62% 32%)'}
-                      onBlur={(e) => e.currentTarget.style.borderColor = 'hsl(40 20% 88%)'}
-                    />
-                  </div>
+              {/* Heading */}
+              <div style={{ marginBottom: 'clamp(1.5rem, 4vw, 2rem)' }}>
+                <h1 style={{ color: 'hsl(200 25% 15%)', fontSize: 'clamp(1.5rem, 5vw, 2rem)', fontWeight: '700', lineHeight: '1.2', margin: 0, marginBottom: '0.5rem' }}>
+                  Find Properties for Sale
+                </h1>
+                <p style={{ color: 'hsl(200 15% 45%)', fontSize: 'clamp(0.875rem, 2.5vw, 1rem)', margin: 0 }}>
+                  Browse verified listings across Ghana
+                </p>
+              </div>
 
-                  {/* City Dropdown */}
-                  <Dropdown
-                    value={selectedCity}
-                    options={cityOptions}
-                    onChange={setSelectedCity}
-                    placeholder="All Regions"
-                  />
+              {/* Search Input */}
+              <div style={{ marginBottom: 'clamp(1.25rem, 3vw, 1.5rem)', position: 'relative' }}>
+                <SearchIcon style={{ position: 'absolute', left: 'clamp(0.75rem, 2vw, 1rem)', top: '50%', transform: 'translateY(-50%)', height: 'clamp(1.1rem, 2.5vw, 1.25rem)', width: 'clamp(1.1rem, 2.5vw, 1.25rem)', color: 'hsl(200 15% 45%)' }} />
+                <input
+                  type="text"
+                  placeholder="Search by area, city, or property type..."
+                  style={{
+                    width: '100%',
+                    paddingLeft: 'clamp(2.5rem, 5vw, 3rem)',
+                    height: 'clamp(2.75rem, 10vw, 3.25rem)',
+                    border: '1px solid hsl(40 20% 88%)',
+                    borderRadius: '0.75rem',
+                    fontSize: 'clamp(0.9rem, 2.5vw, 1rem)',
+                    outline: 'none',
+                    backgroundColor: 'white',
+                    color: 'hsl(200 25% 15%)',
+                    transition: 'border-color 0.2s',
+                    fontWeight: '500'
+                  }}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onFocus={(e) => e.currentTarget.style.borderColor = 'hsl(174 62% 32%)'}
+                  onBlur={(e) => e.currentTarget.style.borderColor = 'hsl(40 20% 88%)'}
+                />
+              </div>
 
-                  {/* Area Dropdown */}
-                  <Dropdown
-                    value={selectedArea}
-                    options={areaOptions}
-                    onChange={setSelectedArea}
-                    placeholder="All Areas"
-                  />
+              {/* Filters */}
+              <div className="search-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 'clamp(0.75rem, 2vw, 1rem)' }}>
+                <Dropdown
+                  value={selectedCity}
+                  options={cityOptions}
+                  onChange={setSelectedCity}
+                  placeholder="All Regions"
+                  label="Region"
+                />
 
-                  {/* Sort By Dropdown */}
-                  <Dropdown
-                    value={sortBy}
-                    options={sortOptions}
-                    onChange={setSortBy}
-                    placeholder="Sort by"
-                  />
+                <Dropdown
+                  value={selectedArea}
+                  options={areaOptions}
+                  onChange={setSelectedArea}
+                  placeholder="All Areas"
+                  label="Area"
+                />
 
-                  {/* Search Button */}
+                <Dropdown
+                  value={sortBy}
+                  options={sortOptions}
+                  onChange={setSortBy}
+                  placeholder="Sort by"
+                  label="Sort"
+                />
+
+                <div style={{ display: 'flex', alignItems: 'flex-end' }}>
                   <button
                     style={{
-                      height: '3rem',
-                      background: 'linear-gradient(135deg, hsl(174 62% 32%) 0%, hsl(174 50% 25%) 100%)',
+                      width: '100%',
+                      height: 'clamp(2.5rem, 10vw, 3rem)',
+                      background: 'linear-gradient(135deg, hsl(174 62% 28%), hsl(174 55% 36%))',
                       color: 'white',
                       border: 'none',
                       borderRadius: '0.75rem',
-                      fontWeight: '500',
+                      fontWeight: '600',
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       gap: '0.5rem',
-                      transition: 'opacity 0.2s'
+                      transition: 'all 0.2s',
+                      fontSize: 'clamp(0.875rem, 2vw, 1rem)'
                     }}
-                    onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
-                    onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
-                    onClick={() => console.log('Search clicked')}
+                    onMouseEnter={(e) => { e.currentTarget.style.filter = 'brightness(1.1)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.filter = 'none'; e.currentTarget.style.transform = 'none'; }}
                   >
-                    <Search style={{ height: '1.25rem', width: '1.25rem' }} />
+                    <SearchIcon style={{ height: 'clamp(1rem, 2.5vw, 1.1rem)', width: 'clamp(1rem, 2.5vw, 1.1rem)' }} />
                     Search
                   </button>
                 </div>
@@ -819,58 +708,71 @@ const SaleListingsPage = ({ listings: initialListingsData = {}, filters = {} }) 
             </div>
           </div>
 
-          {/* Results */}
-          <div className="container mx-auto px-4 py-8">
-            <div style={{ marginBottom: '1.5rem' }}>
-              <p style={{ color: 'hsl(200 15% 45%)' }}>
-                Showing <span className="font-medium" style={{ color: 'hsl(200 25% 15%)' }}>{sortedListings.length}</span> properties
-              </p>
+          {/* Results Section */}
+          <div className="container mx-auto" style={{ padding: 'clamp(1.5rem, 4vw, 2rem) clamp(0.75rem, 3vw, 1rem)', flex: 1 }}>
+            
+            {/* Results Count */}
+            <div style={{ marginBottom: 'clamp(1.5rem, 3vw, 2rem)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <p style={{ color: 'hsl(200 25% 15%)', fontSize: 'clamp(0.875rem, 2.5vw, 1rem)', fontWeight: '600', margin: 0 }}>
+                  {sortedListings.length} {sortedListings.length === 1 ? 'Property' : 'Properties'} Available
+                </p>
+                {(searchQuery || selectedCity || selectedArea) && (
+                  <p style={{ color: 'hsl(200 15% 45%)', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', margin: '0.25rem 0 0 0' }}>
+                    Based on your filters
+                  </p>
+                )}
+              </div>
             </div>
 
             {/* Listings Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 gap-6">
-              {sortedListings.map((listing) => (
-                <Link 
-                  key={listing.id} 
-                  href={`/buy/${listing.id}`}
-                  className="block transition-transform hover:scale-[1.02]"
-                >
-                  <PropertyCard listing={listing} />
-                </Link>
-              ))}
-            </div>
-
-            {sortedListings.length === 0 && (
-              <div style={{ textAlign: 'center', padding: '3rem 0' }}>
-                <MapPin style={{ height: '3rem', width: '3rem', color: 'hsl(200 15% 45% / 0.5)', margin: '0 auto 1rem' }} />
-                <h3 className="text-lg font-semibold tracking-tight" style={{ color: 'hsl(200 25% 15%)', marginBottom: '0.5rem' }}>
-                  No properties found
+            {sortedListings.length > 0 ? (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(clamp(250px, 60vw, 320px), 1fr))', gap: 'clamp(1rem, 3vw, 1.5rem)' }}>
+                {sortedListings.map((listing) => (
+                  <Link 
+                    key={listing.id} 
+                    href={`/buy/${listing.id}`}
+                    className="listing-card"
+                    style={{ textDecoration: 'none', display: 'block' }}
+                  >
+                    <PropertyCard listing={listing} />
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <div style={{ textAlign: 'center', padding: 'clamp(2rem, 5vw, 4rem) 1rem' }}>
+                <MapPin style={{ height: 'clamp(2.5rem, 8vw, 3.5rem)', width: 'clamp(2.5rem, 8vw, 3.5rem)', color: 'hsl(200 15% 45% / 0.4)', margin: '0 auto 1rem', display: 'block' }} />
+                <h3 style={{ color: 'hsl(200 25% 15%)', fontSize: 'clamp(1.1rem, 3vw, 1.35rem)', fontWeight: '600', margin: '0 0 0.5rem 0' }}>
+                  No Properties Found
                 </h3>
-                <p style={{ color: 'hsl(200 15% 45%)' }}>Try adjusting your search criteria</p>
+                <p style={{ color: 'hsl(200 15% 45%)', fontSize: 'clamp(0.875rem, 2vw, 1rem)', margin: 0 }}>
+                  Try adjusting your search criteria or filters
+                </p>
               </div>
             )}
 
-            {/* Load More */}
+            {/* Load More Button */}
             {hasMore && sortedListings.length > 0 && (
-              <div style={{ textAlign: 'center', marginTop: '2rem' }}>
+              <div style={{ textAlign: 'center', marginTop: 'clamp(2rem, 4vw, 3rem)' }}>
                 <button
                   style={{
-                    padding: '0.75rem 2rem',
+                    padding: 'clamp(0.75rem, 2vw, 0.875rem) clamp(1.5rem, 4vw, 2rem)',
                     border: '1px solid hsl(40 20% 88%)',
                     borderRadius: '0.75rem',
                     backgroundColor: isLoading ? 'hsl(40 20% 88%)' : 'white',
                     color: isLoading ? 'hsl(200 15% 45%)' : 'hsl(174 62% 32%)',
-                    fontWeight: '500',
+                    fontWeight: '600',
                     cursor: isLoading ? 'not-allowed' : 'pointer',
-                    transition: 'background-color 0.2s',
-                    opacity: isLoading ? 0.6 : 1
+                    transition: 'all 0.2s',
+                    opacity: isLoading ? 0.6 : 1,
+                    fontSize: 'clamp(0.875rem, 2vw, 1rem)'
                   }}
                   onMouseEnter={(e) => !isLoading && (e.currentTarget.style.backgroundColor = 'hsl(174 62% 32% / 0.05)')}
                   onMouseLeave={(e) => !isLoading && (e.currentTarget.style.backgroundColor = 'white')}
                   onClick={loadMoreListings}
                   disabled={isLoading}
                 >
-                  {isLoading ? 'Loading...' : 'Load More Properties'}
+                  {isLoading ? 'Loading Properties...' : 'Load More Properties'}
                 </button>
               </div>
             )}

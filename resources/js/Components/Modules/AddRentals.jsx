@@ -161,8 +161,8 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData, locations
       return payload;
     });
 
-    // choose endpoint based on purpose (same for now but kept for clarity)
-    const endpoint = "/rent"; // future might become "/sale" when route added
+    // choose endpoint based on whether an admin is submitting the listing
+    const endpoint = adminData ? "/admin/rent" : "/rent";
     post(endpoint, {
       forceFormData: true,
       onSuccess: () => {

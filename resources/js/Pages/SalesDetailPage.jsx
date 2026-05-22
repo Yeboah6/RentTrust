@@ -1,14 +1,25 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from '@inertiajs/react';
-import { MapPin, Home, TrendingUp, TrendingDown, ArrowLeft, Building, DollarSign, Calendar } from 'lucide-react';
+import { MapPin, Home, TrendingUp, TrendingDown, ChevronLeft, Building, DollarSign, Calendar, ChevronRight, BedDouble, Bath } from 'lucide-react';
 import Header from "../Components/Layouts/Header";
 import Footer from "../Components/Layouts/Footer";
 
-const PropertyCard = ({ property }) => {
-  const [isHovered, setIsHovered] = React.useState(false);
-  const [imageError, setImageError] = React.useState(false);
+// ─── Icon Components ───────────────────────────────────────────────────────────
 
-  // Parse images if they're stored as JSON string
+const Shield = ({ style }) => (
+  <svg style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+  </svg>
+);
+
+// ─── Property Card Component ───────────────────────────────────────────────────
+
+const PropertyCard = ({ property }) => {
+  const [isHovered, setIsHovered] = useState(false);
+  const [imageError, setImageError] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  // Parse images
   let imagesArray = [];
   try {
     if (property.images) {
@@ -22,37 +33,48 @@ const PropertyCard = ({ property }) => {
     imagesArray = [];
   }
 
-  // Get the first image or null
   const firstImage = imagesArray.length > 0 ? imagesArray[0] : property.image;
+
+  const handlePrevImage = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setCurrentImageIndex((prev) => prev === 0 ? imagesArray.length - 1 : prev - 1);
+  };
+
+  const handleNextImage = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setCurrentImageIndex((prev) => prev === imagesArray.length - 1 ? 0 : prev + 1);
+  };
 
   return (
     <Link
       href={`/buy/${property.id}`}
-      className="block overflow-hidden border rounded-xl bg-white transition-all duration-300"
+      className="block overflow-hidden rounded-lg bg-white transition-all duration-300"
       style={{
-        borderColor: 'hsl(40 20% 88%)',
-        transform: isHovered ? 'translateY(-4px)' : 'translateY(0)',
-        boxShadow: isHovered
-          ? '0 8px 20px -4px hsl(200 25% 15% / 0.12), 0 4px 8px -2px hsl(200 25% 15% / 0.08)'
-          : '0 2px 8px -2px hsl(200 25% 15% / 0.1), 0 1px 3px -1px hsl(200 25% 15% / 0.06)',
+        border: '1px solid hsl(40 20% 88%)',
+        transform: isHovered ? 'translateY(-6px)' : 'translateY(0)',
+        boxShadow: isHovered 
+          ? '0 12px 24px -6px rgba(0, 0, 0, 0.12)'
+          : '0 4px 6px -2px rgba(0, 0, 0, 0.05)',
         textDecoration: 'none'
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Property Image */}
+      {/* Image Section */}
       <div
         style={{
           width: '100%',
-          height: '200px',
-          backgroundColor: 'hsl(40 30% 94%)',
+          height: 'clamp(10rem, 35vw, 14rem)',
+          backgroundColor: 'hsl(174 62% 32% / 0.05)',
           position: 'relative',
           overflow: 'hidden'
         }}
       >
         {firstImage && !imageError ? (
           <img
-            src={`/storage/rental_images/${firstImage}`}
+            src={`/storage/rental_images/${imagesArray[currentImageIndex] || firstImage}`}
             alt={`${property.property_type || 'Property'} image`}
             style={{
               width: '100%',
@@ -60,7 +82,7 @@ const PropertyCard = ({ property }) => {
               objectFit: 'cover',
               objectPosition: 'center',
               transition: 'transform 0.3s ease-in-out',
-              transform: isHovered ? 'scale(1.05)' : 'scale(1)'
+              transform: isHovered ? 'scale(1.08)' : 'scale(1)'
             }}
             onError={() => setImageError(true)}
           />
@@ -73,66 +95,193 @@ const PropertyCard = ({ property }) => {
             height: '100%',
             flexDirection: 'column'
           }}>
-            <MapPin style={{ height: '3rem', width: '3rem', color: 'hsl(200 25% 15% / 0.2)' }} />
-            <div style={{ fontSize: '12px', color: 'hsl(200 15% 45%)', marginTop: '8px' }}>
-              No image available
+            <MapPin style={{ height: 'clamp(2.5rem, 8vw, 3rem)', width: 'clamp(2.5rem, 8vw, 3rem)', color: 'hsl(200 25% 15% / 0.15)' }} />
+            <div style={{ fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', color: 'hsl(200 15% 45%)', marginTop: '0.5rem' }}>
+              No image
             </div>
           </div>
         )}
 
-        {/* Image count badge */}
+        {/* Carousel Controls */}
         {imagesArray.length > 1 && !imageError && (
-          <div style={{
-            position: 'absolute',
-            bottom: '8px',
-            right: '8px',
-            backgroundColor: 'rgba(0, 0, 0, 0.7)',
-            color: 'white',
-            padding: '4px 8px',
-            borderRadius: '4px',
-            fontSize: '12px',
-            fontWeight: '500'
-          }}>
-            +{imagesArray.length - 1} more
+          <>
+            <button
+              onClick={handlePrevImage}
+              style={{
+                position: 'absolute',
+                left: 'clamp(0.5rem, 2vw, 0.75rem)',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                border: 'none',
+                borderRadius: '50%',
+                width: 'clamp(2rem, 8vw, 2.5rem)',
+                height: 'clamp(2rem, 8vw, 2.5rem)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+                zIndex: 10,
+                transition: 'all 0.2s'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 1)';
+                e.currentTarget.style.transform = 'translateY(-50%) scale(1.1)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+                e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
+              }}
+            >
+              <ChevronLeft size={20} style={{ color: '#374151' }} />
+            </button>
+
+            <button
+              onClick={handleNextImage}
+              style={{
+                position: 'absolute',
+                right: 'clamp(0.5rem, 2vw, 0.75rem)',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                border: 'none',
+                borderRadius: '50%',
+                width: 'clamp(2rem, 8vw, 2.5rem)',
+                height: 'clamp(2rem, 8vw, 2.5rem)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+                zIndex: 10,
+                transition: 'all 0.2s'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 1)';
+                e.currentTarget.style.transform = 'translateY(-50%) scale(1.1)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+                e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
+              }}
+            >
+              <ChevronRight size={20} style={{ color: '#374151' }} />
+            </button>
+
+            {/* Dot Indicators */}
+            <div style={{
+              position: 'absolute',
+              bottom: 'clamp(0.5rem, 2vw, 0.75rem)',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              display: 'flex',
+              gap: 'clamp(0.25rem, 1vw, 0.375rem)',
+              padding: 'clamp(0.25rem, 1vw, 0.375rem) clamp(0.5rem, 2vw, 0.625rem)',
+              backgroundColor: 'rgba(0, 0, 0, 0.6)',
+              borderRadius: '9999px',
+              zIndex: 10
+            }}>
+              {imagesArray.map((_, index) => (
+                <div
+                  key={index}
+                  style={{
+                    width: index === currentImageIndex ? 'clamp(0.75rem, 2vw, 1rem)' : 'clamp(0.25rem, 1vw, 0.375rem)',
+                    height: 'clamp(0.25rem, 1vw, 0.375rem)',
+                    borderRadius: '50%',
+                    backgroundColor: index === currentImageIndex ? 'white' : 'rgba(255, 255, 255, 0.5)',
+                    transition: 'all 0.2s',
+                    cursor: 'pointer'
+                  }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setCurrentImageIndex(index);
+                  }}
+                />
+              ))}
+            </div>
+
+            {/* Image Counter */}
+            <div style={{
+              position: 'absolute',
+              top: 'clamp(0.5rem, 2vw, 0.75rem)',
+              right: 'clamp(0.5rem, 2vw, 0.75rem)',
+              backgroundColor: 'rgba(0, 0, 0, 0.7)',
+              color: 'white',
+              padding: 'clamp(0.125rem, 0.5vw, 0.25rem) clamp(0.375rem, 1.5vw, 0.5rem)',
+              borderRadius: '0.375rem',
+              fontSize: 'clamp(0.6875rem, 2vw, 0.75rem)',
+              fontWeight: '500',
+              zIndex: 10
+            }}>
+              {currentImageIndex + 1} / {imagesArray.length}
+            </div>
+          </>
+        )}
+
+        {property.is_verified && (
+          <div style={{ position: 'absolute', top: 'clamp(0.5rem, 2vw, 0.75rem)', left: 'clamp(0.5rem, 2vw, 0.75rem)' }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', padding: 'clamp(0.25rem, 1vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem)', fontSize: 'clamp(0.7rem, 2vw, 0.825rem)', fontWeight: '600', backgroundColor: 'hsl(152 60% 40%)', color: 'white', borderRadius: '9999px', gap: '0.375rem', backdropFilter: 'blur(8px)' }}>
+              <Shield style={{ height: 'clamp(0.7rem, 2vw, 0.825rem)', width: 'clamp(0.7rem, 2vw, 0.825rem)' }} />
+              Verified
+            </span>
           </div>
         )}
       </div>
 
-      {/* Property Details */}
-      <div className="p-4">
-        <h3 className="font-semibold tracking-tight mb-2" style={{ color: 'hsl(200 25% 15%)' }}>
+      {/* Card Content */}
+      <div style={{ padding: 'clamp(1rem, 3vw, 1.25rem)', display: 'flex', flexDirection: 'column', gap: 'clamp(0.5rem, 2vw, 0.75rem)' }}>
+        
+        {/* Type */}
+        <h3 style={{ color: 'hsl(200 25% 15%)', fontSize: 'clamp(0.975rem, 2.5vw, 1.1rem)', fontWeight: '700', lineHeight: '1.3', margin: 0 }}>
           {property.property_type || 'Property'}
         </h3>
 
-        <div className="space-y-2 text-sm mb-3">
-          <div className="flex items-center gap-2" style={{ color: 'hsl(200 15% 45%)' }}>
-            <MapPin className="h-4 w-4" />
-            <span>{property.area}</span>
-          </div>
-          <div className="flex items-center gap-2" style={{ color: 'hsl(200 15% 45%)' }}>
-            <Home className="h-4 w-4" />
-            <span>{property.bedrooms} bed • {property.bathrooms} bath</span>
-          </div>
+        {/* Location */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', color: 'hsl(200 15% 45%)', fontSize: 'clamp(0.8rem, 2vw, 0.875rem)' }}>
+          <MapPin style={{ height: 'clamp(0.8rem, 2vw, 0.875rem)', width: 'clamp(0.8rem, 2vw, 0.875rem)', flexShrink: 0 }} />
+          {property.area}
         </div>
 
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-xs mb-1" style={{ color: 'hsl(200 15% 45%)' }}>Sale Price</p>
-            <p className="font-bold" style={{ color: 'hsl(174 62% 32%)' }}>
-              GH₵{property.sale_price?.toLocaleString() || 'N/A'}
-            </p>
-          </div>
-          {property.created_at && (
-            <div className="text-xs" style={{ color: 'hsl(200 15% 45%)' }}>
-              <Calendar className="h-3 w-3 inline mr-1" />
-              {new Date(property.created_at).toLocaleDateString()}
+        {/* Features */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.5rem, 2vw, 0.75rem)', fontSize: 'clamp(0.8rem, 2vw, 0.875rem)', color: 'hsl(200 15% 45%)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '0.75rem', color: 'hsl(200 15% 45%)', fontSize: '0.875rem' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '0.22rem', fontSize: '0.76rem', color: 'hsl(200 15% 46%)' }}>
+                <BedDouble style={{ width: '0.82rem', height: '0.82rem' }} />
+                {property.bedrooms ?? 0} bed{property.bedrooms === 1 ? '' : 's'}
+              </span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '0.22rem', fontSize: '0.76rem', color: 'hsl(200 15% 46%)' }}>
+                <Bath style={{ width: '0.82rem', height: '0.82rem' }} />
+                {property.bathrooms ?? 0} bath{property.bathrooms === 1 ? '' : 's'}
+              </span>
+              {property.property_type && (
+                <span style={{ fontWeight: '600' }}>{String(property.property_type).replace(/\b\w/g, c => c.toUpperCase())}</span>
+              )}
             </div>
-          )}
         </div>
+
+        {/* Price */}
+        <div style={{ padding: 'clamp(0.625rem, 2vw, 0.75rem)', backgroundColor: 'hsl(174 62% 32% / 0.07)', border: '1px solid hsl(174 62% 32% / 0.15)', borderRadius: '0.5rem', textAlign: 'center', marginTop: 'clamp(0.25rem, 1vw, 0.5rem)' }}>
+          <p style={{ fontSize: 'clamp(0.7rem, 2vw, 0.775rem)', color: 'hsl(200 15% 45%)', margin: 0, marginBottom: '0.125rem' }}>Sale Price</p>
+          <p style={{ fontSize: 'clamp(1.1rem, 4vw, 1.3rem)', fontWeight: '800', color: 'hsl(174 62% 28%)', margin: 0 }}>
+            GH₵{property.sale_price?.toLocaleString() || 'N/A'}
+          </p>
+        </div>
+
+        {/* Date */}
+        {property.created_at && (
+          <div style={{ fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', color: 'hsl(200 15% 45%)', display: 'flex', alignItems: 'center', gap: '0.375rem', paddingTop: 'clamp(0.5rem, 2vw, 0.75rem)', borderTop: '1px solid hsl(40 20% 90%)' }}>
+            <Calendar style={{ height: 'clamp(0.75rem, 2vw, 0.875rem)', width: 'clamp(0.75rem, 2vw, 0.875rem)' }} />
+            Listed {new Date(property.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+          </div>
+        )}
       </div>
     </Link>
   );
 };
+
+// ─── Main Component ───────────────────────────────────────────────────────────
 
 const SalesDetailPage = ({ area, city, properties }) => {
   const isPositiveTrend = area.trend?.startsWith('+') || false;
@@ -145,51 +294,105 @@ const SalesDetailPage = ({ area, city, properties }) => {
 
         * {
           font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+          -webkit-font-smoothing: antialiased;
+          -moz-osx-font-smoothing: grayscale;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+          font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+          .stats-grid {
+            grid-template-columns: 1fr 1fr !important;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .stats-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
+
+        @keyframes slideDown {
+          from { opacity: 0; transform: translateY(-8px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(8px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        .stat-card {
+          animation: slideDown 0.4s ease-out;
+        }
+
+        .property-card {
+          animation: fadeIn 0.4s ease-out;
         }
       `}</style>
 
-      <div className="min-h-screen flex flex-col" style={{ backgroundColor: 'hsl(40 33% 98%)' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'hsl(40 33% 98%)' }}>
         <Header />
 
-        <main className="flex-1">
-          {/* Breadcrumb & Header */}
-          <div className="bg-white border-b py-6" style={{ borderColor: 'hsl(40 20% 88%)' }}>
-            <div className="container mx-auto px-4">
+        <main style={{ flex: 1 }}>
+          
+          {/* Breadcrumb & Header Section */}
+          <div style={{ backgroundColor: 'white', borderBottom: '1px solid hsl(40 20% 88%)', paddingTop: 'clamp(1.25rem, 3vw, 1.75rem)', paddingBottom: 'clamp(1.25rem, 3vw, 1.75rem)' }}>
+            <div className="container mx-auto" style={{ padding: '0 clamp(0.75rem, 3vw, 1rem)' }}>
+              
               {/* Breadcrumb */}
-              <div className="flex items-center gap-2 mb-4 text-sm" style={{ color: 'hsl(200 15% 45%)' }}>
-                <Link href="/buy/listings" className="hover:underline">Home</Link>
-                <span>/</span>
-                <Link href="/buy/areas" className="hover:underline">Areas</Link>
-                <span>/</span>
-                <Link href={`/buy/areas`} className="hover:underline">{cityLabel}</Link>
-                <span>/</span>
-                <span style={{ color: 'hsl(200 25% 15%)' }}>{area.name}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: 'clamp(1rem, 2vw, 1.25rem)', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', flexWrap: 'wrap' }}>
+                <Link href="/buy" style={{ color: 'hsl(174 62% 32%)', textDecoration: 'none', fontWeight: '500', cursor: 'pointer' }} onMouseEnter={(e) => e.currentTarget.style.textDecoration = 'underline'} onMouseLeave={(e) => e.currentTarget.style.textDecoration = 'none'}>
+                  Browse
+                </Link>
+                <span style={{ color: 'hsl(200 15% 45%)' }}>/</span>
+                <Link href="/buy/areas" style={{ color: 'hsl(174 62% 32%)', textDecoration: 'none', fontWeight: '500', cursor: 'pointer' }} onMouseEnter={(e) => e.currentTarget.style.textDecoration = 'underline'} onMouseLeave={(e) => e.currentTarget.style.textDecoration = 'none'}>
+                  Areas
+                </Link>
+                <span style={{ color: 'hsl(200 15% 45%)' }}>/</span>
+                <Link href={`/buy/areas?city=${city}`} style={{ color: 'hsl(174 62% 32%)', textDecoration: 'none', fontWeight: '500', cursor: 'pointer' }} onMouseEnter={(e) => e.currentTarget.style.textDecoration = 'underline'} onMouseLeave={(e) => e.currentTarget.style.textDecoration = 'none'}>
+                  {cityLabel}
+                </Link>
+                <span style={{ color: 'hsl(200 15% 45%)' }}>/</span>
+                <span style={{ color: 'hsl(200 25% 15%)', fontWeight: '600' }}>{area.name}</span>
               </div>
 
-              {/* Area Header */}
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              {/* Header with Title & Back Button */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(1rem, 2vw, 1.25rem)' }}>
                 <div>
-                  <h1 className="text-3xl font-bold mb-2 tracking-tight" style={{ color: 'hsl(200 25% 15%)' }}>
+                  <h1 style={{ color: 'hsl(200 25% 15%)', fontSize: 'clamp(1.75rem, 5vw, 2.5rem)', fontWeight: '700', lineHeight: '1.2', margin: 0, marginBottom: '0.5rem' }}>
                     {area.name}
                   </h1>
-                  <div className="flex items-center gap-2" style={{ color: 'hsl(200 15% 45%)' }}>
-                    <MapPin className="h-4 w-4" />
-                    <span>{cityLabel}, Ghana</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'hsl(200 15% 45%)', fontSize: 'clamp(0.875rem, 2.5vw, 1rem)' }}>
+                    <MapPin style={{ height: 'clamp(0.875rem, 2.5vw, 1rem)', width: 'clamp(0.875rem, 2.5vw, 1rem)' }} />
+                    {cityLabel}, Ghana
                   </div>
                 </div>
 
                 <Link
                   href="/buy/areas"
-                  className="self-start md:self-auto inline-flex items-center px-4 py-2 rounded-lg font-medium border transition-colors"
                   style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    padding: 'clamp(0.625rem, 2vw, 0.75rem) clamp(1rem, 2vw, 1.25rem)',
+                    border: '1px solid hsl(40 20% 88%)',
+                    borderRadius: '0.75rem',
+                    backgroundColor: 'white',
                     color: 'hsl(174 62% 32%)',
-                    borderColor: 'hsl(40 20% 88%)',
-                    backgroundColor: 'white'
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    textDecoration: 'none',
+                    fontSize: 'clamp(0.875rem, 2vw, 1rem)',
+                    transition: 'all 0.2s',
+                    width: 'fit-content'
                   }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(174 62% 32% / 0.05)'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
+                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'hsl(174 62% 32% / 0.05)'; e.currentTarget.style.borderColor = 'hsl(174 62% 32%)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'white'; e.currentTarget.style.borderColor = 'hsl(40 20% 88%)'; }}
                 >
-                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  <ChevronLeft style={{ height: 'clamp(1rem, 2.5vw, 1.125rem)', width: 'clamp(1rem, 2.5vw, 1.125rem)' }} />
                   Back to Areas
                 </Link>
               </div>
@@ -197,88 +400,102 @@ const SalesDetailPage = ({ area, city, properties }) => {
           </div>
 
           {/* Stats Section */}
-          <div className="container mx-auto px-4 py-8">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <div className="container mx-auto" style={{ padding: 'clamp(1.5rem, 4vw, 2rem) clamp(0.75rem, 3vw, 1rem)' }}>
+            
+            {/* Stats Grid */}
+            <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 'clamp(1rem, 2vw, 1.25rem)', marginBottom: 'clamp(2rem, 4vw, 2.5rem)' }}>
+              
               {/* Average Sale Price */}
-              <div className="bg-white rounded-lg p-6 border" style={{ borderColor: 'hsl(40 20% 88%)' }}>
-                <div className="flex items-center gap-2 mb-2" style={{ color: 'hsl(200 15% 45%)' }}>
-                  <DollarSign className="h-4 w-4" />
-                  <span className="text-sm">Average Sale Price</span>
+              <div className="stat-card" style={{ backgroundColor: 'white', borderRadius: '0.875rem', border: '1px solid hsl(40 20% 88%)', padding: 'clamp(1.25rem, 3vw, 1.5rem)', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'hsl(200 15% 45%)', fontSize: 'clamp(0.8rem, 2vw, 0.875rem)', fontWeight: '500' }}>
+                  <DollarSign style={{ height: 'clamp(1rem, 2.5vw, 1.125rem)', width: 'clamp(1rem, 2.5vw, 1.125rem)' }} />
+                  Average Sale Price
                 </div>
-                <p className="text-2xl font-bold" style={{ color: 'hsl(174 62% 32%)' }}>
-                  GH₵{area.avgPrice?.toLocaleString() || 'N/A'}
+                <p style={{ fontSize: 'clamp(1.5rem, 4vw, 1.875rem)', fontWeight: '800', color: 'hsl(174 62% 28%)', margin: 0 }}>
+                  GH₵{area.avgPrice?.toLocaleString() || '—'}
                 </p>
-                <p className="text-xs mt-1" style={{ color: 'hsl(200 15% 45%)' }}>per property</p>
+                <p style={{ fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', color: 'hsl(200 15% 45%)', margin: 0 }}>per property</p>
               </div>
 
               {/* Total Listings */}
-              <div className="bg-white rounded-lg p-6 border" style={{ borderColor: 'hsl(40 20% 88%)' }}>
-                <div className="flex items-center gap-2 mb-2" style={{ color: 'hsl(200 15% 45%)' }}>
-                  <Home className="h-4 w-4" />
-                  <span className="text-sm">Total Listings</span>
+              <div className="stat-card" style={{ backgroundColor: 'white', borderRadius: '0.875rem', border: '1px solid hsl(40 20% 88%)', padding: 'clamp(1.25rem, 3vw, 1.5rem)', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'hsl(200 15% 45%)', fontSize: 'clamp(0.8rem, 2vw, 0.875rem)', fontWeight: '500' }}>
+                  <Home style={{ height: 'clamp(1rem, 2.5vw, 1.125rem)', width: 'clamp(1rem, 2.5vw, 1.125rem)' }} />
+                  Total Listings
                 </div>
-                <p className="text-2xl font-bold" style={{ color: 'hsl(200 25% 15%)' }}>
+                <p style={{ fontSize: 'clamp(1.5rem, 4vw, 1.875rem)', fontWeight: '800', color: 'hsl(200 25% 15%)', margin: 0 }}>
                   {area.listingCount || 0}
                 </p>
-                <p className="text-xs mt-1" style={{ color: 'hsl(200 15% 45%)' }}>available properties</p>
+                <p style={{ fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', color: 'hsl(200 15% 45%)', margin: 0 }}>available properties</p>
               </div>
 
               {/* Price Trend */}
-              <div className="bg-white rounded-lg p-6 border" style={{ borderColor: 'hsl(40 20% 88%)' }}>
-                <div className="flex items-center gap-2 mb-2" style={{ color: 'hsl(200 15% 45%)' }}>
+              <div className="stat-card" style={{ backgroundColor: 'white', borderRadius: '0.875rem', border: '1px solid hsl(40 20% 88%)', padding: 'clamp(1.25rem, 3vw, 1.5rem)', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'hsl(200 15% 45%)', fontSize: 'clamp(0.8rem, 2vw, 0.875rem)', fontWeight: '500' }}>
                   {isPositiveTrend ? (
-                    <TrendingUp className="h-4 w-4" />
+                    <TrendingUp style={{ height: 'clamp(1rem, 2.5vw, 1.125rem)', width: 'clamp(1rem, 2.5vw, 1.125rem)' }} />
                   ) : (
-                    <TrendingDown className="h-4 w-4" />
+                    <TrendingDown style={{ height: 'clamp(1rem, 2.5vw, 1.125rem)', width: 'clamp(1rem, 2.5vw, 1.125rem)' }} />
                   )}
-                  <span className="text-sm">Price Trend</span>
+                  Price Trend
                 </div>
                 <p
-                  className="text-2xl font-bold"
-                  style={{ color: isPositiveTrend ? 'hsl(152 60% 40%)' : 'hsl(0 72% 51%)' }}
+                  style={{
+                    fontSize: 'clamp(1.5rem, 4vw, 1.875rem)',
+                    fontWeight: '800',
+                    color: isPositiveTrend ? 'hsl(152 60% 40%)' : 'hsl(0 65% 44%)',
+                    margin: 0
+                  }}
                 >
-                  {area.trend || 'N/A'}
+                  {area.trend || '—'}
                 </p>
-                <p className="text-xs mt-1" style={{ color: 'hsl(200 15% 45%)' }}>last 30 days</p>
+                <p style={{ fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', color: 'hsl(200 15% 45%)', margin: 0 }}>last 30 days</p>
               </div>
 
-              {/* Min-Max Range */}
-              <div className="bg-white rounded-lg p-6 border" style={{ borderColor: 'hsl(40 20% 88%)' }}>
-                <div className="flex items-center gap-2 mb-2" style={{ color: 'hsl(200 15% 45%)' }}>
-                  <Building className="h-4 w-4" />
-                  <span className="text-sm">Price Range</span>
+              {/* Price Range */}
+              <div className="stat-card" style={{ backgroundColor: 'white', borderRadius: '0.875rem', border: '1px solid hsl(40 20% 88%)', padding: 'clamp(1.25rem, 3vw, 1.5rem)', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'hsl(200 15% 45%)', fontSize: 'clamp(0.8rem, 2vw, 0.875rem)', fontWeight: '500' }}>
+                  <Building style={{ height: 'clamp(1rem, 2.5vw, 1.125rem)', width: 'clamp(1rem, 2.5vw, 1.125rem)' }} />
+                  Price Range
                 </div>
-                <p className="text-lg font-bold" style={{ color: 'hsl(200 25% 15%)' }}>
-                  GH₵{area.minPrice?.toLocaleString() || 0} - GH₵{area.maxPrice?.toLocaleString() || 0}
+                <p style={{ fontSize: 'clamp(1.25rem, 3vw, 1.5rem)', fontWeight: '700', color: 'hsl(200 25% 15%)', margin: 0, lineHeight: '1.2' }}>
+                  GH₵{area.minPrice?.toLocaleString() || 0} – GH₵{area.maxPrice?.toLocaleString() || 0}
                 </p>
-                <p className="text-xs mt-1" style={{ color: 'hsl(200 15% 45%)' }}>min - max</p>
+                <p style={{ fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', color: 'hsl(200 15% 45%)', margin: 0 }}>min – max</p>
               </div>
             </div>
 
             {/* Properties Section */}
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold mb-4 tracking-tight" style={{ color: 'hsl(200 25% 15%)' }}>
-                Available Properties for Sale in {area.name}
-              </h2>
-            </div>
-
-            {properties && properties.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {properties.map((property) => (
-                  <PropertyCard key={property.id} property={property} />
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-12 bg-white rounded-lg border" style={{ borderColor: 'hsl(40 20% 88%)' }}>
-                <Home className="h-12 w-12 mx-auto mb-4" style={{ color: 'hsl(200 15% 45% / 0.5)' }} />
-                <h3 className="text-lg font-medium mb-2" style={{ color: 'hsl(200 25% 15%)' }}>
-                  No properties available
-                </h3>
-                <p style={{ color: 'hsl(200 15% 45%)' }}>
-                  Check back later for new listings in {area.name}
+            <div>
+              <div style={{ marginBottom: 'clamp(1.5rem, 3vw, 2rem)' }}>
+                <h2 style={{ color: 'hsl(200 25% 15%)', fontSize: 'clamp(1.375rem, 4vw, 1.75rem)', fontWeight: '700', lineHeight: '1.2', margin: 0, marginBottom: '0.5rem' }}>
+                  Available Properties for Sale
+                </h2>
+                <p style={{ color: 'hsl(200 15% 45%)', fontSize: 'clamp(0.875rem, 2.5vw, 1rem)', margin: 0 }}>
+                  Explore {properties?.length || 0} listing{properties?.length === 1 ? '' : 's'} in {area.name}
                 </p>
               </div>
-            )}
+
+              {properties && properties.length > 0 ? (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(clamp(250px, 60vw, 320px), 1fr))', gap: 'clamp(1rem, 3vw, 1.5rem)' }}>
+                  {properties.map((property) => (
+                    <div key={property.id} className="property-card">
+                      <PropertyCard property={property} />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div style={{ backgroundColor: 'white', borderRadius: '0.875rem', border: '1px solid hsl(40 20% 88%)', padding: 'clamp(2rem, 5vw, 3rem)', textAlign: 'center' }}>
+                  <Home style={{ height: 'clamp(2.5rem, 8vw, 3.5rem)', width: 'clamp(2.5rem, 8vw, 3.5rem)', color: 'hsl(200 15% 45% / 0.4)', margin: '0 auto 1rem' }} />
+                  <h3 style={{ color: 'hsl(200 25% 15%)', fontSize: 'clamp(1.125rem, 3vw, 1.375rem)', fontWeight: '600', margin: '0 0 0.5rem 0' }}>
+                    No Properties Available
+                  </h3>
+                  <p style={{ color: 'hsl(200 15% 45%)', fontSize: 'clamp(0.875rem, 2vw, 1rem)', margin: 0 }}>
+                    Check back later for new listings in {area.name}
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         </main>
 
