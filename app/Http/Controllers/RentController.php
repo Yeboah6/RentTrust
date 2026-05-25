@@ -272,7 +272,21 @@ public function index()
             }
 
             // Create listing
-            Rental::create($listingData);
+            $rental = Rental::create($listingData);
+
+            if ($user->role === 'admin') {
+                AdminAuditLog::record('listing', 'Listing created', [
+                    'affected_user' => $user->name,
+                    'affected_id' => $rental->id,
+                    'notes' => "Admin created a new {$purpose} listing.",
+                    'properties' => [
+                        'title' => $rental->title,
+                        'purpose' => $rental->purpose,
+                        'city' => $rental->city,
+                        'area' => $rental->area,
+                    ],
+                ]);
+            }
 
             $typeLabel = $purpose === 'rent' ? 'Rental' : 'Sale';
             return redirect()->back()
@@ -550,6 +564,15 @@ public function index()
                 'title' => $rent->title
             ]);
             
+            // Log audit trail if admin edited the listing
+            if (Auth::user()?->role === 'admin') {
+                AdminAuditLog::record('listing', 'Listing updated', [
+                    'listing_title' => $rent->title,
+                    'listing_city' => $rent->city,
+                    'listing_area' => $rent->area,
+                ], affectedUser: $rent->user?->name, affectedId: $rent->id);
+            }
+            
             return redirect()
                 ->back()
                 ->with('success', 'Rental listing updated successfully!');
@@ -642,7 +665,21 @@ public function index()
             }
 
             $rentalTitle = $rent->title;
+            $affectedUser = $rent->user?->name ?? 'Unknown';
             $rent->delete();
+
+            if (Auth::user()?->role === 'admin') {
+                AdminAuditLog::record('listing', 'Listing deleted', [
+                    'affected_user' => $affectedUser,
+                    'affected_id' => $rent->id,
+                    'notes' => "Admin deleted listing '{$rentalTitle}'.",
+                    'properties' => [
+                        'title' => $rentalTitle,
+                        'city' => $rent->city,
+                        'area' => $rent->area,
+                    ],
+                ]);
+            }
 
             return redirect()->back()->with('success', "Listing '{$rentalTitle}' has been deleted successfully.");
         } catch (\Exception $e) {
@@ -930,12 +967,12 @@ public function index()
     /**
      * Alternative: Simple random trend (if you don't want real calculation yet)
      */
-    private function calculateSimpleTrend($areaRentals)
-    {
-        $trends = ['+12%', '+8%', '+5%', '-3%', '+15%', '+10%', '+2%'];
+    // private function calculateSimpleTrend($areaRentals)
+    // {
+    //     $trends = ['+12%', '+8%', '+5%', '-3%', '+15%', '+10%', '+2%'];
 
-        return $trends[array_rand($trends)];
-    }
+    //     return $trends[array_rand($trends)];
+    // }
 
     /**
      * Ajax endpoint that explicitly tracks a view (useful when the page is cached or rendered as SPA)

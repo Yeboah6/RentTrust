@@ -101,7 +101,7 @@ const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views
 
   const { data, setData, put, processing, reset } = useForm({
     'response': "",
-    'response_name': agentData?.fullName
+    'response_name': agentData?.name
   });
 
   const handleResponse = (e, reviewId) => {
@@ -110,7 +110,7 @@ const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views
     router.put('/response', {
       review_id: reviewId,
       response: responseText,
-      response_name: agentData?.fullName || 'Agent'
+      response_name: agentData?.name
     }, {
       onSuccess: () => {
         setShowToast({ 
@@ -121,6 +121,8 @@ const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views
         setTimeout(() => setShowToast(null), 3000);
         setResponseText("");
         setRespondingTo(null);
+
+        console.log(agentData?.name, responseText);
       },
       onError: (errors) => {
         console.error('Submission errors:', errors);

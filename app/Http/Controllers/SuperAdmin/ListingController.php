@@ -698,7 +698,6 @@ class ListingController extends Controller
         $oldStatus = $listing->status;
         $listing->update([
             'status'      => 'approved',
-            'verified_at' => now(),
         ]);
  
         // Audit log

@@ -5,8 +5,9 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
-use App\Models\User;
+use App\Models\AdminAuditLog;
 use App\Models\Subscription;
+use App\Models\User;
 use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
@@ -146,6 +147,81 @@ class AuthController extends Controller
         ]);
 
         return redirect()->back()->with('success', 'Profile updated successfully');
+    }
+
+    public function storeAgentByAdmin(Request $request) {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'phone' => 'required|string|max:20',
+            'company' => 'nullable|string|max:255',
+            'bio' => 'nullable|string|max:1000',
+            'fee' => 'nullable|numeric|min:0',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        $userData = [
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'phone' => $validated['phone'],
+            'company' => $validated['company'] ?? null,
+            'bio' => $validated['bio'] ?? null,
+            'fee' => $validated['fee'] ?? null,
+            'password' => Hash::make($validated['password']),
+            'role' => 'agent',
+            'status' => 'unverified',
+            'package' => null,
+            'user_id' => User::generateUUID(),
+        ];
+
+        $agent = User::create($userData);
+
+        AdminAuditLog::record('user', 'Agent created', [
+            'affected_user' => $agent->name,
+            'affected_id' => $agent->id,
+            'notes' => 'Admin created a new agent account.',
+            'properties' => [
+                'email' => $agent->email,
+                'phone' => $agent->phone,
+                'company' => $agent->company,
+                'status' => $agent->status,
+            ],
+        ]);
+
+        return redirect()->back()->with('success', 'Agent created successfully');
+    }
+
+    public function updateAgentByAdmin(Request $request, $id) {
+        $validated = $request->validate([
+            'name'=>'nullable|string|max:255',
+            'email' => 'nullable|email',
+            'phone'=>'nullable|string|max:15',
+            'bio'=>'nullable|string|max:500',
+            'company'=>'nullable|string|max:255',
+            'fee'=>'nullable|numeric|min:0',
+        ]);
+
+        $agent = User::where('id', $id)
+            ->where('role', 'agent')
+            ->firstOrFail();
+
+        $agent->update([
+            'name' => $validated['name'] ?? $agent->name,
+            'email' => $validated['email'] ?? $agent->email,
+            'phone' => $validated['phone'] ?? $agent->phone,
+            'bio' => $validated['bio'] ?? $agent->bio,
+            'company' => $validated['company'] ?? $agent->company,
+            'fee' => $validated['fee'] ?? $agent->fee,
+        ]);
+
+        AdminAuditLog::record('user', 'Agent updated', [
+            'affected_user' => $agent->name,
+            'affected_id' => $agent->id,
+            'notes' => 'Admin updated agent details.',
+            'properties' => $request->only(['name', 'email', 'phone', 'company', 'bio', 'fee']),
+        ]);
+
+        return redirect()->back()->with('success', 'Agent updated successfully');
     }
 
     public function updateAdminProfile(Request $request) {

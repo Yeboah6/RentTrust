@@ -92,7 +92,7 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
   const [showEditListingModal, setShowEditListingModal] = useState(false);
 
   // Free tier limits
-  const LISTING_LIMIT = 3;
+  const LISTING_LIMIT = 5;
   const INQUIRY_LIMIT = 10;
   // const PHOTO_LIMIT = 5;
 

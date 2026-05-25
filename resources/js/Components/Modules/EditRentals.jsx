@@ -3,7 +3,7 @@ import { useForm, usePage } from '@inertiajs/react';
 import axios from 'axios';
 import { Home, MapPin, DollarSign, Calendar, Image, FileText, CheckCircle2, AlertCircle, Upload, X } from 'lucide-react';
 
-const EditRentals = ({ agentData, setShowEditListingModal, rental, locations = [], propertyTypes = [], amenities = [] }) => {
+const EditRentals = ({ agentData, setShowEditListingModal, rental, locations = [], propertyTypes = [], amenities = [], userRole = 'agent' }) => {
   const { flash, locations: pageLocations = [], propertyTypes: pagePropertyTypes = [], amenities: pageAmenities = [] } = usePage().props;
 
   const locationsData = locations.length ? locations : pageLocations;
@@ -310,7 +310,9 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental, locations = [
     // });
     
     // Submit using FormData with axios (includes _method for PUT spoofing)
-    const url = data.purpose === 'rent' ? `/rent/${data.id}` : `/sale/${data.id}`;
+    // Use admin endpoint if user is admin, otherwise use standard endpoint
+    const baseUrl = userRole === 'admin' ? '/admin/rent' : (data.purpose === 'rent' ? '/rent' : '/sale');
+    const url = `${baseUrl}/${data.id}`;
     axios.post(url, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',

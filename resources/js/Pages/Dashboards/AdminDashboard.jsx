@@ -8,6 +8,8 @@ import ViewRentals from "@/Components/Modules/ViewRental";
 import EditRentals from "@/Components/Modules/EditRentals";
 import ViewAgentVerifications from '@/Components/Modules/ViewAgentVerifications';
 import AgentProfileModal from '@/Components/Modules/AgentProfileModal';
+import AdminEditAgentModal from '@/Components/Modules/AdminEditAgentModal';
+import AdminAddAgentModal from '@/Components/Modules/AdminAddAgentModal';
 import GrantSubscriptionModal from '@/Components/Modules/GrantSubscriptionModal';
 import { MapPin } from 'lucide-react';
 
@@ -105,12 +107,20 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, verif
   const [selectedRental, setSelectedRental] = useState(null);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showAgentProfile, setShowAgentProfile] = useState(false);
+  const [showEditAgentModal, setShowEditAgentModal] = useState(false);
+  const [showAddAgentModal, setShowAddAgentModal] = useState(false);
   const [showAddListingModal, setShowAddListingModal] = useState(false);
   const [showEditListingModal, setShowEditListingModal] = useState(false);
   // Grant subscription modal state
   const [grantTarget, setGrantTarget] = useState(null);
   const [showGrantModal, setShowGrantModal] = useState(false);
-
+  const [agentsFilter, setAgentsFilter] = useState('');
+  const [listingsFilter, setListingsFilter] = useState('');
+  const [listingsStatusFilter, setListingsStatusFilter] = useState('all');
+  const [reportsFilter, setReportsFilter] = useState('');
+  const [reportsStatusFilter, setReportsStatusFilter] = useState('all');
+  const [reviewsFilter, setReviewsFilter] = useState('');
+  const [reviewsRatingFilter, setReviewsRatingFilter] = useState('all');
   const [toast, setToast] = useState(null);
 
   const showToast = (title, description, variant = "success") => {
@@ -147,6 +157,11 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, verif
   const handleViewProfile = (agentData) => {
     setSelectedAgent(agentData?._original ?? agentData);
     setShowAgentProfile(true);
+  };
+
+  const handleEditAgent = (agentData) => {
+    setSelectedAgent(agentData?._original ?? agentData);
+    setShowEditAgentModal(true);
   };
 
   const handleEditClick = (rental) => {
@@ -215,6 +230,46 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, verif
       </span>
     );
   };
+
+  const matchesFilter = (value, query) => {
+    if (!query) return true;
+    return value?.toString().toLowerCase().includes(query.trim().toLowerCase());
+  };
+
+  const filteredAgents = agents.filter(agentItem => {
+    const query = agentsFilter.trim().toLowerCase();
+    if (!query) return true;
+    return [agentItem.name, agentItem.email, agentItem.company, agentItem.status, agentItem.package]
+      .filter(Boolean)
+      .some(value => matchesFilter(value, query));
+  });
+
+  const filteredListings = properties.filter(property => {
+    const query = listingsFilter.trim().toLowerCase();
+    const matchesSearch = !query || [property.title, property.address, property.city, property.agent_name, property.status, property.purpose]
+      .filter(Boolean)
+      .some(value => matchesFilter(value, query));
+    const matchesStatus = listingsStatusFilter === 'all' || property.status === listingsStatusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
+  const filteredReports = reports.filter(report => {
+    const query = reportsFilter.trim().toLowerCase();
+    const matchesSearch = !query || [report.full_name, report.email, report.report_type, report.report_description, report.status]
+      .filter(Boolean)
+      .some(value => matchesFilter(value, query));
+    const matchesStatus = reportsStatusFilter === 'all' || report.status === reportsStatusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
+  const filteredReviews = reviews.filter(review => {
+    const query = reviewsFilter.trim().toLowerCase();
+    const matchesSearch = !query || [review.full_name, review.comments, review.review_type, review.rental_id?.toString(), review.response]
+      .filter(Boolean)
+      .some(value => matchesFilter(value, query));
+    const matchesRating = reviewsRatingFilter === 'all' || review.overall_rating?.toString() === reviewsRatingFilter;
+    return matchesSearch && matchesRating;
+  });
 
   {/* ─── AdminListingSection ─────────────────────────────────────────────────── */}
  
@@ -399,21 +454,34 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, verif
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
                   <h2 style={{ fontSize: '1.125rem', fontWeight: '600', color: 'hsl(200 25% 15%)' }}>Platform Agents</h2>
-                  <Link href="/become-agent" style={{ padding: '0.5rem 1rem', background: 'linear-gradient(135deg, hsl(174 62% 32%) 0%, hsl(174 50% 25%) 100%)', color: 'white', border: 'none', borderRadius: '0.5rem', fontWeight: '500', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}>
+                  <button type="button" onClick={() => setShowAddAgentModal(true)} style={{ padding: '0.5rem 1rem', background: 'linear-gradient(135deg, hsl(174 62% 32%) 0%, hsl(174 50% 25%) 100%)', color: 'white', border: 'none', borderRadius: '0.5rem', fontWeight: '500', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <Home style={{ height: '1rem', width: '1rem' }} />Add New Agent
-                  </Link>
+                  </button>
+                </div>
+
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', gap: '0.75rem', flex: '1 1 320px' }}>
+                    <input
+                      type="search"
+                      value={agentsFilter}
+                      onChange={(e) => setAgentsFilter(e.target.value)}
+                      placeholder="Search agents by name, email, status..."
+                      style={{ width: '100%', minWidth: '260px', padding: '0.75rem 1rem', borderRadius: '0.5rem', border: '1px solid hsl(200 15% 85%)', fontSize: '0.9rem' }}
+                    />
+                  </div>
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1rem' }}>
-                  {agents.map(agentItem => (
+                  {filteredAgents.map(agentItem => (
                     <div key={agentItem.id} style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.75rem', padding: '1.5rem' }}>
                       {/* Card header */}
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
                         <div style={{ flex: 1, minWidth: '200px' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.375rem', flexWrap: 'wrap' }}>
-                            <h3 style={{ fontWeight: '600', color: 'hsl(200 25% 15%)', fontSize: '0.9rem' }}>{agentItem.fullName}</h3>
+                            {/* <h3 style={{ fontWeight: '600', color: 'hsl(200 25% 15%)', fontSize: '0.9rem' }}>{agentItem.name}</h3> */}
                             {getStatusBadge(agentItem.status)}
                           </div>
+                          <h3 style={{ fontWeight: '600', color: 'hsl(200 25% 15%)', fontSize: '0.9rem' }}>{agentItem.name}</h3>
                           <p style={{ fontSize: '0.8rem', color: 'hsl(200 15% 45%)', marginBottom: '0.2rem' }}>{agentItem.email}</p>
                           {agentItem.company && <p style={{ fontSize: '0.8rem', color: 'hsl(200 15% 45%)' }}>{agentItem.company}</p>}
                         </div>
@@ -423,15 +491,25 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, verif
 
                       {/* Meta */}
                       <div style={{ display: 'flex', gap: '1rem', fontSize: '0.73rem', color: 'hsl(200 15% 50%)', marginBottom: '1rem', flexWrap: 'wrap' }}>
-                        <span>{agentItem.total_listings} listings</span>
+                        <span>{agentItem.rentals_count ?? agentItem.total_listings ?? 0} listings</span>
                         <span>Joined {new Date(agentItem.created_at).toLocaleDateString()}</span>
-                        <span>Active {new Date(agentItem.updated_at).toLocaleDateString()}</span>
+                        <span>Last active {new Date(agentItem.last_active).toLocaleDateString()}</span>
+                        {agentItem.subscription && agentItem.subscription.starts_at && (
+                          <span>Plan starts {new Date(agentItem.subscription.starts_at).toLocaleDateString()}</span>
+                        )}
+                        {agentItem.subscription && agentItem.subscription.ends_at && (
+                          <span>Expires {new Date(agentItem.subscription.ends_at).toLocaleDateString()}</span>
+                        )}
                       </div>
 
                       {/* Actions */}
                       <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
                         <button onClick={() => handleViewProfile(agentItem)} style={{ padding: '0.35rem 0.7rem', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.375rem', backgroundColor: 'white', color: 'hsl(174 62% 32%)', fontSize: '0.8rem', fontWeight: '500', cursor: 'pointer' }}>
                           View Details
+                        </button>
+
+                        <button onClick={() => handleEditAgent(agentItem)} style={{ padding: '0.35rem 0.7rem', border: '1px solid hsl(214 80% 55%)', borderRadius: '0.375rem', backgroundColor: 'white', color: 'hsl(214 80% 55%)', fontSize: '0.8rem', fontWeight: '500', cursor: 'pointer' }}>
+                          Edit Agent
                         </button>
 
                         {(agentItem.status === 'unverified' || agentItem.status === 'pending') && (
@@ -483,7 +561,7 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, verif
                               All Platform Listings
                           </h2>
                           <p style={{ margin: 0, fontSize: '0.78rem', color: 'hsl(200 15% 48%)' }}>
-                              {properties.length} listing{properties.length !== 1 ? 's' : ''} total
+                              {filteredListings.length} listing{filteredListings.length !== 1 ? 's' : ''} found
                           </p>
                       </div>
                       <button
@@ -493,8 +571,29 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, verif
                       </button>
                   </div>
 
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <input
+                      type="search"
+                      value={listingsFilter}
+                      onChange={(e) => setListingsFilter(e.target.value)}
+                      placeholder="Search listings by title, location, agent..."
+                      style={{ width: '100%', minWidth: '260px', padding: '0.75rem 1rem', borderRadius: '0.5rem', border: '1px solid hsl(200 15% 85%)', fontSize: '0.9rem' }}
+                    />
+                    <select
+                      value={listingsStatusFilter}
+                      onChange={(e) => setListingsStatusFilter(e.target.value)}
+                      style={{ padding: '0.75rem 1rem', borderRadius: '0.5rem', border: '1px solid hsl(200 15% 85%)', fontSize: '0.9rem', minWidth: '160px' }}
+                    >
+                      <option value="all">All statuses</option>
+                      <option value="approved">Approved</option>
+                      <option value="pending">Pending</option>
+                      <option value="unverified">Unverified</option>
+                      <option value="suspended">Suspended</option>
+                    </select>
+                  </div>
+
                   {/* ── Empty state ── */}
-                  {properties.length === 0 && (
+                  {filteredListings.length === 0 && (
                       <div style={{ textAlign: 'center', padding: '3rem 1rem', backgroundColor: 'white', border: '1px dashed hsl(40 20% 82%)', borderRadius: '0.75rem' }}>
                           <p style={{ fontSize: '2rem', margin: '0 0 0.5rem' }}>🏠</p>
                           <p style={{ margin: '0 0 0.25rem', fontWeight: '600', color: 'hsl(200 25% 15%)' }}>No listings yet</p>
@@ -504,7 +603,7 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, verif
 
                   {/* ── Rental listings ── */}
                   {(() => {
-                      const rentals = properties.filter(p => p.purpose === 'rent');
+                      const rentals = filteredListings.filter(p => p.purpose === 'rent');
                       if (rentals.length === 0) return null;
                       return (
                           <AdminListingSection title="Rental Listings" emoji="🏠" count={rentals.length} accentColor="hsl(174 55% 28%)" accentBg="hsl(174 62% 32% / 0.07)" borderColor="hsl(174 50% 80%)">
@@ -525,7 +624,7 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, verif
 
                   {/* ── Sale listings ── */}
                   {(() => {
-                      const sales = properties.filter(p => p.purpose === 'sale');
+                      const sales = filteredListings.filter(p => p.purpose === 'sale');
                       if (sales.length === 0) return null;
                       return (
                           <AdminListingSection title="Sale Listings" emoji="🏷️" count={sales.length} accentColor="hsl(36 75% 30%)" accentBg="hsl(38 92% 50% / 0.07)" borderColor="hsl(38 80% 78%)">
@@ -551,12 +650,33 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, verif
             {activeTab === 'reports' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-                  <h2 style={{ fontSize: '1.125rem', fontWeight: '600', color: 'hsl(200 25% 15%)' }}>Platform Reports ({reports.length})</h2>
+                  <h2 style={{ fontSize: '1.125rem', fontWeight: '600', color: 'hsl(200 25% 15%)' }}>Platform Reports ({filteredReports.length})</h2>
                 </div>
 
-                {reports.length > 0 ? (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <input
+                    type="search"
+                    value={reportsFilter}
+                    onChange={(e) => setReportsFilter(e.target.value)}
+                    placeholder="Search reports by type, reporter, description..."
+                    style={{ width: '100%', minWidth: '260px', padding: '0.75rem 1rem', borderRadius: '0.5rem', border: '1px solid hsl(200 15% 85%)', fontSize: '0.9rem' }}
+                  />
+                  <select
+                    value={reportsStatusFilter}
+                    onChange={(e) => setReportsStatusFilter(e.target.value)}
+                    style={{ padding: '0.75rem 1rem', borderRadius: '0.5rem', border: '1px solid hsl(200 15% 85%)', fontSize: '0.9rem', minWidth: '160px' }}
+                  >
+                    <option value="all">All statuses</option>
+                    <option value="pending">Pending</option>
+                    <option value="reviewing">Reviewing</option>
+                    <option value="resolved">Resolved</option>
+                    <option value="dismissed">Dismissed</option>
+                  </select>
+                </div>
+
+                {filteredReports.length > 0 ? (
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '1rem' }}>
-                    {reports.map(report => {
+                    {filteredReports.map(report => {
                       const evidence = typeof report.evidence === 'string' ? JSON.parse(report.evidence) : (report.evidence || []);
 
                       const reportTypeBadge = (type) => {
@@ -717,10 +837,31 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, verif
             {/* ── REVIEWS TAB ──────────────────────────────────────────────── */}
             {activeTab === 'reviews' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                <h2 style={{ fontSize: '1.125rem', fontWeight: '600', color: 'hsl(200 25% 15%)' }}>All Platform Reviews ({reviews.length})</h2>
-                {reviews.length > 0 ? (
+                <h2 style={{ fontSize: '1.125rem', fontWeight: '600', color: 'hsl(200 25% 15%)' }}>All Platform Reviews ({filteredReviews.length})</h2>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <input
+                    type="search"
+                    value={reviewsFilter}
+                    onChange={(e) => setReviewsFilter(e.target.value)}
+                    placeholder="Search reviews by guest, property, comment..."
+                    style={{ width: '100%', minWidth: '260px', padding: '0.75rem 1rem', borderRadius: '0.5rem', border: '1px solid hsl(200 15% 85%)', fontSize: '0.9rem' }}
+                  />
+                  <select
+                    value={reviewsRatingFilter}
+                    onChange={(e) => setReviewsRatingFilter(e.target.value)}
+                    style={{ padding: '0.75rem 1rem', borderRadius: '0.5rem', border: '1px solid hsl(200 15% 85%)', fontSize: '0.9rem', minWidth: '160px' }}
+                  >
+                    <option value="all">All ratings</option>
+                    <option value="5">5 stars</option>
+                    <option value="4">4 stars</option>
+                    <option value="3">3 stars</option>
+                    <option value="2">2 stars</option>
+                    <option value="1">1 star</option>
+                  </select>
+                </div>
+                {filteredReviews.length > 0 ? (
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1rem' }}>
-                    {reviews.map(review => (
+                    {filteredReviews.map(review => (
                       <div key={review.id} style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.75rem', padding: '1.5rem' }}>
                         {/* Header */}
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.875rem', flexWrap: 'wrap', gap: '0.5rem' }}>
@@ -799,6 +940,30 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, verif
 
         <AgentProfileModal agent={selectedAgent} isOpen={showAgentProfile} onClose={() => setShowAgentProfile(false)} auth={auth} />
 
+        {showEditAgentModal && selectedAgent && (
+          <AdminEditAgentModal
+            agent={selectedAgent}
+            isOpen={showEditAgentModal}
+            onClose={() => { setShowEditAgentModal(false); setSelectedAgent(null); }}
+            onSuccess={(message) => {
+              showToast('Agent Updated', message);
+              setShowEditAgentModal(false);
+              setSelectedAgent(null);
+            }}
+          />
+        )}
+
+        {showAddAgentModal && (
+          <AdminAddAgentModal
+            isOpen={showAddAgentModal}
+            onClose={() => setShowAddAgentModal(false)}
+            onSuccess={(message) => {
+              showToast('Agent Created', message);
+              setShowAddAgentModal(false);
+            }}
+          />
+        )}
+
         {showAddListingModal && (
           <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: '1rem' }}>
             <div style={{ backgroundColor: 'white', borderRadius: '1rem', maxHeight: '90vh', overflow: 'auto', maxWidth: '60%', width: '100%', position: 'relative' }}>
@@ -819,7 +984,7 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, verif
           <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: '1rem' }}>
             <div style={{ backgroundColor: 'white', borderRadius: '1rem', maxHeight: '90vh', overflow: 'auto', maxWidth: '60%', width: '100%', position: 'relative' }}>
               <button onClick={() => { setShowEditListingModal(false); setSelectedRental(null); }} style={{ position: 'sticky', top: 0, right: 0, padding: '1rem', border: 'none', background: 'transparent', fontSize: '1.5rem', cursor: 'pointer', color: 'hsl(200 15% 45%)', float: 'right', zIndex: 10 }}>✕</button>
-              <EditRentals agentData={agentData} setShowEditListingModal={setShowEditListingModal} rental={selectedRental} locations={locations} propertyTypes={propertyTypes} amenities={amenities} />
+              <EditRentals agentData={agentData} setShowEditListingModal={setShowEditListingModal} rental={selectedRental} locations={locations} propertyTypes={propertyTypes} amenities={amenities} userRole="admin" />
             </div>
           </div>
         )}

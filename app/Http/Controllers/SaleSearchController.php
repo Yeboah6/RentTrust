@@ -44,7 +44,7 @@ class SaleSearchController extends Controller
 
         try {
             $listings = Rental::where('purpose', 'sale')
-                ->where('is_sold', false)
+                // ->where('is_sold', false)
                 ->latest()
                 ->paginate($perPage, ['*'], 'page', $page);
 

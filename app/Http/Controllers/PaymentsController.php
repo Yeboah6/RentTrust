@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Payment;
 use App\Models\Plan;
+use App\Models\AdminAuditLog;
 use App\Models\Subscription;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -362,6 +363,18 @@ class PaymentsController extends Controller
             'plan_slug'       => $plan->slug,
             'duration_months' => $request->duration_months,
             'admin_id'        => auth()->id(),
+        ]);
+
+        AdminAuditLog::record('subscription', 'Subscription granted', [
+            'affected_user' => $user->name,
+            'affected_id' => $user->id,
+            'notes' => "Admin granted {$plan->name} plan for {$request->duration_months} month(s).",
+            'properties' => [
+                'plan_id' => $plan->id,
+                'plan_slug' => $plan->slug,
+                'duration_months' => $request->duration_months,
+                'granted_by' => auth()->id(),
+            ],
         ]);
 
         return back()->with('success', "Granted {$plan->name} plan to {$user->name} for {$request->duration_months} month(s).");

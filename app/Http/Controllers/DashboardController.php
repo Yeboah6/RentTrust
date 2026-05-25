@@ -134,7 +134,13 @@ class DashboardController extends Controller
         $sub  = $adminData->subscription()->with('plan')->first();
         
         $rentals = Rental::all();
-        $agentData = User::where('role', 'agent')->get();
+        // Load agents with their total listings count and active subscription
+        $agentData = User::where('role', 'agent')
+            ->withCount('rentals')
+            ->with(['subscription' => function($q) {
+                $q->where('status', 'active')->orderByDesc('ends_at');
+            }])
+            ->get();
         $reports = Report::with('rental', 'rental.user')->get();
         $reviews = Review::with('rental')->get();
         $verifications = VerificationRequest::with(['rental', 'agent'])->orderBy('created_at', 'desc')->get();
