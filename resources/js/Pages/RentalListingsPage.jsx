@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Link } from "@inertiajs/react";
 import Header from "../Components/Layouts/Header";
 import Footer from "../Components/Layouts/Footer";
-import { ChevronLeft, ChevronRight, BedDouble, Bath } from "lucide-react";
+import { ChevronLeft, ChevronRight, BedDouble, Bath, Search as SearchIcon } from "lucide-react";
 
 // Icon components
 const Search = ({ className, style }) => (
@@ -129,7 +129,7 @@ const Dropdown = ({ value, options, onChange, placeholder }) => {
                 width: '100%',
                 padding: '0.75rem 1rem',
                 border: 'none',
-                backgroundColor: option.value === value ? 'hsl(38 92% 50%)' : 'white',
+                backgroundColor: option.value === value ? '#1f847a' : 'white',
                 color: option.value === value ? 'white' : 'hsl(200 25% 15%)',
                 textAlign: 'left',
                 cursor: 'pointer',
@@ -687,6 +687,21 @@ const RentalListingsPage = ({ listings: initialListingsData = {} }) => {
         h1, h2, h3, h4, h5, h6 {
           font-weight: 600;
         }
+          @media (max-width: 768px) {
+          .search-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .filter-section {
+            grid-template-columns: 1fr 1fr !important;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .filter-section {
+            grid-template-columns: 1fr !important;
+          }
+        }
+
       `}</style>
 
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'hsl(40 33% 98%)' }}>
@@ -694,100 +709,98 @@ const RentalListingsPage = ({ listings: initialListingsData = {} }) => {
 
         <main style={{ flex: 1 }}>
           {/* Search Header */}
-          <div style={{ backgroundColor: 'hsl(0 0% 100%)', borderBottom: '1px solid hsl(40 20% 88%)', padding: '1.5rem 0' }}>
-            <div className="container mx-auto px-4">
-              <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-4" style={{ color: 'hsl(200 25% 15%)' }}>
-                Find Rentals in Ghana
-              </h1>
+
+          <div style={{ backgroundColor: 'white', borderBottom: '1px solid hsl(40 20% 88%)', paddingTop: 'clamp(1.5rem, 4vw, 2rem)', paddingBottom: 'clamp(1.5rem, 4vw, 2rem)' }}>
+            <div className="container mx-auto" style={{ padding: '0 clamp(0.75rem, 3vw, 1rem)' }}>
               
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '0.75rem' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.75rem' }}>
-                  {/* Search Input */}
-                  <div style={{ position: 'relative', gridColumn: 'span 2' }}>
-                    <MapPin 
-                      style={{ 
-                        position: 'absolute', 
-                        left: '0.75rem', 
-                        top: '50%', 
-                        transform: 'translateY(-50%)', 
-                        height: '1.25rem', 
-                        width: '1.25rem', 
-                        color: 'hsl(200 15% 45%)' 
-                      }} 
-                    />
-                    <input
-                      type="text"
-                      placeholder="Search by area or city..."
-                      style={{
-                        width: '100%',
-                        paddingLeft: '2.5rem',
-                        height: '3rem',
-                        border: '1px solid hsl(40 20% 88%)',
-                        borderRadius: '0.75rem',
-                        fontSize: '1rem',
-                        outline: 'none',
-                        backgroundColor: 'white',
-                        color: 'hsl(200 25% 15%)'
-                      }}
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      onFocus={(e) => e.currentTarget.style.borderColor = 'hsl(174 62% 32%)'}
-                      onBlur={(e) => e.currentTarget.style.borderColor = 'hsl(40 20% 88%)'}
-                    />
-                  </div>
+              {/* Heading */}
+              <div style={{ marginBottom: 'clamp(1.5rem, 4vw, 2rem)' }}>
+                <h1 style={{ color: 'hsl(200 25% 15%)', fontSize: 'clamp(1.5rem, 5vw, 2rem)', fontWeight: '700', lineHeight: '1.2', margin: 0, marginBottom: '0.5rem' }}>
+                  Find Rentals in Ghana
+                </h1>
+                <p style={{ color: 'hsl(200 15% 45%)', fontSize: 'clamp(0.875rem, 2.5vw, 1rem)', margin: 0 }}>
+                  Browse verified listings across Ghana
+                </p>
+              </div>
 
-                  {/* City Dropdown */}
-                  <Dropdown
-                    value={selectedCity}
-                    options={cityOptions}
-                    onChange={setSelectedCity}
-                    placeholder="All Regions"
-                  />
+              {/* Search Input */}
+              <div style={{ marginBottom: 'clamp(1.25rem, 3vw, 1.5rem)', position: 'relative' }}>
+                <SearchIcon style={{ position: 'absolute', left: 'clamp(0.75rem, 2vw, 1rem)', top: '50%', transform: 'translateY(-50%)', height: 'clamp(1.1rem, 2.5vw, 1.25rem)', width: 'clamp(1.1rem, 2.5vw, 1.25rem)', color: 'hsl(200 15% 45%)' }} />
+                <input
+                  type="text"
+                  placeholder="Search by area, city, or property type..."
+                  style={{
+                    width: '100%',
+                    paddingLeft: 'clamp(2.5rem, 5vw, 3rem)',
+                    height: 'clamp(2.75rem, 10vw, 3.25rem)',
+                    border: '1px solid hsl(40 20% 88%)',
+                    borderRadius: '0.75rem',
+                    fontSize: 'clamp(0.9rem, 2.5vw, 1rem)',
+                    outline: 'none',
+                    backgroundColor: 'white',
+                    color: 'hsl(200 25% 15%)',
+                    transition: 'border-color 0.2s',
+                    fontWeight: '500'
+                  }}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onFocus={(e) => e.currentTarget.style.borderColor = 'hsl(174 62% 32%)'}
+                  onBlur={(e) => e.currentTarget.style.borderColor = 'hsl(40 20% 88%)'}
+                />
+              </div>
 
-                  {/* Area Dropdown */}
-                  <Dropdown
-                    value={selectedArea}
-                    options={areaOptions}
-                    onChange={setSelectedArea}
-                    placeholder="All Areas"
-                  />
+              {/* Filters */}
+              <div className="search-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 'clamp(0.75rem, 2vw, 1rem)' }}>
+                <Dropdown
+                  value={selectedCity}
+                  options={cityOptions}
+                  onChange={setSelectedCity}
+                  placeholder="All Regions"
+                />
 
-                  {/* Sort By Dropdown */}
-                  <Dropdown
-                    value={sortBy}
-                    options={sortOptions}
-                    onChange={setSortBy}
-                    placeholder="Sort by"
-                  />
+                <Dropdown
+                  value={selectedArea}
+                  options={areaOptions}
+                  onChange={setSelectedArea}
+                  placeholder="All Areas"
+                />
 
-                  {/* Search Button */}
+                <Dropdown
+                  value={sortBy}
+                  options={sortOptions}
+                  onChange={setSortBy}
+                  placeholder="Sort by"
+                />
+
+                <div style={{ display: 'flex', alignItems: 'flex-end' }}>
                   <button
                     style={{
-                      height: '3rem',
-                      background: 'linear-gradient(135deg, hsl(174 62% 32%) 0%, hsl(174 50% 25%) 100%)',
+                      width: '100%',
+                      height: 'clamp(2.5rem, 10vw, 3rem)',
+                      background: 'linear-gradient(135deg, hsl(174 62% 28%), hsl(174 55% 36%))',
                       color: 'white',
                       border: 'none',
                       borderRadius: '0.75rem',
-                      fontWeight: '500',
+                      fontWeight: '600',
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       gap: '0.5rem',
-                      transition: 'opacity 0.2s'
+                      transition: 'all 0.2s',
+                      fontSize: 'clamp(0.875rem, 2vw, 1rem)'
                     }}
-                    onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
-                    onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
-                    onClick={() => console.log('Search clicked')}
+                    onMouseEnter={(e) => { e.currentTarget.style.filter = 'brightness(1.1)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.filter = 'none'; e.currentTarget.style.transform = 'none'; }}
                   >
-                    <Search style={{ height: '1.25rem', width: '1.25rem' }} />
+                    <SearchIcon style={{ height: 'clamp(1rem, 2.5vw, 1.1rem)', width: 'clamp(1rem, 2.5vw, 1.1rem)' }} />
                     Search
                   </button>
                 </div>
               </div>
             </div>
           </div>
-
+          
           {/* Results */}
           <div className="container mx-auto px-4 py-8">
             <div style={{ marginBottom: '1.5rem' }}>

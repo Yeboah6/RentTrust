@@ -100,7 +100,7 @@ const PropertyCard = ({ property }) => {
 
       {/* Property Details */}
       <div className="p-4">
-        <h3 className="font-semibold tracking-tight mb-2" style={{ color: 'hsl(200 25% 15%)' }}>
+        <h3 className="font-semibold tracking-tight mb-2" style={{ color: 'hsl(200 25% 15%)', textTransform: 'capitalize' }}>
           {property.property_type || 'Property'}
         </h3>
         

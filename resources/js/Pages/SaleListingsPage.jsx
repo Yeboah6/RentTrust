@@ -100,7 +100,7 @@ const Dropdown = ({ value, options, onChange, placeholder, label }) => {
             right: '0.75rem',
             height: 'clamp(1rem, 3vw, 1.25rem)',
             width: 'clamp(1rem, 3vw, 1.25rem)',
-            color: 'hsl(200 15% 45%)',
+            color: '#627884',
             transition: 'transform 0.2s',
             transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
             pointerEvents: 'none'
@@ -136,7 +136,7 @@ const Dropdown = ({ value, options, onChange, placeholder, label }) => {
                 width: '100%',
                 padding: 'clamp(0.5rem, 2vw, 0.75rem) 1rem',
                 border: 'none',
-                backgroundColor: option.value === value ? 'hsl(174 62% 32%)' : 'white',
+                backgroundColor: option.value === value ? '#1f847a' : 'white',
                 color: option.value === value ? 'white' : 'hsl(200 25% 15%)',
                 textAlign: 'left',
                 cursor: 'pointer',

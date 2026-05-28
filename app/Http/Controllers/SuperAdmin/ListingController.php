@@ -490,6 +490,7 @@ class ListingController extends Controller
             'amenities'        => 'nullable',
             'status'           => 'nullable|string',
             'is_featured'      => 'nullable|boolean',
+            'featured_at'      => 'nullable|date', 
             'is_verified'      => 'nullable|boolean',
             'newImages.*'      => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
             'existingImages'   => 'nullable|array',
@@ -630,6 +631,9 @@ class ListingController extends Controller
                 'purpose'          => $dbPurpose,
                 'is_featured'      => filter_var($request->input('is_featured', false), FILTER_VALIDATE_BOOLEAN),
                 'is_verified'      => filter_var($request->input('is_verified', false), FILTER_VALIDATE_BOOLEAN),
+                'featured_at' => filter_var($request->input('is_featured', false), FILTER_VALIDATE_BOOLEAN)
+                    ? ($listing->featured_at ?? now())
+                    : null,
                 // Pricing
                 'sale_price'       => $isSale  ? $request->salePrice  : null,
                 'rent_min'         => !$isSale ? $request->rentMin     : null,

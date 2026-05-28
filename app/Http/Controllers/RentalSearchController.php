@@ -234,7 +234,8 @@ class RentalSearchController extends Controller
         $cityName = str_replace('-', ' ', $city);
 
         // Get all rentals for this specific area
-        $properties = Rental::where('city', 'like', $cityName)
+        $properties = Rental::where('purpose', 'rent')
+            ->where('city', 'like', $cityName)
             ->where('area', 'like', $areaName)
             ->latest()
             ->get();

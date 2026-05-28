@@ -179,4 +179,17 @@ class Rental extends Model
             default => 1, // free
         };
     }
+
+    public function scopeFeatured($query)
+    {
+        return $query->where('is_featured', true);
+    }
+    
+    public function scopeOrderByPriority($query)
+    {
+        return $query
+            ->orderByDesc('featured_priority')
+            ->orderByDesc('featured_at')
+            ->orderByDesc('created_at');
+    }
 }

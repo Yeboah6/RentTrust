@@ -234,7 +234,7 @@ const PropertyCard = ({ property }) => {
       <div style={{ padding: 'clamp(1rem, 3vw, 1.25rem)', display: 'flex', flexDirection: 'column', gap: 'clamp(0.5rem, 2vw, 0.75rem)' }}>
         
         {/* Type */}
-        <h3 style={{ color: 'hsl(200 25% 15%)', fontSize: 'clamp(0.975rem, 2.5vw, 1.1rem)', fontWeight: '700', lineHeight: '1.3', margin: 0 }}>
+        <h3 style={{ color: 'hsl(200 25% 15%)', fontSize: 'clamp(0.975rem, 2.5vw, 1.1rem)', fontWeight: '700', lineHeight: '1.3', margin: 0, textTransform: 'capitalize' }}>
           {property.property_type || 'Property'}
         </h3>
 

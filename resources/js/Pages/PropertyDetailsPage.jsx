@@ -164,6 +164,11 @@ export default function PropertyDetailsPage({ rental, reviews }) {
                     to   { transform: translateX(0);     opacity: 1; }
                 }
 
+                @keyframes fadeIn {
+                    from { opacity: 0; }
+                    to   { opacity: 1; }
+                }
+
                 @media (max-width: 768px) {
                     .carousel-button { width: clamp(2.5rem, 10vw, 3rem) !important; height: clamp(2.5rem, 10vw, 3rem) !important; }
                     .property-details-grid { grid-template-columns: 1fr !important; }
@@ -196,6 +201,25 @@ export default function PropertyDetailsPage({ rental, reviews }) {
                     .property-details-grid { display: flex; flex-direction: column; gap: 1.5rem; }
                     .main-content { order: 1; }
                     .sidebar      { order: 2; }
+                }
+
+                /* Image modal improvements */
+                .image-modal {
+                    animation: fadeIn 0.2s ease-out;
+                }
+
+                .image-modal img {
+                    /* Prevent iOS zoom on double-tap */
+                    -webkit-user-select: none;
+                    user-select: none;
+                    -webkit-touch-callout: none;
+                    /* Enable smoother scrolling on iOS */
+                    -webkit-user-drag: none;
+                }
+
+                /* Prevent body scroll when modal is open */
+                body.modal-open {
+                    overflow: hidden;
                 }
             `}</style>
 
@@ -583,62 +607,174 @@ export default function PropertyDetailsPage({ rental, reviews }) {
                     </div>
                 </main>
 
+                {/* Image Modal - Improved for mobile zoom */}
                 {showImageModal && (
                     <div
+                        className="image-modal"
                         onClick={() => setShowImageModal(false)}
                         style={{
                             position: 'fixed',
                             inset: 0,
                             zIndex: 1000,
-                            backgroundColor: 'rgba(0,0,0,0.85)',
+                            backgroundColor: 'rgba(0,0,0,0.95)',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            padding: '1rem',
+                            padding: 'clamp(0.5rem, 2vw, 1rem)',
+                            WebkitUserSelect: 'none',
+                            userSelect: 'none',
                         }}
                     >
                         <div
                             onClick={(e) => e.stopPropagation()}
                             style={{
                                 position: 'relative',
-                                width: '50%',
-                                maxWidth: 'calc(100% - 2rem)',
-                                maxHeight: 'calc(100% - 2rem)',
-                                // borderRadius: '1rem',
+                                width: '100%',
+                                maxWidth: 'min(90vw, 95vh)',
+                                height: 'auto',
+                                maxHeight: '90vh',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
                                 overflow: 'hidden',
-                                // backgroundColor: 'rgba(0,0,0,0.9)',
                             }}
                         >
+                            {/* Close button - optimized for touch */}
                             <button
                                 onClick={() => setShowImageModal(false)}
                                 style={{
                                     position: 'absolute',
-                                    top: '1rem',
-                                    right: '1rem',
-                                    background: 'rgba(255,255,255,0.12)',
-                                    border: 'none',
+                                    top: 'clamp(0.5rem, 2vw, 1rem)',
+                                    right: 'clamp(0.5rem, 2vw, 1rem)',
+                                    background: 'rgba(255,255,255,0.15)',
+                                    backdropFilter: 'blur(4px)',
+                                    border: '1px solid rgba(255,255,255,0.2)',
                                     borderRadius: '9999px',
-                                    width: '2.5rem',
-                                    height: '2.5rem',
+                                    width: 'clamp(2.5rem, 8vw, 3rem)',
+                                    height: 'clamp(2.5rem, 8vw, 3rem)',
                                     color: 'white',
-                                    fontSize: '1.25rem',
+                                    fontSize: 'clamp(1.25rem, 4vw, 1.5rem)',
                                     cursor: 'pointer',
-                                    zIndex: 2,
+                                    zIndex: 10,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    transition: 'all 0.2s',
+                                    touchAction: 'manipulation',
                                 }}
+                                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.25)'; }}
+                                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.15)'; }}
                             >
                                 ×
                             </button>
-                            <img
-                                src={`/storage/rental_images/${images[currentImageIndex]}`}
-                                alt={`Property image ${currentImageIndex + 1}`}
-                                style={{
-                                    width: '75%',
-                                    // height: '80%',
-                                    objectFit: 'contain',
-                                    backgroundColor: 'black',
-                                    borderRadius: '1rem',
-                                }}
-                            />
+
+                            {/* Image container with proper aspect ratio */}
+                            <div style={{
+                                position: 'relative',
+                                width: '100%',
+                                height: '100%',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                backgroundColor: 'rgba(0,0,0,0.5)',
+                            }}>
+                                <img
+                                    src={`/storage/rental_images/${images[currentImageIndex]}`}
+                                    alt={`Property image ${currentImageIndex + 1}`}
+                                    style={{
+                                        width: '100%',
+                                        height: '100%',
+                                        objectFit: 'contain',
+                                        backgroundColor: 'transparent',
+                                        maxHeight: '90vh',
+                                        maxWidth: '90vw',
+                                        WebkitTouchCallout: 'none',
+                                        WebkitUserSelect: 'none',
+                                        userSelect: 'none',
+                                    }}
+                                    draggable={false}
+                                />
+                            </div>
+
+                            {/* Navigation arrows - hidden on very small screens */}
+                            {images.length > 1 && (
+                                <>
+                                    <button
+                                        onClick={handlePrevImage}
+                                        style={{
+                                            position: 'absolute',
+                                            left: 'clamp(0.5rem, 2vw, 1rem)',
+                                            top: '50%',
+                                            transform: 'translateY(-50%)',
+                                            backgroundColor: 'rgba(255,255,255,0.15)',
+                                            backdropFilter: 'blur(4px)',
+                                            border: '1px solid rgba(255,255,255,0.2)',
+                                            borderRadius: '9999px',
+                                            width: 'clamp(2.5rem, 6vw, 3rem)',
+                                            height: 'clamp(2.5rem, 6vw, 3rem)',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            cursor: 'pointer',
+                                            zIndex: 10,
+                                            color: 'white',
+                                            transition: 'all 0.2s',
+                                            touchAction: 'manipulation',
+                                        }}
+                                        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.25)'; e.currentTarget.style.transform = 'translateY(-50%) scale(1.1)'; }}
+                                        onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.15)'; e.currentTarget.style.transform = 'translateY(-50%) scale(1)'; }}
+                                    >
+                                        <ChevronLeft size={24} />
+                                    </button>
+
+                                    <button
+                                        onClick={handleNextImage}
+                                        style={{
+                                            position: 'absolute',
+                                            right: 'clamp(0.5rem, 2vw, 1rem)',
+                                            top: '50%',
+                                            transform: 'translateY(-50%)',
+                                            backgroundColor: 'rgba(255,255,255,0.15)',
+                                            backdropFilter: 'blur(4px)',
+                                            border: '1px solid rgba(255,255,255,0.2)',
+                                            borderRadius: '9999px',
+                                            width: 'clamp(2.5rem, 6vw, 3rem)',
+                                            height: 'clamp(2.5rem, 6vw, 3rem)',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            cursor: 'pointer',
+                                            zIndex: 10,
+                                            color: 'white',
+                                            transition: 'all 0.2s',
+                                            touchAction: 'manipulation',
+                                        }}
+                                        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.25)'; e.currentTarget.style.transform = 'translateY(-50%) scale(1.1)'; }}
+                                        onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.15)'; e.currentTarget.style.transform = 'translateY(-50%) scale(1)'; }}
+                                    >
+                                        <ChevronRight size={24} />
+                                    </button>
+
+                                    {/* Image counter */}
+                                    <div style={{
+                                        position: 'absolute',
+                                        bottom: 'clamp(0.5rem, 2vw, 1rem)',
+                                        left: '50%',
+                                        transform: 'translateX(-50%)',
+                                        backgroundColor: 'rgba(0,0,0,0.6)',
+                                        backdropFilter: 'blur(4px)',
+                                        color: 'white',
+                                        padding: 'clamp(0.5rem, 1vw, 0.75rem) clamp(0.75rem, 2vw, 1rem)',
+                                        borderRadius: '9999px',
+                                        fontSize: 'clamp(0.75rem, 2vw, 0.875rem)',
+                                        fontWeight: '600',
+                                        zIndex: 10,
+                                        border: '1px solid rgba(255,255,255,0.2)',
+                                    }}>
+                                        {currentImageIndex + 1} / {images.length}
+                                    </div>
+                                </>
+                            )}
                         </div>
                     </div>
                 )}
