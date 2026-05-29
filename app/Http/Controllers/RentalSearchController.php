@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Rental;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use App\Services\Seo\SeoService;
 
 class RentalSearchController extends Controller
 {
@@ -262,8 +263,73 @@ class RentalSearchController extends Controller
             'area' => $areaData,
             'city' => $cityName,
             'properties' => $properties,
+            'seo' => app(SeoService::class)->areaMeta($areaSlug, 'rent'),
         ]);
     }
+
+    public function showAreaBySlug(Request $request, string $areaSlug)
+    {
+        $areaName = str_replace('-', ' ', $areaSlug);
+
+        $properties = Rental::where('purpose', 'rent')
+            ->where('status', 'approved')
+            ->where('is_sold', false)
+            ->where(function ($query) use ($areaName) {
+                $query->whereRaw('LOWER(area) = ?', [strtolower($areaName)])
+                      ->orWhereRaw('LOWER(area) LIKE ?', ['%' . strtolower($areaName) . '%']);
+            })
+            ->latest()
+            ->get();
+
+        if ($properties->isEmpty()) {
+            abort(404, 'Area not found');
+        }
+
+        $avgRent = $properties->avg(function ($rental) {
+            return ($rental->rent_min + $rental->rent_max) / 2;
+        });
+
+        $areaData = [
+            'name' => $properties->first()->area,
+            'listingCount' => $properties->count(),
+            'avgRent' => round($avgRent),
+            'minRent' => $properties->min('rent_min'),
+            'maxRent' => $properties->max('rent_max'),
+            'trend' => $this->calculateTrend($properties),
+        ];
+
+        return inertia('AreaDetailPage', [
+            'area' => $areaData,
+            'city' => $properties->first()->city,
+            'properties' => $properties,
+            'seo' => app(SeoService::class)->areaMeta($areaSlug, 'rent'),
+        ]);
+    }
+
+    public function showProperty(Request $request, string $areaSlug, string $propertySlug)
+    {
+        $areaName = str_replace('-', ' ', $areaSlug);
+
+        $rental = Rental::where('purpose', 'rent')
+            ->where('status', 'approved')
+            ->where('is_sold', false)
+            ->where('slug', $propertySlug)
+            ->where(function ($query) use ($areaName) {
+                $query->whereRaw('LOWER(area) = ?', [strtolower($areaName)])
+                      ->orWhereRaw('LOWER(area) LIKE ?', ['%' . strtolower($areaName) . '%']);
+            })
+            ->firstOrFail();
+
+        $rental->load('user');
+        $reviews = $rental->reviews()->orderBy('created_at', 'desc')->get();
+
+        return inertia('PropertyDetailsPage', [
+            'rental' => $rental,
+            'reviews' => $reviews,
+            'seo' => app(SeoService::class)->propertyMeta($rental),
+        ]);
+    }
+
     /**
      * Track listing view
      */

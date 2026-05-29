@@ -14,11 +14,33 @@ use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\WebhookController;
 use App\Http\Controllers\VerificationsController;
 use App\Http\Controllers\AgentAnalyticsController;
+use App\Http\Controllers\BlogController;
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\SitemapController;
+
+Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap.index');
+Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
+Route::get('/blog/{slug}', [BlogController::class, 'show'])->name('blog.show');
+
+Route::get('/rent/{areaSlug}/{propertySlug}', [RentalSearchController::class, 'showProperty'])
+    ->where(['areaSlug' => '^(?!areas|api|login|logout|about|guide|safety|faq|terms|privacy|report|pricing|agents|become-agent|checkout|payment|admin|agent-dashboard|agent|webhooks|settings)[a-z0-9\-]+$', 'propertySlug' => '[a-z0-9\-]+']);
+
+Route::get('/rent/{areaSlug}', [RentalSearchController::class, 'showAreaBySlug'])
+    ->where('areaSlug', '^(?!areas|api|login|logout|about|guide|safety|faq|terms|privacy|report|pricing|agents|become-agent|checkout|payment|admin|agent-dashboard|agent|webhooks|settings)[a-z0-9\-]+$')
+    ->name('rent.area.show');
 
 Route::resource('rent', RentController::class)
     ->except('index')
     ->where(['rent' => '[a-f0-9\-]{36}|[0-9]+']);
+
+Route::get('/buy/{areaSlug}/{propertySlug}', [SaleSearchController::class, 'showProperty'])
+    ->where(['areaSlug' => '^(?!areas|api|login|logout|about|guide|safety|faq|terms|privacy|report|pricing|agents|become-agent|checkout|payment|admin|agent-dashboard|agent|webhooks|settings)[a-z0-9\-]+$', 'propertySlug' => '[a-z0-9\-]+']);
+
+Route::get('/buy/{areaSlug}', [SaleSearchController::class, 'showAreaBySlug'])
+    ->where('areaSlug', '^(?!areas|api|login|logout|about|guide|safety|faq|terms|privacy|report|pricing|agents|become-agent|checkout|payment|admin|agent-dashboard|agent|webhooks|settings)[a-z0-9\-]+$')
+    ->name('buy.area.show');
+
+Route::get('/buy/{rent}', [SaleSearchController::class, 'show'])->where(['rent' => '[0-9]+']);
 
 Route::get('/', [RentController::class, 'index']);
 

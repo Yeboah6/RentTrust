@@ -18,11 +18,14 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
             $middleware->web(append: [
             HandleInertiaRequests::class,
+            \App\Http\Middleware\TrailingSlashMiddleware::class,
+            \App\Http\Middleware\CanonicalUrlMiddleware::class,
         ]);
             $middleware->alias([
             'role' => RoleMiddleware::class,
             'roles' => RoleCheckMiddleware::class,
             'subscription' => RequiresSubscription::class,
+            'noindex' => \App\Http\Middleware\NoIndexAdminMiddleware::class,
         ]);
 
         $middleware->validateCsrfTokens(except: [

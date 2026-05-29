@@ -6,10 +6,10 @@ import PopularAreas from "../Components/Home/PopularAreas";
 import RentCalculator from "../Components/Home/RentCalculator";
 import TrustFeatures from "../Components/Home/TrustFeatures";
 import CTASection from "../Components/Home/CTASection";
+import { Head } from '@inertiajs/react';
 
 const Home = ({ featuredRentals, featuredSales, rentalAreas, saleAreas, totalListings, totalAreas, totalVerifiedAgents, users }) => {
   return (
-    
     <div className="min-h-screen flex flex-col">
       <Header />
 

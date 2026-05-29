@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Support\Str;
 use App\Models\Review;
 use App\Traits\GeneratesUUIDs;
 
@@ -14,6 +15,7 @@ class Rental extends Model
         'user_id',
         'rental_id',
         'title',
+        'slug',
         'property_type',
         'purpose',
         'city',
@@ -101,9 +103,40 @@ class Rental extends Model
         return $this->hasMany(VerificationRequest::class);
     }
 
+    protected static function booted()
+    {
+        static::creating(function (self $rental) {
+            if (empty($rental->slug)) {
+                $rental->slug = self::generateUniqueSlug($rental->title, $rental->city, $rental->area);
+            }
+        });
+
+        static::updating(function (self $rental) {
+            if ($rental->isDirty(['title', 'city', 'area']) || empty($rental->slug)) {
+                $rental->slug = self::generateUniqueSlug($rental->title, $rental->city, $rental->area, $rental->id);
+            }
+        });
+    }
+
+    public static function generateUniqueSlug(string $title, ?string $city, ?string $area, ?int $ignoreId = null): string
+    {
+        $base = Str::slug(trim("{$title} {$area} {$city}"));
+        $slug = $base ?: Str::slug($title ?: 'property');
+        $count = 0;
+
+        while (self::where('slug', $slug)
+            ->when($ignoreId, fn ($query) => $query->where('id', '!=', $ignoreId))
+            ->exists()) {
+            $count++;
+            $slug = Str::limit($base, 65, '') . '-' . $count;
+        }
+
+        return $slug;
+    }
+
     public function getRouteKeyName()
     {
-        return 'id';
+        return 'slug';
     }
 
     /**

@@ -20,18 +20,21 @@ export default defineConfig({
     //         ignored: ['**/storage/framework/views/**'],
     //     },
     // },
-    // server: {
-    //    	host: '0.0.0.0', // Listen on all network interfaces
-    //      port: 5173,
-    //      hmr: {
-    //          host: '192.168.100.16' // Replace with your machine's IP
-    //      }
-    //  },
     server: {
-        host: '0.0.0.0', // Listen on all network interfaces
-        port: 5173,
-        hmr: {
-            host: '192.168.0.141' // Replace with your machine's IP
-        }
-    }
+       	host: '0.0.0.0', // Listen on all network interfaces
+         port: 5173,
+         cors: {
+            origin: 'http://192.168.100.16:8000'  // allow Laravel's origin
+        },
+         hmr: {
+             host: '192.168.100.16' // Replace with your machine's IP
+         }
+     },
+    // server: {
+    //     host: '0.0.0.0', // Listen on all network interfaces
+    //     port: 5173,
+    //     hmr: {
+    //         host: '192.168.0.141' // Replace with your machine's IP
+    //     }
+    // }
 });

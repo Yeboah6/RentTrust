@@ -7,6 +7,7 @@ use App\Models\ListingView;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
+use App\Services\Seo\SeoService;
 
 class SaleSearchController extends Controller
 {

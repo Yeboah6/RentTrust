@@ -1,2 +1,18 @@
 User-agent: *
-Disallow:
+Allow: /$
+Allow: /rent
+Allow: /buy
+Allow: /blog
+Allow: /agents
+Disallow: /dashboard
+Disallow: /agent-dashboard
+Disallow: /admin
+Disallow: /login
+Disallow: /sign-up
+Disallow: /register
+Disallow: /subscription
+Disallow: /messages
+Disallow: /settings
+Disallow: /webhooks
+Sitemap: https://renttrustgh.com/sitemap.xml
+Host: https://renttrustgh.com
