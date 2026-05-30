@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Rental;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use App\Services\Seo\SeoService;
 
 class RentalSearchController extends Controller
@@ -263,7 +264,7 @@ class RentalSearchController extends Controller
             'area' => $areaData,
             'city' => $cityName,
             'properties' => $properties,
-            'seo' => app(SeoService::class)->areaMeta($areaSlug, 'rent'),
+            'seo' => app(SeoService::class)->areaMeta(Str::slug($areaName), 'rent'),
         ]);
     }
 

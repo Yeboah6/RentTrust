@@ -7,6 +7,7 @@ use App\Models\ListingView;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use App\Services\Seo\SeoService;
 
 class SaleSearchController extends Controller
@@ -202,6 +203,32 @@ class SaleSearchController extends Controller
             'area' => $areaData,
             'city' => $cityName,
             'properties' => $properties,
+            'seo' => app(SeoService::class)->areaMeta(Str::slug($properties->first()->area), 'sale'),
+        ]);
+    }
+
+    public function showProperty(Request $request, string $areaSlug, string $propertySlug)
+    {
+        $areaName = str_replace('-', ' ', $areaSlug);
+
+        $rental = Rental::where('purpose', 'sale')
+            ->where('is_sold', false)
+            ->where('slug', $propertySlug)
+            ->where(function ($query) use ($areaName) {
+                $query->whereRaw('LOWER(area) = ?', [strtolower($areaName)])
+                      ->orWhereRaw('LOWER(area) LIKE ?', ['%' . strtolower($areaName) . '%']);
+            })
+            ->firstOrFail();
+
+        $rental->load('user');
+        $reviews = $rental->reviews()->orderBy('created_at', 'desc')->get();
+
+        return inertia('SalesDetailPage', [
+            'rental' => $rental,
+            'reviews' => $reviews,
+            'price_label' => 'Sale Price',
+            'days_on_market' => $rental->getDaysOnMarket(),
+            'seo' => app(SeoService::class)->propertyMeta($rental),
         ]);
     }
 
@@ -275,11 +302,12 @@ class SaleSearchController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return inertia('SaleDetailsPage', [
+        return inertia('SalesDetailPage', [
             'rental' => $rent,
             'reviews' => $reviews,
             'price_label' => 'Sale Price',
             'days_on_market' => $rent->getDaysOnMarket(),
+            'seo' => app(SeoService::class)->propertyMeta($rent),
         ]);
     }
 

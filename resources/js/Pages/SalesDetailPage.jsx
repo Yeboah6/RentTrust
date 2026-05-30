@@ -3,6 +3,8 @@ import { Link } from '@inertiajs/react';
 import { MapPin, Home, TrendingUp, TrendingDown, ChevronLeft, Building, DollarSign, Calendar, ChevronRight, BedDouble, Bath } from 'lucide-react';
 import Header from "../Components/Layouts/Header";
 import Footer from "../Components/Layouts/Footer";
+import SEO from '../Components/SEO';
+import JsonLd from '../Components/JsonLd';
 
 // ─── Icon Components ───────────────────────────────────────────────────────────
 
@@ -13,6 +15,14 @@ const Shield = ({ style }) => (
 );
 
 // ─── Property Card Component ───────────────────────────────────────────────────
+
+const slugifyArea = (value) => {
+  return String(value || '')
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9\-]/g, '');
+};
 
 const PropertyCard = ({ property }) => {
   const [isHovered, setIsHovered] = useState(false);
@@ -47,9 +57,12 @@ const PropertyCard = ({ property }) => {
     setCurrentImageIndex((prev) => prev === imagesArray.length - 1 ? 0 : prev + 1);
   };
 
+  const areaSlug = slugifyArea(property.area);
+  const listingSlug = property.slug || property.id;
+
   return (
     <Link
-      href={`/buy/${property.id}`}
+      href={`/buy/${areaSlug}/${listingSlug}`}
       className="block overflow-hidden rounded-lg bg-white transition-all duration-300"
       style={{
         border: '1px solid hsl(40 20% 88%)',
@@ -283,17 +296,34 @@ const PropertyCard = ({ property }) => {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-const SalesDetailPage = ({ area, city, properties }) => {
+const buildSaleAreaSchema = (area, city, seo) => ({
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  'name': seo?.title || `${area.name} Properties for Sale`,
+  'description': seo?.description || `Explore homes for sale in ${area.name}, ${city}.`,
+  'url': seo?.canonical || (typeof window !== 'undefined' ? window.location.href : ''),
+  'breadcrumb': {
+    '@type': 'BreadcrumbList',
+    'itemListElement': [
+      { '@type': 'ListItem', 'position': 1, 'name': 'Home', 'item': `${typeof window !== 'undefined' ? window.location.origin : ''}/` },
+      { '@type': 'ListItem', 'position': 2, 'name': 'Buy', 'item': `${typeof window !== 'undefined' ? window.location.origin : ''}/buy` },
+      { '@type': 'ListItem', 'position': 3, 'name': area.name, 'item': seo?.canonical || '' }
+    ]
+  }
+});
+
+const SalesDetailPage = ({ area, city, properties, seo }) => {
   const isPositiveTrend = area.trend?.startsWith('+') || false;
   const cityLabel = city.charAt(0).toUpperCase() + city.slice(1);
+  const areaSchema = buildSaleAreaSchema(area, cityLabel, seo);
 
   return (
     <>
+      <SEO {...seo} />
+      <JsonLd schema={areaSchema} />
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-
         * {
-          font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+          font-family: system-ui, sans-serif;
           -webkit-font-smoothing: antialiased;
           -moz-osx-font-smoothing: grayscale;
         }

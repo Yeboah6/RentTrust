@@ -82,9 +82,9 @@ class SeoService
             ];
         }
 
-        $label = str_replace('-', ' ', ucfirst($areaSlug));
+        $label = ucwords(str_replace('-', ' ', $areaSlug));
         $title = "{$label} Properties for " . ($purpose === 'sale' ? 'Sale' : 'Rent') . " | " . config('seo.site.name');
-        $description = "Browse verified properties in {$label}. Find the latest rental and sale listings, neighbourhood insights, and local agents serving Ghana.");
+        $description = "Browse verified properties in {$label}. Find the latest rental and sale listings, neighbourhood insights, and local agents serving Ghana.";
 
         return [
             'title' => $title,

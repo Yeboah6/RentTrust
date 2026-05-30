@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import Header from '../Components/Layouts/Header';
 import Footer from '../Components/Layouts/Footer';
+import SEO from '../Components/SEO';
+import JsonLd from '../Components/JsonLd';
 import { Link, usePage, useForm } from "@inertiajs/react";
 import { ChevronLeft, ChevronRight, BedDouble, Bath } from 'lucide-react';
 import ReportListingDialog from "../Components/Modules/ReportListingDialog";
@@ -84,9 +86,68 @@ const parseImages = (imagesData) => {
     return [];
 };
 
+const buildPropertySchema = (rental, seo) => {
+    const imageUrl = seo?.image || null;
+    const isSale = rental.purpose === 'sale';
+    const price = isSale ? rental.sale_price : rental.rent_max;
+    const priceCurrency = 'GHS';
+
+    return {
+        '@context': 'https://schema.org',
+        '@type': isSale ? 'Offer' : 'Product',
+        'name': seo?.title || rental.title,
+        'description': seo?.description || rental.description,
+        'url': seo?.canonical || (typeof window !== 'undefined' ? window.location.href : ''),
+        'image': imageUrl ? [imageUrl] : undefined,
+        'offers': {
+            '@type': 'Offer',
+            'priceCurrency': priceCurrency,
+            'price': price || 0,
+            'availability': rental.is_sold ? 'https://schema.org/SoldOut' : 'https://schema.org/InStock',
+            'url': seo?.canonical || (typeof window !== 'undefined' ? window.location.href : ''),
+        },
+        'category': rental.property_type,
+        'address': {
+            '@type': 'PostalAddress',
+            'addressLocality': rental.area,
+            'addressRegion': rental.city,
+            'addressCountry': 'GH',
+        },
+        'brand': {
+            '@type': 'Organization',
+            'name': rental.user?.name || 'RentTrustGh',
+        },
+    };
+};
+
+const buildBreadcrumbSchema = (rental, seo) => ({
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    'itemListElement': [
+        {
+            '@type': 'ListItem',
+            'position': 1,
+            'name': 'Home',
+            'item': `${typeof window !== 'undefined' ? window.location.origin : ''}/`,
+        },
+        {
+            '@type': 'ListItem',
+            'position': 2,
+            'name': rental.area,
+            'item': `${seo?.canonical?.replace(/\/[a-z0-9\-]+$/, '')}`,
+        },
+        {
+            '@type': 'ListItem',
+            'position': 3,
+            'name': rental.title || `${rental.bedrooms || ''} bedroom ${rental.property_type || 'property'}`,
+            'item': seo?.canonical || (typeof window !== 'undefined' ? window.location.href : ''),
+        },
+    ],
+});
+
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
-export default function PropertyDetailsPage({ rental, reviews }) {
+export default function PropertyDetailsPage({ rental, reviews, seo }) {
     const { auth } = usePage().props;
 
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -152,11 +213,16 @@ export default function PropertyDetailsPage({ rental, reviews }) {
         ));
     };
 
+    const propertySchema = buildPropertySchema(rental, seo);
+    const breadcrumbSchema = buildBreadcrumbSchema(rental, seo);
+
     return (
         <>
+            <SEO {...seo} />
+            <JsonLd schema={propertySchema} />
+            <JsonLd schema={breadcrumbSchema} />
             <style>{`
-                @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-                * { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
+                * { font-family: system-ui, sans-serif; }
                 h1, h2, h3, h4, h5, h6 { font-weight: 600; }
 
                 @keyframes slideIn {

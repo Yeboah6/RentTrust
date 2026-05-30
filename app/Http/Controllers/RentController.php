@@ -11,6 +11,7 @@ use App\Models\ListingView;
 use App\Models\ListingInquiry;
 use App\Models\AdminAuditLog;
 use App\Services\FeaturedListingService;
+use App\Services\Seo\SeoService;
 use Illuminate\Http\Request;
 use App\Services\ListingLimitService;
 use Illuminate\Support\Facades\Auth;
@@ -380,7 +381,8 @@ public function index()
 
         return inertia('PropertyDetailsPage', [
             'rental' => $rent,
-            'reviews' => $reviews
+            'reviews' => $reviews,
+            'seo' => app(SeoService::class)->propertyMeta($rent),
         ]);
     }
 

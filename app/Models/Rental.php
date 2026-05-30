@@ -139,6 +139,19 @@ class Rental extends Model
         return 'slug';
     }
 
+    public function resolveRouteBinding($value, $field = null)
+    {
+        $field = $field ?: $this->getRouteKeyName();
+
+        $query = $this->where($field, $value);
+
+        if (! $query->exists() && is_numeric($value)) {
+            return $this->where('id', $value)->first();
+        }
+
+        return $query->first();
+    }
+
     /**
      * Check if this is a rental listing
      */

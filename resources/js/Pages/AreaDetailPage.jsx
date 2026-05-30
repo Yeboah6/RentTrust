@@ -3,6 +3,16 @@ import { Link } from '@inertiajs/react';
 import { MapPin, Home, TrendingUp, TrendingDown, ArrowLeft, Building, DollarSign, Calendar, BedDouble, Bath } from 'lucide-react';
 import Header from "../Components/Layouts/Header";
 import Footer from "../Components/Layouts/Footer";
+import SEO from '../Components/SEO';
+import JsonLd from '../Components/JsonLd';
+
+const slugifyArea = (value) => {
+  return String(value || '')
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9\-]/g, '');
+};
 
 const PropertyCard = ({ property }) => {
   const [isHovered, setIsHovered] = React.useState(false);
@@ -24,10 +34,12 @@ const PropertyCard = ({ property }) => {
 
   // Get the first image or null
   const firstImage = imagesArray.length > 0 ? imagesArray[0] : property.image;
+  const areaSlug = slugifyArea(property.area);
+  const listingSlug = property.slug || property.id;
 
   return (
     <Link
-      href={`/rent/${property.id}`}
+      href={`/rent/${areaSlug}/${listingSlug}`}
       className="block overflow-hidden border rounded-xl bg-white transition-all duration-300"
       style={{
         borderColor: 'hsl(40 20% 88%)',
@@ -143,17 +155,34 @@ const PropertyCard = ({ property }) => {
   );
 };
 
-const AreaDetailPage = ({ area, city, properties }) => {
+const buildAreaSchema = (area, city, seo) => ({
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  'name': seo?.title || `${area.name} Properties`,
+  'description': seo?.description || `Browse listings in ${area.name}, ${city}, Ghana.`,
+  'url': seo?.canonical || (typeof window !== 'undefined' ? window.location.href : ''),
+  'breadcrumb': {
+      '@type': 'BreadcrumbList',
+      'itemListElement': [
+          { '@type': 'ListItem', 'position': 1, 'name': 'Home', 'item': `${typeof window !== 'undefined' ? window.location.origin : ''}/` },
+          { '@type': 'ListItem', 'position': 2, 'name': city, 'item': `${typeof window !== 'undefined' ? window.location.origin : ''}/rent/${city.toLowerCase()}` },
+          { '@type': 'ListItem', 'position': 3, 'name': area.name, 'item': seo?.canonical || '' }
+      ]
+  }
+});
+
+const AreaDetailPage = ({ area, city, properties, seo }) => {
   const isPositiveTrend = area.trend.startsWith('+');
   const cityLabel = city.charAt(0).toUpperCase() + city.slice(1);
+  const areaSchema = buildAreaSchema(area, cityLabel, seo);
 
   return (
     <>
+      <SEO {...seo} />
+      <JsonLd schema={areaSchema} />
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-        
         * {
-          font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+          font-family: system-ui, sans-serif;
         }
       `}</style>
 
