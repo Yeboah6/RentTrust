@@ -6,7 +6,7 @@ return [
         'title' => 'RentTrustGh | Trusted Real Estate in Ghana',
         'description' => 'RentTrustGh helps Ghanaian renters and buyers discover verified apartments, houses, and investment properties with fast search, trusted agents, and local area insights.',
         'url' => env('APP_URL', 'https://renttrustgh.com'),
-        'twitter_handle' => '@RentTrustGh',
+        'instagram_handle' => '@RentTrustGh',
         'locale' => 'en_GH',
         'default_image' => 'https://renttrustgh.com/images/seo/hero.webp',
         'logo' => 'https://renttrustgh.com/images/logo.webp',
@@ -23,7 +23,7 @@ return [
         ],
         'contact_point' => [
             '@type' => 'ContactPoint',
-            'telephone' => '+233000000000',
+            'telephone' => '+233576760647',
             'contactType' => 'customer support',
             'areaServed' => 'GH',
             'availableLanguage' => ['English'],

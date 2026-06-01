@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 use App\Models\User;
+use App\Mail\AgentRegistration;
 
 class AgentController extends Controller
 {
@@ -50,6 +52,19 @@ class AgentController extends Controller
         $agent = User::create($validated);
 
         Auth::login($agent);
+
+        // Send registration confirmation email
+        try {
+            Mail::to($agent->email)->send(new AgentRegistration(
+                agentName: $agent->name,
+                agentEmail: $agent->email,
+                agentType: $agent->type ?? 'Agent',
+                dashboardUrl: route('free.agent.dashboard'),
+            ));
+        } catch (\Exception $e) {
+            // Log error but don't block registration
+            \Log::error('Failed to send agent registration email: ' . $e->getMessage());
+        }
 
         // Go straight to the dashboard — PricingModal auto-opens when package is null
         // No separate SelectPlan page needed.
