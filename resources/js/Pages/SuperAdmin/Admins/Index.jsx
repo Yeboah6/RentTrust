@@ -494,6 +494,14 @@ const AdminsIndex = ({ admins: initial = [] }) => {
         });
     };
 
+    const resendInvite = (admin) => {
+        router.post(`/super-admin/admins/${admin.id}/resend-invite`, {
+            preserveScroll: true,
+            onSuccess: () => showToast('Invitation email resent.'),
+            onError: () => showToast('Failed to resend invitation.', 'error'),
+        });
+    };
+
     const SortTh = ({ field, label, align = 'left' }) => {
         const active = sortField === field;
         const ChevEl = active && sortDir === 'desc' ? Icons.chevD : Icons.chevU;
@@ -662,6 +670,14 @@ const AdminsIndex = ({ admins: initial = [] }) => {
                                                         onMouseEnter={e => e.currentTarget.style.filter = 'brightness(0.92)'}
                                                         onMouseLeave={e => e.currentTarget.style.filter = 'none'}>
                                                         <Icons.edit /> Edit
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => resendInvite(a)}
+                                                        style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', padding: '0.4rem 0.65rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: '600', backgroundColor: 'hsl(40 90% 93%)', color: 'hsl(40 75% 40%)', border: 'none', cursor: 'pointer', transition: 'filter 0.12s', whiteSpace: 'nowrap', fontFamily: 'inherit' }}
+                                                        onMouseEnter={e => e.currentTarget.style.filter = 'brightness(0.92)'}
+                                                        onMouseLeave={e => e.currentTarget.style.filter = 'none'}>
+                                                        <Icons.mail /> Resend Email
                                                     </button>
                                                     <button onClick={() => setDeleteTarget(a)}
                                                         style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '0.4rem 0.55rem', borderRadius: '0.5rem', backgroundColor: 'hsl(0 70% 96%)', color: 'hsl(0 65% 48%)', border: 'none', cursor: 'pointer', transition: 'filter 0.12s', fontFamily: 'inherit' }}

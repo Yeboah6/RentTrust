@@ -92,35 +92,47 @@ class AdminController extends Controller
         }
     }
 
-    public function resendInvitation(Request $request, $adminId)
+    public function resendInvitation(Request $request, User $user)
     {
-        $admin = User::where('user_id', $adminId)
-            ->where('role', 'admin')
-            ->firstOrFail();
- 
+        abort_if($user->role !== 'admin', 404);
+
+        DB::beginTransaction();
+
         try {
-            // Generate a new temporary password
-            $temporaryPassword = Str::random(12);
- 
-            // Update password in database
-            $admin->update([
-                'password' => Hash::make($temporaryPassword),
+            $setupToken = Str::random(64);
+            $user->update([
+                'setup_token'            => hash('sha256', $setupToken),
+                'setup_token_expires_at' => now()->addHours(24),
+                'status'                 => 'unverified',
             ]);
- 
-            // Send invitation email
-            Mail::to($admin->email)->send(new AdminInvitation(
-                adminName: $admin->name,
-                adminEmail: $admin->email,
-                temporaryPassword: $temporaryPassword,
-                loginUrl: route('admin.login')
-            ));
- 
-            return redirect()->back()->with('success', 'Invitation email resent successfully!');
- 
-        } catch (\Exception $e) {
-            \Log::error('Resend invitation failed: ' . $e->getMessage());
- 
-            return redirect()->back()->withErrors(['email' => 'Failed to resend invitation. Please try again.']);
+
+            $setupUrl = route('admin.setup', ['token' => $setupToken]);
+
+            Mail::to($user->email)->send(
+                new AdminInvitation(
+                    adminName:  $user->name,
+                    adminEmail: $user->email,
+                    setupUrl:   $setupUrl,
+                    expiresAt:  $user->setup_token_expires_at->format('M j, Y g:i A'),
+                )
+            );
+
+            AdminAuditLog::record('user', 'Admin invitation resent', [
+                'affected_user' => $user->name,
+                'affected_id'   => $user->id,
+                'notes'         => 'Admin invitation resent via email.',
+                'properties'    => ['email' => $user->email, 'role' => $user->role],
+            ]);
+
+            DB::commit();
+
+            return back()->with('success', 'Invitation email resent successfully!');
+
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error('Resend invitation failed', ['error' => $e->getMessage(), 'admin_id' => $user->id]);
+
+            return back()->withErrors(['email' => 'Failed to resend invitation. Please try again.']);
         }
     }
 

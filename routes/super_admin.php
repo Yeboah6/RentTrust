@@ -101,9 +101,10 @@ Route::prefix('super-admin')
     // ── Admin accounts ───────────────────────────────────────────────────────
     Route::resource('admins', AdminController::class)
         ->parameters(['admins' => 'user']);
-    Route::post('admins/{user}/reset-password', [AdminController::class, 'resetPassword']) ->name('admins.reset-password');
-    Route::post('admins/{user}/suspend',        [AdminController::class, 'suspend'])        ->name('admins.suspend');
-    Route::post('admins/{user}/reactivate',     [AdminController::class, 'reactivate'])     ->name('admins.reactivate');
+    Route::post('admins/{user}/resend-invite',    [AdminController::class, 'resendInvitation']) ->name('admins.resend-invite');
+    Route::post('admins/{user}/reset-password',   [AdminController::class, 'resetPassword'])   ->name('admins.reset-password');
+    Route::post('admins/{user}/suspend',          [AdminController::class, 'suspend'])          ->name('admins.suspend');
+    Route::post('admins/{user}/reactivate',       [AdminController::class, 'reactivate'])       ->name('admins.reactivate');
 
     // ── Platform config ───────────────────────────────────────────────────────
     Route::resource('property-types', PropertyTypeController::class)
