@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use App\Models\User;
+use Illuminate\Support\Str;
 use App\Mail\AgentRegistration;
 
 class AgentController extends Controller
@@ -47,7 +48,7 @@ class AgentController extends Controller
         $validated['role']     = 'agent';
         $validated['status']   = 'unverified';
         $validated['package']  = null; // No plan yet — modal will prompt them
-        $validated['user_id']  = User::generateUUID();
+        $validated['user_id']  = Str::uuid();
 
         $agent = User::create($validated);
 
