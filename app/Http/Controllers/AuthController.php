@@ -2,121 +2,166 @@
 
 namespace App\Http\Controllers;
 
+// use Illuminate\Support\Facades\Password;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use App\Models\AdminAuditLog;
 use App\Models\Subscription;
 use App\Models\User;
-use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
+use Inertia\Inertia;
+use Inertia\Response;
+use Illuminate\Http\RedirectResponse;
+use App\Http\Requests\LoginRequest;
+use App\Http\Requests\RegisterRequest;
+use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
-    public function signUp(Request $request) {
-        $referrer = $request->headers->get('referer') ?? '/';
-        $request->session()->put('signup_referrer', $referrer);
+    // public function signUp(Request $request) {
+    //     $referrer = $request->headers->get('referer') ?? '/';
+    //     $request->session()->put('signup_referrer', $referrer);
         
-        // pass flag to show signup form by default
-        return inertia('Auth/AuthPage', ['isLogin' => false]);
-    }
+    //     // pass flag to show signup form by default
+    //     return inertia('Auth/AuthPage', ['isLogin' => false]);
+    // }
 
-    public function store(Request $request) {
-
-        $signUpData = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
-            'phone' => 'required|max:15|unique:users,phone',
-            'password' => 'required|string|min:8|max:255'
-        ]);
-
-        $signUpData['password'] = Hash::make($signUpData['password']);
-        $signUpData['user_id'] = User::generateUUID();
-
-        $tenant = User::create($signUpData);
-
-        Auth::login($tenant);
-        
-        $tenant->update(['last_active' => now()]);
-        
-        // Get the referrer URL from session, default to home page
-        $redirectUrl = $request->session()->pull('signup_referrer', '/');
-        
-        return redirect($redirectUrl);
-    }
-
-    public function login(Request $request)
+    // ── Views ────────────────────────────────────────────────────────────────
+ 
+    public function showLogin(): Response
     {
-        $validated = $request->validate([
-            'email'    => 'required|email',
-            'password' => 'required|string|min:8',
-        ]);
-    
-        $user = User::where('email', $validated['email'])->first();
-    
-        if (!$user || !Hash::check($validated['password'], $user->password)) {
-            return back()->withErrors([
-                'email' => 'The provided credentials do not match our records.',
-            ])->onlyInput('email');
-        }
+        return Inertia::render('Auth/AuthPage', ['isLogin' => true]);
+    }
+ 
+    public function showRegister(): Response
+    {
+        return Inertia::render('Auth/AuthPage', ['isLogin' => false]);
+    }
 
-        // ── Suspension check ──────────────────────────────────────────────────────
-        if ($user->status === 'suspended') {
-            return back()->withErrors([
-                'email' => 'Your account has been suspended. Please contact support for assistance.',
-            ])->onlyInput('email');
-        }
-    
+    public function register(RegisterRequest $request): RedirectResponse
+    {
+        $user = User::create([
+            'user_id'  => Str::uuid(),
+            'name'     => $request->name,
+            'email'    => $request->email,
+            'phone'    => $request->phone,
+            'password' => Hash::make($request->password),
+            'role'     => 'tenant',
+            'package'  => 'free',
+            'status'   => 'active',
+        ]);
+ 
+        Auth::login($user, remember: true);
+ 
         $request->session()->regenerate();
-        Auth::login($user);
-        
-        $user->update(['last_active' => now()]);
-    
-        // ── Tenant ────────────────────────────────────────────────────────────────
-        if ($user->role === 'tenant') {
-            $redirectUrl = $request->session()->pull('signup_referrer', '/');
-            return redirect($redirectUrl);
-        }
-    
-        // ── Agent ─────────────────────────────────────────────────────────────────
-        if ($user->role === 'agent') {
-            $subscription = Subscription::where('user_id', $user->id)
-                ->whereIn('status', ['active', 'cancelled', 'grace'])
-                ->orderByDesc('ends_at')
-                ->first();
-    
-            $hasActiveAccess = $subscription
-                && $subscription->ends_at
-                && now()->lessThanOrEqualTo($subscription->ends_at);
-    
-            if ($hasActiveAccess && in_array($user->package, ['pro', 'elite'])) {
-                // Paid period is still valid — send to the full agent dashboard
-                return redirect()->intended('/agent-dashboard');
-            }
-    
-            // Free plan, expired subscription, or no subscription at all
-            // if($user->)
-            return redirect()->intended('/agent/dashboard');
-        }
-    
-        // ── Admin ─────────────────────────────────────────────────────────────────
-        if ($user->role === 'admin' && $user->package === 'admin') {
-            return redirect('/admin');
-        }
-    
-        // ── Super admin ───────────────────────────────────────────────────────────
-        if ($user->role === 'super_admin' && $user->package === 'super_admin') {
-            return redirect('/super-admin/dashboard');
-        }
-    
+ 
         return redirect('/');
     }
 
+     // ── Login ─────────────────────────────────────────────────────────────────
+ 
+    public function login(LoginRequest $request): RedirectResponse
+    {
+        // 1. Rate-limit check + credential check (throws ValidationException on failure)
+        $request->authenticate();
+ 
+        // 2. Auth::attempt() succeeded — user is now resolved
+        $user = $request->user();
+ 
+        // 3. Suspension check (after credentials are confirmed valid)
+        if ($user->status === 'suspended') {
+            Auth::logout();
+ 
+            throw ValidationException::withMessages([
+                'email' => 'Your account has been suspended. Please contact support for assistance.',
+            ]);
+        }
+ 
+        // 4. Regenerate session to prevent fixation
+        $request->session()->regenerate();
+ 
+        // 5. Stamp last active
+        $user->update(['last_active' => now()]);
+ 
+        // 6. Role-based redirect
+        return $this->redirectByRole($user);
+    }
 
-    public function logout(Request $request) {
-        Auth::logout();
+    // ── Role-based redirect ───────────────────────────────────────────────────
+ 
+    private function redirectByRole(User $user): RedirectResponse
+    {
+        // ── Unverified (admin invited but not yet set up) ──────────────────────
+        if ($user->status === 'unverified') {
+            Auth::logout();
+
+            throw ValidationException::withMessages([
+                'email' => 'Your account setup is incomplete. Please check your email for the setup link.',
+            ]);
+        }
+
+        // ── Super admin ────────────────────────────────────────────────────────
+        if ($user->role === 'super_admin' && $user->package === 'super_admin') {
+            return redirect('/super-admin/dashboard');
+        }
+
+        // ── Admin ──────────────────────────────────────────────────────────────
+        if ($user->role === 'admin' && $user->package === 'admin') {
+            return redirect('/admin');
+        }
+
+        // ── Agent ──────────────────────────────────────────────────────────────
+        if ($user->role === 'agent') {
+            return $this->redirectAgent($user);
+        }
+
+        // ── Tenant (default) ───────────────────────────────────────────────────
+        return redirect('/');
+    }
+
+    private function redirectAgent(User $user): RedirectResponse
+    {
+        $subscription = Subscription::where('user_id', $user->id)
+            ->whereIn('status', ['active', 'cancelled', 'grace'])
+            ->orderByDesc('ends_at')
+            ->first();
+ 
+        $hasActiveAccess = $subscription
+            && $subscription->ends_at
+            && now()->lessThanOrEqualTo($subscription->ends_at);
+ 
+        // Paid period still valid AND on a premium plan → full dashboard
+        if ($hasActiveAccess && in_array($user->package, ['pro', 'elite'])) {
+            return redirect()->intended('/agent-dashboard');
+        }
+ 
+        // Free plan, expired, or no subscription → basic dashboard
+        return redirect()->intended('/agent/dashboard');
+    }
+
+    // ── Logout ────────────────────────────────────────────────────────────────
+ 
+    public function logout(Request $request): RedirectResponse
+    {
+        Auth::guard('web')->logout();
+ 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+ 
         return redirect('/sign-up');
+    }
+
+    // ── Email availability check ──────────────────────────────────────────────
+ 
+    public function checkEmail(Request $request): JsonResponse
+    {
+        $request->validate(['email' => 'required|email|max:255']);
+ 
+        $taken = User::where('email', $request->email)->exists();
+ 
+        return response()->json(['taken' => $taken]);
     }
 
     public function settings() {
@@ -126,8 +171,8 @@ class AuthController extends Controller
     public function updateAgentProfile(Request $request) {
         $validated = $request->validate([
             'name'=>'nullable|string|max:255',
-            'email' => 'nullable|email',
-            'phone'=>'nullable|string|max:15',
+            'email' => 'nullable|email|unique:users,email,' . Auth::id(),
+            'phone'=>'nullable|string|max:15|unique:users,phone,' . Auth::id(),
             'bio'=>'nullable|string|max:500',
             'company'=>'nullable|string|max:255',
             'fee'=>'nullable|numeric|min:0',
@@ -153,7 +198,7 @@ class AuthController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
-            'phone' => 'required|string|max:20',
+            'phone' => 'required|string|max:20|unique:users,phone',
             'company' => 'nullable|string|max:255',
             'bio' => 'nullable|string|max:1000',
             'fee' => 'nullable|numeric|min:0',
@@ -194,8 +239,8 @@ class AuthController extends Controller
     public function updateAgentByAdmin(Request $request, $id) {
         $validated = $request->validate([
             'name'=>'nullable|string|max:255',
-            'email' => 'nullable|email',
-            'phone'=>'nullable|string|max:15',
+            'email' => 'nullable|email|unique:users,email,' . $id,
+            'phone'=>'nullable|string|max:15|unique:users,phone,' . $id,
             'bio'=>'nullable|string|max:500',
             'company'=>'nullable|string|max:255',
             'fee'=>'nullable|numeric|min:0',
@@ -227,7 +272,7 @@ class AuthController extends Controller
     public function updateAdminProfile(Request $request) {
         $validated = $request->validate([
             'name'=>'nullable|string|max:255',
-            'email' => 'nullable|email',
+            'email' => 'nullable|email|unique:users,email,' . Auth::id(),
         ]);
     
         $admin = Auth::user();

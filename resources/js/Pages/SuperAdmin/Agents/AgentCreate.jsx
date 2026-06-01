@@ -33,13 +33,6 @@ const Icons = {
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 
-const TIERS = [
-    { value: 'basic',    label: 'Basic',    desc: 'Entry level access',       activeBorder: 'hsl(220 15% 60%)', activeBg: 'hsl(220 15% 97%)', glow: 'hsl(220 15% 60% / 0.15)', tagBg: 'hsl(220 15% 93%)', tagColor: 'hsl(220 15% 38%)' },
-    { value: 'standard', label: 'Standard', desc: 'Standard platform access', activeBorder: 'hsl(214 80% 55%)', activeBg: 'hsl(214 100% 98%)', glow: 'hsl(214 80% 55% / 0.12)', tagBg: 'hsl(214 100% 95%)', tagColor: 'hsl(214 80% 40%)' },
-    { value: 'pro',      label: 'Pro',      desc: 'Priority features',        activeBorder: 'hsl(270 60% 55%)', activeBg: 'hsl(270 60% 98%)', glow: 'hsl(270 60% 55% / 0.12)', tagBg: 'hsl(270 60% 95%)', tagColor: 'hsl(270 55% 40%)' },
-    { value: 'premium',  label: 'Premium',  desc: 'Full featured + priority', activeBorder: 'hsl(40 80% 50%)',  activeBg: 'hsl(40 90% 98%)',  glow: 'hsl(40 80% 50% / 0.12)',  tagBg: 'hsl(40 90% 93%)',  tagColor: 'hsl(40 80% 30%)' },
-];
-
 const INITIAL_STATUSES = [
     { value: 'pending',  label: 'Pending' },
     { value: 'active',   label: 'Active' },
@@ -54,19 +47,28 @@ const agentTypes = ['Landlord', 'Agent'];
 
 // ─── Field atoms ──────────────────────────────────────────────────────────────
 
-const inputStyle = (focused, hasError) => ({
+const inputStyle = (focused, hasError, isValid = false) => ({
     width: '100%',
     padding: '0.6rem 0.875rem',
-    border: `1.5px solid ${hasError ? 'hsl(0 65% 60%)' : focused ? 'hsl(220 60% 55%)' : 'hsl(220 15% 88%)'}`,
+    border: `1.5px solid ${
+        hasError ? 'hsl(0 65% 60%)'
+        : isValid ? 'hsl(142 50% 55%)'
+        : focused  ? 'hsl(220 60% 55%)'
+        : 'hsl(220 15% 88%)'
+    }`,
     borderRadius: '0.6rem',
     fontSize: '0.875rem',
     color: 'hsl(220 25% 16%)',
-    backgroundColor: 'white',
+    backgroundColor: hasError ? 'hsl(0 65% 55% / 0.04)' : isValid ? 'hsl(142 60% 36% / 0.04)' : 'white',
     outline: 'none',
     boxSizing: 'border-box',
     fontFamily: 'inherit',
-    boxShadow: focused && !hasError ? '0 0 0 3px hsl(220 60% 55% / 0.11)' : hasError ? '0 0 0 3px hsl(0 65% 55% / 0.1)' : 'none',
-    transition: 'border-color 0.15s, box-shadow 0.15s',
+    boxShadow: focused && !hasError && !isValid
+        ? '0 0 0 3px hsl(220 60% 55% / 0.11)'
+        : hasError  ? '0 0 0 3px hsl(0 65% 55% / 0.1)'
+        : isValid   ? '0 0 0 3px hsl(142 60% 36% / 0.08)'
+        : 'none',
+    transition: 'border-color 0.15s, box-shadow 0.15s, background-color 0.15s',
 });
 
 const FField = ({ label, required, hint, error, children }) => (
@@ -82,19 +84,28 @@ const FField = ({ label, required, hint, error, children }) => (
     </div>
 );
 
-const FInput = ({ hasError, suffix, ...props }) => {
+// Update FInput to accept and pass isValid:
+const FInput = ({ hasError, isValid = false, suffix, ...props }) => {
     const [f, setF] = useState(false);
     return (
         <div style={{ position: 'relative' }}>
             <input {...props} onFocus={() => setF(true)} onBlur={() => setF(false)}
-                style={{ ...inputStyle(f, hasError), paddingRight: suffix ? '2.8rem' : '0.875rem' }} />
+                style={{ ...inputStyle(f, hasError, isValid), paddingRight: suffix ? '2.8rem' : '0.875rem' }} />
             {suffix && (
-                <span style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', display: 'flex', cursor: 'pointer' }}>
+                <span style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', display: 'flex', cursor: 'default' }}>
                     {suffix}
                 </span>
             )}
         </div>
     );
+};
+
+// ─── Email status icon ────────────────────────────────────────────────────────
+const EmailStatusIcon = ({ status }) => {
+    if (status === 'checking') return <span style={{ fontSize: '0.75rem', color: 'hsl(220 15% 55%)', lineHeight: 1 }}>…</span>;
+    if (status === 'valid')    return <span style={{ color: 'hsl(152 60% 36%)', fontSize: '0.85rem', lineHeight: 1 }}>✓</span>;
+    if (status === 'invalid' || status === 'taken') return <span style={{ color: 'hsl(0 65% 52%)', fontSize: '0.85rem', lineHeight: 1 }}>✕</span>;
+    return null;
 };
 
 const FTextarea = ({ rows = 3, hasError, ...props }) => {
@@ -133,7 +144,6 @@ const PreviewCard = ({ data }) => {
     const initials = data.name
         ? data.name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
         : null;
-    const tier     = TIERS.find(t => t.value === data.tier);
 
     return (
         <div style={{ backgroundColor: 'white', border: '1.5px solid hsl(220 15% 88%)', borderRadius: '1rem', overflow: 'hidden', boxShadow: '0 4px 20px hsl(220 25% 12% / 0.08)' }}>
@@ -146,19 +156,14 @@ const PreviewCard = ({ data }) => {
                         <div style={{ width: '3rem', height: '3rem', borderRadius: '50%', backgroundColor: initials ? `hsl(${hue} 50% 88%)` : 'hsl(220 15% 91%)', color: initials ? `hsl(${hue} 50% 28%)` : 'hsl(220 15% 55%)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: initials ? '0.9rem' : '1rem', fontWeight: '900', border: '2px solid hsl(220 15% 93%)' }}>
                             {initials ?? <Icons.user />}
                         </div>
-                        {data.is_verified && (
-                            <div style={{ position: 'absolute', bottom: 0, right: 0, width: '1rem', height: '1rem', borderRadius: '50%', backgroundColor: 'hsl(214 80% 50%)', border: '2px solid white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <svg style={{ width: '0.5rem', height: '0.5rem' }} fill="white" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
-                            </div>
-                        )}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: '0.9rem', fontWeight: '800', color: 'hsl(220 25% 14%)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {data.name || <span style={{ color: 'hsl(220 15% 60%)', fontWeight: '400', fontStyle: 'italic' }}>Agent name…</span>}
                         </div>
-                        {data.agency && (
+                        {data.company && (
                             <div style={{ fontSize: '0.72rem', color: 'hsl(220 15% 52%)', display: 'flex', alignItems: 'center', gap: '0.25rem', marginTop: '0.1rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                <Icons.building /> {data.agency}
+                                <Icons.building /> {data.company}
                             </div>
                         )}
                     </div>
@@ -166,18 +171,10 @@ const PreviewCard = ({ data }) => {
 
                 {/* Badges */}
                 <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap', marginBottom: '0.75rem' }}>
-                    {tier && (
-                        <span style={{ fontSize: '0.62rem', fontWeight: '800', letterSpacing: '0.06em', padding: '0.15rem 0.45rem', borderRadius: '999px', backgroundColor: tier.tagBg, color: tier.tagColor }}>
-                            {data.tier === 'premium' || data.tier === 'pro' ? '⭐ ' : ''}{tier.label.toUpperCase()}
-                        </span>
-                    )}
                     {data.status && (
                         <span style={{ fontSize: '0.62rem', fontWeight: '800', letterSpacing: '0.06em', padding: '0.15rem 0.45rem', borderRadius: '999px', backgroundColor: data.status === 'verified' ? 'hsl(214 100% 95%)' : data.status === 'active' ? 'hsl(152 60% 93%)' : 'hsl(40 90% 93%)', color: data.status === 'verified' ? 'hsl(214 80% 38%)' : data.status === 'active' ? 'hsl(152 60% 28%)' : 'hsl(40 80% 30%)' }}>
                             {data.status.toUpperCase()}
                         </span>
-                    )}
-                    {data.is_featured && (
-                        <span style={{ fontSize: '0.62rem', fontWeight: '800', padding: '0.15rem 0.4rem', borderRadius: '999px', backgroundColor: 'hsl(40 90% 93%)', color: 'hsl(40 80% 30%)' }}>⭐ FEATURED</span>
                     )}
                 </div>
 
@@ -194,11 +191,6 @@ const PreviewCard = ({ data }) => {
                     {data.location && (
                         <div style={{ fontSize: '0.72rem', color: 'hsl(220 15% 48%)' }}>📍 {data.location}</div>
                     )}
-                    {data.license && (
-                        <div style={{ fontSize: '0.68rem', color: 'hsl(214 80% 44%)', fontFamily: 'monospace', backgroundColor: 'hsl(214 100% 96%)', padding: '0.1rem 0.35rem', borderRadius: '0.3rem', display: 'inline-block', marginTop: '0.1rem' }}>
-                            #{data.license}
-                        </div>
-                    )}
                 </div>
             </div>
         </div>
@@ -208,25 +200,60 @@ const PreviewCard = ({ data }) => {
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 const AgentCreate = () => {
+    const [emailStatus, setEmailStatus] = useState('idle');
+
     const { data, setData, post, processing, errors } = useForm({
         name:                  '',
         email:                 '',
         phone:                 '',
-        agency:                '',
-        license:               '',
+        fee:                   '',
+        company:                '',
         location:              '',
         bio:                   '',
         type:                  '',
         status:                'pending',
-        tier:                  'standard',
-        is_verified:           false,
-        is_featured:           false,
-        password:              '',
-        password_confirmation: '',
     });
 
-    const [showPw,  setShowPw]  = useState(false);
-    const [showPw2, setShowPw2] = useState(false);
+    // ── Email validation ──────────────────────────────────────────────────────
+    const handleEmailChange = (val) => {
+        setData('email', val);
+        clearTimeout(window._agentCreateEmailTimer);
+
+        if (!val) { setEmailStatus('idle'); return; }
+
+        const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
+        if (!valid) { setEmailStatus('invalid'); return; }
+
+        setEmailStatus('checking');
+        window._agentCreateEmailTimer = setTimeout(async () => {
+            try {
+                const xsrf = decodeURIComponent(
+                    document.cookie.split('; ').find(r => r.startsWith('XSRF-TOKEN='))?.split('=')[1] ?? ''
+                );
+                const res  = await fetch(`/check-email?email=${encodeURIComponent(val)}`, {
+                    headers: {
+                        'X-XSRF-TOKEN':      xsrf,
+                        'X-Requested-With':  'XMLHttpRequest',
+                        'Accept':            'application/json',
+                    },
+                    credentials: 'same-origin',
+                });
+                const json = await res.json();
+                setEmailStatus(json.taken ? 'taken' : 'valid');
+            } catch {
+                setEmailStatus('valid'); // fail open — server catches it on submit
+            }
+        }, 600);
+    };
+
+    // ── Derived ───────────────────────────────────────────────────────────────
+    const emailHasError = !!errors.email || emailStatus === 'invalid' || emailStatus === 'taken';
+    const emailIsValid  = !errors.email  && emailStatus === 'valid';
+
+    const emailError = errors.email
+        ?? (emailStatus === 'taken'   ? 'This email is already registered.' : undefined)
+        ?? (emailStatus === 'invalid' ? 'Please enter a valid email address.' : undefined);
+
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -293,8 +320,22 @@ const AgentCreate = () => {
                                     <FField label="Full Name" required error={errors.name}>
                                         <FInput value={data.name} onChange={e => setData('name', e.target.value)} placeholder="Jane Mensah" hasError={!!errors.name} />
                                     </FField>
-                                    <FField label="Email Address" required error={errors.email}>
-                                        <FInput type="email" value={data.email} onChange={e => setData('email', e.target.value)} placeholder="jane@agency.com" hasError={!!errors.email} />
+                                    <FField label="Email Address" required error={emailError}>
+                                        <FInput
+                                            type="email"
+                                            value={data.email}
+                                            onChange={e => handleEmailChange(e.target.value)}
+                                            placeholder="jane@company.com"
+                                            hasError={emailHasError}
+                                            isValid={emailIsValid}
+                                            suffix={<EmailStatusIcon status={emailStatus} />}
+                                        />
+                                        {/* Green hint only when confirmed available — not an error state */}
+                                        {emailIsValid && (
+                                            <p style={{ margin: '0.25rem 0 0', fontSize: '0.7rem', color: 'hsl(152 60% 36%)', fontWeight: 600 }}>
+                                                ✓ Email is available.
+                                            </p>
+                                        )}
                                     </FField>
                                 </div>
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.875rem' }}>
@@ -314,93 +355,32 @@ const AgentCreate = () => {
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                                 <SectionLabel>Professional Details</SectionLabel>
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.875rem' }}>
-                                    <FField label="Agency / Company" error={errors.agency}>
-                                        <FInput value={data.agency} onChange={e => setData('agency', e.target.value)} placeholder="e.g. Devtraco Properties" />
+                                    <FField label="Agency / Company" error={errors.company}>
+                                        <FInput value={data.company} onChange={e => setData('company', e.target.value)} placeholder="e.g. Devtraco Properties" />
                                     </FField>
-                                    <div>
-                                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', fontSize: '0.875rem', color: 'hsl(200 25% 15%)' }}>
-                                        Type of Agent
-                                      </label>
-                                      <select
-                                        value={data.type}
-                                        onChange={(e) => setData('type', e.target.value)}
-                                        className="w-full px-4 py-3 border rounded-lg focus:ring-2 transition-all appearance-none"
-                                        style={{ borderColor: errors.type ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)' }}
-                                      >
-                                        <option value="">Select agent type</option>
-                                        {agentTypes.map(type => (
-                                          <option key={type} value={type}>{type}</option>
-                                        ))}
-                                      </select>
-                                      {errors.type && (
-                                        <p style={{ fontSize: '0.875rem', color: 'hsl(0 72% 51%)', marginTop: '0.375rem' }}>
-                                          {errors.type}
-                                        </p>
-                                      )}
-                                    </div>
-                                </div>
-                                {/* <FField label="Website" error={errors.website}>
-                                    <FInput type="url" value={data.website} onChange={e => setData('website', e.target.value)} placeholder="https://agency.com" />
-                                </FField> */}
-                            </div>
-
-                            {/* ── Tier ── */}
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                                <SectionLabel>Subscription Tier</SectionLabel>
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem' }}>
-                                    {TIERS.map(t => {
-                                        const active = data.tier === t.value;
-                                        return (
-                                            <button type="button" key={t.value} onClick={() => setData('tier', t.value)}
-                                                style={{ padding: '0.65rem 0.4rem', borderRadius: '0.7rem', border: `1.5px solid ${active ? t.activeBorder : 'hsl(220 15% 88%)'}`, backgroundColor: active ? t.activeBg : 'white', cursor: 'pointer', textAlign: 'center', transition: 'all 0.15s', fontFamily: 'inherit', boxShadow: active ? `0 0 0 3px ${t.glow}` : 'none' }}>
-                                                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.3rem' }}>
-                                                    <span style={{ fontSize: '0.62rem', fontWeight: '800', letterSpacing: '0.06em', color: active ? t.tagColor : 'hsl(220 15% 50%)', padding: '0.12rem 0.4rem', borderRadius: '0.3rem', backgroundColor: active ? t.tagBg : 'hsl(220 15% 93%)' }}>
-                                                        {t.label.toUpperCase()}
-                                                    </span>
-                                                </div>
-                                                <div style={{ fontSize: '0.7rem', color: active ? t.tagColor : 'hsl(220 15% 55%)' }}>{t.desc.split(' ').slice(0, 2).join(' ')}</div>
-                                                {active && <div style={{ display: 'flex', justifyContent: 'center', marginTop: '0.3rem', color: t.tagColor }}><Icons.check /></div>}
-                                            </button>
-                                        );
-                                    })}
+                                    <FField label="Type of Agent" error={errors.type}>
+                                        <FSelect value={data.type} onChange={e => setData('type', e.target.value)}>
+                                            {agentTypes.map(type => (
+                                                <option key={type} value={type}>{type}</option>
+                                            ))}
+                                        </FSelect>
+                                    </FField>
                                 </div>
                             </div>
 
                             {/* ── Status & flags ── */}
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                                 <SectionLabel>Status & Visibility</SectionLabel>
-                                <FField label="Initial Status" error={errors.status}>
-                                    <FSelect value={data.status} onChange={e => setData('status', e.target.value)}>
-                                        {INITIAL_STATUSES.map(s => (
-                                            <option key={s.value} value={s.value}>{s.label}</option>
-                                        ))}
-                                    </FSelect>
-                                </FField>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.55rem' }}>
-                                    <Toggle value={data.is_verified} onChange={v => setData('is_verified', v)} label="Verified Agent" sub="Shows the blue verified checkmark on their profile and listings" />
-                                    <Toggle value={data.is_featured} onChange={v => setData('is_featured', v)} label="Featured Agent" sub="Agent appears in featured agent sections" />
-                                </div>
-                            </div>
-
-                            {/* ── Password ── */}
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                                <SectionLabel>Account Password</SectionLabel>
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.875rem' }}>
-                                    <FField label="Password" required error={errors.password}>
-                                        <FInput type={showPw ? 'text' : 'password'} value={data.password} onChange={e => setData('password', e.target.value)} placeholder="Min. 8 characters" hasError={!!errors.password}
-                                            suffix={
-                                                <button type="button" onClick={() => setShowPw(v => !v)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'hsl(220 15% 52%)', display: 'flex', padding: 0 }}>
-                                                    {showPw ? <Icons.eyeOff /> : <Icons.eye />}
-                                                </button>
-                                            } />
+                                    <FField label="Fee" error={errors.fee}>
+                                        <FInput value={data.fee} onChange={e => setData('fee', e.target.value)} placeholder="e.g. 8%" />
                                     </FField>
-                                    <FField label="Confirm Password" required error={errors.password_confirmation}>
-                                        <FInput type={showPw2 ? 'text' : 'password'} value={data.password_confirmation} onChange={e => setData('password_confirmation', e.target.value)} placeholder="Repeat password" hasError={!!errors.password_confirmation}
-                                            suffix={
-                                                <button type="button" onClick={() => setShowPw2(v => !v)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'hsl(220 15% 52%)', display: 'flex', padding: 0 }}>
-                                                    {showPw2 ? <Icons.eyeOff /> : <Icons.eye />}
-                                                </button>
-                                            } />
+                                    <FField label="Initial Status" error={errors.status}>
+                                        <FSelect value={data.status} onChange={e => setData('status', e.target.value)}>
+                                            {INITIAL_STATUSES.map(s => (
+                                                <option key={s.value} value={s.value}>{s.label}</option>
+                                            ))}
+                                        </FSelect>
                                     </FField>
                                 </div>
                             </div>
@@ -437,7 +417,7 @@ const AgentCreate = () => {
                         {[
                             'Set status to "Pending" if the agent needs to complete their profile first.',
                             'Verified agents get a trust badge shown on all their listings.',
-                            'The license/REA number is shown publicly to build buyer trust.',
+                            // 'The license/REA number is shown publicly to build buyer trust.',
                             'Password must be at least 8 characters. Share it securely with the agent.',
                         ].map((tip, i) => (
                             <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', marginTop: i > 0 ? '0.5rem' : 0 }}>

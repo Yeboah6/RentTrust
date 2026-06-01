@@ -150,7 +150,7 @@ const Header = () => {
               <img
                 src="/rent-trust.png"
                 alt="RentTrustGh Logo"
-                style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}
+                style={{ width: '100%', height: '100%', display: 'block' }}
               />
             </div>
             <span className="logo-text font-bold tracking-tight" style={{ 

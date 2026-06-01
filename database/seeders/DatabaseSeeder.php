@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class DatabaseSeeder extends Seeder
 {
@@ -21,9 +22,10 @@ class DatabaseSeeder extends Seeder
         ]);
 
         User::create([
-            'user_id' => User::generateUUID(),
+            'user_id' => Str::uuid(),
             'name' => 'Rent Trust',
             'email' => 'rent@trust.com',
+            'phone' => '0500866048',
             'role' => 'super_admin',
             'status' => 'verified',
             'package' => 'super_admin',

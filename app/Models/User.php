@@ -9,12 +9,13 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Models\Rental;
-use App\Traits\GeneratesUUIDs;
+// use App\Traits\GeneratesUUIDs;
+use Illuminate\Support\Str;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, GeneratesUUIDs;
+    use HasFactory, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -22,9 +23,9 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
+        'user_id',
         'name',
         'email',
-        'password',
         'phone',
         'role',
         'type',
@@ -33,8 +34,11 @@ class User extends Authenticatable
         'status',
         'fee',
         'package',
+        'password',
         'last_active',
-        'user_id'
+        'setup_token',
+        'setup_token_expires_at',
+        'location',
     ];
 
     public function rentals()
@@ -61,7 +65,8 @@ class User extends Authenticatable
      */
     protected $hidden = [
         'password',
-        // 'remember_token',
+        'remember_token',
+        'setup_token',
     ];
 
     /**
@@ -72,10 +77,41 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            // 'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-            'last_active' => 'datetime',
+            'password'              => 'hashed',
+            'last_active'           => 'datetime',
+            'setup_token_expires_at'=> 'datetime',
         ];
+    }
+
+    protected static function boot(): void
+    {
+        parent::boot();
+ 
+        static::creating(function (User $user) {
+            if (empty($user->user_id)) {
+                $user->user_id = (string) Str::uuid();
+            }
+        });
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
+    }
+
+    public function isAgent(): bool
+    {
+        return $this->role === 'agent';
+    }
+ 
+    public function isTenant(): bool
+    {
+        return $this->role === 'tenant';
+    }
+ 
+    public function isActive(): bool
+    {
+        return $this->status === 'active';
     }
 
     public function subscription(): HasOne

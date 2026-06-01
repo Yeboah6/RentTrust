@@ -18,6 +18,7 @@ class HandleInertiaRequests extends Middleware
     {
         return [
             ...parent::share($request),
+            'csrf_token' => csrf_token(),
 
             'auth' => [
                 'tenant' => $request->user() && $request->user()->role === 'tenant' 

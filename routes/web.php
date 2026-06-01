@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Inertia;
 use App\Http\Controllers\RentController;
 use App\Http\Controllers\RentalSearchController;
 use App\Http\Controllers\SaleSearchController;
@@ -17,16 +18,25 @@ use App\Http\Controllers\AgentAnalyticsController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\SitemapController;
+use App\Http\Controllers\setupPassword;
+use App\Http\Controllers\AgentSetupController;
+use Illuminate\Support\Facades\{DB, Log, Hash, Mail};
 
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap.index');
 Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
 Route::get('/blog/{slug}', [BlogController::class, 'show'])->name('blog.show');
 
+Route::get('/admin-setup/{token}',   [setupPassword::class, 'show'])->name('admin.setup');
+Route::post('/admin-setup/{token}',  [setupPassword::class, 'store'])->name('admin.setup.store');
+
+// Route::post('/admin/setup-password', [setupPassword::class, 'setupPassword'])
+//     ->name('admin.setup-password.store');
+
 Route::resource('rent', RentController::class)
     ->except('index')
     ->where(['rent' => '[a-f0-9\-]{36}|[0-9]+']);
 
-Route::get('/', [RentController::class, 'index']);
+Route::get('/', [RentController::class, 'index'])->name('home');
 
 Route::get('/about', [RentController::class, 'about'])->name('about');
 Route::get('/guide', function () { return inertia('Guide'); })->name('guide.page');
@@ -44,7 +54,6 @@ Route::prefix('rent')->group(function () {
     Route::get('/listings', [RentalSearchController::class, 'listings']);
     Route::get('/api/cities', [RentalSearchController::class, 'cities'])->name('rent.cities');
     Route::get('/api/areas', [RentalSearchController::class, 'getAreas'])->name('rent.api.areas');
-    // Route::get('/calculator', [RentController::class, 'calculate']);
 });
 
 // ── Sale Search Routes ────────────────────────────────────────────────────────
@@ -142,6 +151,7 @@ Route::middleware(['auth','verified','throttle:60,1','role:admin'])->group(funct
     Route::post('/admin/rent', [RentController::class, 'store'])->name('admin.rent.store');
     Route::put('/admin/rent/{rent}', [RentController::class, 'update'])->name('admin.rent.update');
     // Allow admins to create and update agent details
+    Route::get('/admin/agents/check-email', [AuthController::class, 'checkEmail'])->name('admin.agents.check-email');
     Route::post('/admin/agents', [AuthController::class, 'storeAgentByAdmin'])->name('admin.agents.store');
     Route::put('/admin/agents/{id}', [AuthController::class, 'updateAgentByAdmin'])->name('admin.agents.update');
     
@@ -194,18 +204,42 @@ Route::middleware(['auth','verified'])->group(function () {
     Route::put('settings/password', [AuthController::class, 'updatePassword'])->name('settings.password')->middleware('password.confirm');
 });
 
-// ── Auth ──────────────────────────────────────────────────────────────────────
-Route::post('/logout', [AuthController::class, 'logout'])->middleware(['auth','verified'])->name('logout');
-Route::get('/sign-up', [AuthController::class, 'signUp']) -> name('sign-up.page');
-Route::post('/sign-up', [AuthController::class, 'store']);
+Route::middleware('guest')->group(function () {
+ 
+    // Login
+    Route::get('/login', [AuthController::class, 'showLogin'])
+        ->name('login');
+ 
+    Route::post('/login', [AuthController::class, 'login']);
+ 
+    // Register
+    Route::get('/sign-up', [AuthController::class, 'showRegister'])
+        ->name('register');
+ 
+    Route::post('/sign-up', [AuthController::class, 'register']);
+});
+
+Route::middleware('guest')->group(function () {
+ 
+    Route::get('/agent/setup/{token}', [AgentSetupController::class, 'show'])
+        ->name('agent.setup');
+
+    Route::post('/agent/setup/{token}', [AgentSetupController::class, 'store']);
+
+});
+
+Route::get('/check-email', [AuthController::class, 'checkEmail'])
+    ->middleware('throttle:30,1')   // 30 requests per minute per IP
+    ->name('check-email');
+
+Route::middleware('auth')->group(function () {
+ 
+    Route::post('/logout', [AuthController::class, 'logout'])
+        ->name('logout');
+});
 
 // load super‑admin-specific routes (separate file for clarity)
 require __DIR__ . '/super_admin.php';
-
-Route::get('/login', function () {
-    return inertia('Auth/AuthPage', ['isLogin' => true]);
-})->name('login');
-Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:10,1')->name('login.post');
 
 Route::get('/forgot-password', [PasswordResetController::class, 'showForgotPasswordForm'])
     ->name('password.request');

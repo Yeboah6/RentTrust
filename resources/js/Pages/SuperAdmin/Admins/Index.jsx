@@ -121,8 +121,8 @@ const KpiCard = ({ label, value, sub, iconEl, accentBg, accentColor }) => (
 // ─── Add Admin Modal ──────────────────────────────────────────────────────────
 
 const ROLES = [
-    { value: 'Admin',       label: 'Admin',       desc: 'Standard platform access',     tag: 'ADMIN',    tagBg: 'hsl(214 80% 93%)', tagColor: 'hsl(214 80% 42%)' },
-    { value: 'Super Admin', label: 'Super Admin', desc: 'Full unrestricted access',      tag: '★ SUPER',  tagBg: 'hsl(270 60% 93%)', tagColor: 'hsl(270 60% 42%)' },
+    { value: 'admin',       label: 'Admin',       desc: 'Standard platform access',  tag: 'ADMIN',   tagBg: 'hsl(214 80% 93%)', tagColor: 'hsl(214 80% 42%)' },
+    { value: 'super_admin', label: 'Super Admin', desc: 'Full unrestricted access',   tag: '★ SUPER', tagBg: 'hsl(270 60% 93%)', tagColor: 'hsl(270 60% 42%)' },
 ];
 
 const fieldStyle = (focused, hasError) => ({
@@ -185,184 +185,192 @@ const Toggle = ({ value, onChange, label, sub }) => (
 );
 
 const AddAdminModal = ({ onClose, onSuccess }) => {
-    const [adminEdit, setAdminEdit] = useState(false);
-    const { data, setData, post, processing, errors, reset } = useForm({
-        name:                  '',
-        email:                 '',
-        role:                  'Admin',
-        password:              '',
-        password_confirmation: '',
-        send_invite:           true,
+  const [adminEdit, setAdminEdit] = useState(false);
+  const [emailStatus, setEmailStatus] = useState('idle'); // idle | invalid | checking | taken | valid
+  const [done, setDone] = useState(false);
+
+  const { data, setData, post, processing, errors, reset } = useForm({
+    name: '',
+    email: '',
+    role: '',
+  });
+
+  // ── Email validation ──────────────────────────────────────────────────────
+  const handleEmailChange = (val) => {
+    setData('email', val);
+    clearTimeout(window._adminEmailTimer);
+
+    if (!val) { setEmailStatus('idle'); return; }
+
+    const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
+    if (!valid) { setEmailStatus('invalid'); return; }
+
+    setEmailStatus('checking');
+    window._adminEmailTimer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/check-email?email=${encodeURIComponent(val)}`);
+        const json = await res.json();
+        setEmailStatus(json.taken ? 'taken' : 'valid');
+      } catch {
+        setEmailStatus('valid'); // fail open — server catches it on submit
+      }
+    }, 600);
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    post('/super-admin/admins', {
+      preserveScroll: true,
+      onSuccess: () => { setDone(true); onSuccess?.(); },
     });
+  };
 
-    const [showPw,  setShowPw]  = useState(false);
-    const [showPw2, setShowPw2] = useState(false);
-    const [done,    setDone]    = useState(false);
+  // ── Derived state ─────────────────────────────────────────────────────────
+  const emailHasError = !!errors.email || emailStatus === 'invalid' || emailStatus === 'taken';
+//   const confirmFilled = data.password_confirmation.length > 0;
+//   const passwordsMatch = data.password === data.password_confirmation;
+//   const confirmHasError = !!errors.password_confirmation || (confirmFilled && !passwordsMatch);
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        post('/super-admin/admins', {
-            preserveScroll: true,
-            onSuccess: () => { setDone(true); onSuccess?.(); },
-        });
-    };
+  // ── Live avatar ───────────────────────────────────────────────────────────
+  const liveHue = [...(data.name || data.email || '')].reduce((a, c) => a + c.charCodeAt(0), 0) % 360;
+  const liveInitials = (data.name || data.email || '')
+    ? (data.name || data.email).split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
+    : null;
 
-    const liveHue      = [...(data.name || data.email || '')].reduce((a, c) => a + c.charCodeAt(0), 0) % 360;
-    const liveInitials = (data.name || data.email || '')
-        ? (data.name || data.email).split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase()
-        : null;
+  return (
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'hsl(222 28% 8% / 0.62)', backdropFilter: 'blur(5px)' }}>
+      <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: '540px', margin: '1rem', backgroundColor: 'white', borderRadius: '1.25rem', overflow: 'hidden', boxShadow: '0 40px 100px hsl(220 28% 6% / 0.32)', animation: 'adminModalIn 0.22s cubic-bezier(0.16,1,0.3,1)' }}>
 
-    return (
-        <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'hsl(222 28% 8% / 0.62)', backdropFilter: 'blur(5px)' }}>
-            <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: '540px', margin: '1rem', backgroundColor: 'white', borderRadius: '1.25rem', overflow: 'hidden', boxShadow: '0 40px 100px hsl(220 28% 6% / 0.32)', animation: 'adminModalIn 0.22s cubic-bezier(0.16,1,0.3,1)' }}>
-
-                {/* ── Dark header ── */}
-                <div style={{ background: 'linear-gradient(135deg, hsl(222 30% 14%), hsl(220 28% 20%))', padding: '1.5rem 1.75rem', position: 'relative', overflow: 'hidden' }}>
-                    {/* subtle grid overlay */}
-                    <div style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(hsl(220 30% 50% / 0.07) 1px, transparent 1px)', backgroundSize: '20px 20px', pointerEvents: 'none' }} />
-
-                    <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                            {/* Live avatar preview */}
-                            <div style={{ width: '3rem', height: '3rem', borderRadius: '0.875rem', backgroundColor: liveInitials ? `hsl(${liveHue} 50% 50%)` : 'hsl(220 25% 30%)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: liveInitials ? '0.9rem' : '1rem', fontWeight: '800', letterSpacing: '0.02em', transition: 'background-color 0.3s', border: '2px solid hsl(220 30% 30%)', boxShadow: '0 2px 12px hsl(220 28% 6% / 0.4)' }}>
-                                {liveInitials ?? <Icons.users />}
-                            </div>
-                            <div>
-                                <h2 style={{ margin: '0 0 0.2rem', fontSize: '1.05rem', fontWeight: '800', color: 'white', letterSpacing: '-0.01em' }}>
-                                    {done ? 'Admin Created!' : 'Add New Admin'}
-                                </h2>
-                                <p style={{ margin: 0, fontSize: '0.75rem', color: 'hsl(220 20% 62%)' }}>
-                                    {done ? `${data.name || data.email} is ready` : 'Configure access credentials and role'}
-                                </p>
-                            </div>
-                        </div>
-                        <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'hsl(220 20% 55%)', padding: '0.3rem', display: 'flex', borderRadius: '0.4rem', transition: 'color 0.15s' }}
-                            onMouseEnter={e => e.currentTarget.style.color = 'white'}
-                            onMouseLeave={e => e.currentTarget.style.color = 'hsl(220 20% 55%)'}>
-                            <Icons.x />
-                        </button>
-                    </div>
-                </div>
-
-                {done ? (
-                    /* ── Success panel ── */
-                    <div style={{ padding: '2.25rem 1.75rem', textAlign: 'center' }}>
-                        <div style={{ width: '4.5rem', height: '4.5rem', borderRadius: '50%', backgroundColor: 'hsl(152 55% 92%)', color: 'hsl(152 55% 33%)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.25rem', fontSize: '1.6rem' }}>
-                            <Icons.check />
-                        </div>
-                        <h3 style={{ fontSize: '1.1rem', fontWeight: '800', color: 'hsl(220 25% 15%)', margin: '0 0 0.5rem' }}>
-                            {data.name || data.email} added successfully
-                        </h3>
-                        <p style={{ fontSize: '0.85rem', color: 'hsl(220 15% 50%)', margin: '0 0 0.5rem', lineHeight: 1.6 }}>
-                            {data.send_invite
-                                ? <>An invitation has been sent to <strong>{data.email}</strong>.</>
-                                : <>The account is now active. Share credentials securely.</>}
-                        </p>
-                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.3rem 0.75rem', borderRadius: '999px', backgroundColor: 'hsl(270 60% 95%)', color: 'hsl(270 60% 42%)', fontSize: '0.72rem', fontWeight: '700', marginBottom: '1.75rem' }}>
-                            <Icons.shield /> {data.role}
-                        </div>
-                        <div style={{ display: 'flex', gap: '0.65rem' }}>
-                            <button onClick={() => { reset(); setDone(false); setShowPw(false); setShowPw2(false); }}
-                                style={{ flex: 1, padding: '0.65rem', borderRadius: '0.65rem', border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white', fontSize: '0.85rem', fontWeight: '600', color: 'hsl(220 25% 30%)', cursor: 'pointer', fontFamily: 'inherit' }}>
-                                Add Another
-                            </button>
-                            <button onClick={onClose}
-                                style={{ flex: 1, padding: '0.65rem', borderRadius: '0.65rem', border: 'none', backgroundColor: 'hsl(220 25% 15%)', color: 'white', fontSize: '0.85rem', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit' }}>
-                                Done
-                            </button>
-                        </div>
-                    </div>
-                ) : (
-                    <form onSubmit={handleSubmit}>
-                        <div style={{ padding: '1.5rem 1.75rem', display: 'flex', flexDirection: 'column', gap: '1.15rem' }}>
-
-                            {/* Name + Email */}
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.875rem' }}>
-                                <FField label="Full Name" required error={errors.name}>
-                                    <FInput value={data.name} onChange={e => setData('name', e.target.value)} placeholder="Jane Doe" hasError={!!errors.name} />
-                                </FField>
-                                <FField label="Email Address" required error={errors.email}>
-                                    <FInput type="email" value={data.email} onChange={e => setData('email', e.target.value)} placeholder="jane@company.com" hasError={!!errors.email} />
-                                </FField>
-                            </div>
-
-                            {/* Role selector */}
-                            <FField label="Role" hint="Super Admins have unrestricted access to this panel.">
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.6rem' }}>
-                                    {ROLES.map(r => {
-                                        const active = data.role === r.value;
-                                        const isSuper = r.value === 'Super Admin';
-                                        const activeBorder = isSuper ? 'hsl(270 60% 55%)' : 'hsl(220 60% 55%)';
-                                        const activeBg     = isSuper ? 'hsl(270 60% 98%)' : 'hsl(214 100% 98%)';
-                                        return (
-                                            <button type="button" key={r.value} onClick={() => setData('role', r.value)}
-                                                style={{ padding: '0.75rem 0.875rem', borderRadius: '0.7rem', border: `1.5px solid ${active ? activeBorder : 'hsl(220 15% 88%)'}`, backgroundColor: active ? activeBg : 'white', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s', fontFamily: 'inherit', boxShadow: active ? `0 0 0 3px ${isSuper ? 'hsl(270 60% 55% / 0.1)' : 'hsl(220 60% 55% / 0.1)'}` : 'none' }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
-                                                    <span style={{ fontSize: '0.65rem', fontWeight: '800', letterSpacing: '0.07em', color: active ? r.tagColor : 'hsl(220 15% 50%)', padding: '0.15rem 0.45rem', borderRadius: '0.3rem', backgroundColor: active ? r.tagBg : 'hsl(220 15% 93%)' }}>
-                                                        {r.tag}
-                                                    </span>
-                                                    {active && <span style={{ color: isSuper ? 'hsl(270 60% 48%)' : 'hsl(220 60% 52%)', display: 'flex' }}><Icons.check /></span>}
-                                                </div>
-                                                <div style={{ fontSize: '0.82rem', fontWeight: '700', color: 'hsl(220 25% 18%)', marginBottom: '0.1rem' }}>{r.label}</div>
-                                                <div style={{ fontSize: '0.7rem', color: 'hsl(220 15% 55%)' }}>{r.desc}</div>
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                            </FField>
-
-                            {/* Divider */}
-                            <div style={{ borderTop: '1px solid hsl(220 15% 93%)' }} />
-
-                            {/* Passwords */}
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.875rem' }}>
-                                <FField label="Password" hint={data.send_invite ? 'Optional — auto-generated if blank' : 'Min 8 characters'} error={errors.password}>
-                                    <FInput type={showPw ? 'text' : 'password'} value={data.password} onChange={e => setData('password', e.target.value)} placeholder={data.send_invite ? 'Optional' : '••••••••'} hasError={!!errors.password}
-                                        suffix={
-                                            <button type="button" onClick={() => setShowPw(v => !v)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'hsl(220 15% 55%)', padding: 0, display: 'flex' }}>
-                                                {showPw ? <Icons.eyeOff /> : <Icons.eye />}
-                                            </button>
-                                        }
-                                    />
-                                </FField>
-                                <FField label="Confirm Password" error={errors.password_confirmation}>
-                                    <FInput type={showPw2 ? 'text' : 'password'} value={data.password_confirmation} onChange={e => setData('password_confirmation', e.target.value)} placeholder="Repeat password" hasError={!!errors.password_confirmation}
-                                        suffix={
-                                            <button type="button" onClick={() => setShowPw2(v => !v)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'hsl(220 15% 55%)', padding: 0, display: 'flex' }}>
-                                                {showPw2 ? <Icons.eyeOff /> : <Icons.eye />}
-                                            </button>
-                                        }
-                                    />
-                                </FField>
-                            </div>
-
-                            {/* Invite toggle */}
-                            <Toggle
-                                value={data.send_invite}
-                                onChange={v => setData('send_invite', v)}
-                                label="Send invitation email"
-                                sub="Admin will receive a one-time setup link to activate their account"
-                            />
-                        </div>
-
-                        {/* Footer */}
-                        <div style={{ padding: '1rem 1.75rem 1.5rem', borderTop: '1px solid hsl(220 15% 93%)', display: 'flex', gap: '0.65rem' }}>
-                            <button type="button" onClick={onClose}
-                                style={{ flex: 1, padding: '0.65rem', borderRadius: '0.65rem', border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white', fontSize: '0.875rem', fontWeight: '600', color: 'hsl(220 25% 30%)', cursor: 'pointer', fontFamily: 'inherit' }}>
-                                Cancel
-                            </button>
-                            <button type="submit" disabled={processing}
-                                style={{ flex: 2, padding: '0.65rem', borderRadius: '0.65rem', border: 'none', backgroundColor: processing ? 'hsl(220 25% 38%)' : 'hsl(220 25% 15%)', color: 'white', fontSize: '0.875rem', fontWeight: '700', cursor: processing ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontFamily: 'inherit', transition: 'background-color 0.15s' }}
-                                onMouseEnter={e => { if (!processing) e.currentTarget.style.backgroundColor = 'hsl(220 25% 22%)'; }}
-                                onMouseLeave={e => { if (!processing) e.currentTarget.style.backgroundColor = processing ? 'hsl(220 25% 38%)' : 'hsl(220 25% 15%)'; }}>
-                                {processing ? <><Icons.spinner /> Creating account…</> : <><Icons.plus /> Create Admin Account</>}
-                            </button>
-                        </div>
-                    </form>
-                )}
+        {/* ── Dark header ── */}
+        <div style={{ background: 'linear-gradient(135deg, hsl(222 30% 14%), hsl(220 28% 20%))', padding: '1.5rem 1.75rem', position: 'relative', overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(hsl(220 30% 50% / 0.07) 1px, transparent 1px)', backgroundSize: '20px 20px', pointerEvents: 'none' }} />
+          <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <div style={{ width: '3rem', height: '3rem', borderRadius: '0.875rem', backgroundColor: liveInitials ? `hsl(${liveHue} 50% 50%)` : 'hsl(220 25% 30%)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: liveInitials ? '0.9rem' : '1rem', fontWeight: 800, letterSpacing: '0.02em', transition: 'background-color 0.3s', border: '2px solid hsl(220 30% 30%)', boxShadow: '0 2px 12px hsl(220 28% 6% / 0.4)' }}>
+                {liveInitials ?? <Icons.users />}
+              </div>
+              <div>
+                <h2 style={{ margin: '0 0 0.2rem', fontSize: '1.05rem', fontWeight: 800, color: 'white', letterSpacing: '-0.01em' }}>
+                  {done ? 'Admin Created!' : 'Add New Admin'}
+                </h2>
+                <p style={{ margin: 0, fontSize: '0.75rem', color: 'hsl(220 20% 62%)' }}>
+                  {done ? `${data.name || data.email} is ready` : 'Configure access credentials and role'}
+                </p>
+              </div>
             </div>
+            <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'hsl(220 20% 55%)', padding: '0.3rem', display: 'flex', borderRadius: '0.4rem', transition: 'color 0.15s' }}
+              onMouseEnter={e => e.currentTarget.style.color = 'white'}
+              onMouseLeave={e => e.currentTarget.style.color = 'hsl(220 20% 55%)'}>
+              <Icons.x />
+            </button>
+          </div>
         </div>
-    );
+
+        {done ? (
+          /* ── Success panel ── */
+          <div style={{ padding: '2.25rem 1.75rem', textAlign: 'center' }}>
+            <div style={{ width: '4.5rem', height: '4.5rem', borderRadius: '50%', backgroundColor: 'hsl(152 55% 92%)', color: 'hsl(152 55% 33%)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.25rem', fontSize: '1.6rem' }}>
+              <Icons.check />
+            </div>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'hsl(220 25% 15%)', margin: '0 0 0.5rem' }}>
+              {data.name || data.email} added successfully
+            </h3>
+            <p style={{ fontSize: '0.85rem', color: 'hsl(220 15% 50%)', margin: '0 0 0.5rem', lineHeight: 1.6 }}>
+              {/* {data.send_invite */}
+                <>An invitation has been sent to <strong>{data.email}</strong>.</>
+                <>The account is now active. Share credentials securely.</>
+                {/* } */}
+            </p>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.3rem 0.75rem', borderRadius: '999px', backgroundColor: 'hsl(270 60% 95%)', color: 'hsl(270 60% 42%)', fontSize: '0.72rem', fontWeight: 700, marginBottom: '1.75rem' }}>
+              <Icons.shield /> {data.role === 'super_admin' ? 'Super Admin' : 'Admin'}
+            </div>
+            <div style={{ display: 'flex', gap: '0.65rem' }}>
+              <button onClick={() => { reset(); setDone(false); setEmailStatus('idle'); }}
+                style={{ flex: 1, padding: '0.65rem', borderRadius: '0.65rem', border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white', fontSize: '0.85rem', fontWeight: 600, color: 'hsl(220 25% 30%)', cursor: 'pointer', fontFamily: 'inherit' }}>
+                Add Another
+              </button>
+              <button onClick={onClose}
+                style={{ flex: 1, padding: '0.65rem', borderRadius: '0.65rem', border: 'none', backgroundColor: 'hsl(220 25% 15%)', color: 'white', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+                Done
+              </button>
+            </div>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit}>
+            <div style={{ padding: '1.5rem 1.75rem', display: 'flex', flexDirection: 'column', gap: '1.15rem' }}>
+
+              {/* Name + Email */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.875rem' }}>
+                <FField label="Full Name" required error={errors.name}>
+                  <FInput value={data.name} onChange={e => setData('name', e.target.value)} placeholder="Jane Doe" hasError={!!errors.name} />
+                </FField>
+                <FField label="Email Address" required error={errors.email || (emailStatus === 'taken' && !errors.email ? 'This email is already registered.' : emailStatus === 'invalid' && !errors.email ? 'Please enter a valid email address.' : '')}>
+                  <div style={{ position: 'relative' }}>
+                    <FInput
+                      type="email"
+                      value={data.email}
+                      onChange={e => handleEmailChange(e.target.value)}
+                      placeholder="jane@company.com"
+                      hasError={emailHasError}
+                      suffix={
+                        <span style={{ fontSize: '0.875rem', pointerEvents: 'none' }}>
+                          {emailStatus === 'checking' && <span style={{ color: 'hsl(220 15% 55%)' }}>…</span>}
+                          {emailStatus === 'valid' && <span style={{ color: 'hsl(152 60% 40%)' }}>✓</span>}
+                          {(emailStatus === 'invalid' || emailStatus === 'taken') && <span style={{ color: 'hsl(0 72% 51%)' }}>✕</span>}
+                        </span>
+                      }
+                    />
+                  </div>
+                  {!errors.email && emailStatus === 'valid' && (
+                    <p style={{ fontSize: '0.7rem', color: 'hsl(152 60% 40%)', marginTop: '0.3rem' }}>✓ Email is available.</p>
+                  )}
+                </FField>
+              </div>
+
+              {/* Role selector */}
+              <FField label="Role" hint="Super Admins have unrestricted access to this panel.">
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.6rem' }}>
+                  {ROLES.map(r => {
+                    const active = data.role === r.value;
+                    const isSuper = r.value === 'super_admin';
+                    const activeBorder = isSuper ? 'hsl(270 60% 55%)' : 'hsl(220 60% 55%)';
+                    const activeBg = isSuper ? 'hsl(270 60% 98%)' : 'hsl(214 100% 98%)';
+                    return (
+                      <button type="button" key={r.value} onClick={() => setData('role', r.value)}
+                        style={{ padding: '0.75rem 0.875rem', borderRadius: '0.7rem', border: `1.5px solid ${active ? activeBorder : 'hsl(220 15% 88%)'}`, backgroundColor: active ? activeBg : 'white', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s', fontFamily: 'inherit', boxShadow: active ? `0 0 0 3px ${isSuper ? 'hsl(270 60% 55% / 0.1)' : 'hsl(220 60% 55% / 0.1)'}` : 'none' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
+                          <span style={{ fontSize: '0.65rem', fontWeight: 800, letterSpacing: '0.07em', color: active ? r.tagColor : 'hsl(220 15% 50%)', padding: '0.15rem 0.45rem', borderRadius: '0.3rem', backgroundColor: active ? r.tagBg : 'hsl(220 15% 93%)' }}>
+                            {r.tag}
+                          </span>
+                          {active && <span style={{ color: isSuper ? 'hsl(270 60% 48%)' : 'hsl(220 60% 52%)', display: 'flex' }}><Icons.check /></span>}
+                        </div>
+                        <div style={{ fontSize: '0.82rem', fontWeight: 700, color: 'hsl(220 25% 18%)', marginBottom: '0.1rem' }}>{r.label}</div>
+                        <div style={{ fontSize: '0.7rem', color: 'hsl(220 15% 55%)' }}>{r.desc}</div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </FField>
+            </div>
+
+            {/* Footer */}
+            <div style={{ padding: '1rem 1.75rem 1.5rem', borderTop: '1px solid hsl(220 15% 93%)', display: 'flex', gap: '0.65rem' }}>
+              <button type="button" onClick={onClose}
+                style={{ flex: 1, padding: '0.65rem', borderRadius: '0.65rem', border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white', fontSize: '0.875rem', fontWeight: 600, color: 'hsl(220 25% 30%)', cursor: 'pointer', fontFamily: 'inherit' }}>
+                Cancel
+              </button>
+              <button type="submit" disabled={processing}
+                style={{ flex: 2, padding: '0.65rem', borderRadius: '0.65rem', border: 'none', backgroundColor: processing ? 'hsl(220 25% 38%)' : 'hsl(220 25% 15%)', color: 'white', fontSize: '0.875rem', fontWeight: 700, cursor: processing ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontFamily: 'inherit', transition: 'background-color 0.15s' }}
+                onMouseEnter={e => { if (!processing) e.currentTarget.style.backgroundColor = 'hsl(220 25% 22%)'; }}
+                onMouseLeave={e => { if (!processing) e.currentTarget.style.backgroundColor = processing ? 'hsl(220 25% 38%)' : 'hsl(220 25% 15%)'; }}>
+                {processing ? <><Icons.spinner /> Creating account…</> : <><Icons.plus /> Create Admin Account</>}
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
+    </div>
+  );
 };
 
 // ─── Delete confirm modal ─────────────────────────────────────────────────────

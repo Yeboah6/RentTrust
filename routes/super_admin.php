@@ -98,7 +98,7 @@ Route::prefix('super-admin')
     Route::post('/listings/verification/bulk-approve', [ListingController::class, 'bulkApprove'])
         ->name('verification.bulk-approve');
 
-    // ── Admin accounts ────────────────────────────────────────────────────────
+    // ── Admin accounts ───────────────────────────────────────────────────────
     Route::resource('admins', AdminController::class)
         ->parameters(['admins' => 'user']);
     Route::post('admins/{user}/reset-password', [AdminController::class, 'resetPassword']) ->name('admins.reset-password');

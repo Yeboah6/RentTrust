@@ -2,7 +2,10 @@ import './bootstrap';
 
 import { createInertiaApp } from '@inertiajs/react'
 import { createRoot } from 'react-dom/client'
+// import axios from 'axios';
 // import Layout from '@/Layouts/Layout';
+
+// axios.defaults.withCredentials = true;
 
 createInertiaApp({
     resolve: name => {

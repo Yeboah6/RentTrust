@@ -2,13 +2,14 @@
 
 namespace App\Http\Controllers\SuperAdmin;
 
+
+use Illuminate\Support\Facades\{DB, Log, Hash, Mail};
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use App\Mail\AdminInvitation;
+use App\Models\AdminAuditLog;
 
 class AdminController extends Controller
 {
@@ -36,72 +37,58 @@ class AdminController extends Controller
         return inertia('SuperAdmin/Admins/Index', ['admins' => $admins]);
     }
 
-    // public function store(Request $request)
-    // {
-    //     $data = $request->validate([
-    //         'name' => 'required|string',
-    //         'email' => 'required|email|unique:users,email',
-    //         'role' => 'required|string',
-    //         'password' => 'required|string|min:8|confirmed',
-    //     ]);
-    //     $data['password'] = Hash::make($data['password']);
-    //     $data['role'] = 'admin';
-    //     $data['package'] = 'admin';
-    //     $data['user_id'] = User::generateUUID();
-
-
-
-    //     User::create($data);
-    //     return redirect()-> back()->with('success', 'Admin account created');
-    // }
-
     public function store(Request $request)
     {
-        // Validate input
         $data = $request->validate([
-            'name' => 'required|string|max:255',
+            'name'  => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'role' => 'required|string|in:admin,super_admin',
-            'password' => 'required|string|min:8|confirmed',
         ]);
- 
-        // Generate temporary password for email (before hashing)
-        $temporaryPassword = $data['password'];
- 
-        // Prepare user data
-        $data['password'] = Hash::make($data['password']);
-        $data['role'] = 'admin';
-        $data['package'] = 'admin';
-        $data['user_id'] = User::generateUUID();
-        $data['verification_status'] = 'verified'; // Admins are auto-verified
-        $data['is_active'] = true;
- 
+
+        DB::beginTransaction();
+
         try {
-            // Create the admin user
-            $admin = User::create($data);
- 
-            // Send invitation email
-            Mail::to($admin->email)->send(new AdminInvitation(
-                adminName: $admin->name,
-                adminEmail: $admin->email,
-                temporaryPassword: $temporaryPassword,
-                loginUrl: route('admin.login')
-            ));
- 
-            return redirect()->back()->with('success', 'Admin account created successfully! Invitation email sent.');
- 
-        } catch (\Exception $e) {
-            // Log the error
-            \Log::error('Admin creation failed: ' . $e->getMessage());
- 
-            // Delete user if email send fails (optional cleanup)
-            if (isset($admin)) {
-                $admin->delete();
-            }
- 
-            return redirect()->back()
-                ->withInput()
-                ->withErrors(['email' => 'Failed to create admin account. Please try again.']);
+            $setupToken = Str::random(64);
+
+            $admin = User::create([
+                'user_id'               => (string) Str::uuid(),
+                'name'                  => $data['name'],
+                'email'                 => $data['email'],
+                'password'              => Hash::make(Str::random(32)), // unusable until they set their own
+                'role'                  => $data['role'],
+                'package'               => $data['role'] === 'super_admin' ? 'super_admin' : 'admin',
+                'status'                => 'unverified', // becomes 'verified' after setup
+                'setup_token'           => hash('sha256', $setupToken), // store hashed
+                'setup_token_expires_at'=> now()->addHours(24),
+            ]);
+
+            $setupUrl = route('admin.setup', ['token' => $setupToken]); // plain token in URL
+
+            Mail::to($admin->email)->send(
+                new AdminInvitation(
+                    adminName:  $admin->name,
+                    adminEmail: $admin->email,
+                    setupUrl:   $setupUrl,
+                    expiresAt:  $admin->setup_token_expires_at->format('M j, Y g:i A'),
+                )
+            );
+
+            AdminAuditLog::record('user', 'Admin invited', [
+                'affected_user' => $admin->name,
+                'affected_id'   => $admin->id,
+                'notes'         => 'Admin invitation sent via email.',
+                'properties'    => ['email' => $admin->email, 'role' => $admin->role],
+            ]);
+
+            DB::commit();
+
+            return back()->with('success', 'Admin account created and invitation sent.');
+
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error('Admin invite failed', ['error' => $e->getMessage()]);
+
+            return back()->withErrors(['email' => $e->getMessage()]);
         }
     }
 

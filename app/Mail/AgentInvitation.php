@@ -3,13 +3,14 @@
 namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
-// use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class AdminInvitation extends Mailable
+class AgentInvitation extends Mailable
 {
     use Queueable, SerializesModels;
 
@@ -17,8 +18,8 @@ class AdminInvitation extends Mailable
      * Create a new message instance.
      */
     public function __construct(
-        public readonly string $adminName,
-        public readonly string $adminEmail,
+        public readonly string $agentName,
+        public readonly string $agentEmail,
         public readonly string $setupUrl,
         public readonly string $expiresAt,
     ) {}
@@ -28,10 +29,8 @@ class AdminInvitation extends Mailable
      */
     public function envelope(): Envelope
     {
-        $subject = "You've been invited to RentTrustGH as an Administrator";
-
         return new Envelope(
-            subject: $subject,
+            subject: 'You\'ve been invited to join RentTrustGH as an Agent',
         );
     }
 
@@ -41,19 +40,14 @@ class AdminInvitation extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'emails.AdminInvitation',
-            with: [
-                'adminName' => $this->adminName,
-                'adminEmail' => $this->adminEmail,
-                'setupUrl' => $this->setupUrl,
-            ]
+            view: 'emails.AgentInvitation',
         );
     }
 
     /**
      * Get the attachments for the message.
      *
-     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
+     * @return array<int, Attachment>
      */
     public function attachments(): array
     {

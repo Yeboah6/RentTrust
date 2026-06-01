@@ -13,6 +13,9 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
+use App\Mail\AgentInvitation;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 
 class AgentController extends Controller
 {
@@ -78,69 +81,71 @@ class AgentController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name'                  => ['required', 'string', 'max:255'],
-            'email'                 => ['required', 'email', 'unique:users,email'],
-            'phone'                 => ['nullable', 'string', 'max:30'],
-            'agency'                => ['nullable', 'string', 'max:255'],
-            'type'                  => ['nullable', 'string', 'max:100'],
-            'location'              => ['nullable', 'string', 'max:255'],
-            'bio'                   => ['nullable', 'string', 'max:2000'],
-            'website'               => ['nullable', 'url', 'max:255'],
-            'status'                => ['required', Rule::in(['active', 'pending', 'verified'])],
-            'tier'                  => ['required', Rule::in(['basic', 'standard', 'pro', 'premium'])],
-            'is_verified'           => ['boolean'],
-            'is_featured'           => ['boolean'],
-            'password'              => ['required', 'string', 'min:8', 'confirmed'],
+            'name'     => ['required', 'string', 'max:255'],
+            'email'    => ['required', 'email', 'unique:users,email'],
+            'phone'    => ['nullable', 'string', 'max:30', 'unique:users,phone'],
+            'fee'     => ['nullable', 'numeric', 'min:0'],
+            'company'  => ['nullable', 'string', 'max:255'],
+            'type'     => ['nullable', 'string', 'max:100'],
+            'bio'      => ['nullable', 'string', 'max:2000'],
+            'status'   => ['required', Rule::in(['active', 'pending', 'verified'])],
+            'location' => ['nullable', 'string', 'max:255']
         ]);
+
+        DB::beginTransaction();
  
-        $agent = DB::transaction(function () use ($validated) {
- 
-            // Create the agent record — map form field names to model column names
-            $agent = User::create([
-                'user_id'        => User::generateUUID(),
-                'name'           => $validated['name'],
-                'email'          => $validated['email'],
-                'phone'          => $validated['phone']    ?? null,
-                'agency_name'    => $validated['agency']   ?? null,
-                'role'           => 'agent',
-                'location'       => $validated['location'] ?? null,
-                'bio'            => $validated['bio']      ?? null,
-                'type'        => $validated['type']  ?? null,
-                'status'         => $validated['status'],
-                'tier'           => $validated['tier'],
-                'is_verified'    => $validated['is_verified']  ?? false,
-                'is_featured'    => $validated['is_featured']  ?? false,
-                'password'       => Hash::make($validated['password']),
-                'created_by'     => auth()->id(),
- 
-                // Auto-set verified_at if created as verified
-                'verified_at'    => $validated['status'] === 'verified' ? now() : null,
-                'verified_by'    => $validated['status'] === 'verified' ? auth()->id() : null,
-            ]);
- 
-            // Optionally create a linked User account so the agent can log in
-            // Uncomment if your platform uses a shared users table for auth:
-            //
-            // $user = User::create([
-            //     'name'     => $validated['name'],
-            //     'email'    => $validated['email'],
-            //     'password' => Hash::make($validated['password']),
-            //     'role'     => 'agent',
-            // ]);
-            // $agent->update(['user_id' => $user->id]);
- 
-            return $agent;
-        });
- 
-        Log::info('SuperAdmin created agent', [
-            'agent_id' => $agent->id,
-            'admin_id' => auth()->id(),
+        try {
+        $setupToken = Str::random(64);
+
+        $agent = User::create([
+            'user_id'                => (string) Str::uuid(),
+            'name'                   => $validated['name'],
+            'email'                  => $validated['email'],
+            'phone'                  => $validated['phone']   ?? null,
+            'fee'                   => $validated['fees']    ?? null,
+            'company'                => $validated['company'] ?? null,
+            'type'                   => $validated['type']    ?? null,
+            'bio'                    => $validated['bio']     ?? null,
+            'role'                   => 'agent',
+            'package'                => 'free',
+            'status'                 => $validated['status'],
+            'password'               => Hash::make(Str::random(32)), // unusable until setup
+            'setup_token'            => hash('sha256', $setupToken),
+            'setup_token_expires_at' => now()->addHours(48),         // agents get 48hrs
         ]);
- 
+
+        $setupUrl = route('agent.setup', ['token' => $setupToken]);
+
+        Mail::to($agent->email)->send(
+            new AgentInvitation(
+                agentName: $agent->name,
+                agentEmail: $agent->email,
+                setupUrl:  $setupUrl,
+                expiresAt: $agent->setup_token_expires_at->format('M j, Y g:i A'),
+            )
+        );
+
+        AdminAuditLog::record('user', 'Agent created', [
+            'affected_user' => $agent->name,
+            'affected_id'   => $agent->id,
+            'notes'         => 'Agent account created and invitation sent via email.',
+            'properties'    => ['email' => $agent->email, 'type' => $agent->type],
+        ]);
+
+        DB::commit();
+
         return redirect()
-            ->route('super-admin.agents.show', $agent)
-            ->with('success', "Agent \"{$agent->name}\" created successfully.");
+            ->route('super-admin.agents.index')
+            ->with('success', "Agent \"{$agent->name}\" created. Invitation sent to {$agent->email}.");
+
+    } catch (\Throwable $e) {
+        DB::rollBack();
+        Log::error('Agent creation failed', ['error' => $e->getMessage()]);
+
+        return back()->withErrors(['email' => $e->getMessage()]);
     }
+}
+
 
     // ─── Show ─────────────────────────────────────────────────────────────────
  

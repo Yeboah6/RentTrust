@@ -3,7 +3,7 @@ import { Head } from '@inertiajs/react';
 const defaultSiteUrl = typeof window !== 'undefined' ? window.location.origin : '';
 
 export default function SEO({
-    title,
+    title='RentTrustGh - Find Your Perfect Rental Home in Ghana',
     description,
     canonical,
     image,

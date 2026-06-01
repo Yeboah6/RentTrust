@@ -26,6 +26,10 @@ return new class extends Migration
             $table->string('package')->nullable()->default('free');
             $table->string('password');
             $table->timestamp('last_active')->nullable();
+            $table->string('remember_token', 100)->nullable();
+            $table->string('setup_token', 64)->nullable()->unique()->after('password');
+            $table->timestamp('setup_token_expires_at')->nullable()->after('setup_token');
+            $table->string('location')->nullable();
             $table->timestamps();
         });
 
