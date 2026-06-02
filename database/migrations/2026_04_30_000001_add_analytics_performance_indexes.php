@@ -16,7 +16,6 @@ return new class extends Migration
             $table->index(['purpose', 'status'], 'idx_rentals_purpose_status');
             $table->index('created_at', 'idx_rentals_created_at');
             $table->index('city', 'idx_rentals_city');
-            $table->index('views', 'idx_rentals_views');
             $table->index('is_sold', 'idx_rentals_is_sold');
             $table->index(['user_id', 'purpose'], 'idx_rentals_user_purpose');
         });
@@ -48,7 +47,6 @@ return new class extends Migration
             $table->dropIndex('idx_rentals_purpose_status');
             $table->dropIndex('idx_rentals_created_at');
             $table->dropIndex('idx_rentals_city');
-            $table->dropIndex('idx_rentals_views');
             $table->dropIndex('idx_rentals_is_sold');
             $table->dropIndex('idx_rentals_user_purpose');
         });

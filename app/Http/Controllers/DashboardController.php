@@ -33,13 +33,16 @@ class DashboardController extends Controller
         }
 
         // include view/inquiry/review counts for each rental and fetch status from DB
-        $rentals = Rental::where('user_id', $agentData->id)
+        $rentals = Rental::where(function ($query) use ($agentData) {
+            $query->where('user_id', $agentData->id)
+                  ->orWhere('agent_id', $agentData->id);
+        })
         ->select(
             'id', 'rental_id', 'title', 'property_type', 'purpose',
             'city', 'area', 'address', 'rent_min', 'rent_max', 'sale_price',
             'status', 'is_verified', 'is_featured', 'images', 'created_at', 'updated_at',
             'bedrooms', 'bathrooms', 'description', 'amenities',
-            'verification_status', 'advance_duration', 'agent_name', 'agent_phone', 'agent_email'
+            'verification_status', 'advance_duration', 'agent_id', 'agent_name', 'agent_phone', 'agent_email'
         )
         ->withCount(['views', 'inquiries', 'reviews'])
         ->latest()

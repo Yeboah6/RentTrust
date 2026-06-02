@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Support\Str;
 use App\Models\Review;
+use App\Models\User;
 use App\Traits\GeneratesUUIDs;
 
 class Rental extends Model
@@ -13,6 +14,7 @@ class Rental extends Model
     use GeneratesUUIDs;
     protected $fillable = [
         'user_id',
+        'agent_id',
         'rental_id',
         'title',
         'slug',
@@ -53,6 +55,7 @@ class Rental extends Model
     protected $casts = [
         'images' => 'array',
         'amenities' => 'array',
+        'agent_id' => 'integer',
         'rent_min' => 'decimal:2',
         'rent_max' => 'decimal:2',
         'sale_price' => 'decimal:2',
@@ -76,6 +79,11 @@ class Rental extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+ 
+    public function agent()
+    {
+        return $this->belongsTo(User::class, 'agent_id');
     }
  
     public function reviews()

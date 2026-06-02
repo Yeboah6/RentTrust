@@ -21,6 +21,7 @@ use Illuminate\Validation\Rule;
 use App\Mail\ListingUpdatedMail;
 use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
+use Illuminate\Support\Str;
 
 class ListingController extends Controller
 {
@@ -259,7 +260,8 @@ class ListingController extends Controller
         'bedrooms'     => 'nullable|integer|min:0',
         'bathrooms'    => 'nullable|integer|min:0',
         'description'  => 'nullable|string',
-        'agentName'    => 'nullable|string|max:255',
+'agent_id'     => 'nullable|exists:users,id',
+    'agentName'    => 'nullable|string|max:255',
         'agentPhone'   => 'nullable|string|max:20',
         'agentEmail'   => 'nullable|email|max:255',
         'amenities'    => 'nullable',
@@ -320,8 +322,9 @@ class ListingController extends Controller
  
         // ── Build listing data ────────────────────────────────────────────────
         $listingData = [
-            'rental_id'    => Rental::generateUUID(),
+            'rental_id'    => (string) Str::uuid(),
             'user_id'      => auth()->id(),
+            'agent_id'     => $request->input('agent_id'),
             'purpose'      => $purpose,
             'title'        => $request->title,
             'property_type'=> $request->propertyType,
@@ -356,10 +359,36 @@ class ListingController extends Controller
  
         $listing = Rental::create($listingData);
  
-        Log::info('SuperAdmin created listing', [
-            'listing_id' => $listing->id,
-            'admin_id'   => auth()->id(),
+        AdminAuditLog::record('listing', "Listing created: {$listing->title}", [
+            'affected_user' => $listing->agent_id ? optional(User::find($listing->agent_id))->name : $listing->agent_name,
+            'affected_id'   => $listing->id,
+            'notes'         => 'Created by super admin and assigned to agent',
+            'properties'    => [
+                'created_by_admin_id' => auth()->id(),
+                'agent_id'            => $listing->agent_id,
+                'agent_email'         => $listing->agent_email,
+                'listing_id'          => $listing->id,
+            ],
         ]);
+ 
+        $assignedAgent = $listing->agent_id ? User::find($listing->agent_id) : null;
+        $notificationEmail = $assignedAgent?->email ?: $listing->agent_email;
+        if ($notificationEmail && filter_var($notificationEmail, FILTER_VALIDATE_EMAIL)) {
+            try {
+                Mail::to($notificationEmail)->send(new ListingUpdatedMail($listing->fresh()));
+                Log::info('Agent notification email sent for assigned listing', [
+                    'listing_id'  => $listing->id,
+                    'agent_id'    => $listing->agent_id,
+                    'agent_email' => $notificationEmail,
+                ]);
+            } catch (\Exception $e) {
+                Log::warning('Failed to send assigned listing email', [
+                    'listing_id'  => $listing->id,
+                    'agent_email' => $notificationEmail,
+                    'error'       => $e->getMessage(),
+                ]);
+            }
+        }
  
         return redirect()
             ->route('super-admin.listings.show', $listing)
@@ -484,6 +513,7 @@ class ListingController extends Controller
             'bedrooms'         => 'nullable|integer|min:0',
             'bathrooms'        => 'nullable|integer|min:0',
             'description'      => 'nullable|string',
+            'agent_id'         => 'nullable|exists:users,id',
             'agentName'        => 'nullable|string|max:255',
             'agentPhone'       => 'nullable|string|max:20',
             'agentEmail'       => 'nullable|email|max:255',
@@ -622,6 +652,7 @@ class ListingController extends Controller
                 'bathrooms'        => $request->bathrooms ?? 0,
                 'amenities'        => $amenitiesArray,
                 'description'      => $request->description,
+                'agent_id'         => $request->input('agent_id') ?: $listing->agent_id,
                 'agent_name'       => $request->input('agentName')  ?: $listing->agent_name,
                 'agent_phone'      => $request->input('agentPhone') ?: $listing->agent_phone,
                 'agent_email'      => $request->input('agentEmail') ?: $listing->agent_email,
@@ -895,10 +926,10 @@ class ListingController extends Controller
             'flagged_count'    => $listing->flagged_count ?? 0,
             'images'           => $this->resolveImages($listing),
             'amenities'        => is_array($listing->amenities) ? $listing->amenities : [],
-            'agent_id'         => $listing->user_id,
-            'agent_name'       => $listing->agent_name ?? $listing->user?->name,
-            'agent_phone'      => $listing->agent_phone,
-            'agent_email'      => $listing->agent_email,
+            'agent_id'         => $listing->agent_id ?? $listing->user_id,
+            'agent_name'       => $listing->agent_name ?? $listing->agent?->name ?? $listing->user?->name,
+            'agent_phone'      => $listing->agent_phone ?: $listing->agent?->phone,
+            'agent_email'      => $listing->agent_email ?: $listing->agent?->email,
             'created_at'       => $listing->created_at?->toISOString(),
             'updated_at'       => $listing->updated_at?->toISOString(),
         ];

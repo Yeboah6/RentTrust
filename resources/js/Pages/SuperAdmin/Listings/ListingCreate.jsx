@@ -384,6 +384,7 @@ const ListingCreate = ({ agents = [], property_types = [], amenities: amenityLis
         status:          'pending',
         amenities:       [],    
         images:          [],    
+        agent_id:        '',
         agentName:       '',    
         agentPhone:      '',    
         agentEmail:      '',    
@@ -541,10 +542,11 @@ const ListingCreate = ({ agents = [], property_types = [], amenities: amenityLis
 
                                 {agents.length > 0 && (
                                     <FField label="Assign to Agent" hint="Optional — can be assigned later">
-                                        <FSelect value={data.agentName} onChange={e => {
-                                            const agent = agents.find(a => a.name === e.target.value);
+                                        <FSelect value={data.agent_id} onChange={e => {
+                                            const agent = agents.find(a => String(a.id) === e.target.value);
                                             setData({
                                                 ...data,
+                                                agent_id:   agent?.id    ?? '',
                                                 agentName:  agent?.name  ?? '',
                                                 agentPhone: agent?.phone ?? '',
                                                 agentEmail: agent?.email ?? '',
@@ -552,7 +554,7 @@ const ListingCreate = ({ agents = [], property_types = [], amenities: amenityLis
                                         }}>
                                             <option value="">Unassigned</option>
                                             {agents.map(a => (
-                                                <option key={a.id} value={a.name}>
+                                                <option key={a.id} value={a.id}>
                                                     {a.name}{a.agency ? ` — ${a.agency}` : ''}
                                                 </option>
                                             ))}
