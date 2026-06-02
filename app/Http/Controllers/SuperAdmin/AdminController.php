@@ -29,6 +29,7 @@ class AdminController extends Controller
                     'email' => $user->email,
                     'phone' => $user->phone,
                     'status' => $user->status ?? 'active',
+                    'role' => $user->role,
                     'joined_at' => $user->created_at,
                     'created_at' => $user->created_at,
                     'last_active' => $user->last_active,
@@ -143,21 +144,68 @@ class AdminController extends Controller
             'email' => 'required|email|unique:users,email,'.$user->id,
             'role' => 'required|string',
             'password' => 'nullable|string|min:8|confirmed',
-            'notify_on_save' => 'boolean',
         ]);
+        // We'll perform the update inside a transaction so we can
+        // send a notification and write an audit record atomically.
+        DB::beginTransaction();
 
-        // Remove fields that shouldn't be updated
-        unset($data['notify_on_save']);
+        try {
+            // Snapshot relevant original fields to compute changes
+            $original = $user->only(['name', 'email', 'role', 'status']);
 
-        // Only hash and update password if provided
-        if (!empty($data['password'])) {
-            $data['password'] = Hash::make($data['password']);
-        } else {
-            unset($data['password']);
+            // Only hash and update password if provided
+            if (!empty($data['password'])) {
+                $data['password'] = Hash::make($data['password']);
+            } else {
+                unset($data['password']);
+            }
+
+            $user->update($data);
+
+            // Build a simple changes array for the email/audit log
+            $changes = [];
+            foreach (['name', 'email', 'role', 'status'] as $key) {
+                $from = $original[$key] ?? null;
+                $to   = $user->{$key} ?? null;
+                if ($from !== $to) {
+                    $changes[$key] = ['from' => $from, 'to' => $to];
+                }
+            }
+            if (array_key_exists('password', $data)) {
+                $changes['password'] = ['from' => '(hidden)', 'to' => '(changed)'];
+            }
+
+            // Send notification email to the admin about the change
+            try {
+                Mail::to($user->email)->send(new \App\Mail\AdminUpdated(
+                    adminName: $user->name,
+                    adminEmail: $user->email,
+                    updatedBy: auth()->user()?->name ?? 'System',
+                    changes: $changes,
+                ));
+            } catch (\Throwable $e) {
+                // Log but don't fail the whole request for email issues
+                Log::warning('Failed to send admin updated email', ['error' => $e->getMessage(), 'admin_id' => $user->id]);
+            }
+
+            // Record audit log
+            AdminAuditLog::record('user', 'Admin updated', [
+                'affected_user' => $user->name,
+                'affected_id'   => $user->id,
+                'notes'         => 'Admin account updated by ' . (auth()->user()?->name ?? 'System'),
+                'properties'    => ['changes' => $changes],
+            ]);
+
+            DB::commit();
+
+            return redirect()->back()->with('success', 'Admin updated');
+
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error('Admin update failed', ['error' => $e->getMessage(), 'admin_id' => $user->id]);
+
+            return back()->withErrors(['email' => 'Failed to update admin. Please try again.']);
         }
-
-        $user->update($data);
-        return redirect()->back()->with('success', 'Admin updated');
     }
 
     public function destroy(User $user)

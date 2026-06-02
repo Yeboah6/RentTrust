@@ -115,7 +115,7 @@
 
         <p style="margin:0 0 12px;font-size:13px;color:#64748b;text-align:center;line-height:1.6;">
             Questions? We're here to help!<br>
-            Contact our support team at <a href="mailto:support@renttrustgh.com" style="color:#0f766e;text-decoration:none;">support@renttrustgh.com</a>
+            Contact our support team at <a href="mailto:renttrust2026@gmail.com" style="color:#0f766e;text-decoration:none;">renttrust2026@gmail.com</a>
         </p>
 
         <p style="margin:0;font-size:12px;color:#94a3b8;text-align:center;">

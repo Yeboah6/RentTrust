@@ -44,35 +44,70 @@
                             Hello {{ $adminName }},
                         </p>
 
-                        <p style="margin:0 0 20px;font-size:15px;line-height:1.8;color:#475569;">
-                            You've been invited to join the RentTrustGh administration portal.
-                            To activate your account, create your password using the secure button below.
-                        </p>
-
-                        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:18px;margin-bottom:28px;">
-                            <p style="margin:0;font-size:14px;color:#64748b;">
-                                <strong>Account Email</strong><br>
-                                {{ $adminEmail }}
+                        @if($isPasswordReset)
+                            <p style="margin:0 0 20px;font-size:15px;line-height:1.8;color:#475569;">
+                                Your administrator password on RentTrustGh has been reset. Use the temporary password below to sign in,
+                                then update your password from your account settings.
                             </p>
-                        </div>
 
-                        <table width="100%" cellpadding="0" cellspacing="0">
-                            <tr>
-                                <td align="center">
+                            <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:18px;margin-bottom:28px;">
+                                <p style="margin:0;font-size:14px;color:#64748b;">
+                                    <strong>Account Email</strong><br>
+                                    {{ $adminEmail }}
+                                </p>
+                                <p style="margin:16px 0 0;font-size:14px;color:#64748b;">
+                                    <strong>Temporary Password</strong><br>
+                                    {{ $temporaryPassword ?? 'Not provided' }}
+                                </p>
+                            </div>
 
-                                    <a href="{{ $setupUrl }}"
-                                       style="display:inline-block;background:#0f172a;color:#ffffff;text-decoration:none;padding:15px 32px;border-radius:10px;font-weight:700;font-size:15px;">
-                                        Create Password & Activate Account
-                                    </a>
+                            <table width="100%" cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td align="center">
 
-                                </td>
-                            </tr>
-                        </table>
+                                        <a href="{{ $loginUrl ?? url('/') }}"
+                                           style="display:inline-block;background:#0f172a;color:#ffffff;text-decoration:none;padding:15px 32px;border-radius:10px;font-weight:700;font-size:15px;">
+                                            Sign in to RentTrustGh
+                                        </a>
 
-                        <p style="margin:28px 0 0;font-size:14px;color:#64748b;line-height:1.7;">
-                            This secure invitation link can only be used once and will expire in
-                            <strong>24 hours</strong>.
-                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <p style="margin:28px 0 0;font-size:14px;color:#64748b;line-height:1.7;">
+                                If you did not request this reset, please contact a Super Admin immediately.
+                            </p>
+                        @else
+                            <p style="margin:0 0 20px;font-size:15px;line-height:1.8;color:#475569;">
+                                You've been invited to join the RentTrustGh administration portal.
+                                To activate your account, create your password using the secure button below.
+                            </p>
+
+                            <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:18px;margin-bottom:28px;">
+                                <p style="margin:0;font-size:14px;color:#64748b;">
+                                    <strong>Account Email</strong><br>
+                                    {{ $adminEmail }}
+                                </p>
+                            </div>
+
+                            <table width="100%" cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td align="center">
+
+                                        <a href="{{ $setupUrl }}"
+                                           style="display:inline-block;background:#0f172a;color:#ffffff;text-decoration:none;padding:15px 32px;border-radius:10px;font-weight:700;font-size:15px;">
+                                            Create Password & Activate Account
+                                        </a>
+
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <p style="margin:28px 0 0;font-size:14px;color:#64748b;line-height:1.7;">
+                                This secure invitation link can only be used once and will expire in
+                                <strong>{{ $expiresAt ?? '24 hours' }}</strong>.
+                            </p>
+                        @endif
 
                     </td>
                 </tr>

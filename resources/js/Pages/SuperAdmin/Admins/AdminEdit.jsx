@@ -227,7 +227,6 @@ const AdminEdit = ({ admin }) => {
         role:                  admin.role     ?? 'Admin',
         password:              '',
         password_confirmation: '',
-        notify_on_save:        false,
     });
 
     const originalRole = admin.role ?? 'Admin';
@@ -432,17 +431,6 @@ const AdminEdit = ({ admin }) => {
                                             />
                                         </FField>
                                     </div>
-                                </div>
-
-                                {/* ── Notifications ── */}
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                                    <SectionLabel>Options</SectionLabel>
-                                    <Toggle
-                                        value={data.notify_on_save}
-                                        onChange={v => setData('notify_on_save', v)}
-                                        label="Notify admin of changes"
-                                        sub="Send an email to this admin summarising what was changed"
-                                    />
                                 </div>
                             </div>
 

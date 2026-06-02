@@ -19,8 +19,11 @@ class AdminInvitation extends Mailable
     public function __construct(
         public readonly string $adminName,
         public readonly string $adminEmail,
-        public readonly string $setupUrl,
-        public readonly string $expiresAt,
+        public readonly ?string $setupUrl = null,
+        public readonly ?string $expiresAt = null,
+        public readonly ?string $temporaryPassword = null,
+        public readonly ?string $loginUrl = null,
+        public readonly bool $isPasswordReset = false,
     ) {}
 
     /**
@@ -28,7 +31,9 @@ class AdminInvitation extends Mailable
      */
     public function envelope(): Envelope
     {
-        $subject = "You've been invited to RentTrustGH as an Administrator";
+        $subject = $this->isPasswordReset
+            ? 'Your RentTrustGH administrator password was reset'
+            : "You've been invited to RentTrustGH as an Administrator";
 
         return new Envelope(
             subject: $subject,
@@ -46,6 +51,10 @@ class AdminInvitation extends Mailable
                 'adminName' => $this->adminName,
                 'adminEmail' => $this->adminEmail,
                 'setupUrl' => $this->setupUrl,
+                'expiresAt' => $this->expiresAt,
+                'temporaryPassword' => $this->temporaryPassword,
+                'loginUrl' => $this->loginUrl,
+                'isPasswordReset' => $this->isPasswordReset,
             ]
         );
     }
