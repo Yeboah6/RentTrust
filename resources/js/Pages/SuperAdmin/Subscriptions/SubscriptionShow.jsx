@@ -424,7 +424,13 @@ const SubscriptionShow = ({ subscription: sub, audit_logs = [], plans = [] }) =>
                         {[
                             ['Started',      fmtDate(sub.starts_at ?? sub.created_at)],
                             ['Renews / Ends', fmtDate(sub.renews_at)],
-                            ['Days Left',     sub.days_left != null ? `${sub.days_left} day${sub.days_left !== 1 ? 's' : ''}` : '—'],
+                            ['Days Left',    (() => {
+                                const start = sub.starts_at ?? sub.created_at;
+                                if (!start || !sub.renews_at) return '—';
+                                const diff = Math.ceil((new Date(sub.renews_at) - new Date()) / (1000 * 60 * 60 * 24));
+                                const days = Math.max(0, diff);
+                                return `${days} day${days !== 1 ? 's' : ''}`;
+                            })()],
                             ['Created At',    fmtDate(sub.created_at)],
                         ].map(([label, value]) => (
                             <div key={label} style={{ padding: '1rem 1.4rem', borderRight: '1px solid hsl(220 15% 95%)', borderBottom: '1px solid hsl(220 15% 95%)' }}>

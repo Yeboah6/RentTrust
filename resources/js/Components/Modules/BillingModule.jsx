@@ -148,22 +148,38 @@ const FeatureRow = ({ label, value, included }) => (
  * Props:
  *   billing  — { subscription: {...} | null, payments: [...] }
  *              passed from DashboardController::agentDashboard()
+ *   plans    — [] — active plan records from DB used to resolve the exact current plan
  *   onUpgrade — () => void  — opens PricingModal
  */
-const BillingModule = ({ billing, onUpgrade }) => {
+const BillingModule = ({ billing, plans = [], onUpgrade }) => {
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [cancelLoading, setCancelLoading] = useState(false);
 
-  const sub      = billing?.subscription ?? null;
+  const sub = billing?.subscription ?? null;
   const payments = billing?.payments ?? [];
-  const hasSub   = !!sub;
-  const isFree   = !hasSub || sub.is_free;
+
+  const currentPlan = plans.find(plan => plan.slug === sub?.plan_slug)
+    ?? plans.find(plan => plan.is_free)
+    ?? {
+      name: sub?.plan_name ?? 'Free',
+      slug: sub?.plan_slug ?? 'free',
+      price: sub?.plan_price ?? 0,
+      listing_limit_display: sub?.listing_limit ?? 'Limited',
+      lead_limit: sub?.lead_limit ?? 0,
+      verified_badge: sub?.verified_badge ?? false,
+      priority_ranking: sub?.priority_ranking ?? false,
+      analytics_access: sub?.analytics_access ?? false,
+      is_free: sub?.is_free ?? !sub,
+    };
+
+  const hasSub = !!sub;
+  const isFree = currentPlan.is_free ?? !hasSub;
 
   const planColor = {
     free:  'hsl(200 15% 45%)',
     pro:   'hsl(174 62% 32%)',
     elite: 'hsl(38 92% 45%)',
-  }[sub?.plan_slug] ?? 'hsl(174 62% 32%)';
+  }[currentPlan.slug] ?? 'hsl(174 62% 32%)';
 
   const handleCancel = () => {
     setCancelLoading(true);
@@ -192,11 +208,11 @@ const BillingModule = ({ billing, onUpgrade }) => {
           <div style={{ padding: 'clamp(1.25rem, 3vw, 1.75rem)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.5rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                <PlanIcon slug={sub?.plan_slug ?? 'free'} />
+                <PlanIcon slug={currentPlan.slug ?? 'free'} />
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
                     <h3 style={{ margin: 0, fontSize: 'clamp(1.125rem, 3vw, 1.375rem)', fontWeight: '700', color: 'hsl(200 25% 15%)' }}>
-                      {sub?.plan_name ?? 'Free'} Plan
+                      {currentPlan.name} Plan
                     </h3>
                     {hasSub && <StatusPill status={sub.status} />}
                     {sub?.grace && (
@@ -208,7 +224,7 @@ const BillingModule = ({ billing, onUpgrade }) => {
                   <p style={{ margin: '0.25rem 0 0', fontSize: '0.875rem', color: 'hsl(200 15% 45%)' }}>
                     {isFree
                       ? 'Basic access — no payment required'
-                      : `GHS ${sub.plan_price.toFixed(2)} / month · renews automatically`}
+                      : `GHS ${currentPlan.price.toFixed(2)} / month · renews automatically`}
                   </p>
                 </div>
               </div>
@@ -289,11 +305,11 @@ const BillingModule = ({ billing, onUpgrade }) => {
                 Plan Features
               </h4>
               <div style={{ borderTop: '1px solid hsl(40 20% 88% / 0.6)' }}>
-                <FeatureRow label="Property Listings" value={sub?.listing_limit ?? '5 (Limited)'} />
-                <FeatureRow label="Lead Contacts / month" value={sub?.lead_limit > 0 ? sub.lead_limit : 'None'} />
-                <FeatureRow label="Verified Badge" included={sub?.verified_badge ?? false} />
-                <FeatureRow label="Priority Search Ranking" included={sub?.priority_ranking ?? false} />
-                <FeatureRow label="Analytics Dashboard" included={sub?.analytics_access ?? false} />
+                <FeatureRow label="Property Listings" value={currentPlan.listing_limit_display ?? 'Unlimited'} />
+                <FeatureRow label="Lead Contacts / month" value={currentPlan.lead_limit > 0 ? currentPlan.lead_limit : 'None'} />
+                <FeatureRow label="Verified Badge" included={currentPlan.verified_badge ?? false} />
+                <FeatureRow label="Priority Search Ranking" included={currentPlan.priority_ranking ?? false} />
+                <FeatureRow label="Analytics Dashboard" included={currentPlan.analytics_access ?? false} />
               </div>
             </div>
           </div>

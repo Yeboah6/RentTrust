@@ -214,6 +214,8 @@ const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views
     }))
     : [];
 
+  const viewedProperties = properties.filter(property => Number(property.views) > 0);
+
   const renderStars = (rating) => {
     const ratingValue = Math.floor(rating || 0);
     return Array.from({ length: 5 }).map((_, i) => (
@@ -779,9 +781,9 @@ const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views
               {activeTab === 'views' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(1rem, 3vw, 1.5rem)' }}>
                   <h2 style={{ color: 'hsl(200 25% 15%)', fontSize: 'clamp(1rem, 3vw, 1.125rem)', fontWeight: '600' }}>Property Views</h2>
-                  {properties.length > 0 ? (
+                  {viewedProperties.length > 0 ? (
                     <div className="listing-grid" style={{ display: 'grid', gap: 'clamp(0.75rem, 2vw, 1rem)' }}>
-                      {properties.map((property) => (
+                      {viewedProperties.map((property) => (
                         <div key={property.id} style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.5rem, 2vw, 0.75rem)', padding: 'clamp(0.75rem, 2vw, 1rem)', display: 'flex', flexDirection: 'column', gap: 'clamp(0.75rem, 2vw, 1rem)' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: 'clamp(0.5rem, 2vw, 1rem)' }}>
                             <div style={{ flex: 1, minWidth: 0 }}>
@@ -814,8 +816,8 @@ const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views
                   ) : (
                     <div style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.5rem, 2vw, 0.75rem)', padding: 'clamp(1.5rem, 4vw, 2rem)', textAlign: 'center' }}>
                       <Eye style={{ height: 'clamp(2.5rem, 10vw, 3rem)', width: 'clamp(2.5rem, 10vw, 3rem)', color: 'hsl(200 15% 45%)', margin: '0 auto clamp(0.75rem, 2vw, 1rem) auto' }} />
-                      <h3 style={{ fontSize: 'clamp(1rem, 3vw, 1.125rem)', fontWeight: '600', color: 'hsl(200 25% 15%)', marginBottom: 'clamp(0.375rem, 1.5vw, 0.5rem)' }}>No Properties Yet</h3>
-                      <p style={{ color: 'hsl(200 15% 45%)', fontSize: 'clamp(0.875rem, 2vw, 0.875rem)' }}>Add your first property to start tracking views.</p>
+                      <h3 style={{ fontSize: 'clamp(1rem, 3vw, 1.125rem)', fontWeight: '600', color: 'hsl(200 25% 15%)', marginBottom: 'clamp(0.375rem, 1.5vw, 0.5rem)' }}>No Viewed Properties Yet</h3>
+                      <p style={{ color: 'hsl(200 15% 45%)', fontSize: 'clamp(0.875rem, 2vw, 0.875rem)' }}>Only listings with at least one view are shown here.</p>
                     </div>
                   )}
                 </div>
@@ -831,6 +833,7 @@ const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views
                   {/* ↓ billing and onUpgrade now both passed */}
                   <BillingModule
                     billing={billing}
+                    plans={plans ?? []}
                     onUpgrade={() => setShowPricingModal(true)}
                   />
                 </div>

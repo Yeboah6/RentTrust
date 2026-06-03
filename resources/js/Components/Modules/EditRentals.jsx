@@ -140,7 +140,7 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental, locations = [
     }
   }, [rental]);
 
-  // console.log('EditRentals received rental prop:', rental);
+  // console.log('EditRentals received rental prop:', rental.property_type);
 
   const handleAmenityToggle = (amenity) => {
     const updatedAmenities = data.amenities.includes(amenity)
@@ -302,12 +302,6 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental, locations = [
       formData.append(`newImages[${index}]`, imageObj.file);
     });
 
-    // console.log('Submitting update with:', {
-    //   id: data.id,
-    //   existingImagesCount: data.existingImages.length,
-    //   removedImagesCount: data.removedImages.length,
-    //   newImagesCount: newImages.length
-    // });
     
     // Submit using FormData with axios (includes _method for PUT spoofing)
     // Use admin endpoint if user is admin, otherwise use standard endpoint
@@ -767,6 +761,40 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental, locations = [
                             }} /> 
                             {errors.propertyType}
                           </p>
+                        )}
+                        {data.propertyType && (
+                          <div style={{ 
+                            marginTop: 'clamp(0.5rem, 1.5vw, 0.75rem)',
+                            display: 'flex',
+                            gap: 'clamp(0.375rem, 1vw, 0.5rem)',
+                            flexWrap: 'wrap',
+                            alignItems: 'center'
+                          }}>
+                            <span style={{ 
+                              fontSize: 'clamp(0.75rem, 2vw, 0.75rem)',
+                              color: 'hsl(200 15% 45%)',
+                              fontWeight: '500'
+                            }}>
+                              Selected:
+                            </span>
+                            <div style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 'clamp(0.375rem, 1vw, 0.5rem)',
+                              paddingLeft: 'clamp(0.625rem, 2vw, 0.75rem)',
+                              paddingRight: 'clamp(0.625rem, 2vw, 0.75rem)',
+                              paddingTop: 'clamp(0.375rem, 1vw, 0.5rem)',
+                              paddingBottom: 'clamp(0.375rem, 1vw, 0.5rem)',
+                              backgroundColor: 'hsl(174 62% 32%)',
+                              color: 'white',
+                              borderRadius: 'clamp(0.5rem, 2vw, 0.625rem)',
+                              fontSize: 'clamp(0.75rem, 2vw, 0.875rem)',
+                              fontWeight: '600',
+                              textTransform: 'capitalize'
+                            }}>
+                              {data.propertyType}
+                            </div>
+                          </div>
                         )}
                       </div>
 
@@ -1864,7 +1892,8 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental, locations = [
                               fontSize: 'clamp(0.875rem, 2.5vw, 0.875rem)', 
                               color: 'hsl(200 25% 15%)',
                               fontWeight: '500',
-                              textAlign: 'right'
+                              textAlign: 'right',
+                              textTransform: 'capitalize'
                             }}>
                               {data.propertyType}
                             </span>

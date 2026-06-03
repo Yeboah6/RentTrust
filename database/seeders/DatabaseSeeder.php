@@ -23,7 +23,7 @@ class DatabaseSeeder extends Seeder
 
         User::create([
             'user_id' => Str::uuid(),
-            'name' => 'Rent Trust',
+            'name' => 'RentTrustGh',
             'email' => 'rent@trust.com',
             'phone' => '0500866048',
             'role' => 'super_admin',

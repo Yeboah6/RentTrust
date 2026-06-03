@@ -11,6 +11,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 
 class PaymentController extends Controller
@@ -159,6 +160,56 @@ class PaymentController extends Controller
             ]);
         });
  
+        try {
+            $agent = $payment->user;
+            $adminEmails = User::where('role', 'super_admin')
+                ->whereNotNull('email')
+                ->pluck('email')
+                ->filter()
+                ->unique()
+                ->values()
+                ->all();
+ 
+            $agentSubject = "Refund issued for payment {$payment->reference}";
+            $agentMessage = "Hello {$agent?->name},\n\n" .
+                "A refund of GH₵" . number_format($refundAmount, 2) . " has been processed for payment reference {$payment->reference}.\n\n" .
+                "Amount: GH₵" . number_format($refundAmount, 2) . "\n" .
+                "Reason: {$request->reason}\n" .
+                "Status: " . ($isPartial ? 'Partial refund' : 'Full refund') . "\n\n" .
+                "If you have any questions, please contact support.\n\n" .
+                "Thank you.\n";
+ 
+            if ($agent?->email) {
+                Mail::raw($agentMessage, function ($message) use ($agentSubject, $agent) {
+                    $message->to($agent->email, $agent->name)
+                        ->subject($agentSubject);
+                });
+            }
+ 
+            $adminSubject = "[Admin] Refund issued for payment {$payment->reference}";
+
+            if (!empty($adminEmails)) {
+                $adminMessage = "A refund was issued by admin " . Auth::user()->name . " (" . Auth::user()->email . ") for payment {$payment->reference}.\n\n" .
+                    "Refund amount: GH₵" . number_format($refundAmount, 2) . "\n" .
+                    "Original payment amount: GH₵" . number_format($payment->amount, 2) . "\n" .
+                    "Reason: {$request->reason}\n" .
+                    "Refund type: " . ($isPartial ? 'Partial refund' : 'Full refund') . "\n\n" .
+                    "Agent: " . ($agent?->name ?? 'N/A') . " <" . ($agent?->email ?? 'N/A') . ">\n" .
+                    "Payment reference: {$payment->reference}\n";
+ 
+                Mail::raw($adminMessage, function ($message) use ($adminSubject, $adminEmails) {
+                    $message->to($adminEmails)
+                        ->subject($adminSubject);
+                });
+            }
+        } catch (\Throwable $exception) {
+            Log::warning('Refund notification delivery failed', [
+                'payment_id' => $payment->id,
+                'admin_id'   => Auth::id(),
+                'message'    => $exception->getMessage(),
+            ]);
+        }
+ 
         return back()->with('success', 'Refund of GH₵' . number_format($refundAmount, 2) . ' processed successfully.');
     }
  
@@ -194,12 +245,4 @@ class PaymentController extends Controller
  
         return $base;
     }
-
-    // public function refund(Payment $payment)
-    // {
-    //     // refund logic
-    //     $payment->status = 'refunded';
-    //     $payment->save();
-    //     return back()->with('success', 'Payment refunded');
-    // }
 }

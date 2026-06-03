@@ -435,7 +435,7 @@ const PaymentShow = ({ payment, refunds = [], total_refunded = 0, refundable = 0
                                 <div>Amount</div>
                                 <div>Date</div>
                                 <div>Status</div>
-                                <div>Reason</div>
+                                <div>Refund Reason</div>
                             </div>
 
                             {refunds.map((r, i) => (
@@ -444,11 +444,13 @@ const PaymentShow = ({ payment, refunds = [], total_refunded = 0, refundable = 0
                                         {r.reference}
                                     </span>
                                     <span style={{ fontSize: '0.84rem', fontWeight: '700', color: 'hsl(0 62% 44%)' }}>
-                                        − GH₵ {fmt(r.amount)}
+                                        − {r.currency ?? 'GHS'} {fmt(r.amount)}
                                     </span>
                                     <span style={{ fontSize: '0.78rem', color: 'hsl(220 15% 44%)' }}>{r.created_at}</span>
                                     <StatusBadge status={r.status} />
-                                    <span style={{ fontSize: '0.78rem', color: 'hsl(220 15% 44%)', lineHeight: 1.5 }}>{r.reason}</span>
+                                    <span style={{ fontSize: '0.78rem', color: 'hsl(220 15% 44%)', lineHeight: 1.5 }}>
+                                        {r.reason ?? 'No reason provided'}
+                                    </span>
                                 </div>
                             ))}
 

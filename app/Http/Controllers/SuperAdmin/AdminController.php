@@ -210,47 +210,173 @@ class AdminController extends Controller
 
     public function destroy(User $user)
     {
-        $user->delete();
-        return back()->with('success', 'Admin removed');
+        DB::beginTransaction();
+    
+        try {
+            $adminName = $user->name;
+            $adminEmail = $user->email;
+    
+            AdminAuditLog::record('user', 'Admin account deleted', [
+                'affected_user' => $adminName,
+                'affected_id'   => $user->id,
+                'notes'         => "Admin account '{$adminName}' was deleted by " . (auth()->user()?->name ?? 'System'),
+                'properties'    => ['email' => $adminEmail, 'role' => $user->role],
+            ]);
+    
+            $user->delete();
+    
+            // Notify admin of deletion
+            try {
+                Mail::raw(
+                    "Hello {$adminName},\n\n" .
+                    "Your admin account on RentWise has been deleted by a super admin.\n\n" .
+                    "If you believe this was done in error, please contact the support team.\n\n" .
+                    "Thank you.\n",
+                    function ($message) use ($adminEmail, $adminName) {
+                        $message->to($adminEmail, $adminName)
+                            ->subject('Your admin account has been deleted');
+                    }
+                );
+            } catch (\Throwable $e) {
+                Log::warning('Failed to send admin deletion email', ['admin_email' => $adminEmail, 'error' => $e->getMessage()]);
+            }
+    
+            DB::commit();
+            return back()->with('success', 'Admin removed');
+    
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error('Admin deletion failed', ['error' => $e->getMessage(), 'admin_id' => $user->id]);
+            return back()->withErrors(['email' => 'Failed to remove admin. Please try again.']);
+        }
     }
-
+    
     public function resetPassword(Request $request, $user_id)
     {
         $admin = User::where('user_id', $user_id)
             ->where('role', 'admin')
             ->firstOrFail();
- 
+    
         $request->validate([
             'password' => 'required|string|min:8|confirmed',
         ]);
- 
-        $temporaryPassword = $request->password;
- 
-        $admin->update([
-            'password' => Hash::make($request->password),
-        ]);
- 
-        // Send password reset email
-        Mail::to($admin->email)->send(new AdminInvitation(
-            adminName: $admin->name,
-            adminEmail: $admin->email,
-            temporaryPassword: $temporaryPassword,
-            loginUrl: route('admin.login'),
-            isPasswordReset: true
-        ));
- 
-        return redirect()->back()->with('success', 'Admin password reset! Email sent with new credentials.');
+    
+        DB::beginTransaction();
+    
+        try {
+            $temporaryPassword = $request->password;
+    
+            $admin->update([
+                'password' => Hash::make($request->password),
+            ]);
+    
+            // Record audit log
+            AdminAuditLog::record('user', 'Admin password reset', [
+                'affected_user' => $admin->name,
+                'affected_id'   => $admin->id,
+                'notes'         => "Password reset by " . (auth()->user()?->name ?? 'System'),
+                'properties'    => ['email' => $admin->email],
+            ]);
+    
+            // Send password reset email
+            Mail::to($admin->email)->send(new AdminInvitation(
+                adminName: $admin->name,
+                adminEmail: $admin->email,
+                temporaryPassword: $temporaryPassword,
+                loginUrl: route('admin.login'),
+                isPasswordReset: true
+            ));
+    
+            DB::commit();
+            return redirect()->back()->with('success', 'Admin password reset! Email sent with new credentials.');
+    
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error('Admin password reset failed', ['error' => $e->getMessage(), 'admin_id' => $admin->id]);
+            return back()->withErrors(['password' => 'Failed to reset password. Please try again.']);
+        }
     }
-
+    
     public function suspend(User $user)
     {
-        $user->update(['status' => 'suspended']);
-        return redirect()->back()->with('success', 'Admin suspended');
+        DB::beginTransaction();
+    
+        try {
+            $user->update(['status' => 'suspended']);
+    
+            // Record audit log
+            AdminAuditLog::record('user', 'Admin account suspended', [
+                'affected_user' => $user->name,
+                'affected_id'   => $user->id,
+                'notes'         => "Admin account suspended by " . (auth()->user()?->name ?? 'System'),
+                'properties'    => ['email' => $user->email, 'role' => $user->role],
+            ]);
+    
+            // Send suspension notification email
+            try {
+                Mail::raw(
+                    "Hello {$user->name},\n\n" .
+                    "Your admin account on RentWise has been suspended by a super admin.\n\n" .
+                    "You will not be able to access the admin panel until your account is reactivated.\n\n" .
+                    "If you believe this was done in error, please contact the support team.\n\n" .
+                    "Thank you.\n",
+                    function ($message) use ($user) {
+                        $message->to($user->email, $user->name)
+                            ->subject('Your admin account has been suspended');
+                    }
+                );
+            } catch (\Throwable $e) {
+                Log::warning('Failed to send admin suspension email', ['admin_id' => $user->id, 'error' => $e->getMessage()]);
+            }
+    
+            DB::commit();
+            return redirect()->back()->with('success', 'Admin suspended');
+    
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error('Admin suspension failed', ['error' => $e->getMessage(), 'admin_id' => $user->id]);
+            return back()->withErrors(['email' => 'Failed to suspend admin. Please try again.']);
+        }
     }
-
+    
     public function reactivate(User $user)
     {
-        $user->update(['status' => 'active']);
-        return redirect()->back()->with('success', 'Admin reactivated');
+        DB::beginTransaction();
+    
+        try {
+            $user->update(['status' => 'active']);
+    
+            // Record audit log
+            AdminAuditLog::record('user', 'Admin account reactivated', [
+                'affected_user' => $user->name,
+                'affected_id'   => $user->id,
+                'notes'         => "Admin account reactivated by " . (auth()->user()?->name ?? 'System'),
+                'properties'    => ['email' => $user->email, 'role' => $user->role],
+            ]);
+    
+            // Send reactivation notification email
+            try {
+                Mail::raw(
+                    "Hello {$user->name},\n\n" .
+                    "Your admin account on RentWise has been reactivated by a super admin.\n\n" .
+                    "You can now access the admin panel. If you need to reset your password, please contact the support team.\n\n" .
+                    "Thank you.\n",
+                    function ($message) use ($user) {
+                        $message->to($user->email, $user->name)
+                            ->subject('Your admin account has been reactivated');
+                    }
+                );
+            } catch (\Throwable $e) {
+                Log::warning('Failed to send admin reactivation email', ['admin_id' => $user->id, 'error' => $e->getMessage()]);
+            }
+    
+            DB::commit();
+            return redirect()->back()->with('success', 'Admin reactivated');
+    
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error('Admin reactivation failed', ['error' => $e->getMessage(), 'admin_id' => $user->id]);
+            return back()->withErrors(['email' => 'Failed to reactivate admin. Please try again.']);
+        }
     }
 }
