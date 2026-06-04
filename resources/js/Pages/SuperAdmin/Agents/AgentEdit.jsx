@@ -54,6 +54,11 @@ const TIERS = [
 ];
 
 const ALL_STATUSES = ['active', 'pending', 'verified', 'suspended', 'rejected', 'inactive'];
+// Add this constant near your other configs at the top
+const AGENT_TYPES = [
+    'Agent',
+    'Landlord',
+];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -208,6 +213,9 @@ const AgentEdit = ({ agent: a }) => {
     const [confirmAct, setConfirmAct] = useState(null);
     const [actLoading, setActLoading] = useState(false);
     const [toast,      setToast]      = useState(null);
+    const [showPw, setShowPw] = useState(false);
+    const [showPw2, setShowPw2] = useState(false);
+
     const toastTimer = useRef(null);
 
     const showToast = (msg, type = 'success') => {
@@ -371,41 +379,13 @@ const AgentEdit = ({ agent: a }) => {
                                         </FField>
                                         <FField label="Type of Agent" error={errors.type}>
                                         <FSelect value={data.type} onChange={e => setData('type', e.target.value)}>
-                                            {type.map(type => (
+                                            {AGENT_TYPES.map(type => (
                                                 <option key={type} value={type}>{type}</option>
                                             ))}
                                         </FSelect>
                                     </FField>
                                     </div>
                                 </div>
-
-                                {/* ── Tier ── */}
-                                {/* <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                                    <SectionLabel>Subscription Tier</SectionLabel>
-                                    {tierChanged && (
-                                        <div style={{ padding: '0.65rem 0.875rem', borderRadius: '0.5rem', backgroundColor: 'hsl(40 90% 96%)', border: '1px solid hsl(40 80% 84%)', fontSize: '0.76rem', color: 'hsl(36 75% 33%)', lineHeight: 1.5, display: 'flex', gap: '0.5rem', alignItems: 'flex-start', animation: 'ageSlideIn 0.2s ease' }}>
-                                            <span style={{ flexShrink: 0, marginTop: '0.05rem', display: 'flex' }}><Icons.alert /></span>
-                                            Changing tier affects what features the agent can access immediately on save.
-                                        </div>
-                                    )}
-                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem' }}>
-                                        {TIERS.map(t => {
-                                            const active = data.tier === t.value;
-                                            return (
-                                                <button type="button" key={t.value} onClick={() => setData('tier', t.value)}
-                                                    style={{ padding: '0.65rem 0.4rem', borderRadius: '0.7rem', border: `1.5px solid ${active ? t.activeBorder : 'hsl(220 15% 88%)'}`, backgroundColor: active ? t.activeBg : 'white', cursor: 'pointer', textAlign: 'center', transition: 'all 0.15s', fontFamily: 'inherit', boxShadow: active ? `0 0 0 3px ${t.glow}` : 'none' }}>
-                                                    <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.3rem' }}>
-                                                        <span style={{ fontSize: '0.62rem', fontWeight: '800', letterSpacing: '0.06em', color: active ? t.tagColor : 'hsl(220 15% 50%)', padding: '0.12rem 0.4rem', borderRadius: '0.3rem', backgroundColor: active ? t.tagBg : 'hsl(220 15% 93%)' }}>
-                                                            {t.label.toUpperCase()}
-                                                        </span>
-                                                    </div>
-                                                    <div style={{ fontSize: '0.7rem', color: active ? t.tagColor : 'hsl(220 15% 55%)' }}>{t.desc.split(' ').slice(0, 2).join(' ')}</div>
-                                                    {active && <div style={{ display: 'flex', justifyContent: 'center', marginTop: '0.3rem', color: t.tagColor }}><Icons.check /></div>}
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-                                </div> */}
 
                                 {/* ── Status & flags ── */}
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -418,14 +398,14 @@ const AgentEdit = ({ agent: a }) => {
                                             })}
                                         </FSelect>
                                     </FField>
-                                    {/* <div style={{ display: 'flex', flexDirection: 'column', gap: '0.55rem' }}>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.55rem' }}>
                                         <Toggle value={data.is_verified} onChange={v => setData('is_verified', v)} label="Verified Agent" sub="Shows the blue verified checkmark on their profile and listings" />
-                                        <Toggle value={data.is_featured} onChange={v => setData('is_featured', v)} label="Featured Agent" sub="Agent appears in featured agent sections" />
-                                    </div> */}
+                                        {/* <Toggle value={data.is_featured} onChange={v => setData('is_featured', v)} label="Featured Agent" sub="Agent appears in featured agent sections" /> */}
+                                    </div>
                                 </div>
 
                                 {/* ── Password ── */}
-                                {/* <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                                     <SectionLabel>Reset Password</SectionLabel>
                                     <p style={{ margin: 0, fontSize: '0.75rem', color: 'hsl(220 15% 52%)' }}>Leave both fields blank to keep the current password unchanged.</p>
                                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.875rem' }}>
@@ -438,7 +418,7 @@ const AgentEdit = ({ agent: a }) => {
                                                 suffix={<button type="button" onClick={() => setShowPw2(v => !v)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'hsl(220 15% 52%)', display: 'flex', padding: 0 }}>{showPw2 ? <Icons.eyeOff /> : <Icons.eye />}</button>} />
                                         </FField>
                                     </div>
-                                </div> */}
+                                </div>
                             </div>
 
                             {/* ── Footer ── */}

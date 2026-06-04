@@ -93,13 +93,13 @@ const normalise = (a) => ({
     email:          a.email          ?? '',
     phone:          a.phone          ?? a.phone_number    ?? '',
     status_key:     (a.status        ?? 'pending').toLowerCase(),
-    tier:           (a.tier          ?? a.plan            ?? a.subscription_type ?? 'standard').toLowerCase(),
-    agency:         a.agency         ?? a.agency_name     ?? a.company           ?? '',
-    license:        a.license        ?? a.license_number  ?? a.rea_number        ?? '',
+    // tier:           (a.tier          ?? a.plan            ?? a.subscription_type ?? 'standard').toLowerCase(),
+    company:         a.company           ?? '',
+    // license:        a.license        ?? a.license_number  ?? a.rea_number        ?? '',
     location:       a.location       ?? a.city            ?? a.area              ?? '',
     bio:            a.bio            ?? a.about           ?? '',
-    website:        a.website        ?? a.website_url     ?? '',
-    social:         a.social         ?? {},
+    // website:        a.website        ?? a.website_url     ?? '',
+    // social:         a.social         ?? {},
     listings_count: a.listings_count ?? a.total_listings  ?? 0,
     active_listings:a.active_listings ?? 0,
     sold_count:     a.sold_count     ?? a.properties_sold ?? 0,
@@ -107,7 +107,7 @@ const normalise = (a) => ({
     reviews_count:  a.reviews_count  ?? 0,
     total_revenue:  a.total_revenue  ?? null,
     is_verified:    a.is_verified    ?? a.verified        ?? false,
-    is_featured:    a.is_featured    ?? a.featured        ?? false,
+    // is_featured:    a.is_featured    ?? a.featured        ?? false,
     avatar:         a.avatar         ?? a.profile_photo   ?? null,
     joined_at:      a.joined_at      ?? a.created_at      ?? '',
     last_active:    a.last_active    ?? a.last_login_at   ?? '',
@@ -183,7 +183,7 @@ const ConfirmModal = ({ action, agent, onConfirm, onClose, processing }) => {
                             <div style={{ fontSize: '0.875rem', fontWeight: '700', color: 'hsl(220 25% 14%)' }}>{agent.name}</div>
                             <div style={{ fontSize: '0.72rem', color: 'hsl(220 15% 52%)', display: 'flex', gap: '0.4rem', alignItems: 'center', flexWrap: 'wrap', marginTop: '0.15rem' }}>
                                 <StatusBadge sk={agent.status_key} />
-                                {agent.agency && <span>{agent.agency}</span>}
+                                {agent.company && <span>{agent.company}</span>}
                             </div>
                         </div>
                     </div>
@@ -475,12 +475,12 @@ const AgentShow = ({ agent: rawAgent }) => {
                                     <div style={{ flex: 1, minWidth: 0 }}>
                                         <h2 style={{ margin: '0 0 0.3rem', fontSize: '1.2rem', fontWeight: '900', color: 'white', letterSpacing: '-0.02em' }}>{agent.name}</h2>
                                         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.4rem' }}>
-                                            {agent.agency && <span style={{ fontSize: '0.75rem', color: 'hsl(220 20% 68%)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}><Icons.building /> {agent.agency}</span>}
+                                            {agent.company && <span style={{ fontSize: '0.75rem', color: 'hsl(220 20% 68%)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}><Icons.building /> {agent.company}</span>}
                                             {agent.location && <span style={{ fontSize: '0.75rem', color: 'hsl(220 20% 68%)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}><Icons.pin /> {agent.location}</span>}
                                         </div>
-                                        {agent.license && (
+                                        {/* {agent.license && (
                                             <span style={{ fontSize: '0.68rem', fontFamily: 'monospace', color: 'hsl(214 80% 70%)', backgroundColor: 'hsl(220 25% 22%)', padding: '0.18rem 0.5rem', borderRadius: '0.3rem' }}>#{agent.license}</span>
-                                        )}
+                                        )} */}
                                     </div>
                                 </div>
                             </div>
@@ -610,7 +610,7 @@ const AgentShow = ({ agent: rawAgent }) => {
                                 <InfoRow label="Agent ID"    value={`#${agent._id}`}           mono />
                                 <InfoRow label="Status"      value={stCfg.label} />
                                 <InfoRow label="Tier"        value={agent.tier ? agent.tier.charAt(0).toUpperCase() + agent.tier.slice(1) : '—'} />
-                                <InfoRow label="License"     value={agent.license}              mono />
+                                <InfoRow label="Company"     value={agent.company}              mono />
                                 <InfoRow label="Joined"      value={fmtDate(agent.joined_at)} />
                                 <InfoRow label="Last Active" value={fmtRelative(agent.last_active)} />
                                 {agent.reviews_count > 0 && (

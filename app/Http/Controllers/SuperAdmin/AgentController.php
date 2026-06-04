@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use App\Mail\AgentInvitation;
+use App\Mail\AgentStatusChanged;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
@@ -44,7 +45,7 @@ class AgentController extends Controller
                     'phone'           => $user->phone,
                     'status'          => $user->status ?? 'pending',
                     'type'       => $user->type,
-                    'agency'          => $user->company,
+                    'company'          => $user->company,
                     'bio'             => $user->bio,                    // add profile photo column if needed
                     // 'is_verified'     => in_array($user->status, ['verified', 'active']),
                     // 'is_featured'     => false,                         // add featured flag to users table if needed
@@ -196,40 +197,67 @@ class AgentController extends Controller
             'name'        => ['required', 'string', 'max:255'],
             'email'       => ['required', 'email', Rule::unique('users', 'email')->ignore($agent->id)],
             'phone'       => ['nullable', 'string', 'max:30'],
-            'agency'      => ['nullable', 'string', 'max:255'],
-            'type'     => ['nullable', 'string', 'max:100'],
+            'company'      => ['nullable', 'string', 'max:255'],
+            'type'      => ['nullable', 'string', 'max:100'],
             'location'    => ['nullable', 'string', 'max:255'],
             'bio'         => ['nullable', 'string', 'max:2000'],
-            // 'website'     => ['nullable', 'url', 'max:255'],
             'status'      => ['required', Rule::in(['active', 'pending', 'verified', 'suspended', 'rejected', 'inactive'])],
-            // 'tier'        => ['required', Rule::in(['basic', 'standard', 'pro', 'premium'])],
-            // 'is_verified' => ['boolean'],
-            // 'is_featured' => ['boolean'],
-            // 'password'    => ['nullable', 'string', 'min:8', 'confirmed'],
+            'is_verified' => ['boolean'],
+            'password'    => ['nullable', 'string', 'min:8', 'confirmed'],
         ]);
  
-        DB::transaction(function () use ($agent, $validated) {
+        $original = $agent->only(['name', 'email', 'phone', 'company', 'type', 'location', 'bio', 'status', 'is_verified']);
+        $changes = [];
+ 
+        DB::transaction(function () use ($agent, $validated, $original, &$changes) {
             $fillable = collect($validated)->except(['password', 'password_confirmation'])->toArray();
  
             // Map form fields to model fields
-            $fillable['company'] = $fillable['agency'] ?? null;
-            unset($fillable['agency']);
- 
-            $fillable['license_number'] = $fillable['license'] ?? null;
-            unset($fillable['license']);
+            $fillable['company'] = $fillable['company'] ?? null;
+            unset($fillable['company']);
  
             $agent->update($fillable);
+ 
+            foreach (['name', 'email', 'phone', 'company', 'type', 'location', 'bio', 'status', 'is_verified'] as $field) {
+                $before = $original[$field] ?? null;
+                $after = $agent->{$field} ?? null;
+                if ($before !== $after) {
+                    $changes[$field] = ['from' => $before, 'to' => $after];
+                }
+            }
  
             // Update password only if provided
             if (!empty($validated['password'])) {
                 $agent->update(['password' => Hash::make($validated['password'])]);
+                $changes['password'] = ['from' => '(hidden)', 'to' => '(changed)'];
  
-                // Also update the linked User if the agent has one
                 if ($agent->user) {
                     $agent->user->update(['password' => Hash::make($validated['password'])]);
                 }
             }
         });
+ 
+        $updatedBy = auth()->user() ?? $agent;
+ 
+        try {
+            Mail::to($agent->email)->send(new \App\Mail\AgentAccountUpdated(
+                agent: $agent,
+                changedFields: $changes,
+                updatedBy: $updatedBy,
+            ));
+        } catch (\Throwable $e) {
+            Log::warning('Failed to send agent account updated email', [
+                'error' => $e->getMessage(),
+                'agent_id' => $agent->id,
+            ]);
+        }
+ 
+        AdminAuditLog::record('user', 'Agent updated', [
+            'affected_user' => $agent->name,
+            'affected_id'   => $agent->id,
+            'notes'         => 'Agent account updated by ' . (auth()->user()?->name ?? 'System'),
+            'properties'    => ['changes' => $changes],
+        ]);
  
         Log::info('SuperAdmin updated agent', [
             'user_id' => $agent->id,
@@ -255,6 +283,20 @@ class AgentController extends Controller
             'verified_at' => now(),
             'verified_by' => auth()->id(),
         ]);
+ 
+        try {
+            Mail::to($agent->email)->send(new AgentStatusChanged(
+                agent: $agent,
+                status: 'verified',
+                message: 'Your agent account has been verified and is now active.',
+                updatedBy: auth()->user() ?? $agent,
+            ));
+        } catch (\Throwable $e) {
+            Log::warning('Failed to send agent verified email', [
+                'error' => $e->getMessage(),
+                'agent_id' => $agent->id,
+            ]);
+        }
  
         // Audit log
         AdminAuditLog::record('verification', "Agent verified: {$agent->name}", [
@@ -290,6 +332,20 @@ class AgentController extends Controller
             'suspended_by'     => auth()->id(),
             'previous_status'  => $previousStatus,
         ]);
+ 
+        try {
+            Mail::to($agent->email)->send(new AgentStatusChanged(
+                agent: $agent,
+                status: 'suspended',
+                message: "Your agent account has been suspended. Previous status was {$previousStatus}.",
+                updatedBy: auth()->user() ?? $agent,
+            ));
+        } catch (\Throwable $e) {
+            Log::warning('Failed to send agent suspended email', [
+                'error' => $e->getMessage(),
+                'agent_id' => $agent->id,
+            ]);
+        }
  
         // Audit log
         AdminAuditLog::record('suspension', "Agent suspended: {$agent->name}", [
@@ -330,6 +386,20 @@ class AgentController extends Controller
             'suspended_by'    => null,
             'previous_status' => null,
         ]);
+ 
+        try {
+            Mail::to($agent->email)->send(new AgentStatusChanged(
+                agent: $agent,
+                status: 'reactivated',
+                message: "Your agent account has been reactivated and restored to {$restoreStatus} status.",
+                updatedBy: auth()->user() ?? $agent,
+            ));
+        } catch (\Throwable $e) {
+            Log::warning('Failed to send agent reactivated email', [
+                'error' => $e->getMessage(),
+                'agent_id' => $agent->id,
+            ]);
+        }
  
         // Audit log
         AdminAuditLog::record('suspension', "Agent reactivated: {$agent->name}", [
@@ -404,16 +474,11 @@ class AgentController extends Controller
             'name'           => $agent->name           ?? $agent->full_name,
             'email'          => $agent->email,
             'phone'          => $agent->phone          ?? $agent->phone_number,
-            'company'         => $agent->agency_name    ?? $agent->agency ?? $agent->company,
-            // 'license'        => $agent->license_number ?? $agent->rea_number ?? $agent->license,
-            'type'    => $agent->type,
+            'company'        => $agent->company,
+            'type'          => $agent->type,
             'location'       => $agent->location       ?? $agent->city    ?? $agent->area,
             'bio'            => $agent->bio             ?? $agent->about,
-            // 'website'        => $agent->website        ?? $agent->website_url,
             'status'         => $agent->status         ?? 'pending',
-            // 'tier'           => $agent->tier           ?? $agent->plan    ?? $agent->subscription_type ?? 'standard',
-            // 'is_verified'    => (bool) ($agent->is_verified ?? false),
-            // 'is_featured'    => (bool) ($agent->is_featured ?? false),
             'listings_count' => $agent->listings_count ?? 0,
             'active_listings'=> $agent->active_listings ?? 0,
             'sold_count'     => $agent->sold_count      ?? $agent->properties_sold ?? 0,
