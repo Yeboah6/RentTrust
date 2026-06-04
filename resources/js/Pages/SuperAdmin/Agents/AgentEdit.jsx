@@ -198,21 +198,13 @@ const AgentEdit = ({ agent: a }) => {
         name:        a.name         ?? a.full_name     ?? '',
         email:       a.email        ?? '',
         phone:       a.phone        ?? a.phone_number  ?? '',
-        agency:      a.agency       ?? a.agency_name   ?? a.company ?? '',
-        // license:     a.license      ?? a.license_number ?? a.rea_number ?? '',
-        // location:    a.location     ?? a.city          ?? '',
+        company:      a.company ?? '',
+        type:          a.type ?? '',
+        location:    a.location     ?? a.city          ?? '',
         bio:         a.bio          ?? a.about         ?? '',
-        // website:     a.website      ?? a.website_url   ?? '',
         status:      statusKey,
-        tier:        (a.tier        ?? a.plan          ?? 'standard').toLowerCase(),
-        is_verified: a.is_verified  ?? a.status      ?? false,
-        // is_featured: a.is_featured  ?? a.featured      ?? false,
-        password:              '',
-        password_confirmation: '',
     });
 
-    const [showPw,     setShowPw]     = useState(false);
-    const [showPw2,    setShowPw2]    = useState(false);
     const [confirmAct, setConfirmAct] = useState(null);
     const [actLoading, setActLoading] = useState(false);
     const [toast,      setToast]      = useState(null);
@@ -260,7 +252,7 @@ const AgentEdit = ({ agent: a }) => {
     const initials     = data.name ? data.name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase() : null;
     const liveHue      = avatarHue(data.name || '');
     const isSuspended  = statusKey === 'suspended';
-    const tierChanged  = data.tier !== (a.tier ?? a.plan ?? 'standard').toLowerCase();
+    // const tierChanged  = data.tier !== (a.tier ?? a.plan ?? 'standard').toLowerCase();
 
     return (
         <>
@@ -374,20 +366,21 @@ const AgentEdit = ({ agent: a }) => {
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                                     <SectionLabel>Professional Details</SectionLabel>
                                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.875rem' }}>
-                                        <FField label="Agency / Company" error={errors.agency}>
-                                            <FInput value={data.agency} onChange={e => setData('agency', e.target.value)} placeholder="e.g. Devtraco Properties" />
+                                        <FField label="Agency / Company" error={errors.company}>
+                                            <FInput value={data.company} onChange={e => setData('company', e.target.value)} placeholder="e.g. Devtraco Properties" />
                                         </FField>
-                                        <FField label="License / REA Number" error={errors.license} hint="Registered estate agent number">
-                                            <FInput value={data.license} onChange={e => setData('license', e.target.value)} placeholder="e.g. REA-2024-XXXX" />
-                                        </FField>
-                                    </div>
-                                    <FField label="Website" error={errors.website}>
-                                        <FInput type="url" value={data.website} onChange={e => setData('website', e.target.value)} placeholder="https://agency.com" />
+                                        <FField label="Type of Agent" error={errors.type}>
+                                        <FSelect value={data.type} onChange={e => setData('type', e.target.value)}>
+                                            {type.map(type => (
+                                                <option key={type} value={type}>{type}</option>
+                                            ))}
+                                        </FSelect>
                                     </FField>
+                                    </div>
                                 </div>
 
                                 {/* ── Tier ── */}
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                {/* <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                                     <SectionLabel>Subscription Tier</SectionLabel>
                                     {tierChanged && (
                                         <div style={{ padding: '0.65rem 0.875rem', borderRadius: '0.5rem', backgroundColor: 'hsl(40 90% 96%)', border: '1px solid hsl(40 80% 84%)', fontSize: '0.76rem', color: 'hsl(36 75% 33%)', lineHeight: 1.5, display: 'flex', gap: '0.5rem', alignItems: 'flex-start', animation: 'ageSlideIn 0.2s ease' }}>
@@ -412,7 +405,7 @@ const AgentEdit = ({ agent: a }) => {
                                             );
                                         })}
                                     </div>
-                                </div>
+                                </div> */}
 
                                 {/* ── Status & flags ── */}
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -425,14 +418,14 @@ const AgentEdit = ({ agent: a }) => {
                                             })}
                                         </FSelect>
                                     </FField>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.55rem' }}>
+                                    {/* <div style={{ display: 'flex', flexDirection: 'column', gap: '0.55rem' }}>
                                         <Toggle value={data.is_verified} onChange={v => setData('is_verified', v)} label="Verified Agent" sub="Shows the blue verified checkmark on their profile and listings" />
                                         <Toggle value={data.is_featured} onChange={v => setData('is_featured', v)} label="Featured Agent" sub="Agent appears in featured agent sections" />
-                                    </div>
+                                    </div> */}
                                 </div>
 
                                 {/* ── Password ── */}
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                {/* <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                                     <SectionLabel>Reset Password</SectionLabel>
                                     <p style={{ margin: 0, fontSize: '0.75rem', color: 'hsl(220 15% 52%)' }}>Leave both fields blank to keep the current password unchanged.</p>
                                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.875rem' }}>
@@ -445,7 +438,7 @@ const AgentEdit = ({ agent: a }) => {
                                                 suffix={<button type="button" onClick={() => setShowPw2(v => !v)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'hsl(220 15% 52%)', display: 'flex', padding: 0 }}>{showPw2 ? <Icons.eyeOff /> : <Icons.eye />}</button>} />
                                         </FField>
                                     </div>
-                                </div>
+                                </div> */}
                             </div>
 
                             {/* ── Footer ── */}

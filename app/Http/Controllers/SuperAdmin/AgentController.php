@@ -43,13 +43,14 @@ class AgentController extends Controller
                     'email'           => $user->email,
                     'phone'           => $user->phone,
                     'status'          => $user->status ?? 'pending',
+                    'type'       => $user->type,
                     'agency'          => $user->company,
                     'bio'             => $user->bio,                    // add profile photo column if needed
-                    'is_verified'     => in_array($user->status, ['verified', 'active']),
-                    'is_featured'     => false,                         // add featured flag to users table if needed
-                    'tier'            => $user->subscription?->plan?->slug
-                                         ?? $user->package
-                                         ?? 'standard',             // add city/area column if needed
+                    // 'is_verified'     => in_array($user->status, ['verified', 'active']),
+                    // 'is_featured'     => false,                         // add featured flag to users table if needed
+                    // 'tier'            => $user->subscription?->plan?->slug
+                    //                      ?? $user->package
+                    //                      ?? 'standard',             // add city/area column if needed
                     'listings_count'  => $user->listings_count  ?? 0,
                     'active_listings' => $user->active_listings ?? 0,
                     'sold_count'      => $user->sold_count      ?? 0,
@@ -196,15 +197,15 @@ class AgentController extends Controller
             'email'       => ['required', 'email', Rule::unique('users', 'email')->ignore($agent->id)],
             'phone'       => ['nullable', 'string', 'max:30'],
             'agency'      => ['nullable', 'string', 'max:255'],
-            'license'     => ['nullable', 'string', 'max:100'],
+            'type'     => ['nullable', 'string', 'max:100'],
             'location'    => ['nullable', 'string', 'max:255'],
             'bio'         => ['nullable', 'string', 'max:2000'],
-            'website'     => ['nullable', 'url', 'max:255'],
+            // 'website'     => ['nullable', 'url', 'max:255'],
             'status'      => ['required', Rule::in(['active', 'pending', 'verified', 'suspended', 'rejected', 'inactive'])],
-            'tier'        => ['required', Rule::in(['basic', 'standard', 'pro', 'premium'])],
-            'is_verified' => ['boolean'],
-            'is_featured' => ['boolean'],
-            'password'    => ['nullable', 'string', 'min:8', 'confirmed'],
+            // 'tier'        => ['required', Rule::in(['basic', 'standard', 'pro', 'premium'])],
+            // 'is_verified' => ['boolean'],
+            // 'is_featured' => ['boolean'],
+            // 'password'    => ['nullable', 'string', 'min:8', 'confirmed'],
         ]);
  
         DB::transaction(function () use ($agent, $validated) {
@@ -403,15 +404,16 @@ class AgentController extends Controller
             'name'           => $agent->name           ?? $agent->full_name,
             'email'          => $agent->email,
             'phone'          => $agent->phone          ?? $agent->phone_number,
-            'agency'         => $agent->agency_name    ?? $agent->agency ?? $agent->company,
-            'license'        => $agent->license_number ?? $agent->rea_number ?? $agent->license,
+            'company'         => $agent->agency_name    ?? $agent->agency ?? $agent->company,
+            // 'license'        => $agent->license_number ?? $agent->rea_number ?? $agent->license,
+            'type'    => $agent->type,
             'location'       => $agent->location       ?? $agent->city    ?? $agent->area,
             'bio'            => $agent->bio             ?? $agent->about,
-            'website'        => $agent->website        ?? $agent->website_url,
+            // 'website'        => $agent->website        ?? $agent->website_url,
             'status'         => $agent->status         ?? 'pending',
-            'tier'           => $agent->tier           ?? $agent->plan    ?? $agent->subscription_type ?? 'standard',
-            'is_verified'    => (bool) ($agent->is_verified ?? false),
-            'is_featured'    => (bool) ($agent->is_featured ?? false),
+            // 'tier'           => $agent->tier           ?? $agent->plan    ?? $agent->subscription_type ?? 'standard',
+            // 'is_verified'    => (bool) ($agent->is_verified ?? false),
+            // 'is_featured'    => (bool) ($agent->is_featured ?? false),
             'listings_count' => $agent->listings_count ?? 0,
             'active_listings'=> $agent->active_listings ?? 0,
             'sold_count'     => $agent->sold_count      ?? $agent->properties_sold ?? 0,

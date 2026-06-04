@@ -772,11 +772,11 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData, locations
                               fontSize: 'clamp(0.875rem, 2.5vw, 1rem)'
                             }}
                           >
-                            <option value="1">1 Year</option>
-                            <option value="2">2 Years</option>
-                            <option value="3">3 Years</option>
-                            <option value="4">4 Years</option>
-                            <option value="5">5 Years</option>
+                            <option value="1">1 Month</option>
+                            <option value="2">2 Months</option>
+                            <option value="3">3 Months</option>
+                            <option value="4">4 Months</option>
+                            <option value="5">5 Months</option>
                           </select>
                         </div>
                       </div>
