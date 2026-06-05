@@ -229,7 +229,7 @@ class AdminController extends Controller
             try {
                 Mail::raw(
                     "Hello {$adminName},\n\n" .
-                    "Your admin account on RentWise has been deleted by a super admin.\n\n" .
+                    "Your admin account on RentTrustGh has been deleted by a super admin.\n\n" .
                     "If you believe this was done in error, please contact the support team.\n\n" .
                     "Thank you.\n",
                     function ($message) use ($adminEmail, $adminName) {
@@ -316,7 +316,7 @@ class AdminController extends Controller
             try {
                 Mail::raw(
                     "Hello {$user->name},\n\n" .
-                    "Your admin account on RentWise has been suspended by a super admin.\n\n" .
+                    "Your admin account on RentTrustGh has been suspended by a super admin.\n\n" .
                     "You will not be able to access the admin panel until your account is reactivated.\n\n" .
                     "If you believe this was done in error, please contact the support team.\n\n" .
                     "Thank you.\n",
@@ -358,7 +358,7 @@ class AdminController extends Controller
             try {
                 Mail::raw(
                     "Hello {$user->name},\n\n" .
-                    "Your admin account on RentWise has been reactivated by a super admin.\n\n" .
+                    "Your admin account on RentTrustGh has been reactivated by a super admin.\n\n" .
                     "You can now access the admin panel. If you need to reset your password, please contact the support team.\n\n" .
                     "Thank you.\n",
                     function ($message) use ($user) {

@@ -200,14 +200,17 @@ const AgentEdit = ({ agent: a }) => {
     const hue       = avatarHue(a.name ?? '');
 
     const { data, setData, put, processing, errors, isDirty, reset } = useForm({
-        name:        a.name         ?? a.full_name     ?? '',
-        email:       a.email        ?? '',
-        phone:       a.phone        ?? a.phone_number  ?? '',
-        company:      a.company ?? '',
-        type:          a.type ?? '',
-        location:    a.location     ?? a.city          ?? '',
-        bio:         a.bio          ?? a.about         ?? '',
-        status:      statusKey,
+        name:                  a.name         ?? a.full_name    ?? '',
+        email:                 a.email        ?? '',
+        phone:                 a.phone        ?? a.phone_number ?? '',
+        company:               a.company      ?? '',
+        type:                  a.type         ?? '',
+        location:              a.location     ?? a.city         ?? '',
+        bio:                   a.bio          ?? a.about        ?? '',
+        status:                statusKey,
+        is_verified:           a.is_verified  ?? false,
+        password:              '',
+        password_confirmation: '',
     });
 
     const [confirmAct, setConfirmAct] = useState(null);
@@ -259,8 +262,7 @@ const AgentEdit = ({ agent: a }) => {
 
     const initials     = data.name ? data.name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase() : null;
     const liveHue      = avatarHue(data.name || '');
-    const isSuspended  = statusKey === 'suspended';
-    // const tierChanged  = data.tier !== (a.tier ?? a.plan ?? 'standard').toLowerCase();
+    const isSuspended = (data.status ?? statusKey) === 'suspended';
 
     return (
         <>

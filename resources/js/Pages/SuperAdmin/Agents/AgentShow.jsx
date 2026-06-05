@@ -49,12 +49,12 @@ const STATUS_CFG = {
     inactive:  { label: 'Inactive',  bg: 'hsl(220 15% 93%)', color: 'hsl(220 15% 38%)', dot: 'hsl(220 15% 52%)', bar: 'hsl(220 15% 55%)' },
 };
 
-const TIER_CFG = {
-    premium:  { label: 'Premium',  bg: 'hsl(40 90% 93%)',  color: 'hsl(40 80% 30%)',  dot: 'hsl(40 80% 44%)' },
-    pro:      { label: 'Pro',      bg: 'hsl(270 60% 95%)', color: 'hsl(270 55% 38%)', dot: 'hsl(270 55% 50%)' },
-    standard: { label: 'Standard', bg: 'hsl(220 15% 93%)', color: 'hsl(220 15% 38%)', dot: 'hsl(220 15% 52%)' },
-    basic:    { label: 'Basic',    bg: 'hsl(220 15% 93%)', color: 'hsl(220 15% 38%)', dot: 'hsl(220 15% 52%)' },
-};
+// const TIER_CFG = {
+//     premium:  { label: 'Premium',  bg: 'hsl(40 90% 93%)',  color: 'hsl(40 80% 30%)',  dot: 'hsl(40 80% 44%)' },
+//     pro:      { label: 'Pro',      bg: 'hsl(270 60% 95%)', color: 'hsl(270 55% 38%)', dot: 'hsl(270 55% 50%)' },
+//     standard: { label: 'Standard', bg: 'hsl(220 15% 93%)', color: 'hsl(220 15% 38%)', dot: 'hsl(220 15% 52%)' },
+//     basic:    { label: 'Basic',    bg: 'hsl(220 15% 93%)', color: 'hsl(220 15% 38%)', dot: 'hsl(220 15% 52%)' },
+// };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -78,10 +78,25 @@ const fmtRelative = (v) => {
 
 const resolveImage = (img) => {
     if (!img) return null;
-    if (typeof img !== 'string') return null;
-    if (img.startsWith('http://') || img.startsWith('https://')) return img;
-    if (img.includes('/')) return img;
-    return `/storage/rental_images/${img}`;
+
+    let path = null;
+    if (typeof img === 'string') {
+        path = img;
+    } else if (Array.isArray(img)) {
+        path = img[0] ?? null;
+    } else if (typeof img === 'object' && img !== null) {
+        path = img.path ?? img.url ?? null;
+    }
+
+    if (!path || typeof path !== 'string') return null;
+    path = path.trim();
+    if (!path) return null;
+
+    if (path.startsWith('http://') || path.startsWith('https://')) return path;
+    if (path.startsWith('/storage/')) return path;
+    if (path.startsWith('storage/')) return `/${path}`;
+    if (path.includes('/')) return `/storage/${path}`;
+    return `/storage/rental_images/${path}`;
 };
 
 const avatarHue = (s = '') => [...s].reduce((a, c) => a + c.charCodeAt(0), 0) % 360;
@@ -93,21 +108,16 @@ const normalise = (a) => ({
     email:          a.email          ?? '',
     phone:          a.phone          ?? a.phone_number    ?? '',
     status_key:     (a.status        ?? 'pending').toLowerCase(),
-    // tier:           (a.tier          ?? a.plan            ?? a.subscription_type ?? 'standard').toLowerCase(),
     company:         a.company           ?? '',
-    // license:        a.license        ?? a.license_number  ?? a.rea_number        ?? '',
     location:       a.location       ?? a.city            ?? a.area              ?? '',
     bio:            a.bio            ?? a.about           ?? '',
-    // website:        a.website        ?? a.website_url     ?? '',
-    // social:         a.social         ?? {},
     listings_count: a.listings_count ?? a.total_listings  ?? 0,
     active_listings:a.active_listings ?? 0,
     sold_count:     a.sold_count     ?? a.properties_sold ?? 0,
     rating:         a.rating         ?? a.average_rating  ?? null,
     reviews_count:  a.reviews_count  ?? 0,
-    total_revenue:  a.total_revenue  ?? null,
+    // total_revenue:  a.total_revenue  ?? null,
     is_verified:    a.is_verified    ?? a.verified        ?? false,
-    // is_featured:    a.is_featured    ?? a.featured        ?? false,
     avatar:         a.avatar         ?? a.profile_photo   ?? null,
     joined_at:      a.joined_at      ?? a.created_at      ?? '',
     last_active:    a.last_active    ?? a.last_login_at   ?? '',
@@ -126,14 +136,14 @@ const StatusBadge = ({ sk }) => {
     );
 };
 
-const TierBadge = ({ tier }) => {
-    const c = TIER_CFG[(tier ?? '').toLowerCase()] ?? TIER_CFG.standard;
-    return (
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', padding: '0.18rem 0.52rem', borderRadius: '999px', fontSize: '0.62rem', fontWeight: '800', letterSpacing: '0.07em', backgroundColor: c.bg, color: c.color }}>
-            {(tier === 'premium' || tier === 'pro') ? '⭐ ' : ''}{c.label.toUpperCase()}
-        </span>
-    );
-};
+// const TierBadge = ({ tier }) => {
+//     const c = TIER_CFG[(tier ?? '').toLowerCase()] ?? TIER_CFG.standard;
+//     return (
+//         <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', padding: '0.18rem 0.52rem', borderRadius: '999px', fontSize: '0.62rem', fontWeight: '800', letterSpacing: '0.07em', backgroundColor: c.bg, color: c.color }}>
+//             {(tier === 'premium' || tier === 'pro') ? '⭐ ' : ''}{c.label.toUpperCase()}
+//         </span>
+//     );
+// };
 
 const Toast = ({ toast }) => toast ? (
     <div style={{ position: 'fixed', top: '1.25rem', right: '1.25rem', zIndex: 200, padding: '0.85rem 1.25rem', borderRadius: '0.75rem', backgroundColor: toast.type === 'error' ? 'hsl(0 65% 50%)' : 'hsl(152 55% 37%)', color: 'white', fontWeight: '600', fontSize: '0.875rem', boxShadow: '0 8px 28px hsl(220 25% 8% / 0.22)', animation: 'agsSlideIn 0.2s ease', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -390,13 +400,13 @@ const AgentShow = ({ agent: rawAgent }) => {
                             <h1 style={{ fontSize: '1.35rem', fontWeight: '900', color: 'hsl(220 25% 12%)', margin: '0 0 0.2rem', letterSpacing: '-0.02em' }}>{agent.name}</h1>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
                                 <StatusBadge sk={agent.status_key} />
-                                <TierBadge tier={agent.tier} />
+                                {/* <TierBadge tier={agent.tier} />
                                 {agent.is_verified && (
                                     <span style={{ fontSize: '0.62rem', fontWeight: '800', backgroundColor: 'hsl(214 100% 95%)', color: 'hsl(214 80% 38%)', padding: '0.1rem 0.4rem', borderRadius: '0.3rem' }}>✓ VERIFIED</span>
                                 )}
                                 {agent.is_featured && (
                                     <span style={{ fontSize: '0.62rem', fontWeight: '800', backgroundColor: 'hsl(40 90% 93%)', color: 'hsl(40 80% 30%)', padding: '0.1rem 0.4rem', borderRadius: '0.3rem' }}>⭐ FEATURED</span>
-                                )}
+                                )} */}
                                 <span style={{ fontSize: '0.72rem', color: 'hsl(220 15% 52%)' }}>#{agent._id} · Joined {fmtDate(agent.joined_at)}</span>
                                 {agent.last_active && (
                                     <span style={{ fontSize: '0.72rem', color: 'hsl(214 60% 45%)', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
@@ -549,7 +559,7 @@ const AgentShow = ({ agent: rawAgent }) => {
 
                         {/* Recent listings */}
                         <Card>
-                            <CardHead title="Listings" sub={`${agent.listings_count} total`} />
+                            <CardHead title="Listings" sub={`Showing all ${agent.listings_count} listing${agent.listings_count !== 1 ? 's' : ''}`} />
                             {agent.listings?.length > 0 ? (
                                 <>
                                     {/* Image gallery for first few listings */}
@@ -564,7 +574,7 @@ const AgentShow = ({ agent: rawAgent }) => {
                                                             <img
                                                                 src={imageUrl}
                                                                 alt={l.title ?? 'Listing'}
-                                                                style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.2s' }}
+                                                                style={{ width: '100%', objectFit: 'cover', transition: 'transform 0.2s' }}
                                                                 onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
                                                                 onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
                                                             />
@@ -581,8 +591,8 @@ const AgentShow = ({ agent: rawAgent }) => {
                                     )}
 
                                     {/* Listing details */}
-                                    {agent.listings.slice(0, 5).map(l => <ListingRow key={l.id} listing={l} />)}
-                                    {agent.listings_count > 5 && (
+                                    {agent.listings.map(l => <ListingRow key={l.id} listing={l} />)}
+                                    {agent.listings_count > agent.listings.length && (
                                         <div style={{ padding: '0.75rem 1.125rem', textAlign: 'center' }}>
                                             <Link href={`/super-admin/listings?agent=${agent._id}`}
                                                 style={{ fontSize: '0.78rem', fontWeight: '600', color: 'hsl(214 80% 44%)', textDecoration: 'none' }}>
@@ -609,7 +619,7 @@ const AgentShow = ({ agent: rawAgent }) => {
                             <div style={{ padding: '0.25rem 1.125rem 0.75rem' }}>
                                 <InfoRow label="Agent ID"    value={`#${agent._id}`}           mono />
                                 <InfoRow label="Status"      value={stCfg.label} />
-                                <InfoRow label="Tier"        value={agent.tier ? agent.tier.charAt(0).toUpperCase() + agent.tier.slice(1) : '—'} />
+                                {/* <InfoRow label="Tier"        value={agent.tier ? agent.tier.charAt(0).toUpperCase() + agent.tier.slice(1) : '—'} /> */}
                                 <InfoRow label="Company"     value={agent.company}              mono />
                                 <InfoRow label="Joined"      value={fmtDate(agent.joined_at)} />
                                 <InfoRow label="Last Active" value={fmtRelative(agent.last_active)} />

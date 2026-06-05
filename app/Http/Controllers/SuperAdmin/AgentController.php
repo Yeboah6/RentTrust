@@ -16,6 +16,7 @@ use Inertia\Inertia;
 use App\Mail\AgentInvitation;
 use App\Mail\AgentStatusChanged;
 use Illuminate\Support\Facades\Mail;
+use App\Mail\AgentAccountUpdated;
 use Illuminate\Support\Str;
 
 class AgentController extends Controller
@@ -162,11 +163,10 @@ class AgentController extends Controller
 
         $agent->loadAvg('reviews as rating', 'overall_rating');
  
-        // Load recent listings for the show page sidebar
+        // Load every listing for this agent so the page can show full listing details, not just counts.
         $listings = Rental::where('user_id', $agent->user_id ?? $agent->id)
             ->orWhere('agent_id', $agent->id)
             ->latest()
-            ->take(10)
             ->get()
             ->map(fn ($l) => $this->formatListingPreview($l));
  
@@ -212,10 +212,6 @@ class AgentController extends Controller
         DB::transaction(function () use ($agent, $validated, $original, &$changes) {
             $fillable = collect($validated)->except(['password', 'password_confirmation'])->toArray();
  
-            // Map form fields to model fields
-            $fillable['company'] = $fillable['company'] ?? null;
-            unset($fillable['company']);
- 
             $agent->update($fillable);
  
             foreach (['name', 'email', 'phone', 'company', 'type', 'location', 'bio', 'status', 'is_verified'] as $field) {
@@ -237,17 +233,36 @@ class AgentController extends Controller
             }
         });
  
-        $updatedBy = auth()->user() ?? $agent;
+        // $updatedBy = auth()->user() ?? $agent;
  
         try {
-            Mail::to($agent->email)->send(new \App\Mail\AgentAccountUpdated(
-                agent: $agent,
-                changedFields: $changes,
-                updatedBy: $updatedBy,
-            ));
+            $changeLines = collect($changes)
+                ->map(function ($update, $field) {
+                    $label = ucfirst(str_replace('_', ' ', $field));
+                    $from  = $field === 'password' ? '••••••••' : ($update['from'] ?? '—');
+                    $to    = $field === 'password' ? '(changed)' : ($update['to']   ?? '—');
+                    return "  • {$label}: {$from} → {$to}";
+                })
+                ->join("\n");
+
+            $body = !empty($changes)
+                ? "The following details were updated:\n\n{$changeLines}"
+                : "Your account was reviewed but no details were changed.";
+
+            Mail::raw(
+                "Hello {$agent->name},\n\n" .
+                "Your agent account on " . config('app.name') . " was updated by an administrator.\n\n" .
+                "{$body}\n\n" .
+                "If you did not expect this change, please contact support immediately.\n\n" .
+                "Thank you.\n",
+                function ($message) use ($agent) {
+                    $message->to($agent->email, $agent->name)
+                        ->subject('Your Agent Account Has Been Updated');
+                }
+            );
         } catch (\Throwable $e) {
             Log::warning('Failed to send agent account updated email', [
-                'error' => $e->getMessage(),
+                'error'    => $e->getMessage(),
                 'agent_id' => $agent->id,
             ]);
         }
@@ -276,43 +291,44 @@ class AgentController extends Controller
         if ($agent->is_verified) {
             return back()->with('info', 'Agent is already verified.');
         }
- 
+
         $agent->update([
             'is_verified' => true,
             'status'      => 'verified',
             'verified_at' => now(),
             'verified_by' => auth()->id(),
         ]);
- 
+
         try {
-            Mail::to($agent->email)->send(new AgentStatusChanged(
-                agent: $agent,
-                status: 'verified',
-                message: 'Your agent account has been verified and is now active.',
-                updatedBy: auth()->user() ?? $agent,
-            ));
+            Mail::raw(
+                "Hello {$agent->name},\n\n" .
+                "Your agent account on RentTrustGh has been verified and is now active.\n\n" .
+                "You can now log in and start managing your listings.\n\n" .
+                "Thank you.\n",
+                function ($message) use ($agent) {
+                    $message->to($agent->email, $agent->name)
+                        ->subject('Your agent account has been verified');
+                }
+            );
         } catch (\Throwable $e) {
             Log::warning('Failed to send agent verified email', [
-                'error' => $e->getMessage(),
+                'error'    => $e->getMessage(),
                 'agent_id' => $agent->id,
             ]);
         }
- 
-        // Audit log
+
         AdminAuditLog::record('verification', "Agent verified: {$agent->name}", [
             'affected_user' => $agent->name,
-            'affected_id' => $agent->id,
-            'notes' => "Agent {$agent->email} has been verified",
-            'properties' => ['agent_id' => $agent->id, 'verified_by' => auth()->id()],
+            'affected_id'   => $agent->id,
+            'notes'         => "Agent {$agent->email} has been verified",
+            'properties'    => ['agent_id' => $agent->id, 'verified_by' => auth()->id()],
         ]);
- 
-        // $agent->user?->notify(new AgentVerified($agent));
- 
+
         Log::info('SuperAdmin verified agent', [
-            'user_id' => $agent->id,
+            'user_id'  => $agent->id,
             'admin_id' => auth()->id(),
         ]);
- 
+
         return back()->with('success', "{$agent->name} has been verified.");
     }
 
@@ -323,50 +339,51 @@ class AgentController extends Controller
         if ($agent->status === 'suspended') {
             return back()->with('error', 'Agent is already suspended.');
         }
- 
+
         $previousStatus = $agent->status;
- 
+
         $agent->update([
-            'status'           => 'suspended',
-            'suspended_at'     => now(),
-            'suspended_by'     => auth()->id(),
-            'previous_status'  => $previousStatus,
+            'status'          => 'suspended',
+            'suspended_at'    => now(),
+            'suspended_by'    => auth()->id(),
+            'previous_status' => $previousStatus,
         ]);
- 
+
         try {
-            Mail::to($agent->email)->send(new AgentStatusChanged(
-                agent: $agent,
-                status: 'suspended',
-                message: "Your agent account has been suspended. Previous status was {$previousStatus}.",
-                updatedBy: auth()->user() ?? $agent,
-            ));
+            Mail::raw(
+                "Hello {$agent->name},\n\n" .
+                "Your agent account on RentTrustGh has been suspended by a super admin.\n\n" .
+                "You will not be able to access the platform or manage listings until your account is reactivated.\n\n" .
+                "If you believe this was done in error, please contact the support team.\n\n" .
+                "Thank you.\n",
+                function ($message) use ($agent) {
+                    $message->to($agent->email, $agent->name)
+                        ->subject('Your agent account has been suspended');
+                }
+            );
         } catch (\Throwable $e) {
             Log::warning('Failed to send agent suspended email', [
-                'error' => $e->getMessage(),
+                'error'    => $e->getMessage(),
                 'agent_id' => $agent->id,
             ]);
         }
- 
-        // Audit log
+
         AdminAuditLog::record('suspension', "Agent suspended: {$agent->name}", [
             'affected_user' => $agent->name,
-            'affected_id' => $agent->id,
-            'notes' => "Agent {$agent->email} has been suspended. Previous status: {$previousStatus}",
-            'properties' => ['agent_id' => $agent->id, 'previous_status' => $previousStatus, 'suspended_by' => auth()->id()],
+            'affected_id'   => $agent->id,
+            'notes'         => "Agent {$agent->email} has been suspended. Previous status: {$previousStatus}",
+            'properties'    => ['agent_id' => $agent->id, 'previous_status' => $previousStatus, 'suspended_by' => auth()->id()],
         ]);
- 
-        // Optionally hide all active listings
+
         Rental::where('agent_id', $agent->id)
             ->where('status', 'approved')
             ->update(['status' => 'suspended']);
- 
-        // $agent->user?->notify(new AgentSuspended($agent));
- 
+
         Log::info('SuperAdmin suspended agent', [
-            'user_id' => $agent->id,
+            'user_id'  => $agent->id,
             'admin_id' => auth()->id(),
         ]);
- 
+
         return back()->with('success', "{$agent->name} has been suspended.");
     }
 
@@ -377,64 +394,64 @@ class AgentController extends Controller
         if ($agent->status !== 'suspended') {
             return back()->with('error', 'Agent is not suspended.');
         }
- 
+
         $restoreStatus = $agent->previous_status ?? ($agent->is_verified ? 'verified' : 'active');
- 
+
         $agent->update([
             'status'          => $restoreStatus,
             'suspended_at'    => null,
             'suspended_by'    => null,
             'previous_status' => null,
         ]);
- 
+
         try {
-            Mail::to($agent->email)->send(new AgentStatusChanged(
-                agent: $agent,
-                status: 'reactivated',
-                message: "Your agent account has been reactivated and restored to {$restoreStatus} status.",
-                updatedBy: auth()->user() ?? $agent,
-            ));
+            Mail::raw(
+                "Hello {$agent->name},\n\n" .
+                "Your agent account on RentTrustGh has been reactivated by a super admin.\n\n" .
+                "Your account has been restored to '{$restoreStatus}' status and you can now access the platform again.\n\n" .
+                "Thank you.\n",
+                function ($message) use ($agent) {
+                    $message->to($agent->email, $agent->name)
+                        ->subject('Your agent account has been reactivated');
+                }
+            );
         } catch (\Throwable $e) {
             Log::warning('Failed to send agent reactivated email', [
-                'error' => $e->getMessage(),
+                'error'    => $e->getMessage(),
                 'agent_id' => $agent->id,
             ]);
         }
- 
-        // Audit log
+
         AdminAuditLog::record('suspension', "Agent reactivated: {$agent->name}", [
             'affected_user' => $agent->name,
-            'affected_id' => $agent->id,
-            'notes' => "Agent {$agent->email} has been reactivated. Restored status: {$restoreStatus}",
-            'properties' => ['agent_id' => $agent->id, 'restored_status' => $restoreStatus, 'reactivated_by' => auth()->id()],
+            'affected_id'   => $agent->id,
+            'notes'         => "Agent {$agent->email} has been reactivated. Restored status: {$restoreStatus}",
+            'properties'    => ['agent_id' => $agent->id, 'restored_status' => $restoreStatus, 'reactivated_by' => auth()->id()],
         ]);
- 
-        // Restore suspended listings that belonged to this agent
+
         Rental::where('agent_id', $agent->id)
             ->where('status', 'suspended')
             ->update(['status' => 'approved']);
- 
+
         Log::info('SuperAdmin reactivated agent', [
             'agent_id' => $agent->id,
             'admin_id' => auth()->id(),
         ]);
- 
+
         return back()->with('success', "{$agent->name} has been reactivated.");
     }
- 
     // ─── Delete ───────────────────────────────────────────────────────────────
  
     public function destroy(User $agent)
     {
-        $name = $agent->name;
- 
-        DB::transaction(function () use ($agent) {
-            // Delete avatar from storage
+        $name  = $agent->name;
+        $email = $agent->email;
+
+        DB::transaction(function () use ($agent, $name, $email) {
             if ($agent->avatar && !str_starts_with($agent->avatar, 'http')) {
                 Storage::disk('public')->delete($agent->avatar);
             }
- 
-            // Delete all listings and their images
+
             $listings = Rental::where('agent_id', $agent->id)->get();
             foreach ($listings as $listing) {
                 if (!empty($listing->images)) {
@@ -448,18 +465,35 @@ class AgentController extends Controller
                 $listing->inquiries()->delete();
                 $listing->delete();
             }
- 
-            // Delete associated user account if linked
+
             $agent->user?->delete();
- 
             $agent->delete();
         });
- 
+
+        try {
+            Mail::raw(
+                "Hello {$name},\n\n" .
+                "Your agent account on RentTrustGh has been permanently deleted by a super admin.\n\n" .
+                "All your listings and associated data have been removed from the platform.\n\n" .
+                "If you believe this was done in error, please contact the support team.\n\n" .
+                "Thank you.\n",
+                function ($message) use ($email, $name) {
+                    $message->to($email, $name)
+                        ->subject('Your agent account has been deleted');
+                }
+            );
+        } catch (\Throwable $e) {
+            Log::warning('Failed to send agent deletion email', [
+                'agent_email' => $email,
+                'error'       => $e->getMessage(),
+            ]);
+        }
+
         Log::info('SuperAdmin deleted agent', [
             'agent_name' => $name,
             'admin_id'   => auth()->id(),
         ]);
- 
+
         return redirect()
             ->route('super-admin.agents.index')
             ->with('success', "Agent \"{$name}\" and all their data have been permanently deleted.");
@@ -486,7 +520,7 @@ class AgentController extends Controller
             'reviews_count' => $agent->reviews_count ?? 0,
             'total_revenue'  => $agent->total_revenue   ?? null,
             'avatar'         => $agent->avatar
-                ? (str_starts_with($agent->avatar, 'http') ? $agent->avatar : asset('storage/' . $agent->avatar))
+                ? (str_starts_with($agent->avatar, 'http') ? $agent->avatar : (str_starts_with($agent->avatar, 'storage/') ? asset($agent->avatar) : asset('storage/' . ltrim($agent->avatar, '/'))))
                 : null,
             'joined_at'      => $agent->created_at?->toISOString(),
             'last_active'    => $agent->last_active?->toISOString(),
@@ -496,11 +530,52 @@ class AgentController extends Controller
  
     private function formatListingPreview(Rental $listing): array
     {
-        $images = $listing->images ?? [];
-        $first  = is_array($images) ? ($images[0] ?? null) : null;
-        if ($first && is_array($first)) $first = $first['path'] ?? $first['url'] ?? null;
-        if ($first && !str_starts_with($first, 'http')) $first = asset('storage/' . ltrim($first, '/'));
- 
+        $raw = $listing->images ?? [];
+        if (is_string($raw)) {
+            $decoded = json_decode($raw, true);
+            $raw     = is_array($decoded) ? $decoded : [];
+        }
+
+        if (!is_array($raw)) {
+            $raw = [$raw];
+        }
+
+        $images = [];
+        foreach ($raw as $item) {
+            $path = null;
+            if (is_string($item)) {
+                $path = trim($item);
+            } elseif (is_array($item)) {
+                $path = trim($item['path'] ?? $item['url'] ?? '');
+            }
+
+            if (!$path) {
+                continue;
+            }
+
+            if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+                $images[] = $path;
+                continue;
+            }
+
+            if (str_starts_with($path, '/storage/')) {
+                $images[] = $path;
+                continue;
+            }
+
+            if (str_starts_with($path, 'storage/')) {
+                $images[] = Storage::disk('public')->url(ltrim($path, '/'));
+                continue;
+            }
+
+            if (str_contains($path, '/')) {
+                $images[] = Storage::disk('public')->url($path);
+                continue;
+            }
+
+            $images[] = Storage::disk('public')->url("rental_images/{$path}");
+        }
+
         return [
             'id'         => $listing->id,
             'title'      => $listing->title,
@@ -510,7 +585,7 @@ class AgentController extends Controller
             'sale_price' => $listing->sale_price,
             'rent_min'   => $listing->rent_min,
             'currency'   => 'GH₵',
-            'images'     => $first ? [$first] : [],
+            'images'     => array_values(array_filter($images)),
         ];
     }
 }

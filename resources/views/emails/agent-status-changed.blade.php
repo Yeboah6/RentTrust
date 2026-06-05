@@ -1,18 +1,25 @@
 <x-mail::message>
-# Account Status Updated
+# Account Updated
 
-Hi **{{ $agent->name }},**
+Hi **{{ $agent->name }}**,
 
-{{ $message }}
+Your agent account on **{{ config('app.name') }}** was updated by **{{ $updatedBy->name }}**.
+
+@if (!empty($changedFields))
+**The following details were changed:**
 
 <x-mail::table>
-| Field | Value |
-|:------|:------|
-| Status | {{ ucfirst($status) }} |
-| Updated by | {{ $updatedBy->name ?? 'System' }} |
+| Field | From | To |
+|:------|:-----|:---|
+@foreach ($changedFields as $field => $update)
+| {{ ucfirst(str_replace('_', ' ', $field)) }} | {{ $field === 'password' ? '••••••••' : ($update['from'] ?? '—') }} | {{ $field === 'password' ? '(changed)' : ($update['to'] ?? '—') }} |
+@endforeach
 </x-mail::table>
+@endif
 
-If you have questions or did not expect this change, please contact support immediately.
+If you made this request or are aware of these changes, no action is needed.
+
+If you did **not** expect this change, please contact support immediately.
 
 <x-mail::button :url="config('app.url')">
 Go to Platform
@@ -21,5 +28,5 @@ Go to Platform
 Thanks,
 **{{ config('app.name') }} Team**
 
-<small style="color:#aaa;">This is an automated notification. Updated on {{ now()->format('M d, Y \a\t h:i A') }}.</small>
+<small style="color:#aaa;">This is an automated notification. Updated on {{ now()->format('M d, Y \a\t h:i A') }} by {{ $updatedBy->name }}.</small>
 </x-mail::message>
