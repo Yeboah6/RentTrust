@@ -20,7 +20,7 @@ class FeaturedListingService
      *
      * @return array<int, array<string, mixed>>
      */
-    public function getFeaturedListings(string $purpose, int $limit = 8): array
+    public function getFeaturedListings(string $purpose, int $limit = 5): array
     {
         $this->validatePurpose($purpose);
 

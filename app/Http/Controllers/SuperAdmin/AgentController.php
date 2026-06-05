@@ -17,6 +17,10 @@ use App\Mail\AgentInvitation;
 use App\Mail\AgentStatusChanged;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\AgentAccountUpdated;
+use App\Mail\AgentVerified;
+use App\Mail\AgentSuspended;
+use App\Mail\AgentReactivated;
+use App\Mail\AgentDeleted;
 use Illuminate\Support\Str;
 
 class AgentController extends Controller
@@ -300,15 +304,11 @@ class AgentController extends Controller
         ]);
 
         try {
-            Mail::raw(
-                "Hello {$agent->name},\n\n" .
-                "Your agent account on RentTrustGh has been verified and is now active.\n\n" .
-                "You can now log in and start managing your listings.\n\n" .
-                "Thank you.\n",
-                function ($message) use ($agent) {
-                    $message->to($agent->email, $agent->name)
-                        ->subject('Your agent account has been verified');
-                }
+            Mail::to($agent->email)->send(
+                new AgentVerified(
+                    agent: $agent,
+                    verifiedBy: auth()->user(),
+                )
             );
         } catch (\Throwable $e) {
             Log::warning('Failed to send agent verified email', [
@@ -350,16 +350,11 @@ class AgentController extends Controller
         ]);
 
         try {
-            Mail::raw(
-                "Hello {$agent->name},\n\n" .
-                "Your agent account on RentTrustGh has been suspended by a super admin.\n\n" .
-                "You will not be able to access the platform or manage listings until your account is reactivated.\n\n" .
-                "If you believe this was done in error, please contact the support team.\n\n" .
-                "Thank you.\n",
-                function ($message) use ($agent) {
-                    $message->to($agent->email, $agent->name)
-                        ->subject('Your agent account has been suspended');
-                }
+            Mail::to($agent->email)->send(
+                new AgentSuspended(
+                    agent: $agent,
+                    suspendedBy: auth()->user(),
+                )
             );
         } catch (\Throwable $e) {
             Log::warning('Failed to send agent suspended email', [
@@ -405,15 +400,11 @@ class AgentController extends Controller
         ]);
 
         try {
-            Mail::raw(
-                "Hello {$agent->name},\n\n" .
-                "Your agent account on RentTrustGh has been reactivated by a super admin.\n\n" .
-                "Your account has been restored to '{$restoreStatus}' status and you can now access the platform again.\n\n" .
-                "Thank you.\n",
-                function ($message) use ($agent) {
-                    $message->to($agent->email, $agent->name)
-                        ->subject('Your agent account has been reactivated');
-                }
+            Mail::to($agent->email)->send(
+                new AgentReactivated(
+                    agent: $agent,
+                    reactivatedBy: auth()->user(),
+                )
             );
         } catch (\Throwable $e) {
             Log::warning('Failed to send agent reactivated email', [
@@ -471,16 +462,12 @@ class AgentController extends Controller
         });
 
         try {
-            Mail::raw(
-                "Hello {$name},\n\n" .
-                "Your agent account on RentTrustGh has been permanently deleted by a super admin.\n\n" .
-                "All your listings and associated data have been removed from the platform.\n\n" .
-                "If you believe this was done in error, please contact the support team.\n\n" .
-                "Thank you.\n",
-                function ($message) use ($email, $name) {
-                    $message->to($email, $name)
-                        ->subject('Your agent account has been deleted');
-                }
+            Mail::to($email)->send(
+                new AgentDeleted(
+                    agentName: $name,
+                    agentEmail: $email,
+                    deletedBy: auth()->user()?->name ?? 'System',
+                )
             );
         } catch (\Throwable $e) {
             Log::warning('Failed to send agent deletion email', [

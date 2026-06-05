@@ -19,6 +19,10 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use App\Mail\ListingUpdatedMail;
+use App\Mail\ListingApproved;
+use App\Mail\ListingRejected;
+use App\Mail\VerificationApproved;
+use App\Mail\VerificationRejected;
 use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 use Illuminate\Support\Str;
@@ -116,6 +120,28 @@ class ListingController extends Controller
             // Dispatch events or notifications
             // event(new VerificationApproved($verificationRequest));
 
+            // Send email notification to agent
+            try {
+                $agent = $verificationRequest->rental->user ?? $verificationRequest->agent;
+                if ($agent && $agent->email) {
+                    Mail::to($agent->email)->send(
+                        new VerificationApproved(
+                            verificationRequest: $verificationRequest,
+                            approvedBy: auth()->user()?->name ?? 'System',
+                        )
+                    );
+                    Log::info('Verification approved email sent', [
+                        'verification_request_id' => $verificationRequest->id,
+                        'agent_id' => $agent->id,
+                    ]);
+                }
+            } catch (\Throwable $e) {
+                Log::warning('Failed to send verification approved email', [
+                    'verification_request_id' => $verificationRequest->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+
             DB::commit();
 
             return back()->with('success', 'Verification request approved successfully.');
@@ -168,6 +194,29 @@ class ListingController extends Controller
 
             // Dispatch events or notifications
             // event(new VerificationRejected($verificationRequest));
+
+            // Send email notification to agent
+            try {
+                $agent = $verificationRequest->rental->user ?? $verificationRequest->agent;
+                if ($agent && $agent->email) {
+                    Mail::to($agent->email)->send(
+                        new VerificationRejected(
+                            verificationRequest: $verificationRequest,
+                            rejectedBy: auth()->user()?->name ?? 'System',
+                            rejectionReason: $rejectionReason,
+                        )
+                    );
+                    Log::info('Verification rejected email sent', [
+                        'verification_request_id' => $verificationRequest->id,
+                        'agent_id' => $agent->id,
+                    ]);
+                }
+            } catch (\Throwable $e) {
+                Log::warning('Failed to send verification rejected email', [
+                    'verification_request_id' => $verificationRequest->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
 
             DB::commit();
 
@@ -742,15 +791,34 @@ class ListingController extends Controller
             'notes' => "Listing '{$listing->title}' status changed from {$oldStatus} to approved",
             'properties' => ['old_status' => $oldStatus, 'new_status' => 'approved', 'listing_id' => $listing->id],
         ]);
- 
-        // Notify agent
-        // $listing->agent?->notify(new ListingApproved($listing));
- 
+
+        // Send email notification to agent
+        try {
+            $agentEmail = $listing->agent_email ?? $listing->user?->email;
+            if ($agentEmail && filter_var($agentEmail, FILTER_VALIDATE_EMAIL)) {
+                Mail::to($agentEmail)->send(
+                    new ListingApproved(
+                        listing: $listing,
+                        approvedBy: auth()->user()?->name ?? 'System',
+                    )
+                );
+                Log::info('Listing approved email sent', [
+                    'listing_id' => $listing->id,
+                    'agent_email' => $agentEmail,
+                ]);
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Failed to send listing approved email', [
+                'listing_id' => $listing->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
         Log::info('SuperAdmin approved listing', [
             'listing_id' => $listing->id,
             'admin_id'   => auth()->id(),
         ]);
- 
+
         return back()->with('success', "Listing \"{$listing->title}\" approved successfully.");
     }
 
@@ -777,16 +845,36 @@ class ListingController extends Controller
             'notes' => "Listing '{$listing->title}' rejected. Reason: {$request->input('reason')}",
             'properties' => ['old_status' => $oldStatus, 'new_status' => 'rejected', 'reason' => $request->input('reason'), 'listing_id' => $listing->id],
         ]);
- 
-        // Notify agent
-        // $listing->agent?->notify(new ListingRejected($listing, $request->reason));
- 
+
+        // Send email notification to agent
+        try {
+            $agentEmail = $listing->agent_email ?? $listing->user?->email;
+            if ($agentEmail && filter_var($agentEmail, FILTER_VALIDATE_EMAIL)) {
+                Mail::to($agentEmail)->send(
+                    new ListingRejected(
+                        listing: $listing,
+                        rejectedBy: auth()->user()?->name ?? 'System',
+                        reason: $request->input('reason'),
+                    )
+                );
+                Log::info('Listing rejected email sent', [
+                    'listing_id' => $listing->id,
+                    'agent_email' => $agentEmail,
+                ]);
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Failed to send listing rejected email', [
+                'listing_id' => $listing->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
         Log::info('SuperAdmin rejected listing', [
             'listing_id' => $listing->id,
             'admin_id'   => auth()->id(),
             'reason'     => $request->input('reason'),
         ]);
- 
+
         return back()->with('success', "Listing \"{$listing->title}\" has been rejected.");
     }
 
