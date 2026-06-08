@@ -120,7 +120,7 @@ const AuthPage = ({ isLogin: initialLogin = true }) => {
   });
 
   // const { errors } = usePage().props;
-  const { errors: pageErrors } = usePage().props;
+  // const { errors: pageErrors } = usePage().props;
 
   const toggleMode = () => {
     setIsLogin((v) => !v);
@@ -208,7 +208,7 @@ const handleEmailChange = (val) => {
         }
       `}</style>
 
-          {pageErrors?.suspended && (
+          {/* {pageErrors?.suspended && (
     <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: '1rem' }}>
       <div style={{ backgroundColor: 'white', borderRadius: '1rem', border: '1px solid hsl(40 20% 88%)', padding: '2rem', maxWidth: '400px', width: '100%', textAlign: 'center' }}>
 
@@ -239,7 +239,7 @@ const handleEmailChange = (val) => {
       </div>
     </div>
   )
-}
+} */}
 
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: COLOR.bg }}>
         <main style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'clamp(1rem, 4vw, 3rem) 1rem' }}>
