@@ -5,12 +5,10 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\{Hash, DB, Mail};
 use Illuminate\Support\Str;
 use Illuminate\Auth\Events\PasswordReset;
 use App\Models\User;
-use Illuminate\Support\Facades\Mail;
 use App\Mail\ResetPasswordMail;
 use Carbon\Carbon;
 use Inertia\Inertia;
@@ -53,17 +51,27 @@ class PasswordResetController extends Controller
         $token = Str::random(64);
 
         // Store token in password_resets table
-        DB::table('password_reset_tokens')->updateOrInsert(
-            [
-                'email' => $email,
-            ],
-            [
-                'email' => $email,
-                'token' => Hash::make($token),
-                'user_type' => $userType,
-                'created_at' => Carbon::now(),
-            ]
-        );
+        DB::table('password_reset_tokens')->where('email', $email)->delete();
+
+        DB::table('password_reset_tokens')->insert([
+            'id'        => (string) Str::uuid(),
+            'email'      => $email,
+            'token'      => Hash::make($token),
+            'user_type'  => $userType,
+            'created_at' => Carbon::now(),
+        ]);
+
+        // DB::table('password_reset_tokens')->updateOrInsert(
+        //     [
+        //         'email' => $email,
+        //     ],
+        //     [
+        //         'email' => $email,
+        //         'token' => Hash::make($token),
+        //         'user_type' => $userType,
+        //         'created_at' => Carbon::now(),
+        //     ]
+        // );
 
         // Send email with reset link
         $resetUrl = url('/reset-password/' . $token . '?email=' . urlencode($email) . '&type=' . $userType);

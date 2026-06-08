@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useForm } from '@inertiajs/react';
+import { Link, useForm } from '@inertiajs/react';
 
 // ── Icons ─────────────────────────────────────────────────────────────────────
 
@@ -22,16 +22,22 @@ const CheckIcon = () => (
     </svg>
 );
 
-const ShieldIcon = () => (
-    <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.6}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-    </svg>
-);
-
 const SpinnerIcon = () => (
     <svg width="18" height="18" fill="none" viewBox="0 0 24 24" style={{ animation: 'spin 0.75s linear infinite' }}>
         <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" style={{ opacity: 0.2 }} />
         <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" style={{ opacity: 0.85 }} />
+    </svg>
+);
+
+const CheckCircleIcon = () => (
+    <svg width="48" height="48" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+);
+
+const ArrowRightIcon = () => (
+    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
     </svg>
 );
 
@@ -40,10 +46,10 @@ const SpinnerIcon = () => (
 const getStrength = (pw) => {
     if (!pw) return 0;
     let s = 0;
-    if (pw.length >= 8)            s++;
-    if (/[A-Z]/.test(pw))          s++;
-    if (/[0-9]/.test(pw))          s++;
-    if (/[^A-Za-z0-9]/.test(pw))  s++;
+    if (pw.length >= 8)           s++;
+    if (/[A-Z]/.test(pw))         s++;
+    if (/[0-9]/.test(pw))         s++;
+    if (/[^A-Za-z0-9]/.test(pw)) s++;
     return s;
 };
 
@@ -85,6 +91,7 @@ const REQUIREMENTS = [
     { test: pw => pw.length >= 8,           label: 'At least 8 characters' },
     { test: pw => /[A-Z]/.test(pw),         label: 'One uppercase letter' },
     { test: pw => /[0-9]/.test(pw),         label: 'One number' },
+    { test: pw => /[^A-Za-z0-9]/.test(pw), label: 'One special character' },
 ];
 
 const RequirementItem = ({ met, label }) => (
@@ -166,26 +173,43 @@ const PasswordField = ({ label, value, onChange, error, show, onToggle, placehol
     </div>
 );
 
+// ── Role label ────────────────────────────────────────────────────────────────
+
+const ROLE_LABELS = {
+    agent:       'Agent',
+    admin:       'Admin',
+    super_admin: 'Super Admin',
+};
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 
-const AgentSetup = ({ token, agentName, agentEmail }) => {
-    const [showPw,  setShowPw]  = useState(false);
-    const [showPw2, setShowPw2] = useState(false);
+const ResetPasswordPage = ({ token, email, userType }) => {
+    const [showPw,    setShowPw]    = useState(false);
+    const [showPw2,   setShowPw2]   = useState(false);
+    const [resetDone, setResetDone] = useState(false);
 
     const { data, setData, post, processing, errors } = useForm({
+        token:                 token,
+        email:                 email,
+        userType:              userType,
         password:              '',
         password_confirmation: '',
     });
 
-    const confirmFilled   = data.password_confirmation.length > 0;
-    const passwordsMatch  = data.password === data.password_confirmation;
-    const confirmIsValid  = confirmFilled && passwordsMatch && !errors.password_confirmation;
-    const confirmHasError = !!errors.password_confirmation || (confirmFilled && !passwordsMatch);
-    const allReqsMet      = REQUIREMENTS.every(r => r.test(data.password));
+    const confirmFilled  = data.password_confirmation.length > 0;
+    const passwordsMatch = data.password === data.password_confirmation;
+    const confirmIsValid = confirmFilled && passwordsMatch && !errors.password_confirmation;
+    const confirmError   = errors.password_confirmation || (confirmFilled && !passwordsMatch ? 'Passwords do not match.' : '');
+    const allReqsMet     = REQUIREMENTS.every(r => r.test(data.password));
+
+    const roleLabel = ROLE_LABELS[userType] || 'User';
+    const emailInitial = (email || 'U').charAt(0).toUpperCase();
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        post(`/agent/setup/${token}`);
+        post('/reset-password', {
+            onSuccess: () => setResetDone(true),
+        });
     };
 
     return (
@@ -199,9 +223,9 @@ const AgentSetup = ({ token, agentName, agentEmail }) => {
                     from { opacity: 0; transform: translateY(16px); }
                     to   { opacity: 1; transform: translateY(0); }
                 }
-                @keyframes shimmer {
-                    0%   { background-position: -200% center; }
-                    100% { background-position: 200% center; }
+                @keyframes popIn {
+                    from { opacity: 0; transform: scale(0.85); }
+                    to   { opacity: 1; transform: scale(1); }
                 }
                 @media (max-width: 640px) {
                     input[type="password"], input[type="text"] { font-size: 16px !important; }
@@ -210,17 +234,13 @@ const AgentSetup = ({ token, agentName, agentEmail }) => {
 
             <div style={{
                 minHeight: '100vh',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
+                display: 'flex', flexDirection: 'column',
+                alignItems: 'center', justifyContent: 'center',
                 padding: '2rem 1rem',
                 background: 'hsl(168 30% 96%)',
                 fontFamily: "'DM Sans', system-ui, sans-serif",
-                position: 'relative',
-                overflow: 'hidden',
+                position: 'relative', overflow: 'hidden',
             }}>
-
                 {/* Background texture */}
                 <div style={{
                     position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0,
@@ -232,36 +252,95 @@ const AgentSetup = ({ token, agentName, agentEmail }) => {
                     backgroundSize: 'auto, auto, 28px 28px',
                 }} />
 
-                {/* Card */}
+                {/* Card wrapper */}
                 <div style={{
                     width: '100%', maxWidth: '440px',
                     position: 'relative', zIndex: 1,
                     animation: 'fadeUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) both',
                 }}>
-
-                    {/* Brand mark */}
+                    {/* Logo */}
                     <div style={{ textAlign: 'center', marginBottom: '1.75rem' }}>
-                      <div
-                          style={{
-                              display: 'inline-flex',
-                              flexDirection: 'column',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              padding: '1rem 1.25rem',
-                          }}
-                      >
-                          <img
-                              src="/rent-trust.png"
-                              alt="RentTrustGh Logo"
-                              style={{
-                                  width: '100px',
-                                  height: '100px',
-                              }}
-                          />
-                      </div>
+                        <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '1rem 1.25rem' }}>
+                            <img src="/rent-trust.png" alt="RentTrustGH" style={{ width: '100px', height: '100px' }} />
+                        </div>
                     </div>
 
-                    {/* Main card */}
+                    {/* ── SUCCESS STATE ─────────────────────────────────── */}
+                    {resetDone ? (
+                        <div style={{
+                            backgroundColor: 'white',
+                            borderRadius: '1.25rem',
+                            border: '1px solid hsl(174 25% 88%)',
+                            boxShadow: '0 4px 24px hsl(174 40% 20% / 0.09), 0 1px 4px hsl(174 40% 20% / 0.06)',
+                            overflow: 'hidden',
+                            textAlign: 'center',
+                        }}>
+                            {/* Green header bar */}
+                            <div style={{
+                                background: 'linear-gradient(135deg, hsl(142 55% 30%) 0%, hsl(142 50% 24%) 100%)',
+                                padding: '2rem',
+                                position: 'relative', overflow: 'hidden',
+                            }}>
+                                <div style={{
+                                    position: 'absolute', inset: 0, pointerEvents: 'none',
+                                    backgroundImage: 'radial-gradient(hsl(142 80% 80% / 0.08) 1px, transparent 1px)',
+                                    backgroundSize: '18px 18px',
+                                }} />
+                                <div style={{
+                                    position: 'absolute', top: '-2rem', right: '-2rem',
+                                    width: '8rem', height: '8rem', borderRadius: '50%',
+                                    background: 'hsl(142 60% 50% / 0.15)', filter: 'blur(20px)',
+                                }} />
+                                <div style={{
+                                    width: '4rem', height: '4rem', borderRadius: '50%',
+                                    backgroundColor: 'hsl(142 55% 40% / 0.25)',
+                                    border: '2px solid hsl(142 60% 60% / 0.35)',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    margin: '0 auto',
+                                    color: 'hsl(142 60% 78%)',
+                                    animation: 'popIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both',
+                                }}>
+                                    <CheckCircleIcon />
+                                </div>
+                            </div>
+
+                            <div style={{ padding: '2rem 2rem 2.5rem' }}>
+                                <h2 style={{
+                                    fontFamily: "'DM Serif Display', Georgia, serif",
+                                    fontSize: '1.5rem', fontWeight: 400,
+                                    color: 'hsl(200 25% 12%)', marginBottom: '0.6rem',
+                                    letterSpacing: '-0.01em',
+                                }}>
+                                    Password Reset!
+                                </h2>
+                                <p style={{
+                                    fontSize: '0.85rem', color: 'hsl(200 15% 50%)',
+                                    lineHeight: 1.6, marginBottom: '1.75rem',
+                                }}>
+                                    Your password has been updated. You can now sign in to your account with your new credentials.
+                                </p>
+                                <Link
+                                    href="/login"
+                                    style={{
+                                        display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
+                                        padding: '0.875rem 1.75rem',
+                                        background: 'linear-gradient(135deg, hsl(174 62% 32%), hsl(174 55% 26%))',
+                                        color: 'white', textDecoration: 'none',
+                                        borderRadius: '0.75rem', fontWeight: 700,
+                                        fontSize: '0.9rem', fontFamily: 'inherit',
+                                        boxShadow: '0 2px 12px hsl(174 62% 28% / 0.3)',
+                                        transition: 'box-shadow 0.2s',
+                                    }}
+                                    onMouseEnter={e => e.currentTarget.style.boxShadow = '0 4px 20px hsl(174 62% 28% / 0.45)'}
+                                    onMouseLeave={e => e.currentTarget.style.boxShadow = '0 2px 12px hsl(174 62% 28% / 0.3)'}
+                                >
+                                    Sign In Now <ArrowRightIcon />
+                                </Link>
+                            </div>
+                        </div>
+                    ) : (
+
+                    // ── FORM STATE ────────────────────────────────────────
                     <div style={{
                         backgroundColor: 'white',
                         borderRadius: '1.25rem',
@@ -269,20 +348,17 @@ const AgentSetup = ({ token, agentName, agentEmail }) => {
                         boxShadow: '0 4px 24px hsl(174 40% 20% / 0.09), 0 1px 4px hsl(174 40% 20% / 0.06)',
                         overflow: 'hidden',
                     }}>
-
                         {/* Teal header */}
                         <div style={{
                             background: 'linear-gradient(135deg, hsl(174 62% 28%) 0%, hsl(174 55% 22%) 100%)',
                             padding: '1.75rem 2rem',
                             position: 'relative', overflow: 'hidden',
                         }}>
-                            {/* Dot grid overlay */}
                             <div style={{
                                 position: 'absolute', inset: 0, pointerEvents: 'none',
                                 backgroundImage: 'radial-gradient(hsl(174 80% 80% / 0.08) 1px, transparent 1px)',
                                 backgroundSize: '18px 18px',
                             }} />
-                            {/* Glow orb */}
                             <div style={{
                                 position: 'absolute', top: '-2rem', right: '-2rem',
                                 width: '8rem', height: '8rem', borderRadius: '50%',
@@ -299,20 +375,19 @@ const AgentSetup = ({ token, agentName, agentEmail }) => {
                                     marginBottom: '0.75rem',
                                 }}>
                                     <span style={{ fontSize: '0.65rem', fontWeight: 800, letterSpacing: '0.1em', color: 'hsl(174 60% 75%)', textTransform: 'uppercase' }}>
-                                        Agent Activation
+                                        Password Reset
                                     </span>
                                 </div>
                                 <h1 style={{
                                     fontFamily: "'DM Serif Display', Georgia, serif",
                                     fontSize: '1.5rem', fontWeight: 400,
                                     color: 'white', lineHeight: 1.2,
-                                    marginBottom: '0.4rem',
-                                    letterSpacing: '-0.01em',
+                                    marginBottom: '0.4rem', letterSpacing: '-0.01em',
                                 }}>
-                                    Welcome, {agentName.split(' ')[0]}
+                                    Create a new password
                                 </h1>
                                 <p style={{ fontSize: '0.82rem', color: 'hsl(174 30% 72%)', lineHeight: 1.5 }}>
-                                    Set a password to activate your agent account on RentTrustGH.
+                                    Choose a strong password to secure your RentTrustGH account.
                                 </p>
                             </div>
                         </div>
@@ -326,21 +401,20 @@ const AgentSetup = ({ token, agentName, agentEmail }) => {
                             border: '1px solid hsl(174 35% 88%)',
                             display: 'flex', alignItems: 'center', gap: '0.65rem',
                         }}>
-                            {/* Avatar */}
                             <div style={{
                                 width: '2.25rem', height: '2.25rem', borderRadius: '50%', flexShrink: 0,
                                 backgroundColor: 'hsl(174 62% 32%)',
                                 color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                fontSize: '0.78rem', fontWeight: 800, letterSpacing: '0.02em',
+                                fontSize: '0.78rem', fontWeight: 800,
                             }}>
-                                {agentName.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()}
+                                {emailInitial}
                             </div>
                             <div style={{ minWidth: 0 }}>
                                 <div style={{ fontSize: '0.82rem', fontWeight: 700, color: 'hsl(200 25% 15%)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                    {agentName}
+                                    {email}
                                 </div>
-                                <div style={{ fontSize: '0.72rem', color: 'hsl(174 40% 38%)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                    {agentEmail}
+                                <div style={{ fontSize: '0.72rem', color: 'hsl(174 40% 38%)' }}>
+                                    Resetting password for this account
                                 </div>
                             </div>
                             <div style={{
@@ -350,7 +424,7 @@ const AgentSetup = ({ token, agentName, agentEmail }) => {
                                 backgroundColor: 'hsl(174 62% 32%)', color: 'white',
                                 textTransform: 'uppercase',
                             }}>
-                                Agent
+                                {roleLabel}
                             </div>
                         </div>
 
@@ -359,7 +433,7 @@ const AgentSetup = ({ token, agentName, agentEmail }) => {
                             <div style={{ padding: '1.25rem 1.75rem', display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
 
                                 <PasswordField
-                                    label="Create Password"
+                                    label="New Password"
                                     value={data.password}
                                     onChange={e => setData('password', e.target.value)}
                                     error={errors.password}
@@ -390,7 +464,7 @@ const AgentSetup = ({ token, agentName, agentEmail }) => {
                                     label="Confirm Password"
                                     value={data.password_confirmation}
                                     onChange={e => setData('password_confirmation', e.target.value)}
-                                    error={confirmHasError && !errors.password_confirmation ? 'Passwords do not match.' : errors.password_confirmation}
+                                    error={confirmError}
                                     show={showPw2}
                                     onToggle={() => setShowPw2(v => !v)}
                                     placeholder="••••••••"
@@ -407,49 +481,69 @@ const AgentSetup = ({ token, agentName, agentEmail }) => {
                                     </div>
                                 )}
 
+                                {/* General error (e.g. invalid/expired token) */}
+                                {errors.email && (
+                                    <div style={{
+                                        padding: '0.75rem 1rem', borderRadius: '0.65rem',
+                                        backgroundColor: 'hsl(0 72% 51% / 0.06)',
+                                        border: '1px solid hsl(0 72% 51% / 0.2)',
+                                        fontSize: '0.8rem', color: 'hsl(0 65% 44%)', fontWeight: 600,
+                                    }}>
+                                        {errors.email}
+                                    </div>
+                                )}
+
                                 {/* Submit */}
                                 <button
                                     type="submit"
                                     disabled={processing}
                                     style={{
-                                        width: '100%',
-                                        padding: '0.875rem',
-                                        border: 'none',
+                                        width: '100%', padding: '0.875rem', border: 'none',
                                         borderRadius: '0.75rem',
                                         background: processing || !allReqsMet
                                             ? 'hsl(174 20% 78%)'
                                             : 'linear-gradient(135deg, hsl(174 62% 32%), hsl(174 55% 26%))',
                                         color: processing || !allReqsMet ? 'hsl(174 10% 55%)' : 'white',
-                                        fontSize: '0.9rem',
-                                        fontWeight: 700,
+                                        fontSize: '0.9rem', fontWeight: 700,
                                         cursor: processing ? 'not-allowed' : 'pointer',
                                         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
-                                        fontFamily: 'inherit',
-                                        transition: 'all 0.2s',
+                                        fontFamily: 'inherit', transition: 'all 0.2s',
                                         boxShadow: processing || !allReqsMet ? 'none' : '0 2px 12px hsl(174 62% 28% / 0.3)',
                                         marginTop: '0.25rem',
                                     }}
                                     onMouseEnter={e => { if (!processing && allReqsMet) e.currentTarget.style.boxShadow = '0 4px 20px hsl(174 62% 28% / 0.4)'; }}
                                     onMouseLeave={e => { if (!processing && allReqsMet) e.currentTarget.style.boxShadow = '0 2px 12px hsl(174 62% 28% / 0.3)'; }}
                                 >
-                                    {processing ? <><SpinnerIcon /> Activating account…</> : 'Activate My Account →'}
+                                    {processing ? <><SpinnerIcon /> Resetting password…</> : 'Reset Password →'}
                                 </button>
+
+                                {/* Back to login */}
+                                <p style={{ textAlign: 'center', fontSize: '0.78rem', color: 'hsl(200 15% 52%)' }}>
+                                    Remembered it?{' '}
+                                    <Link href="/login" style={{ color: 'hsl(174 62% 32%)', fontWeight: 700, textDecoration: 'none' }}>
+                                        Back to sign in
+                                    </Link>
+                                </p>
                             </div>
                         </form>
                     </div>
+                    )}
 
                     {/* Footer note */}
-                    <p style={{
-                        textAlign: 'center', marginTop: '1.25rem',
-                        fontSize: '0.75rem', color: 'hsl(200 15% 52%)', lineHeight: 1.6,
-                    }}>
-                        This link is single-use and will expire after activation.<br />
-                        Need help? Contact <span style={{ color: 'hsl(174 62% 32%)', fontWeight: 600 }}>renttrust2026@gmail.com</span>
-                    </p>
+                    {!resetDone && (
+                        <p style={{
+                            textAlign: 'center', marginTop: '1.25rem',
+                            fontSize: '0.75rem', color: 'hsl(200 15% 52%)', lineHeight: 1.6,
+                        }}>
+                            This link expires in 24 hours.<br />
+                            Need help? Contact{' '}
+                            <span style={{ color: 'hsl(174 62% 32%)', fontWeight: 600 }}>renttrust2026@gmail.com</span>
+                        </p>
+                    )}
                 </div>
             </div>
         </>
     );
 };
 
-export default AgentSetup;
+export default ResetPasswordPage;

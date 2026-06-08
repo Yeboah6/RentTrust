@@ -314,71 +314,71 @@ class PaymentsController extends Controller
      *  3. Update user.package to the plan slug.
      *  4. Log the action.
      */
-    public function grantSubscription(Request $request, int $userId)
-    {
-        $request->validate([
-            'plan_id'         => 'required|integer|exists:plans,id',
-            'duration_months' => 'required|integer|min:1|max:24',
-        ]);
+    // public function grantSubscription(Request $request, int $userId)
+    // {
+    //     $request->validate([
+    //         'plan_id'         => 'required|integer|exists:plans,id',
+    //         'duration_months' => 'required|integer|min:1|max:24',
+    //     ]);
 
-        $user = User::findOrFail($userId);
-        $plan = Plan::findOrFail($request->plan_id);
+    //     $user = User::findOrFail($userId);
+    //     $plan = Plan::findOrFail($request->plan_id);
 
-        DB::transaction(function () use ($user, $plan, $request) {
-            // Cancel existing active subscription
-            Subscription::where('user_id', $user->id)
-                ->where('status', 'active')
-                ->update(['status' => 'cancelled']);
+    //     DB::transaction(function () use ($user, $plan, $request) {
+    //         // Cancel existing active subscription
+    //         Subscription::where('user_id', $user->id)
+    //             ->where('status', 'active')
+    //             ->update(['status' => 'cancelled']);
 
-            $months = (int) $request->duration_months;
-            $now    = now();
+    //         $months = (int) $request->duration_months;
+    //         $now    = now();
 
-            // Create the complimentary subscription
-            Subscription::create([
-                'subscription_uuid'             => Subscription::generateUUID(),
-                'user_id'                   => $user->id,
-                'plan_id'                   => $plan->id,
-                'provider'                  => 'admin_grant',
-                'provider_subscription_id'  => 'admin_grant_' . $user->id . '_' . $now->timestamp,
-                'provider_customer_code'    => null,
-                'status'                    => 'active',
-                'starts_at'                 => $now,
-                'ends_at'                   => $now->copy()->addMonths($months),
-                'grace_ends_at'             => $now->copy()->addMonths($months)->addDays(3),
-                'meta'                      => [
-                    'granted_by'      => auth()->id(),
-                    'granted_at'      => $now->toIso8601String(),
-                    'reason'          => $request->reason ?? 'Admin grant',
-                    'duration_months' => $months,
-                ],
-            ]);
+    //         // Create the complimentary subscription
+    //         Subscription::create([
+    //             'subscription_uuid'             => Subscription::generateUUID(),
+    //             'user_id'                   => $user->id,
+    //             'plan_id'                   => $plan->id,
+    //             'provider'                  => 'admin_grant',
+    //             'provider_subscription_id'  => 'admin_grant_' . $user->id . '_' . $now->timestamp,
+    //             'provider_customer_code'    => null,
+    //             'status'                    => 'active',
+    //             'starts_at'                 => $now,
+    //             'ends_at'                   => $now->copy()->addMonths($months),
+    //             'grace_ends_at'             => $now->copy()->addMonths($months)->addDays(3),
+    //             'meta'                      => [
+    //                 'granted_by'      => auth()->id(),
+    //                 'granted_at'      => $now->toIso8601String(),
+    //                 'reason'          => $request->reason ?? 'Admin grant',
+    //                 'duration_months' => $months,
+    //             ],
+    //         ]);
 
-            // Upgrade user's package field
-            $user->update(['package' => $plan->slug]);
-        });
+    //         // Upgrade user's package field
+    //         $user->update(['package' => $plan->slug]);
+    //     });
 
-        Log::info('Admin granted subscription', [
-            'target_user_id'  => $userId,
-            'plan_id'         => $plan->id,
-            'plan_slug'       => $plan->slug,
-            'duration_months' => $request->duration_months,
-            'admin_id'        => auth()->id(),
-        ]);
+    //     Log::info('Admin granted subscription', [
+    //         'target_user_id'  => $userId,
+    //         'plan_id'         => $plan->id,
+    //         'plan_slug'       => $plan->slug,
+    //         'duration_months' => $request->duration_months,
+    //         'admin_id'        => auth()->id(),
+    //     ]);
 
-        AdminAuditLog::record('subscription', 'Subscription granted', [
-            'affected_user' => $user->name,
-            'affected_id' => $user->id,
-            'notes' => "Admin granted {$plan->name} plan for {$request->duration_months} month(s).",
-            'properties' => [
-                'plan_id' => $plan->id,
-                'plan_slug' => $plan->slug,
-                'duration_months' => $request->duration_months,
-                'granted_by' => auth()->id(),
-            ],
-        ]);
+    //     AdminAuditLog::record('subscription', 'Subscription granted', [
+    //         'affected_user' => $user->name,
+    //         'affected_id' => $user->id,
+    //         'notes' => "Admin granted {$plan->name} plan for {$request->duration_months} month(s).",
+    //         'properties' => [
+    //             'plan_id' => $plan->id,
+    //             'plan_slug' => $plan->slug,
+    //             'duration_months' => $request->duration_months,
+    //             'granted_by' => auth()->id(),
+    //         ],
+    //     ]);
 
-        return back()->with('success', "Granted {$plan->name} plan to {$user->name} for {$request->duration_months} month(s).");
-    }
+    //     return back()->with('success', "Granted {$plan->name} plan to {$user->name} for {$request->duration_months} month(s).");
+    // }
 
     /**
      * Ajax-compatible filter for the payments table.

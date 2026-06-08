@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Header from '../Components/Layouts/Header';
 import Footer from '../Components/Layouts/Footer';
 import { Link, usePage, useForm } from "@inertiajs/react";
@@ -107,7 +107,14 @@ export default function SaleDetailsPage({ rental, reviews, days_on_market }) {
         }
     };
 
+    const hasTrackedView = useRef(false);
+
     useEffect(() => {
+        if (hasTrackedView.current || !rental?.id) {
+            return;
+        }
+
+        hasTrackedView.current = true;
         const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
         if (token) {
             fetch(`/api/listings/${rental.id}/track-view`, {
@@ -115,7 +122,7 @@ export default function SaleDetailsPage({ rental, reviews, days_on_market }) {
                 headers: { 'X-CSRF-TOKEN': token },
             }).catch(() => {});
         }
-    }, [rental.id]);
+    }, [rental?.id]);
 
     const handlePrevImage = (e) => {
         e.stopPropagation();

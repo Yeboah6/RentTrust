@@ -135,8 +135,8 @@ const PlanCard = ({ plan, palette, index, onEditClick }) => {
                 borderBottom: features.length ? '1px solid hsl(220 15% 95%)' : 'none',
             }}>
                 {[
-                    { label: 'Subscribers', value: plan.subscribers_count ?? '—', icon: <UsersIcon /> },
-                    { label: 'Rental Listings', value: plan.listing_limit ?? '∞' },
+                    { label: 'Listings', value: plan.listing_limit ?? '∞', icon: <UsersIcon /> },
+                    { label: 'Rental Listings', value: plan.rental_limit ?? '∞' },
                     { label: 'Sale Listings', value: plan.sale_limit ?? '∞' },
                 ].map((stat, i, arr) => (
                     <div key={i} style={{

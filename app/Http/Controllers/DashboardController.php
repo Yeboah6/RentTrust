@@ -146,6 +146,7 @@ class DashboardController extends Controller
             ->get();
         $reports = Report::with('rental', 'rental.user')->get();
         $reviews = Review::with('rental')->get();
+        $inquiries = ListingInquiry::with('rental')->get();
         $verifications = VerificationRequest::with(['rental', 'agent'])->orderBy('created_at', 'desc')->get();
 
         $locations = Location::all();
@@ -158,6 +159,7 @@ class DashboardController extends Controller
             'agentData' => $agentData,
             'reports' => $reports,
             'reviews' => $reviews,
+            'inquiries' => $inquiries,
             'verifications' => $verifications,
             'locations' => $locations,
             'propertyTypes' => $propertyTypes,

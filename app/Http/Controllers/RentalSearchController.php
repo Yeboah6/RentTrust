@@ -268,6 +268,29 @@ class RentalSearchController extends Controller
         ]);
     }
 
+    public function showProperty(Request $request, string $areaSlug, string $propertySlug) {
+        $areaName = str_replace('-', ' ', $areaSlug);
+
+        $rental = Rental::where('purpose', 'rent')
+            ->where('status', 'approved')
+            ->where('is_sold', false)
+            ->where('slug', $propertySlug)
+            ->where(function ($query) use ($areaName) {
+                $query->whereRaw('LOWER(area) = ?', [strtolower($areaName)])
+                      ->orWhereRaw('LOWER(area) LIKE ?', ['%' . strtolower($areaName) . '%']);
+            })
+            ->firstOrFail();
+
+            $rental->load('user');
+            $reviews = $rental->reviews()->orderBy('created_at', 'desc')->get();
+
+            return inertia('PropertyDetailsPage', [
+                'rental' => $rental,
+                'reviews' => $reviews,
+                'seo' => app(SeoService::class)->propertyMeta($rental),
+            ]);
+    }
+
     public function showAreaBySlug(Request $request, string $areaSlug)
     {
         $areaName = str_replace('-', ' ', $areaSlug);
@@ -307,48 +330,4 @@ class RentalSearchController extends Controller
         ]);
     }
 
-    public function showProperty(Request $request, string $areaSlug, string $propertySlug)
-    {
-        $areaName = str_replace('-', ' ', $areaSlug);
-
-        $rental = Rental::where('purpose', 'rent')
-            ->where('status', 'approved')
-            ->where('is_sold', false)
-            ->where('slug', $propertySlug)
-            ->where(function ($query) use ($areaName) {
-                $query->whereRaw('LOWER(area) = ?', [strtolower($areaName)])
-                      ->orWhereRaw('LOWER(area) LIKE ?', ['%' . strtolower($areaName) . '%']);
-            })
-            ->firstOrFail();
-
-        $rental->load('user');
-        $reviews = $rental->reviews()->orderBy('created_at', 'desc')->get();
-
-        return inertia('PropertyDetailsPage', [
-            'rental' => $rental,
-            'reviews' => $reviews,
-            'seo' => app(SeoService::class)->propertyMeta($rental),
-        ]);
-    }
-
-    /**
-     * Track listing view
-     */
-    private function trackView(Request $request, Rental $rental)
-    {
-        try {
-            $ip = $request->ip();
-            if (!\App\Models\ListingView::hasViewInWindow($rental->id, $ip)) {
-                \App\Models\ListingView::create([
-                    'rental_id' => $rental->id,
-                    'user_id' => auth()->id(),
-                    'ip' => $ip,
-                    'user_agent' => $request->userAgent(),
-                    'referrer' => $request->headers->get('referer'),
-                ]);
-            }
-        } catch (\Exception $e) {
-            Log::warning('Failed to track rental view: ' . $e->getMessage());
-        }
-    }
 }

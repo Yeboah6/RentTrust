@@ -7,6 +7,15 @@ use App\Http\Controllers\RentController;
 use App\Http\Controllers\RentalSearchController;
 use App\Http\Controllers\SaleSearchController;
 use App\Http\Controllers\AgentController;
+
+use App\Http\Controllers\Admin\AgentsController;
+use App\Http\Controllers\Admin\ListingController;
+use App\Http\Controllers\Admin\ReviewResponseController;
+
+use App\Http\Controllers\Agent\ResponseController;
+
+use App\Http\Controllers\ReviewController;
+
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PasswordResetController;
@@ -51,9 +60,10 @@ Route::prefix('rent')->group(function () {
     Route::get('/areas', [RentalSearchController::class, 'areas'])->name('rent.areas');
     Route::get('/areas/{city}/{area}', [RentalSearchController::class, 'showArea'])->name('areas.show');
     Route::get('/api/more', [RentalSearchController::class, 'getMore'])->name('rent.more');
-    Route::get('/listings', [RentalSearchController::class, 'listings']);
     Route::get('/api/cities', [RentalSearchController::class, 'cities'])->name('rent.cities');
     Route::get('/api/areas', [RentalSearchController::class, 'getAreas'])->name('rent.api.areas');
+    Route::get('/{areaSlug}/{propertySlug}', [RentalSearchController::class, 'showProperty'])->name('rent.property.show');
+    Route::get('/listings', [RentalSearchController::class, 'listings']);
 });
 
 // ── Sale Search Routes ────────────────────────────────────────────────────────
@@ -61,10 +71,11 @@ Route::prefix('buy')->group(function () {
     Route::get('/listings', [SaleSearchController::class, 'index'])->name('buy.index');
     Route::get('/areas', [SaleSearchController::class, 'areas'])->name('buy.areas');
     Route::get('/areas/{city}/{area}', [SaleSearchController::class, 'showArea'])->name('buy.areas.show');
-    Route::get('/{rent}', [SaleSearchController::class, 'show'])->where(['rent' => '[0-9]+']);
     Route::get('/api/more', [SaleSearchController::class, 'getMore'])->name('buy.more');
     Route::get('/api/cities', [SaleSearchController::class, 'cities'])->name('buy.cities');
     Route::get('/api/areas', [SaleSearchController::class, 'getAreas'])->name('buy.api.areas');
+    Route::get('/{areaSlug}/{propertySlug}', [SaleSearchController::class, 'showProperty'])->name('buy.property.show');
+    Route::get('/{rent}', [SaleSearchController::class, 'show'])->where(['rent' => '[0-9]+']);
 });
 
 // tracking endpoints
@@ -77,12 +88,12 @@ Route::get('/api/listings/{rent}/analytics', [AgentAnalyticsController::class, '
 Route::get('/api/areas/search', [RentController::class, 'searchAreas'])->name('areas.search');
 Route::get('/api/areas/city/{city}', [RentController::class, 'getAreasByCity'])->name('areas.by-city');
 
+// Review & Report endpoints
+Route::get('/reviews-reports', [ReviewController::class, 'reviews']);
+Route::post('/report-listing', [ReviewController::class, 'reportListing'])->name('report.listing');
 
-Route::get('/reviews-reports', [RentController::class, 'reviews']);
-Route::post('/report-listing', [RentController::class, 'reportListing'])->name('report.listing');
-
-Route::post('/review-forms', [RentController::class, 'storeReviewForms']);
-Route::post('/reviews/app', [RentController::class, 'storeReviewApp'])->name('reviews.app');
+Route::post('/review-forms', [ReviewController::class, 'storeReviewForms']);
+Route::post('/reviews/app', [ReviewController::class, 'storeReviewApp'])->name('reviews.app');
 
 // ── Pricing page (public) ────────────────────────────────────────────────────
 Route::get('pricing', [RentController::class, 'pricing'])->name('pricing.page');
@@ -104,7 +115,7 @@ Route::post('/become-agent', [AgentController::class, 'storeBecomeAgent']);
 Route::middleware(['auth', 'verified', 'throttle:60,1', 'role:agent'])->group(function () {
     Route::get('/agent-dashboard', [DashboardController::class, 'agentDashboard'])->name('agent.dashboard');
     Route::post('/rent', [RentController::class, 'store']);
-    Route::put('/response', [RentController::class, 'response']);
+    Route::put('/response', [ResponseController::class, 'response']);
     
     // Verification request routes for agents
     Route::post('/verification-requests', [VerificationsController::class, 'store'])
@@ -147,28 +158,33 @@ Route::middleware(['auth','verified'])->group(function () {
 // ── Admin Routes ──────────────────────────────────────────────────────────────
 Route::middleware(['auth','verified','throttle:60,1','role:admin'])->group(function () {
     Route::get('/admin', [DashboardController::class, 'adminDashboard'])->name('admin.dashboard');
+
     // Allow admins to create and edit listings via dedicated admin endpoints
     Route::post('/admin/rent', [RentController::class, 'store'])->name('admin.rent.store');
     Route::put('/admin/rent/{rent}', [RentController::class, 'update'])->name('admin.rent.update');
-    // Allow admins to create and update agent details
-    Route::get('/admin/agents/check-email', [AuthController::class, 'checkEmail'])->name('admin.agents.check-email');
-    Route::post('/admin/agents', [AuthController::class, 'storeAgentByAdmin'])->name('admin.agents.store');
-    Route::put('/admin/agents/{id}', [AuthController::class, 'updateAgentByAdmin'])->name('admin.agents.update');
+
+    // Allow admins to create and update agent details 
+    Route::get('/admin/agents/check-email', [AgentsController::class, 'checkEmail'])->name('admin.agents.check-email');
+    Route::post('/admin/agents', [AgentsController::class, 'storeAgentByAdmin'])->name('admin.agents.store');
+    Route::put('/admin/agents/{id}', [AgentsController::class, 'updateAgentByAdmin'])->name('admin.agents.update');
+    Route::post('/admin/agents/{userId}/grant-subscription', [AgentsController::class, 'grantSubscription'])
+        ->name('admin.agents.grant-subscription');
+    // Agent verification and management
+    Route::put('/admin/agents/{id}/verify', [AgentsController::class, 'verifyAgent'])
+        ->name('admin.verify.agent');
+    Route::put('/admin/agents/{id}/suspend', [AgentsController::class, 'suspendAgent'])
+        ->name('admin.suspend.agent');
+    Route::post('/admin/agents/{id}/resend-invitation', [AgentsController::class, 'resendInvitation'])
+        ->name('admin.agents.resend-invitation');
     
     // Report management
-    Route::put('/admin/reports/{id}/status', [RentController::class, 'updateReportStatus'])
+    Route::put('/admin/reports/{id}/status', [ReviewResponseController::class, 'updateReportStatus'])
         ->name('admin.reports.status');
-    Route::get('/admin/reports/{report}/evidence/{filename}', [RentController::class, 'downloadReportEvidence'])
+    Route::get('/admin/reports/{report}/evidence/{filename}', [ReviewResponseController::class, 'downloadReportEvidence'])
         ->name('admin.reports.evidence.download');
     
-    // Agent verification and management
-    Route::put('/admin/agents/{id}/verify', [VerificationsController::class, 'verifyAgent'])
-        ->name('admin.verify.agent');
-    Route::put('/admin/agents/{id}/suspend', [VerificationsController::class, 'suspendAgent'])
-        ->name('admin.suspend.agent');
-    
     // Listing approval
-    Route::put('/admin/listings/{rent}/toggle-approval', [RentController::class, 'toggleApprovalStatus'])
+    Route::put('/admin/listings/{rent}/toggle-approval', [ListingController::class, 'toggleApprovalStatus'])
         ->name('admin.listings.toggle-approval');
     
     // Rental verification request management
@@ -182,9 +198,6 @@ Route::middleware(['auth','verified','throttle:60,1','role:admin'])->group(funct
     // Payment management
     Route::get('/admin/payments/dashboard', [PaymentsController::class, 'paymentDashboard'])
         ->name('admin.payments.dashboard');
-
-    Route::post('/admin/agents/{userId}/grant-subscription', [PaymentsController::class, 'grantSubscription'])
-        ->name('admin.agents.grant-subscription');
 
     Route::post('/admin/payments/{id}/refund', [PaymentsController::class, 'refundPayment'])
         ->name('admin.payments.refund');
@@ -205,27 +218,21 @@ Route::middleware(['auth','verified'])->group(function () {
 });
 
 Route::middleware('guest')->group(function () {
- 
     // Login
     Route::get('/login', [AuthController::class, 'showLogin'])
         ->name('login');
- 
     Route::post('/login', [AuthController::class, 'login']);
- 
+
     // Register
     Route::get('/sign-up', [AuthController::class, 'showRegister'])
         ->name('register');
- 
     Route::post('/sign-up', [AuthController::class, 'register']);
 });
 
 Route::middleware('guest')->group(function () {
- 
     Route::get('/agent/setup/{token}', [AgentSetupController::class, 'show'])
         ->name('agent.setup');
-
     Route::post('/agent/setup/{token}', [AgentSetupController::class, 'store']);
-
 });
 
 Route::get('/check-email', [AuthController::class, 'checkEmail'])
@@ -233,7 +240,6 @@ Route::get('/check-email', [AuthController::class, 'checkEmail'])
     ->name('check-email');
 
 Route::middleware('auth')->group(function () {
- 
     Route::post('/logout', [AuthController::class, 'logout'])
         ->name('logout');
 });

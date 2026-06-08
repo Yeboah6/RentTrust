@@ -223,7 +223,7 @@ class SaleSearchController extends Controller
         $rental->load('user');
         $reviews = $rental->reviews()->orderBy('created_at', 'desc')->get();
 
-        return inertia('SalesDetailPage', [
+        return inertia('SaleDetailsPage', [
             'rental' => $rental,
             'reviews' => $reviews,
             'price_label' => 'Sale Price',
@@ -302,7 +302,7 @@ class SaleSearchController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return inertia('SalesDetailPage', [
+        return inertia('SaleDetailsPage', [
             'rental' => $rent,
             'reviews' => $reviews,
             'price_label' => 'Sale Price',

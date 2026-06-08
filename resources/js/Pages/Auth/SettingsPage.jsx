@@ -17,14 +17,13 @@ const AdminSettingsPage = () => {
   const userAgent = !!auth?.agent;
   const userAdmin = !!auth?.super;
 
-  // console.log("Auth Data:", userAgent, userAdmin);
-
   const userFullName = auth?.agent?.name || auth?.super?.name || "";
   const userEmail = auth?.agent?.email || auth?.super?.email || "";
   const userphone = auth?.agent?.phone || auth?.super?.phone || "";
+  const userlocation = auth?.agent?.location || auth?.super?.location || "";
   const userbio = auth?.agent?.bio || auth?.super?.bio || "";
+  const userRole = auth?.agent?.type || auth?.super?.type || "";
   const userCompany = auth?.agent?.company || auth?.super?.company || "";
-  const userType = auth?.agent?.type || auth?.super?.type || "";
   const userFee = auth?.agent?.fee || auth?.super?.fee || "";
   const userStatus = auth?.agent?.status || auth?.super?.status || "";
 
@@ -33,10 +32,11 @@ const AdminSettingsPage = () => {
     name: userFullName,
     email: userEmail,
     phone: userphone,
+    location: userlocation,
     bio: userbio,
     company: userCompany,
     fee: userFee,
-    role: userType,
+    role: userRole,
   });
 
   const adminForm = useForm({
@@ -44,6 +44,9 @@ const AdminSettingsPage = () => {
     email: userEmail,
     phone: userphone,
     bio: userbio,
+    location: userlocation,
+    company: userCompany,
+    fee: userFee,
   });
 
   // Use the appropriate form based on user type
@@ -332,6 +335,33 @@ const AdminSettingsPage = () => {
                         }}
                       />
                       {errors.phone && <p style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '0.25rem' }}>{errors.phone}</p>}
+                    </div>
+
+                    {/* Location */}
+                    <div>
+                      <label style={{
+                        display: 'block',
+                        fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)',
+                        fontWeight: '500',
+                        color: '#374151',
+                        marginBottom: '0.5rem'
+                      }}>
+                        Location
+                      </label>
+                      <input
+                        type="tel"
+                        value={data.location}
+                        onChange={(e) => setData('location', e.target.value)}
+                        style={{
+                          width: '100%',
+                          padding: 'clamp(0.625rem, 2vw, 0.75rem)',
+                          border: '1px solid #d1d5db',
+                          borderRadius: '0.375rem',
+                          fontSize: 'clamp(0.875rem, 2vw, 1rem)',
+                          outline: 'none'
+                        }}
+                      />
+                      {errors.location && <p style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '0.25rem' }}>{errors.location}</p>}
                     </div>
 
                     {userAgent && (

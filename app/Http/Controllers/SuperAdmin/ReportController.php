@@ -40,4 +40,8 @@ class ReportController extends Controller
             ],
         ]);
     }
+
+    // public function analytics() {
+    //     return Inertia::render('SuperAdmin/Analytics/Index');
+    // }
 }

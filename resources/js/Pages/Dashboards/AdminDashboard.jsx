@@ -96,12 +96,12 @@ const PlanBadge = ({ plan }) => {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, verifications, plans, locations, propertyTypes, amenities }) => {
+const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, verifications, plans, locations, propertyTypes, amenities, inquiries }) => {
   const { auth } = usePage().props;
   const findPlan = (packageSlug) => plans?.find(p => p.slug === packageSlug) ?? null;
   const [activeTab, setActiveTab] = useState("agents");
-  const [respondingTo, setRespondingTo] = useState(null);
-  const [responseText, setResponseText] = useState("");
+  // const [respondingTo, setRespondingTo] = useState(null);
+  // const [responseText, setResponseText] = useState("");
   const [selectedAgent, setSelectedAgent] = useState(null);
   const [showDialog, setShowDialog] = useState(false);
   const [selectedRental, setSelectedRental] = useState(null);
@@ -198,10 +198,18 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, verif
   };
 
   const handleDeleteListing = (property) => {
-    if (!confirm(`Delete "${property.title}"? This cannot be undone.`)) return;
-    router.delete(`/rent/${property.id}`, {}, {
-      onSuccess: () => showToast('Listing Deleted', `"${property.title}" deleted.`),
-      onError: () => showToast('Delete Failed', 'Unable to delete.', 'error'),
+    if (!confirm(`Are you sure you want to delete "${property.title}"?`)) return;
+    router.delete(`/admin/listings/${property.id}`, {
+      onSuccess: () => showToast('Listing Deleted', 'Listing has been removed.'),
+      onError: () => showToast('Failed', 'Unable to delete listing.', 'error'),
+    });
+  };
+
+  const handleResendInvitation = (agentItem) => {
+    if (!confirm(`Resend invitation email to ${agentItem.name}?`)) return;
+    router.post(`/admin/agents/${agentItem.id}/resend-invitation`, {}, {
+      onSuccess: () => showToast('Invitation Sent', `Invitation email sent to ${agentItem.email}`),
+      onError: () => showToast('Failed', 'Unable to resend invitation.', 'error'),
     });
   };
 
@@ -428,6 +436,7 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, verif
                   <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: 'hsl(200 15% 45%)' }}><Home style={{ height: '1rem', width: '1rem' }} />{agent.total_listings} Listings</span>
                   <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: 'hsl(200 15% 45%)' }}><AlertCircle style={{ height: '1rem', width: '1rem' }} />{reports.length} Reports</span>
                   <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: 'hsl(200 15% 45%)' }}><MessageSquare style={{ height: '1rem', width: '1rem' }} />{reviews.length} Reviews</span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: 'hsl(200 15% 45%)' }}><MessageSquare style={{ height: '1rem', width: '1rem' }} />{inquiries.length} inquiries</span>
                 </div>
               </div>
               <Link href="/settings" style={{ padding: '0.5rem 1rem', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.5rem', backgroundColor: 'white', color: 'hsl(174 62% 32%)', fontWeight: '500', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none', alignSelf: 'flex-start' }}>
@@ -437,13 +446,14 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, verif
 
             {/* Tabs */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '0.5rem', backgroundColor: 'hsl(40 30% 94%)', padding: '0.25rem', borderRadius: '0.5rem', marginBottom: '2rem' }}>
-              {['agents', 'listings', 'verifications', 'reports', 'reviews'].map(tab => (
+              {['agents', 'listings', 'verifications', 'reports', 'reviews', 'inquiries'].map(tab => (
                 <button key={tab} onClick={() => setActiveTab(tab)} style={{ padding: '0.5rem 1rem', border: 'none', borderRadius: '0.375rem', backgroundColor: activeTab === tab ? 'white' : 'transparent', color: activeTab === tab ? 'hsl(200 25% 15%)' : 'hsl(200 15% 45%)', fontWeight: '500', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', transition: 'all 0.2s', boxShadow: activeTab === tab ? '0 1px 2px 0 hsl(200 25% 15% / 0.05)' : 'none', textTransform: 'capitalize' }}>
                   {tab === 'agents' && <Shield style={{ height: '1rem', width: '1rem' }} />}
                   {tab === 'listings' && <Home style={{ height: '1rem', width: '1rem' }} />}
                   {tab === 'verifications' && <ShieldCheck style={{ height: '1rem', width: '1rem' }} />}
                   {tab === 'reports' && <AlertCircle style={{ height: '1rem', width: '1rem' }} />}
                   {tab === 'reviews' && <MessageSquare style={{ height: '1rem', width: '1rem' }} />}
+                  {tab === 'inquiries' && <MessageSquare style={{ height: '1rem', width: '1rem' }} />}
                   {tab}
                 </button>
               ))}
@@ -478,12 +488,13 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, verif
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
                         <div style={{ flex: 1, minWidth: '200px' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.375rem', flexWrap: 'wrap' }}>
-                            {/* <h3 style={{ fontWeight: '600', color: 'hsl(200 25% 15%)', fontSize: '0.9rem' }}>{agentItem.name}</h3> */}
+                            <h3 style={{ fontWeight: '600', color: 'hsl(200 25% 15%)', fontSize: '0.9rem' }}>{agentItem.name}</h3>
                             {getStatusBadge(agentItem.status)}
                           </div>
-                          <h3 style={{ fontWeight: '600', color: 'hsl(200 25% 15%)', fontSize: '0.9rem' }}>{agentItem.name}</h3>
+                          {/* <h3 style={{ fontWeight: '600', color: 'hsl(200 25% 15%)', fontSize: '0.9rem' }}>{agentItem.name}</h3> */}
                           <p style={{ fontSize: '0.8rem', color: 'hsl(200 15% 45%)', marginBottom: '0.2rem' }}>{agentItem.email}</p>
                           {agentItem.company && <p style={{ fontSize: '0.8rem', color: 'hsl(200 15% 45%)' }}>{agentItem.company}</p>}
+                          {agentItem.location && <p style={{ fontSize: '0.8rem', color: 'hsl(200 15% 45%)' }}>{agentItem.location}</p>}
                         </div>
                         {/* Plan badge */}
                         <PlanBadge plan={findPlan(agentItem.package)} />
@@ -493,7 +504,12 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, verif
                       <div style={{ display: 'flex', gap: '1rem', fontSize: '0.73rem', color: 'hsl(200 15% 50%)', marginBottom: '1rem', flexWrap: 'wrap' }}>
                         <span>{agentItem.rentals_count ?? agentItem.total_listings ?? 0} listings</span>
                         <span>Joined {new Date(agentItem.created_at).toLocaleDateString()}</span>
-                        <span>Last active {new Date(agentItem.last_active).toLocaleDateString()}</span>
+                        <span>Last Active</span>
+                        <span>
+                          {agentItem.last_active
+                            ? new Date(agentItem.last_active).toLocaleDateString()
+                            : 'Not Active Yet'}
+                        </span>
                         {agentItem.subscription && agentItem.subscription.starts_at && (
                           <span>Plan starts {new Date(agentItem.subscription.starts_at).toLocaleDateString()}</span>
                         )}
@@ -512,6 +528,10 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, verif
                           Edit Agent
                         </button>
 
+                        <button onClick={() => handleResendInvitation(agentItem)} style={{ padding: '0.35rem 0.7rem', border: '1px solid hsl(39 100% 50%)', borderRadius: '0.375rem', backgroundColor: 'white', color: 'hsl(39 100% 50%)', fontSize: '0.8rem', fontWeight: '500', cursor: 'pointer' }}>
+                          📧 Resend Invite
+                        </button>
+
                         {(agentItem.status === 'unverified' || agentItem.status === 'pending') && (
                           <button onClick={() => handleVerifyClick(agentItem.id)} style={{ padding: '0.35rem 0.7rem', background: 'linear-gradient(135deg, hsl(152 60% 40%) 0%, hsl(152 50% 35%) 100%)', color: 'white', border: 'none', borderRadius: '0.375rem', fontSize: '0.8rem', fontWeight: '500', cursor: 'pointer' }}>
                             Verify
@@ -519,7 +539,7 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, verif
                         )}
 
                         {agentItem.status === 'verified' && (
-                          <button onClick={() => { if (!confirm(`Mark ${agentItem.fullName} as unverified?`)) return; router.put(`/admin/agents/${agentItem.id}/suspend`, { status: 'unverified' }, { onSuccess: () => showToast('Updated', `${agentItem.fullName} is now unverified`), onError: () => showToast('Error', 'Failed', 'error') }); }} style={{ padding: '0.35rem 0.7rem', backgroundColor: 'white', color: 'hsl(200 25% 15%)', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.375rem', fontSize: '0.8rem', fontWeight: '500', cursor: 'pointer' }}>
+                          <button onClick={() => { if (!confirm(`Mark ${agentItem.name} as unverified?`)) return; router.put(`/admin/agents/${agentItem.id}/suspend`, { status: 'unverified' }, { onSuccess: () => showToast('Updated', `${agentItem.name} is now unverified`), onError: () => showToast('Error', 'Failed', 'error') }); }} style={{ padding: '0.35rem 0.7rem', backgroundColor: 'white', color: 'hsl(200 25% 15%)', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.375rem', fontSize: '0.8rem', fontWeight: '500', cursor: 'pointer' }}>
                             Mark Unverified
                           </button>
                         )}
@@ -930,6 +950,69 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, verif
                 )}
               </div>
             )}
+
+            {activeTab === 'inquiries' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(1rem, 3vw, 1.5rem)' }}>
+                  <h2 style={{ color: 'hsl(200 25% 15%)', fontSize: 'clamp(1rem, 3vw, 1.125rem)', fontWeight: '600' }}>Property Inquiries ({inquiries.length})</h2>
+                  {inquiries.length > 0 ? (
+                    <div className="review-grid" style={{ display: 'grid', gap: 'clamp(0.75rem, 2vw, 1rem)' }}>
+                      {inquiries.map((inquiry) => {
+                        const propertyTitle = rentals?.find(r => r.id === inquiry.rental_id)?.title || `Property #${inquiry.rental_id}`;
+                        const propertyAddress = rentals?.find(r => r.id === inquiry.rental_id)?.address || 'Unknown';
+                        const propertyCity = rentals?.find(r => r.id === inquiry.rental_id)?.city || 'Unknown';
+                        
+                        return (
+                          <div key={inquiry.id} style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.5rem, 2vw, 0.75rem)', padding: 'clamp(0.75rem, 2vw, 1rem)' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 'clamp(0.75rem, 2vw, 1rem)', gap: 'clamp(0.5rem, 2vw, 1rem)', flexWrap: 'wrap' }}>
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <h3 style={{ color: 'hsl(200 25% 15%)', fontSize: 'clamp(0.875rem, 2.5vw, 1rem)', fontWeight: '600', marginBottom: 'clamp(0.25rem, 1vw, 0.5rem)', wordBreak: 'break-word' }}>{propertyTitle}</h3>
+                                <p style={{ fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', color: 'hsl(200 15% 45%)', marginBottom: 'clamp(0.5rem, 2vw, 0.75rem)', wordBreak: 'break-word' }}>{propertyAddress}, {propertyCity}</p>
+                              </div>
+                              <span style={{ padding: 'clamp(0.25rem, 1vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem)', fontSize: 'clamp(0.6875rem, 2vw, 0.75rem)', fontWeight: '500', backgroundColor: 'hsl(174 62% 32% / 0.1)', color: 'hsl(174 62% 32%)', borderRadius: '9999px', whiteSpace: 'nowrap' }}>
+                                {inquiry.type === 'form' ? '📝 Form' : inquiry.type === 'whatsapp' ? '💬 WhatsApp' : '📞 Phone'}
+                              </span>
+                            </div>
+
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.75rem, 2vw, 1rem)', marginBottom: 'clamp(0.75rem, 2vw, 1rem)', paddingBottom: 'clamp(0.75rem, 2vw, 1rem)', borderBottom: '1px solid hsl(40 20% 88%)' }}>
+                              <div style={{ width: 'clamp(2rem, 8vw, 2.5rem)', height: 'clamp(2rem, 8vw, 2.5rem)', borderRadius: '50%', backgroundColor: 'hsl(174 62% 32% / 0.1)', color: 'hsl(174 62% 32%)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 'clamp(0.875rem, 2.5vw, 1rem)', fontWeight: '600', flexShrink: 0 }}>
+                                {inquiry.user?.name?.[0] || 'T'}
+                              </div>
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <p style={{ fontSize: 'clamp(0.875rem, 2.5vw, 1rem)', fontWeight: '500', color: 'hsl(200 25% 15%)', margin: 0, wordBreak: 'break-word' }}>
+                                  {inquiry.user?.name || 'Anonymous Tenant'}
+                                </p>
+                                <p style={{ fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', color: 'hsl(200 15% 45%)', margin: '0.25rem 0 0', wordBreak: 'break-word' }}>
+                                  {inquiry.user?.email || 'No email provided'}
+                                </p>
+                                <p style={{ fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', color: 'hsl(200 15% 45%)', margin: '0.25rem 0 0', wordBreak: 'break-word' }}>
+                                  {inquiry.user?.phone || 'No number provided'}
+                                </p>
+                              </div>
+                              <span style={{ fontSize: 'clamp(0.75rem, 2vw, 0.75rem)', color: 'hsl(200 15% 45%)', whiteSpace: 'nowrap' }}>
+                                {new Date(inquiry.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                              </span>
+                            </div>
+
+                            {inquiry.message && (
+                              <div style={{ backgroundColor: 'hsl(40 33% 98%)', padding: 'clamp(0.75rem, 2vw, 1rem)', borderRadius: 'clamp(0.375rem, 2vw, 0.5rem)', marginBottom: 'clamp(0.75rem, 2vw, 1rem)' }}>
+                                <p style={{ fontSize: 'clamp(0.75rem, 2vw, 0.75rem)', fontWeight: '600', color: 'hsl(200 25% 15%)', marginBottom: '0.5rem' }}>Message:</p>
+                                <p style={{ fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)', color: 'hsl(200 15% 45%)', margin: 0, lineHeight: '1.5', wordBreak: 'break-word' }}>"{inquiry.message}"</p>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.5rem, 2vw, 0.75rem)', padding: 'clamp(1.5rem, 4vw, 2rem)', textAlign: 'center' }}>
+                      <MessageSquare style={{ height: 'clamp(2.5rem, 10vw, 3rem)', width: 'clamp(2.5rem, 10vw, 3rem)', color: 'hsl(200 15% 45%)', margin: '0 auto clamp(0.75rem, 2vw, 1rem) auto' }} />
+                      <h3 style={{ fontSize: 'clamp(1rem, 3vw, 1.125rem)', fontWeight: '600', color: 'hsl(200 25% 15%)', marginBottom: 'clamp(0.375rem, 1.5vw, 0.5rem)' }}>No Inquiries Yet</h3>
+                      <p style={{ color: 'hsl(200 15% 45%)', fontSize: 'clamp(0.875rem, 2vw, 0.875rem)' }}>You haven't received any inquiries from tenants yet.</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
 
           </div>
         </main>

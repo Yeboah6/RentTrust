@@ -96,6 +96,9 @@ const NAV = [
             { label: 'Listings',      href: '/super-admin/listings',      icon: PropertyTypesIcon },
             { label: 'Verification',  href: '/super-admin/listings/verification', icon: CheckCircleIcon },
             { label: 'Reports & Reviews',      href: '/super-admin/reports-reviews',      icon: PropertyTypesIcon },
+            { label: 'Inquiries',         href: '/super-admin/inquiries',         icon: PlansIcon },
+            { label: 'Reports', href: '/super-admin/reports',   icon: LogsIcon },
+            { label: 'Platform Analytics', href: '/super-admin/analytics',   icon: LogsIcon },
         ],
     },
     {
@@ -124,7 +127,6 @@ const NAV = [
         items: [
             { label: 'Impersonate', href: '/super-admin/impersonate', icon: ImpersonateIcon },
             { label: 'System Logs', href: '/super-admin/audit-log',   icon: LogsIcon },
-            { label: 'Reports', href: '/super-admin/reports',   icon: LogsIcon },
         ],
     },
 ];

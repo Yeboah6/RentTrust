@@ -18,54 +18,6 @@ use Illuminate\Support\Facades\Storage;
 
 class VerificationsController extends Controller
 {
-    public function verifyAgent(Request $request, $id)
-    {
-        $validated = $request->validate([
-            'status' => 'required|in:verified,rejected,request_info',
-        ]);
-
-        $verify = User::findOrFail($id);
-        $oldStatus = $verify->status;
-        $verify->update([
-            'status' => $validated['status'],
-            'updated_at' => now(),
-        ]);
-
-        // Audit log
-        AdminAuditLog::record('verification', "Agent verification status changed to {$validated['status']}", [
-            'affected_user' => $verify->name,
-            'affected_id' => $verify->id,
-            'notes' => "Status changed from {$oldStatus} to {$validated['status']}",
-            'properties' => ['old_status' => $oldStatus, 'new_status' => $validated['status']],
-        ]);
-
-        return redirect()->back()->with('success', 'Agent status updated successfully');
-    }
-
-    public function suspendAgent(Request $request, $id)
-    {
-        $validated = $request->validate([
-            'status' => 'required|in:suspended,unverified',
-        ]);
-
-        $agent = User::findOrFail($id);
-        $oldStatus = $agent->status;
-        $agent->update([
-            'status' => $validated['status'],
-            'updated_at' => now(),
-        ]);
-
-        // Audit log
-        AdminAuditLog::record('suspension', "Agent suspended: {$agent->name}", [
-            'affected_user' => $agent->name,
-            'affected_id' => $agent->id,
-            'notes' => "Agent status changed from {$oldStatus} to {$validated['status']}",
-            'properties' => ['old_status' => $oldStatus, 'new_status' => $validated['status']],
-        ]);
-
-        return redirect()->back()->with('success', 'Agent status updated successfully');
-    }
-
     public function store(Request $request)
     {
         Log::info('Verification request received', [
@@ -342,6 +294,7 @@ class VerificationsController extends Controller
         }
     }
 
+    // Super Admin Verification
     public function index(Request $request)
     {
         try {
