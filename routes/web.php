@@ -255,3 +255,5 @@ Route::get('/reset-password/{token}', [PasswordResetController::class, 'showRese
         ->name('password.reset');
 Route::post('/reset-password', [PasswordResetController::class, 'resetPassword'])
     ->name('password.update');
+
+// Route::get('/suspended', fn() => inertia('Suspended'))->name('suspended')->middleware('auth');

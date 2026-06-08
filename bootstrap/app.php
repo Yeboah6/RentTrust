@@ -8,6 +8,7 @@ use App\Http\Middleware\EnsureAgentIsAuthenticated;
 use App\Http\Middleware\RoleMiddleware;
 use App\Http\Middleware\RoleCheckMiddleware;
 use App\Http\Middleware\RequiresSubscription;
+// use App\Http\Middleware\CheckSuspended;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -20,6 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
             HandleInertiaRequests::class,
             \App\Http\Middleware\TrailingSlashMiddleware::class,
             \App\Http\Middleware\CanonicalUrlMiddleware::class,
+            // CheckSuspended::class,
         ]);
             $middleware->alias([
             'role' => RoleMiddleware::class,

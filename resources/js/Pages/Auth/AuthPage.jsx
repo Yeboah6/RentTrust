@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, usePage } from "react";
 import { useForm, Link } from "@inertiajs/react";
+// import SuspendedModal from "@/Components/Modules/SuspendAccountMessage";
 
 // ── Icons ────────────────────────────────────────────────────────────────────
 const Eye = ({ style }) => (
@@ -12,6 +13,12 @@ const Eye = ({ style }) => (
 const EyeOff = ({ style }) => (
   <svg style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+  </svg>
+);
+
+const AlertCircle = ({ style }) => (
+  <svg style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
   </svg>
 );
 
@@ -104,13 +111,16 @@ const AuthPage = ({ isLogin: initialLogin = true }) => {
   // email validation state: 'idle' | 'invalid' | 'checking' | 'taken' | 'valid'
   const [emailStatus, setEmailStatus] = useState('idle');
 
-  const { data, setData, post, processing, errors, reset } = useForm({
+  const { data, setData, post, errors, processing, reset } = useForm({
     name: '',
     email: '',
     phone: '',
     password: '',
     password_confirmation: '',
   });
+
+  // const { errors } = usePage().props;
+  // const { errors: pageErrors } = usePage().props;
 
   const toggleMode = () => {
     setIsLogin((v) => !v);
@@ -197,6 +207,39 @@ const handleEmailChange = (val) => {
           button { -webkit-tap-highlight-color: transparent; min-height: 44px; }
         }
       `}</style>
+
+          {/* {pageErrors?.suspended && (
+    <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: '1rem' }}>
+      <div style={{ backgroundColor: 'white', borderRadius: '1rem', border: '1px solid hsl(40 20% 88%)', padding: '2rem', maxWidth: '400px', width: '100%', textAlign: 'center' }}>
+
+        <div style={{ width: '56px', height: '56px', borderRadius: '50%', backgroundColor: 'hsl(0 70% 97%)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.25rem' }}>
+          <AlertCircle style={{ height: '1.5rem', width: '1.5rem', color: 'hsl(0 70% 50%)' }} />
+        </div>
+
+        <h2 style={{ fontSize: '1.125rem', fontWeight: '600', color: 'hsl(200 25% 15%)', marginBottom: '0.5rem' }}>
+          Account suspended
+        </h2>
+        <p style={{ fontSize: '0.875rem', color: 'hsl(200 15% 45%)', lineHeight: '1.6', marginBottom: '1.5rem' }}>
+          Your account has been suspended. Please contact support to resolve this issue and regain access.
+        </p>
+
+        <div style={{ backgroundColor: 'hsl(40 30% 97%)', borderRadius: '0.5rem', border: '1px solid hsl(40 20% 88%)', padding: '0.875rem 1rem', marginBottom: '1.5rem', textAlign: 'left' }}>
+          <p style={{ fontSize: '0.8rem', color: 'hsl(200 15% 45%)', margin: 0, lineHeight: '1.6' }}>
+            Common reasons include policy violations, suspicious activity, or unpaid dues. Our support team can help clarify.
+          </p>
+        </div>
+
+        <a
+          href="mailto:support@renttrustgh.com"
+          style={{ display: 'block', padding: '0.625rem 1rem', backgroundColor: 'hsl(0 70% 97%)', border: '1px solid hsl(0 70% 88%)', borderRadius: '0.5rem', fontSize: '0.875rem', fontWeight: '500', color: 'hsl(0 70% 45%)', textDecoration: 'none' }}
+        >
+          Contact support
+        </a>
+
+      </div>
+    </div>
+  )
+} */}
 
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: COLOR.bg }}>
         <main style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'clamp(1rem, 4vw, 3rem) 1rem' }}>

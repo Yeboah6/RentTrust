@@ -20,7 +20,6 @@ use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
-
     // ── Views ────────────────────────────────────────────────────────────────
  
     public function showLogin(): Response
@@ -66,9 +65,9 @@ class AuthController extends Controller
         // 3. Suspension check (after credentials are confirmed valid)
         if ($user->status === 'suspended') {
             Auth::logout();
- 
+            
             throw ValidationException::withMessages([
-                'email' => 'Your account has been suspended. Please contact support for assistance.',
+                'suspended' => 'Your account has been suspended. Please contact support for assistance.',
             ]);
         }
  
