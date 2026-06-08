@@ -20,14 +20,6 @@ use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
-    // public function signUp(Request $request) {
-    //     $referrer = $request->headers->get('referer') ?? '/';
-    //     $request->session()->put('signup_referrer', $referrer);
-        
-    //     // pass flag to show signup form by default
-    //     return inertia('Auth/AuthPage', ['isLogin' => false]);
-    // }
-
     // ── Views ────────────────────────────────────────────────────────────────
  
     public function showLogin(): Response
@@ -73,9 +65,9 @@ class AuthController extends Controller
         // 3. Suspension check (after credentials are confirmed valid)
         if ($user->status === 'suspended') {
             Auth::logout();
- 
+            
             throw ValidationException::withMessages([
-                'email' => 'Your account has been suspended. Please contact support for assistance.',
+                'suspended' => 'Your account has been suspended. Please contact support for assistance.',
             ]);
         }
  

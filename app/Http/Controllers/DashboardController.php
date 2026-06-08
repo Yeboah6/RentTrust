@@ -15,7 +15,7 @@ use App\Models\Report;
 use App\Models\VerificationRequest;
 use App\Models\ListingInquiry;
 use App\Models\ListingView;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\{Auth, DB};
 
 class DashboardController extends Controller
 {
@@ -144,8 +144,38 @@ class DashboardController extends Controller
                 $q->where('status', 'active')->orderByDesc('ends_at');
             }])
             ->get();
-        $reports = Report::with('rental', 'rental.user')->get();
-        $reviews = Review::with('rental')->get();
+        $reports = Report::with([
+            'rental:id,title,address,city,status,purpose',
+            'rental.user:id,fullName,email',
+        ])
+        ->latest()
+        ->get();
+
+        $reviews = Review::with('rental:id,title,address,city,status,purpose')
+            ->latest()
+            ->get();
+
+        $views = ListingView::with('rental')
+            ->select('rental_id', DB::raw('COUNT(*) as views'))
+            ->groupBy('rental_id')
+            ->get()
+            ->map(fn($v) => [
+                'id'                       => $v->rental?->id,
+                'title'                    => $v->rental?->title,
+                'address'                  => $v->rental?->address,
+                'city'                     => $v->rental?->city,
+                'purpose'                  => $v->rental?->purpose,
+                'rent_min'                 => $v->rental?->rent_min,
+                'rent_max'                 => $v->rental?->rent_max,
+                'sale_price'               => $v->rental?->sale_price,
+                'status'                   => $v->rental?->status,
+                'effective_listing_status' => $v->rental?->effective_listing_status,
+                'views'                    => $v->views,
+            ])
+            ->filter(fn($v) => $v['id'] !== null)
+            ->values();
+
+        $totalViews = ListingView::count(); // raw count for the header stat
         $verifications = VerificationRequest::with(['rental', 'agent'])->orderBy('created_at', 'desc')->get();
 
         $locations = Location::all();
@@ -158,6 +188,8 @@ class DashboardController extends Controller
             'agentData' => $agentData,
             'reports' => $reports,
             'reviews' => $reviews,
+            'views' => $views,
+            'totalViews' => $totalViews,
             'verifications' => $verifications,
             'locations' => $locations,
             'propertyTypes' => $propertyTypes,

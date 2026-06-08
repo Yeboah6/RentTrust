@@ -70,6 +70,13 @@ const Settings = ({ style }) => (
   </svg>
 );
 
+const Eye = ({ style }) => (
+  <svg style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+  </svg>
+);
+
 const Gift = ({ style }) => (
   <svg style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
@@ -96,7 +103,7 @@ const PlanBadge = ({ plan }) => {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, verifications, plans, locations, propertyTypes, amenities }) => {
+const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, verifications, plans, locations, propertyTypes, amenities, views, totalViews }) => {
   const { auth } = usePage().props;
   const findPlan = (packageSlug) => plans?.find(p => p.slug === packageSlug) ?? null;
   const [activeTab, setActiveTab] = useState("agents");
@@ -141,6 +148,8 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, verif
   const agent   = mockAdmin;
   const agents  = agentData || [];
   const properties = rentals || [];
+
+  // const viewedProperties = properties.filter(property => Number(property.views) > 0);
 
   // ── Handlers ──────────────────────────────────────────────────────────────
 
@@ -428,6 +437,7 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, verif
                   <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: 'hsl(200 15% 45%)' }}><Home style={{ height: '1rem', width: '1rem' }} />{agent.total_listings} Listings</span>
                   <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: 'hsl(200 15% 45%)' }}><AlertCircle style={{ height: '1rem', width: '1rem' }} />{reports.length} Reports</span>
                   <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: 'hsl(200 15% 45%)' }}><MessageSquare style={{ height: '1rem', width: '1rem' }} />{reviews.length} Reviews</span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: 'hsl(200 15% 45%)' }}><Eye style={{ height: '1rem', width: '1rem' }} />{totalViews} Views</span>
                 </div>
               </div>
               <Link href="/settings" style={{ padding: '0.5rem 1rem', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.5rem', backgroundColor: 'white', color: 'hsl(174 62% 32%)', fontWeight: '500', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none', alignSelf: 'flex-start' }}>
@@ -437,13 +447,14 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, verif
 
             {/* Tabs */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '0.5rem', backgroundColor: 'hsl(40 30% 94%)', padding: '0.25rem', borderRadius: '0.5rem', marginBottom: '2rem' }}>
-              {['agents', 'listings', 'verifications', 'reports', 'reviews'].map(tab => (
+              {['agents', 'listings', 'verifications', 'reports', 'reviews', 'views'].map(tab => (
                 <button key={tab} onClick={() => setActiveTab(tab)} style={{ padding: '0.5rem 1rem', border: 'none', borderRadius: '0.375rem', backgroundColor: activeTab === tab ? 'white' : 'transparent', color: activeTab === tab ? 'hsl(200 25% 15%)' : 'hsl(200 15% 45%)', fontWeight: '500', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', transition: 'all 0.2s', boxShadow: activeTab === tab ? '0 1px 2px 0 hsl(200 25% 15% / 0.05)' : 'none', textTransform: 'capitalize' }}>
                   {tab === 'agents' && <Shield style={{ height: '1rem', width: '1rem' }} />}
                   {tab === 'listings' && <Home style={{ height: '1rem', width: '1rem' }} />}
                   {tab === 'verifications' && <ShieldCheck style={{ height: '1rem', width: '1rem' }} />}
                   {tab === 'reports' && <AlertCircle style={{ height: '1rem', width: '1rem' }} />}
                   {tab === 'reviews' && <MessageSquare style={{ height: '1rem', width: '1rem' }} />}
+                  {tab === 'views' && <Eye style={{ height: '1rem', width: '1rem' }} />}
                   {tab}
                 </button>
               ))}
@@ -930,6 +941,90 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, verif
                 )}
               </div>
             )}
+
+            {/* Views Tab */}
+              {activeTab === 'views' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                
+                  {/* Header */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                    <div>
+                      <h2 style={{ fontSize: '1.125rem', fontWeight: '700', color: 'hsl(200 25% 15%)', margin: '0 0 0.15rem' }}>
+                        Property Views
+                      </h2>
+                      <p style={{ margin: 0, fontSize: '0.78rem', color: 'hsl(200 15% 48%)' }}>
+                        {views.length} propert{views.length !== 1 ? 'ies' : 'y'} viewed · {totalViews} total view{totalViews !== 1 ? 's' : ''}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Empty state */}
+                  {views.length === 0 && (
+                    <div style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.75rem', padding: '3rem', textAlign: 'center' }}>
+                      <Eye style={{ height: '3rem', width: '3rem', color: 'hsl(200 15% 70%)', margin: '0 auto 1rem' }} />
+                      <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: 'hsl(200 25% 15%)', marginBottom: '0.5rem' }}>No Views Yet</h3>
+                      <p style={{ color: 'hsl(200 15% 45%)' }}>No listings have been viewed yet.</p>
+                    </div>
+                  )}
+
+                  {/* Grid */}
+                  {views.length > 0 && (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
+                      {views.map((property) => {
+                        const isRent     = property.purpose === 'rent';
+                        const priceStr   = isRent
+                          ? `GH₵${property.rent_min?.toLocaleString() ?? '—'} – GH₵${property.rent_max?.toLocaleString() ?? '—'} / yr`
+                          : `GH₵${property.sale_price?.toLocaleString() ?? '—'}`;
+                        const priceColor = isRent ? 'hsl(174 55% 28%)' : 'hsl(36 75% 30%)';
+                      
+                        return (
+                          <div key={property.id} style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.75rem', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
+                          
+                            {/* Property info */}
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.75rem' }}>
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <h3 style={{ margin: '0 0 0.2rem', fontWeight: '600', color: 'hsl(200 25% 15%)', fontSize: '0.9375rem', wordBreak: 'break-word' }}>
+                                  {property.title}
+                                </h3>
+                                <p style={{ margin: '0 0 0.3rem', fontSize: '0.8rem', color: 'hsl(200 15% 48%)' }}>
+                                  {[property.address, property.city].filter(Boolean).join(', ')}
+                                </p>
+                                <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: '600', color: priceColor }}>
+                                  {priceStr}
+                                </p>
+                              </div>
+                              <div style={{ flexShrink: 0 }}>
+                                {getStatusBadge(property.status)}
+                              </div>
+                            </div>
+                        
+                            {/* Divider */}
+                            <div style={{ height: '1px', backgroundColor: 'hsl(40 20% 92%)' }} />
+                        
+                            {/* Views count + action */}
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.875rem', fontWeight: '600', color: 'hsl(174 55% 28%)' }}>
+                                <Eye style={{ height: '1rem', width: '1rem' }} />
+                                {property.views} view{property.views !== 1 ? 's' : ''}
+                              </div>
+                              <button
+                                onClick={() => handleViewClick(property)}
+                                style={{ padding: '0.35rem 0.7rem', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.375rem', backgroundColor: 'white', color: 'hsl(174 62% 32%)', fontSize: '0.8rem', fontWeight: '500', cursor: 'pointer' }}
+                                onMouseEnter={e => e.currentTarget.style.backgroundColor = 'hsl(174 62% 32% / 0.05)'}
+                                onMouseLeave={e => e.currentTarget.style.backgroundColor = 'white'}
+                              >
+                                View Details
+                              </button>
+                            </div>
+                        
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                </div>
+              )}
 
           </div>
         </main>
