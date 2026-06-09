@@ -175,7 +175,10 @@ class DashboardController extends Controller
             ->filter(fn($v) => $v['id'] !== null)
             ->values();
 
-        $totalViews = ListingView::count(); // raw count for the header stat
+        $totalViews = ListingView::count();
+        $inquiries = ListingInquiry::with('rental:id,title,address,city,status,purpose', 'user:id,name,email,phone')
+            ->latest()
+            ->get();
         $verifications = VerificationRequest::with(['rental', 'agent'])->orderBy('created_at', 'desc')->get();
 
         $locations = Location::all();

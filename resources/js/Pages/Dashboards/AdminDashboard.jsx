@@ -11,6 +11,7 @@ import AgentProfileModal from '@/Components/Modules/AgentProfileModal';
 import AdminEditAgentModal from '@/Components/Modules/AdminEditAgentModal';
 import AdminAddAgentModal from '@/Components/Modules/AdminAddAgentModal';
 import GrantSubscriptionModal from '@/Components/Modules/GrantSubscriptionModal';
+import InquiriesTab from '@/Components/Modules/InquiriesTab';
 import { MapPin } from 'lucide-react';
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
@@ -963,7 +964,9 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, verif
               </div>
             )}
 
-            {activeTab === 'inquiries' && (
+            {activeTab === 'inquiries' && <InquiriesTab inquiries={inquiries} rentals={rentals} onView={handleViewClick} />}
+
+            {/* {activeTab === 'inquiries' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(1rem, 3vw, 1.5rem)' }}>
                   <h2 style={{ color: 'hsl(200 25% 15%)', fontSize: 'clamp(1rem, 3vw, 1.125rem)', fontWeight: '600' }}>Property Inquiries ({inquiries.length})</h2>
                   {inquiries.length > 0 ? (
@@ -1011,6 +1014,26 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, verif
                                 <p style={{ fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)', color: 'hsl(200 15% 45%)', margin: 0, lineHeight: '1.5', wordBreak: 'break-word' }}>"{inquiry.message}"</p>
                               </div>
                             )}
+
+                            <button onClick={() => handleViewClick(inquiry.rental)}
+                              style={{ padding: '0.35rem 0.7rem', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.375rem', backgroundColor: 'white', color: 'hsl(174 62% 32%)', fontSize: '0.8rem', fontWeight: '500', cursor: 'pointer' }}
+                              onMouseEnter={e => e.currentTarget.style.backgroundColor = 'hsl(174 62% 32% / 0.05)'}
+                              onMouseLeave={e => e.currentTarget.style.backgroundColor = 'white'}
+                            >View Property</button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.75rem', padding: '3rem', textAlign: 'center' }}>
+                      <Inbox style={{ height: '3rem', width: '3rem', color: 'hsl(200 15% 70%)', margin: '0 auto 1rem' }} />
+                      <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: 'hsl(200 25% 15%)', marginBottom: '0.5rem' }}>No Inquiries Yet</h3>
+                      <p style={{ color: 'hsl(200 15% 45%)' }}>There are no property inquiries yet.</p>
+                    </div>
+                  )}
+                </div>
+              )} */}
+
             {/* Views Tab */}
               {activeTab === 'views' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -1090,17 +1113,7 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, verif
                         );
                       })}
                     </div>
-                  ) : (
-                    <div style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.5rem, 2vw, 0.75rem)', padding: 'clamp(1.5rem, 4vw, 2rem)', textAlign: 'center' }}>
-                      <MessageSquare style={{ height: 'clamp(2.5rem, 10vw, 3rem)', width: 'clamp(2.5rem, 10vw, 3rem)', color: 'hsl(200 15% 45%)', margin: '0 auto clamp(0.75rem, 2vw, 1rem) auto' }} />
-                      <h3 style={{ fontSize: 'clamp(1rem, 3vw, 1.125rem)', fontWeight: '600', color: 'hsl(200 25% 15%)', marginBottom: 'clamp(0.375rem, 1.5vw, 0.5rem)' }}>No Inquiries Yet</h3>
-                      <p style={{ color: 'hsl(200 15% 45%)', fontSize: 'clamp(0.875rem, 2vw, 0.875rem)' }}>You haven't received any inquiries from tenants yet.</p>
-                    </div>
                   )}
-                </div>
-              )}
-                  )}
-
                 </div>
               )}
 
