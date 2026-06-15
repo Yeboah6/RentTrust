@@ -240,13 +240,13 @@ class CheckoutController extends Controller
         }
 
         // Numeric capability limits
-        if (($plan->boost_limit ?? 0) > 0) {
-            $features[] = "{$plan->boost_limit} listing boosts/month";
-        }
+        // if (($plan->boost_limit ?? 0) > 0) {
+        //     $features[] = "{$plan->boost_limit} listing boosts/month";
+        // }
 
-        if (($plan->lead_limit ?? 0) > 0) {
-            $features[] = "{$plan->lead_limit} lead contacts/month";
-        }
+        // if (($plan->lead_limit ?? 0) > 0) {
+        //     $features[] = "{$plan->lead_limit} lead contacts/month";
+        // }
 
         // Boolean capabilities
         if ($plan->verified_badge) {

@@ -268,7 +268,7 @@ const handleEmailChange = (val) => {
                 {isLogin ? 'Welcome back' : 'Create account'}
               </h1>
               <p style={{ color: COLOR.muted, fontSize: 'clamp(0.875rem, 2vw, 0.9375rem)', lineHeight: 1.5, margin: 0 }}>
-                {isLogin ? 'Sign in to your RentTrust account' : 'Join RentTrust to find your perfect home'}
+                {isLogin ? 'Sign in to your RentTrustGh account' : 'Join RentTrustGh to find your perfect home'}
               </p>
             </div>
 

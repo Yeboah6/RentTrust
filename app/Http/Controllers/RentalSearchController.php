@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Rental;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -268,27 +269,45 @@ class RentalSearchController extends Controller
         ]);
     }
 
-    public function showProperty(Request $request, string $areaSlug, string $propertySlug) {
+    public function showProperty(Request $request, string $areaSlug, string $propertySlug)
+    {
         $areaName = str_replace('-', ' ', $areaSlug);
-
+    
         $rental = Rental::where('purpose', 'rent')
-            ->where('status', 'approved')
-            ->where('is_sold', false)
             ->where('slug', $propertySlug)
             ->where(function ($query) use ($areaName) {
                 $query->whereRaw('LOWER(area) = ?', [strtolower($areaName)])
                       ->orWhereRaw('LOWER(area) LIKE ?', ['%' . strtolower($areaName) . '%']);
             })
+            ->select(
+                'id', 'rental_id', 'title', 'property_type', 'purpose',
+                'city', 'area', 'address', 'rent_min', 'rent_max', 'sale_price',
+                'status', 'is_verified', 'is_featured', 'images', 'created_at', 'updated_at',
+                'bedrooms', 'bathrooms', 'description', 'amenities',
+                'advance_duration', 'agent_id', 'user_id', 'agent_name', 'agent_phone', 'agent_email'
+            )
             ->firstOrFail();
-
-            $rental->load('user');
-            $reviews = $rental->reviews()->orderBy('created_at', 'desc')->get();
-
-            return inertia('PropertyDetailsPage', [
-                'rental' => $rental,
-                'reviews' => $reviews,
-                'seo' => app(SeoService::class)->propertyMeta($rental),
-            ]);
+    
+        // Collect both IDs
+        $userIds = collect([$rental->agent_id, $rental->user_id])->filter()->unique();
+        
+        // Get all users in one query
+        $users = User::whereIn('id', $userIds)
+            ->select('id', 'name', 'email', 'phone', 'company', 'bio', 'status', 'fee', 'role')
+            ->get()
+            ->keyBy('id');
+    
+        // Determine which user to show as agent (priority: agent_id > user_id)
+        $agent = $users->get($rental->agent_id) ?? $users->get($rental->user_id);
+    
+        $reviews = $rental->reviews()->orderBy('created_at', 'desc')->get();
+    
+        return inertia('PropertyDetailsPage', [
+            'rental' => $rental,
+            'agent' => $agent,
+            'reviews' => $reviews,
+            'seo' => app(SeoService::class)->propertyMeta($rental),
+        ]);
     }
 
     public function showAreaBySlug(Request $request, string $areaSlug)

@@ -114,6 +114,7 @@ class AgentController extends Controller
             'type'                   => $validated['type']    ?? null,
             'bio'                    => $validated['bio']     ?? null,
             'role'                   => 'agent',
+            'location'               => $validated['location'] ?? null,
             'package'                => null,
             'status'                 => $validated['status'],
             'password'               => Hash::make(Str::random(32)), // unusable until setup

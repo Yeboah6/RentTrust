@@ -25,6 +25,9 @@ const Icons = {
     dollar:  () => <Ico d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />,
     image:   () => <Ico d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />,
     upload:  () => <Ico d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />,
+    clock:   () => <Ico d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />,
+    queue:   () => <Ico d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />,
+    star:    () => <Ico d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />,
     spinner: () => (
         <svg style={{ width: '1rem', height: '1rem', animation: 'leSpin 0.75s linear infinite', flexShrink: 0 }} fill="none" viewBox="0 0 24 24">
             <circle style={{ opacity: 0.2 }} cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -76,6 +79,17 @@ const STEPS = [
 const fmtDate = (v) => {
     if (!v) return '—';
     try { return new Date(v).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); }
+    catch { return v; }
+};
+
+const fmtDateTime = (v) => {
+    if (!v) return '—';
+    try { 
+        return new Date(v).toLocaleString('en-US', { 
+            month: 'short', day: 'numeric', year: 'numeric',
+            hour: 'numeric', minute: '2-digit'
+        }); 
+    }
     catch { return v; }
 };
 
@@ -144,14 +158,14 @@ const FSelect = ({ hasError, children, ...props }) => {
     return <select {...props} onFocus={() => setF(true)} onBlur={() => setF(false)} style={{ ...inputStyle(f, hasError), cursor: 'pointer', appearance: 'none' }}>{children}</select>;
 };
 
-const Toggle = ({ value, onChange, label, sub }) => (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.7rem 0.875rem', borderRadius: '0.6rem', backgroundColor: 'hsl(220 15% 97.5%)', border: '1px solid hsl(220 15% 91%)' }}>
+const Toggle = ({ value, onChange, label, sub, disabled }) => (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.7rem 0.875rem', borderRadius: '0.6rem', backgroundColor: disabled ? 'hsl(220 15% 93%)' : 'hsl(220 15% 97.5%)', border: '1px solid hsl(220 15% 91%)', opacity: disabled ? 0.6 : 1 }}>
         <div>
             <div style={{ fontSize: '0.82rem', fontWeight: '600', color: 'hsl(220 25% 20%)' }}>{label}</div>
             {sub && <div style={{ fontSize: '0.7rem', color: 'hsl(220 15% 52%)', marginTop: '0.08rem' }}>{sub}</div>}
         </div>
-        <button type="button" onClick={() => onChange(!value)}
-            style={{ width: '2.75rem', height: '1.5rem', borderRadius: '999px', border: 'none', cursor: 'pointer', flexShrink: 0, position: 'relative', backgroundColor: value ? 'hsl(152 55% 38%)' : 'hsl(220 15% 80%)', transition: 'background-color 0.2s' }}>
+        <button type="button" onClick={() => !disabled && onChange(!value)} disabled={disabled}
+            style={{ width: '2.75rem', height: '1.5rem', borderRadius: '999px', border: 'none', cursor: disabled ? 'not-allowed' : 'pointer', flexShrink: 0, position: 'relative', backgroundColor: value ? 'hsl(152 55% 38%)' : 'hsl(220 15% 80%)', transition: 'background-color 0.2s' }}>
             <span style={{ position: 'absolute', top: '0.15rem', left: value ? 'calc(100% - 1.2rem)' : '0.15rem', width: '1.2rem', height: '1.2rem', borderRadius: '50%', backgroundColor: 'white', transition: 'left 0.2s', boxShadow: '0 1px 3px hsl(220 25% 15% / 0.25)' }} />
         </button>
     </div>
@@ -254,36 +268,43 @@ const ListingEdit = ({ listing, agents = [], property_types = [], amenities = []
     // FIX: normalise status — 'approved' maps to 'active'
     const statusKey = (() => { const s = (l.status ?? 'pending').toLowerCase(); return s === 'approved' ? 'active' : s; })();
 
+    // ── Featured queue status ─────────────────────────────────────────────────
+    const isQueued = l.is_featured_queued ?? false;
+    const queuePosition = l.featured_queue_position ?? null;
+    const timesFeatured = l.times_featured ?? 0;
+    const lastFeaturedAt = l.last_featured_at ?? null;
+    const featuredEndsAt = l.featured_at 
+        ? new Date(new Date(l.featured_at).getTime() + 48 * 60 * 60 * 1000) 
+        : null;
+    const isFeaturedExpired = featuredEndsAt ? new Date() > featuredEndsAt : false;
+
     // ── Form state ────────────────────────────────────────────────────────────
     const [form, setForm] = useState({
         title:            l.title            ?? '',
         description:      l.description      ?? '',
-        // FIX: purpose is the Rental model column — use it as the source of truth
         purpose:          l.purpose          ?? (l.listing_type ?? 'rent'),
-        listing_type:     l.purpose          ?? (l.listing_type ?? 'rent'),  // mirrors purpose
+        listing_type:     l.purpose          ?? (l.listing_type ?? 'rent'),
         property_type:    l.property_type    ?? '',
         sale_price:       l.sale_price       ?? '',
         rent_min:         l.rent_min         ?? '',
         rent_max:         l.rent_max         ?? '',
         advance_duration: l.advance_duration ?? '',
         currency:         l.currency         ?? 'GH₵',
-        // FIX: city = region/location, area = sub-area — separate fields
         location:         l.city             ?? l.location ?? '',
         area:             l.area             ?? '',
         address:          l.address          ?? '',
         bedrooms:         l.bedrooms         ?? '',
         bathrooms:        l.bathrooms        ?? '',
-        is_featured:      l.is_featured      ?? false,   // FIX: was commented out but Toggle used it
+        is_featured:      l.is_featured      ?? false,
         is_verified:      l.is_verified      ?? false,
+        featured_priority: l.featured_priority ?? 0,
+        featured_at:       l.featured_at      ?? '',
         status:           statusKey,
         agent_id:         l.agent?.id        ?? l.agent_id ?? '',
         amenities:        (() => {
             const raw = l.amenities ?? [];
-            // DB stores amenities as name strings e.g. ["Pool", "Gym"]
-            // but may also come as objects [{id, name}] from a relation load
             return raw.map(a => typeof a === 'string' ? a : (a.name ?? '')).filter(Boolean);
         })(),
-        // Contact info — fall back to existing DB values
         agentName:        l.agent_name  ?? l.agentName  ?? '',
         agentPhone:       l.agent_phone ?? l.agentPhone ?? '',
         agentEmail:       l.agent_email ?? l.agentEmail ?? '',
@@ -333,8 +354,6 @@ const ListingEdit = ({ listing, agents = [], property_types = [], amenities = []
         if (isExisting) {
             const img = existingImages.find(i => i.id === id);
             setExistingImages(prev => prev.filter(i => i.id !== id));
-            // FIX: send the bare filename (without rental_images/ prefix)
-            // backend does: Storage::disk('public')->delete("rental_images/{$path}")
             if (img) {
                 const bare = img.path.replace(/^rental_images\//, '');
                 setRemovedImages(prev => [...prev, bare]);
@@ -395,13 +414,12 @@ const ListingEdit = ({ listing, agents = [], property_types = [], amenities = []
         const fd = new FormData();
         fd.append('_method', 'PUT');
 
-        // ── Core fields — camelCase to match the controller field names ────────
         fd.append('title',       form.title);
         fd.append('description', form.description ?? '');
         fd.append('purpose',     form.purpose);
         fd.append('status',      form.status);
         fd.append('propertyType',form.property_type ?? '');
-        fd.append('city',        form.location);   // location field = city in DB
+        fd.append('city',        form.location);
         fd.append('area',        form.area);
         fd.append('address',     form.address ?? '');
         fd.append('bedrooms',    form.bedrooms ?? '');
@@ -409,12 +427,16 @@ const ListingEdit = ({ listing, agents = [], property_types = [], amenities = []
         fd.append('is_featured', form.is_featured ? '1' : '0');
         fd.append('is_verified', form.is_verified ? '1' : '0');
 
-        // Contact info
+        // Featured queue fields
+        fd.append('featured_priority', form.featured_priority ?? 0);
+        if (form.featured_at) {
+            fd.append('featured_at', form.featured_at);
+        }
+
         fd.append('agentName',  form.agentName  ?? '');
         fd.append('agentPhone', form.agentPhone ?? '');
         fd.append('agentEmail', form.agentEmail ?? '');
 
-        // Pricing — camelCase to match controller
         const isSale = form.purpose === 'sale';
         if (isSale) {
             fd.append('salePrice', form.sale_price ?? '');
@@ -424,10 +446,8 @@ const ListingEdit = ({ listing, agents = [], property_types = [], amenities = []
             fd.append('advanceDuration', form.advance_duration ?? '');
         }
 
-        // Amenities — send as JSON string, controller decodes it
         fd.append('amenities', JSON.stringify(Array.isArray(form.amenities) ? form.amenities : []));
 
-        // Images
         existingImages.forEach((img, i) => {
             const bare = img.path.replace(/^rental_images\//, '');
             fd.append(`existingImages[${i}]`, bare);
@@ -473,10 +493,8 @@ const ListingEdit = ({ listing, agents = [], property_types = [], amenities = []
     };
 
     // ── Derived ───────────────────────────────────────────────────────────────
-    // FIX: property_types may be objects {id,name,slug} or plain strings — normalise both
     const allPropTypes = (property_types ?? []).map(pt => {
         if (typeof pt === 'string') return { value: pt.toLowerCase(), label: pt };
-        // Always prefer slug — formatListing now normalises property_type to slug
         const value = pt.slug ?? pt.name?.toLowerCase().replace(/\s+/g, '-') ?? '';
         return { value, label: pt.name ?? '' };
     }).filter(pt => pt.value);
@@ -533,7 +551,6 @@ const ListingEdit = ({ listing, agents = [], property_types = [], amenities = []
                                     <div>
                                         <h2 style={{ margin: '0 0 0.15rem', fontSize: '1rem', fontWeight: '800', color: 'white' }}>{form.title || 'Listing Title'}</h2>
                                         <p style={{ margin: 0, fontSize: '0.73rem', color: 'hsl(220 20% 58%)' }}>
-                                            {/* FIX: show area + location (city) in header */}
                                             {[form.area, form.location].filter(Boolean).join(', ') || 'No location set'}
                                         </p>
                                     </div>
@@ -633,6 +650,134 @@ const ListingEdit = ({ listing, agents = [], property_types = [], amenities = []
                                         <FField label="Full Address" hint="Optional — shown to verified leads only" error={errors.address}>
                                             <FInput value={form.address} onChange={e => set('address', e.target.value)} placeholder="House number, street, area…" />
                                         </FField>
+                                    </div>
+
+                                    {/* ── Featured Listing Section (NEW) ── */}
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                        <SectionLabel>Featured Listing</SectionLabel>
+                                        
+                                        {/* Featured toggle */}
+                                        <Toggle 
+                                            value={form.is_featured} 
+                                            onChange={v => {
+                                                set('is_featured', v);
+                                                if (v && !form.featured_at) {
+                                                    set('featured_at', new Date().toISOString().slice(0, 16));
+                                                }
+                                                if (!v) {
+                                                    set('featured_at', '');
+                                                }
+                                            }} 
+                                            label="Featured Listing" 
+                                            sub="Highlighted in search and featured sections" 
+                                        />
+
+                                        {/* Featured details - only show when featured is enabled */}
+                                        {form.is_featured && (
+                                            <div style={{ 
+                                                padding: '1rem', 
+                                                borderRadius: '0.65rem', 
+                                                backgroundColor: 'hsl(40 90% 97%)', 
+                                                border: '1px solid hsl(40 80% 88%)',
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                gap: '0.875rem'
+                                            }}>
+                                                {/* Queue status indicator */}
+                                                {isQueued && (
+                                                    <div style={{ 
+                                                        padding: '0.5rem 0.75rem', 
+                                                        borderRadius: '0.5rem', 
+                                                        backgroundColor: 'hsl(214 100% 96%)', 
+                                                        border: '1px solid hsl(214 80% 88%)',
+                                                        fontSize: '0.75rem',
+                                                        color: 'hsl(214 80% 38%)',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        gap: '0.5rem'
+                                                    }}>
+                                                        <Icons.queue />
+                                                        <span>
+                                                            <strong>In Queue</strong> — Position #{queuePosition}
+                                                            {queuePosition > 10 && ' (Will be activated when slots available)'}
+                                                        </span>
+                                                    </div>
+                                                )}
+
+                                                {/* Featured stats */}
+                                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                                                    <div style={{ fontSize: '0.72rem', color: 'hsl(220 15% 50%)' }}>
+                                                        <div style={{ fontWeight: '600', marginBottom: '0.15rem' }}>Times Featured</div>
+                                                        <div style={{ color: 'hsl(220 25% 22%)' }}>{timesFeatured}</div>
+                                                    </div>
+                                                    <div style={{ fontSize: '0.72rem', color: 'hsl(220 15% 50%)' }}>
+                                                        <div style={{ fontWeight: '600', marginBottom: '0.15rem' }}>Last Featured</div>
+                                                        <div style={{ color: 'hsl(220 25% 22%)' }}>{fmtDate(lastFeaturedAt)}</div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Featured expiration info */}
+                                                {form.featured_at && (
+                                                    <div style={{ 
+                                                        padding: '0.5rem 0.75rem', 
+                                                        borderRadius: '0.5rem', 
+                                                        backgroundColor: isFeaturedExpired ? 'hsl(0 70% 96%)' : 'hsl(152 60% 96%)',
+                                                        border: `1px solid ${isFeaturedExpired ? 'hsl(0 65% 88%)' : 'hsl(152 55% 85%)'}`,
+                                                        fontSize: '0.72rem',
+                                                        color: isFeaturedExpired ? 'hsl(0 65% 40%)' : 'hsl(152 55% 28%)',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        gap: '0.4rem'
+                                                    }}>
+                                                        <Icons.clock />
+                                                        <span>
+                                                            {isFeaturedExpired 
+                                                                ? 'Featured period has expired' 
+                                                                : `Featured until ${fmtDateTime(featuredEndsAt)}`
+                                                            }
+                                                        </span>
+                                                    </div>
+                                                )}
+
+                                                {/* Featured date input */}
+                                                <FField label="Featured Start Date" hint="When the featured period should start">
+                                                    <FInput 
+                                                        type="datetime-local" 
+                                                        value={form.featured_at ? form.featured_at.slice(0, 16) : ''} 
+                                                        onChange={e => set('featured_at', e.target.value ? new Date(e.target.value).toISOString() : '')} 
+                                                    />
+                                                </FField>
+
+                                                {/* Priority slider */}
+                                                <FField label="Featured Priority" hint="Higher priority listings appear first (0-100)">
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                                        <input 
+                                                            type="range" 
+                                                            min="0" 
+                                                            max="100" 
+                                                            value={form.featured_priority} 
+                                                            onChange={e => set('featured_priority', parseInt(e.target.value))}
+                                                            style={{ flex: 1, height: '6px', appearance: 'none', backgroundColor: 'hsl(220 15% 88%)', borderRadius: '3px', outline: 'none' }}
+                                                        />
+                                                        <span style={{ 
+                                                            fontSize: '0.8rem', 
+                                                            fontWeight: '700', 
+                                                            color: 'hsl(220 25% 22%)',
+                                                            minWidth: '2rem',
+                                                            textAlign: 'right'
+                                                        }}>
+                                                            {form.featured_priority}
+                                                        </span>
+                                                    </div>
+                                                </FField>
+
+                                                {/* Featured duration info */}
+                                                <div style={{ fontSize: '0.7rem', color: 'hsl(220 15% 52%)', lineHeight: 1.5 }}>
+                                                    <Icons.star /> Featured listings are displayed for 48 hours. 
+                                                    {timesFeatured >= 3 && ' Maximum featured limit reached.'}
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
 
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -926,6 +1071,30 @@ const ListingEdit = ({ listing, agents = [], property_types = [], amenities = []
 
                     {/* ═══ RIGHT: sidebar ═══════════════════════════════════ */}
                     <div style={{ position: 'sticky', top: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                        {/* Featured Queue Status Card (NEW) */}
+                        {(isQueued || timesFeatured > 0) && (
+                            <div style={{ backgroundColor: 'white', border: '1px solid hsl(40 80% 88%)', borderRadius: '0.875rem', overflow: 'hidden', boxShadow: '0 1px 3px hsl(220 20% 15% / 0.04)' }}>
+                                <div style={{ padding: '0.7rem 1rem', borderBottom: '1px solid hsl(40 80% 90%)', backgroundColor: 'hsl(40 90% 97%)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                    <Icons.star />
+                                    <p style={{ margin: 0, fontSize: '0.72rem', fontWeight: '800', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'hsl(40 80% 30%)' }}>Featured Status</p>
+                                </div>
+                                <div style={{ padding: '0.5rem 1rem 0.75rem' }}>
+                                    {[
+                                        { label: 'Queue Status', value: isQueued ? `Position #${queuePosition}` : (form.is_featured ? 'Active' : 'Not Featured') },
+                                        { label: 'Times Featured', value: timesFeatured },
+                                        { label: 'Last Featured', value: fmtDate(lastFeaturedAt) },
+                                        { label: 'Priority', value: `${form.featured_priority}/100` },
+                                        ...(form.featured_at ? [{ label: 'Featured Until', value: fmtDateTime(featuredEndsAt) }] : []),
+                                    ].map(({ label, value }) => (
+                                        <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.42rem 0', borderBottom: '1px solid hsl(220 15% 95%)' }}>
+                                            <span style={{ fontSize: '0.74rem', color: 'hsl(220 15% 52%)' }}>{label}</span>
+                                            <span style={{ fontSize: '0.78rem', fontWeight: '600', color: 'hsl(220 25% 22%)' }}>{value ?? '—'}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
                         <div style={{ backgroundColor: 'white', border: '1px solid hsl(220 15% 91%)', borderRadius: '0.875rem', overflow: 'hidden', boxShadow: '0 1px 3px hsl(220 20% 15% / 0.04)' }}>
                             <div style={{ padding: '0.7rem 1rem', borderBottom: '1px solid hsl(220 15% 94%)', backgroundColor: 'hsl(220 15% 98.5%)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                 <p style={{ margin: 0, fontSize: '0.72rem', fontWeight: '800', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'hsl(220 25% 22%)' }}>Record Info</p>

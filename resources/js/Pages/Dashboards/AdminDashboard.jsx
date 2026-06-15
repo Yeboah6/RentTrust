@@ -3,15 +3,21 @@ import Header from "@/Components/Layouts/Header";
 import Footer from "@/Components/Layouts/Footer";
 import { Link, router, usePage } from "@inertiajs/react";
 import AddRentalPage from "@/Components/Modules/AddRentals";
-import VerifyAgentDialog from '@/Components/Modules/VerifyAgent';
+import VerifyAgentDialog from '@/Components/Modules/Admin/VerifyAgent';
 import ViewRentals from "@/Components/Modules/ViewRental";
 import EditRentals from "@/Components/Modules/EditRentals";
 import ViewAgentVerifications from '@/Components/Modules/ViewAgentVerifications';
 import AgentProfileModal from '@/Components/Modules/AgentProfileModal';
-import AdminEditAgentModal from '@/Components/Modules/AdminEditAgentModal';
-import AdminAddAgentModal from '@/Components/Modules/AdminAddAgentModal';
-import GrantSubscriptionModal from '@/Components/Modules/GrantSubscriptionModal';
-import InquiriesTab from '@/Components/Modules/InquiriesTab';
+import AdminEditAgentModal from '@/Components/Modules/Admin/AdminEditAgentModal';
+import AdminAddAgentModal from '@/Components/Modules/Admin/AdminAddAgentModal';
+import GrantSubscriptionModal from '@/Components/Modules/Admin/GrantSubscriptionModal';
+import InquiriesTab from '@/Components/Modules/Admin/InquiriesTab';
+import AgentsTab from '@/Components/Modules/Admin/AgentsTab';
+import ReportsTab from '@/Components/Modules/Admin/ReportsTab';
+import ReviewsTab from '@/Components/Modules/Admin/ReviewsTab';
+import ViewsTab from '@/Components/Modules/Admin/ViewsTab';
+import ListingsTab from '@/Components/Modules/Admin/ListingsTab';
+import SubscriptionsTab from '@/Components/Modules/Admin/SubscriptionsTab';
 import { MapPin } from 'lucide-react';
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
@@ -104,7 +110,7 @@ const PlanBadge = ({ plan }) => {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, verifications, plans, locations, propertyTypes, amenities, views, totalViews, inquiries }) => {
+const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, verifications, plans, locations, propertyTypes, amenities, views, totalViews, inquiries, subscriptions }) => {
   const { auth } = usePage().props;
   const findPlan = (packageSlug) => plans?.find(p => p.slug === packageSlug) ?? null;
   const [activeTab, setActiveTab] = useState("agents");
@@ -448,6 +454,7 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, verif
                   <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: 'hsl(200 15% 45%)' }}><MessageSquare style={{ height: '1rem', width: '1rem' }} />{reviews.length} Reviews</span>
                   <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: 'hsl(200 15% 45%)' }}><MessageSquare style={{ height: '1rem', width: '1rem' }} />{inquiries.length} inquiries</span>
                   <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: 'hsl(200 15% 45%)' }}><Eye style={{ height: '1rem', width: '1rem' }} />{totalViews} Views</span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: 'hsl(200 15% 45%)' }}><Gift style={{ height: '1rem', width: '1rem' }} />{subscriptions} Subscriptions</span>
                 </div>
               </div>
               <Link href="/settings" style={{ padding: '0.5rem 1rem', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.5rem', backgroundColor: 'white', color: 'hsl(174 62% 32%)', fontWeight: '500', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none', alignSelf: 'flex-start' }}>
@@ -457,8 +464,7 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, verif
 
             {/* Tabs */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '0.5rem', backgroundColor: 'hsl(40 30% 94%)', padding: '0.25rem', borderRadius: '0.5rem', marginBottom: '2rem' }}>
-              {/* {['agents', 'listings', 'verifications', 'reports', 'reviews', 'inquiries'].map(tab => ( */}
-              {['agents', 'listings', 'verifications', 'reports', 'reviews', 'views', 'inquiries'].map(tab => (
+              {['agents', 'listings', 'verifications', 'reports', 'reviews', 'views', 'inquiries', 'subscriptions'].map(tab => (
                 <button key={tab} onClick={() => setActiveTab(tab)} style={{ padding: '0.5rem 1rem', border: 'none', borderRadius: '0.375rem', backgroundColor: activeTab === tab ? 'white' : 'transparent', color: activeTab === tab ? 'hsl(200 25% 15%)' : 'hsl(200 15% 45%)', fontWeight: '500', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', transition: 'all 0.2s', boxShadow: activeTab === tab ? '0 1px 2px 0 hsl(200 25% 15% / 0.05)' : 'none', textTransform: 'capitalize' }}>
                   {tab === 'agents' && <Shield style={{ height: '1rem', width: '1rem' }} />}
                   {tab === 'listings' && <Home style={{ height: '1rem', width: '1rem' }} />}
@@ -467,6 +473,7 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, verif
                   {tab === 'reviews' && <MessageSquare style={{ height: '1rem', width: '1rem' }} />}
                   {tab === 'inquiries' && <MessageSquare style={{ height: '1rem', width: '1rem' }} />}
                   {tab === 'views' && <Eye style={{ height: '1rem', width: '1rem' }} />}
+                  {tab === 'subscriptions' && <Gift style={{ height: '1rem', width: '1rem' }} />}
                   {tab}
                 </button>
               ))}
@@ -474,386 +481,69 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, verif
 
             {/* ── AGENTS TAB ──────────────────────────────────────────────────── */}
             {activeTab === 'agents' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-                  <h2 style={{ fontSize: '1.125rem', fontWeight: '600', color: 'hsl(200 25% 15%)' }}>Platform Agents</h2>
-                  <button type="button" onClick={() => setShowAddAgentModal(true)} style={{ padding: '0.5rem 1rem', background: 'linear-gradient(135deg, hsl(174 62% 32%) 0%, hsl(174 50% 25%) 100%)', color: 'white', border: 'none', borderRadius: '0.5rem', fontWeight: '500', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <Home style={{ height: '1rem', width: '1rem' }} />Add New Agent
-                  </button>
-                </div>
-
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div style={{ display: 'flex', gap: '0.75rem', flex: '1 1 320px' }}>
-                    <input
-                      type="search"
-                      value={agentsFilter}
-                      onChange={(e) => setAgentsFilter(e.target.value)}
-                      placeholder="Search agents by name, email, status..."
-                      style={{ width: '100%', minWidth: '260px', padding: '0.75rem 1rem', borderRadius: '0.5rem', border: '1px solid hsl(200 15% 85%)', fontSize: '0.9rem' }}
-                    />
-                  </div>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1rem' }}>
-                  {filteredAgents.map(agentItem => (
-                    <div key={agentItem.id} style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.75rem', padding: '1.5rem' }}>
-                      {/* Card header */}
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-                        <div style={{ flex: 1, minWidth: '200px' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.375rem', flexWrap: 'wrap' }}>
-                            <h3 style={{ fontWeight: '600', color: 'hsl(200 25% 15%)', fontSize: '0.9rem' }}>{agentItem.name}</h3>
-                            {getStatusBadge(agentItem.status)}
-                          </div>
-                          {/* <h3 style={{ fontWeight: '600', color: 'hsl(200 25% 15%)', fontSize: '0.9rem' }}>{agentItem.name}</h3> */}
-                          <p style={{ fontSize: '0.8rem', color: 'hsl(200 15% 45%)', marginBottom: '0.2rem' }}>{agentItem.email}</p>
-                          {agentItem.company && <p style={{ fontSize: '0.8rem', color: 'hsl(200 15% 45%)' }}>{agentItem.company}</p>}
-                          {agentItem.location && <p style={{ fontSize: '0.8rem', color: 'hsl(200 15% 45%)' }}>{agentItem.location}</p>}
-                        </div>
-                        {/* Plan badge */}
-                        <PlanBadge plan={findPlan(agentItem.package)} />
-                      </div>
-
-                      {/* Meta */}
-                      <div style={{ display: 'flex', gap: '1rem', fontSize: '0.73rem', color: 'hsl(200 15% 50%)', marginBottom: '1rem', flexWrap: 'wrap' }}>
-                        <span>{agentItem.rentals_count ?? agentItem.total_listings ?? 0} listings</span>
-                        <span>Joined {new Date(agentItem.created_at).toLocaleDateString()}</span>
-                        <span>Last Active</span>
-                        <span>
-                          {agentItem.last_active
-                            ? new Date(agentItem.last_active).toLocaleDateString()
-                            : 'Not Active Yet'}
-                        </span>
-                        {agentItem.subscription && agentItem.subscription.starts_at && (
-                          <span>Plan starts {new Date(agentItem.subscription.starts_at).toLocaleDateString()}</span>
-                        )}
-                        {agentItem.subscription && agentItem.subscription.ends_at && (
-                          <span>Expires {new Date(agentItem.subscription.ends_at).toLocaleDateString()}</span>
-                        )}
-                      </div>
-
-                      {/* Actions */}
-                      <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
-                        <button onClick={() => handleViewProfile(agentItem)} style={{ padding: '0.35rem 0.7rem', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.375rem', backgroundColor: 'white', color: 'hsl(174 62% 32%)', fontSize: '0.8rem', fontWeight: '500', cursor: 'pointer' }}>
-                          View Details
-                        </button>
-
-                        <button onClick={() => handleEditAgent(agentItem)} style={{ padding: '0.35rem 0.7rem', border: '1px solid hsl(214 80% 55%)', borderRadius: '0.375rem', backgroundColor: 'white', color: 'hsl(214 80% 55%)', fontSize: '0.8rem', fontWeight: '500', cursor: 'pointer' }}>
-                          Edit Agent
-                        </button>
-
-                        <button onClick={() => handleResendInvitation(agentItem)} style={{ padding: '0.35rem 0.7rem', border: '1px solid hsl(39 100% 50%)', borderRadius: '0.375rem', backgroundColor: 'white', color: 'hsl(39 100% 50%)', fontSize: '0.8rem', fontWeight: '500', cursor: 'pointer' }}>
-                          📧 Resend Invite
-                        </button>
-
-                        {(agentItem.status === 'unverified' || agentItem.status === 'pending') && (
-                          <button onClick={() => handleVerifyClick(agentItem.id)} style={{ padding: '0.35rem 0.7rem', background: 'linear-gradient(135deg, hsl(152 60% 40%) 0%, hsl(152 50% 35%) 100%)', color: 'white', border: 'none', borderRadius: '0.375rem', fontSize: '0.8rem', fontWeight: '500', cursor: 'pointer' }}>
-                            Verify
-                          </button>
-                        )}
-
-                        {agentItem.status === 'verified' && (
-                          <button onClick={() => { if (!confirm(`Mark ${agentItem.name} as unverified?`)) return; router.put(`/admin/agents/${agentItem.id}/suspend`, { status: 'unverified' }, { onSuccess: () => showToast('Updated', `${agentItem.name} is now unverified`), onError: () => showToast('Error', 'Failed', 'error') }); }} style={{ padding: '0.35rem 0.7rem', backgroundColor: 'white', color: 'hsl(200 25% 15%)', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.375rem', fontSize: '0.8rem', fontWeight: '500', cursor: 'pointer' }}>
-                            Mark Unverified
-                          </button>
-                        )}
-
-                        {/* ── UPGRADE BUTTON ─────────────────────────────── */}
-                        {canUpgrade(agentItem) && plans?.length > 0 && (
-                          <button
-                            onClick={() => handleGrantClick(agentItem)}
-                            style={{ padding: '0.35rem 0.7rem', border: '1px solid hsl(271 76% 53%)', borderRadius: '0.375rem', backgroundColor: 'white', color: 'hsl(271 76% 53%)', fontSize: '0.8rem', fontWeight: '600', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.3rem', transition: 'all 0.15s' }}
-                            onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'hsl(271 76% 97%)'; }}
-                            onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'white'; }}
-                          >
-                            <Gift style={{ height: '0.8rem', width: '0.8rem' }} />
-                            Upgrade
-                          </button>
-                        )}
-
-                        <button onClick={() => handleSuspendAgent(agentItem.id)} style={{ padding: '0.35rem 0.7rem', border: '1px solid #d92626', borderRadius: '0.375rem', backgroundColor: 'white', color: '#d92626', fontSize: '0.8rem', fontWeight: '500', cursor: 'pointer' }}
-                          onMouseEnter={e => e.currentTarget.style.backgroundColor = 'hsl(0 70% 97%)'}
-                          onMouseLeave={e => e.currentTarget.style.backgroundColor = 'white'}
-                        >
-                          {agentItem.status === 'suspended' ? 'Unsuspend' : 'Suspend'}
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+                <AgentsTab 
+                    agents={agents}
+                    onAddAgent={() => setShowAddAgentModal(true)}
+                    onViewDetails={(agent) => {
+                        setSelectedAgent(agent);
+                        setShowAgentProfile(true);
+                    }}
+                    onEdit={(agent) => {
+                        setSelectedAgent(agent);
+                        setShowEditAgentModal(true);
+                    }}
+                    onVerify={(agentId) => {
+                        const agentToVerify = agents.find(a => a.id === agentId);
+                        if (agentToVerify) {
+                            setSelectedAgent(agentToVerify);
+                            setShowDialog(true);
+                        }
+                    }}
+                    onSuspend={(agentId) => {
+                        const a = agents.find(a => a.id === agentId);
+                        if (!a) return;
+                        const isSuspended = a.status === 'suspended';
+                        const newStatus = isSuspended ? 'unverified' : 'suspended';
+                        const action = isSuspended ? 'unsuspend' : 'suspend';
+                        if (!confirm(`Are you sure you want to ${action} ${a.name}?`)) return;
+                        router.put(`/admin/agents/${agentId}/suspend`, { status: newStatus }, {
+                            onSuccess: () => showToast(isSuspended ? 'Agent Unsuspended' : 'Agent Suspended', `${a.name} has been ${action}ed.`),
+                            onError: () => showToast('Failed', `Unable to ${action} agent.`, 'error'),
+                        });
+                    }}
+                    onUpgrade={(agent) => {
+                        setGrantTarget(agent);
+                        setShowGrantModal(true);
+                    }}
+                    onResendInvite={(agent) => {
+                        if (!confirm(`Resend invitation email to ${agent.name}?`)) return;
+                        router.post(`/admin/agents/${agent.id}/resend-invitation`, {}, {
+                            onSuccess: () => showToast('Invitation Sent', `Invitation email sent to ${agent.email}`),
+                            onError: () => showToast('Failed', 'Unable to resend invitation.', 'error'),
+                        });
+                    }}
+                />
             )}
 
             {/* ── LISTINGS TAB ─────────────────────────────────────────────── */}
             {activeTab === 'listings' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-              
-                  {/* ── Header ── */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-                      <div>
-                          <h2 style={{ fontSize: '1.125rem', fontWeight: '700', color: 'hsl(200 25% 15%)', margin: '0 0 0.15rem' }}>
-                              All Platform Listings
-                          </h2>
-                          <p style={{ margin: 0, fontSize: '0.78rem', color: 'hsl(200 15% 48%)' }}>
-                              {filteredListings.length} listing{filteredListings.length !== 1 ? 's' : ''} found
-                          </p>
-                      </div>
-                      <button
-                          onClick={() => setShowAddListingModal(true)}
-                          style={{ padding: '0.5rem 1rem', background: 'linear-gradient(135deg, hsl(174 62% 32%) 0%, hsl(174 50% 25%) 100%)', color: 'white', border: 'none', borderRadius: '0.5rem', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '0.875rem', fontFamily: 'inherit' }}>
-                          <Home style={{ height: '1rem', width: '1rem' }} /> Add New Listing
-                      </button>
-                  </div>
-
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <input
-                      type="search"
-                      value={listingsFilter}
-                      onChange={(e) => setListingsFilter(e.target.value)}
-                      placeholder="Search listings by title, location, agent..."
-                      style={{ width: '100%', minWidth: '260px', padding: '0.75rem 1rem', borderRadius: '0.5rem', border: '1px solid hsl(200 15% 85%)', fontSize: '0.9rem' }}
-                    />
-                    <select
-                      value={listingsStatusFilter}
-                      onChange={(e) => setListingsStatusFilter(e.target.value)}
-                      style={{ padding: '0.75rem 1rem', borderRadius: '0.5rem', border: '1px solid hsl(200 15% 85%)', fontSize: '0.9rem', minWidth: '160px' }}
-                    >
-                      <option value="all">All statuses</option>
-                      <option value="approved">Approved</option>
-                      <option value="pending">Pending</option>
-                      <option value="unverified">Unverified</option>
-                      <option value="suspended">Suspended</option>
-                    </select>
-                  </div>
-
-                  {/* ── Empty state ── */}
-                  {filteredListings.length === 0 && (
-                      <div style={{ textAlign: 'center', padding: '3rem 1rem', backgroundColor: 'white', border: '1px dashed hsl(40 20% 82%)', borderRadius: '0.75rem' }}>
-                          <p style={{ fontSize: '2rem', margin: '0 0 0.5rem' }}>🏠</p>
-                          <p style={{ margin: '0 0 0.25rem', fontWeight: '600', color: 'hsl(200 25% 15%)' }}>No listings yet</p>
-                          <p style={{ margin: 0, fontSize: '0.875rem', color: 'hsl(200 15% 48%)' }}>Add the first listing to get started.</p>
-                      </div>
-                  )}
-
-                  {/* ── Rental listings ── */}
-                  {(() => {
-                      const rentals = filteredListings.filter(p => p.purpose === 'rent');
-                      if (rentals.length === 0) return null;
-                      return (
-                          <AdminListingSection title="Rental Listings" emoji="🏠" count={rentals.length} accentColor="hsl(174 55% 28%)" accentBg="hsl(174 62% 32% / 0.07)" borderColor="hsl(174 50% 80%)">
-                              {rentals.map(property => (
-                                  <AdminListingCard
-                                      key={property.id}
-                                      property={property}
-                                      onView={handleViewClick}
-                                      onEdit={handleEditClick}
-                                      onApproveToggle={handleApproveToggle}
-                                      onDelete={handleDeleteListing}
-                                      getStatusBadge={getStatusBadge}
-                                  />
-                              ))}
-                          </AdminListingSection>
-                      );
-                  })()}
-
-                  {/* ── Sale listings ── */}
-                  {(() => {
-                      const sales = filteredListings.filter(p => p.purpose === 'sale');
-                      if (sales.length === 0) return null;
-                      return (
-                          <AdminListingSection title="Sale Listings" emoji="🏷️" count={sales.length} accentColor="hsl(36 75% 30%)" accentBg="hsl(38 92% 50% / 0.07)" borderColor="hsl(38 80% 78%)">
-                              {sales.map(property => (
-                                  <AdminListingCard
-                                      key={property.id}
-                                      property={property}
-                                      onView={handleViewClick}
-                                      onEdit={handleEditClick}
-                                      onApproveToggle={handleApproveToggle}
-                                      onDelete={handleDeleteListing}
-                                      getStatusBadge={getStatusBadge}
-                                  />
-                              ))}
-                          </AdminListingSection>
-                      );
-                  })()}
-
-              </div>
-          )}
+                <ListingsTab 
+                    listings={properties || []}
+                    onAddListing={() => setShowAddListingModal(true)}
+                    onView={handleViewClick}
+                    onEdit={handleEditClick}
+                    onApproveToggle={handleApproveToggle}
+                    onDelete={handleDeleteListing}
+                />
+            )}
 
             {/* ── REPORTS TAB ──────────────────────────────────────────────── */}
             {activeTab === 'reports' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-                  <h2 style={{ fontSize: '1.125rem', fontWeight: '600', color: 'hsl(200 25% 15%)' }}>Platform Reports ({filteredReports.length})</h2>
-                </div>
-
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <input
-                    type="search"
-                    value={reportsFilter}
-                    onChange={(e) => setReportsFilter(e.target.value)}
-                    placeholder="Search reports by type, reporter, description..."
-                    style={{ width: '100%', minWidth: '260px', padding: '0.75rem 1rem', borderRadius: '0.5rem', border: '1px solid hsl(200 15% 85%)', fontSize: '0.9rem' }}
-                  />
-                  <select
-                    value={reportsStatusFilter}
-                    onChange={(e) => setReportsStatusFilter(e.target.value)}
-                    style={{ padding: '0.75rem 1rem', borderRadius: '0.5rem', border: '1px solid hsl(200 15% 85%)', fontSize: '0.9rem', minWidth: '160px' }}
-                  >
-                    <option value="all">All statuses</option>
-                    <option value="pending">Pending</option>
-                    <option value="reviewing">Reviewing</option>
-                    <option value="resolved">Resolved</option>
-                    <option value="dismissed">Dismissed</option>
-                  </select>
-                </div>
-
-                {filteredReports.length > 0 ? (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '1rem' }}>
-                    {filteredReports.map(report => {
-                      const evidence = typeof report.evidence === 'string' ? JSON.parse(report.evidence) : (report.evidence || []);
-
-                      const reportTypeBadge = (type) => {
-                        const types = {
-                          'Fraudulent agent/landlord': 'hsl(0 70% 50%)',
-                          'Fraudulent listing':        'hsl(0 70% 50%)',
-                          'Harassment':                'hsl(25 95% 53%)',
-                          'False information':         'hsl(40 92% 50%)',
-                          'Scam':                      'hsl(0 84% 60%)',
-                          'Other':                     'hsl(200 15% 45%)',
-                        };
-                        const color = types[type] ?? 'hsl(0 70% 50%)';
-                        return <span style={{ display: 'inline-flex', alignItems: 'center', padding: '0.25rem 0.625rem', fontSize: '0.72rem', fontWeight: '600', backgroundColor: color, color: 'white', borderRadius: '9999px' }}>{type}</span>;
-                      };
-
-                      const reportStatusBadge = (status) => {
-                        const s = {
-                          pending:       { label: 'Pending',       bg: 'hsl(40 30% 94%)',    color: 'hsl(200 25% 15%)', border: 'hsl(40 20% 88%)' },
-                          reviewing:     { label: 'Reviewing',     bg: 'hsl(214 100% 95%)',  color: 'hsl(214 100% 40%)', border: 'hsl(214 100% 80%)' },
-                          resolved:      { label: 'Resolved',      bg: 'hsl(152 60% 95%)',  color: 'hsl(152 60% 35%)', border: 'hsl(152 60% 80%)' },
-                          dismissed:     { label: 'Dismissed',     bg: 'hsl(0 0% 95%)',     color: 'hsl(0 0% 45%)',    border: 'hsl(0 0% 80%)' },
-                        };
-                        const c = s[status] ?? s.pending;
-                        return <span style={{ display: 'inline-flex', alignItems: 'center', padding: '0.25rem 0.625rem', fontSize: '0.72rem', fontWeight: '500', backgroundColor: c.bg, color: c.color, borderRadius: '9999px', border: `1px solid ${c.border}` }}>{c.label}</span>;
-                      };
-
-                      return (
-                        <div key={report.id} style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.75rem', padding: '1.5rem' }}>
-                          {/* Type + Status badges */}
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.875rem', flexWrap: 'wrap' }}>
-                            {reportTypeBadge(report.report_type)}
-                            {reportStatusBadge(report.status ?? 'pending')}
-                          </div>
-
-                          {/* Reporter */}
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.875rem' }}>
-                            <div style={{ width: '2rem', height: '2rem', borderRadius: '50%', backgroundColor: 'hsl(0 70% 50% / 0.1)', color: 'hsl(0 70% 50%)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.875rem', fontWeight: '600', flexShrink: 0 }}>
-                              {report.full_name?.[0] ?? 'R'}
-                            </div>
-                            <div>
-                              <p style={{ fontSize: '0.85rem', fontWeight: '500', color: 'hsl(200 25% 15%)', margin: 0 }}>Reported by: {report.full_name ?? 'Anonymous'}</p>
-                              <p style={{ fontSize: '0.75rem', color: 'hsl(200 15% 45%)', margin: 0 }}>{new Date(report.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
-                            </div>
-                          </div>
-
-                          {/* Description */}
-                          <div style={{ backgroundColor: 'hsl(40 30% 97%)', padding: '0.875rem', borderRadius: '0.5rem', marginBottom: '1rem', borderLeft: '3px solid hsl(0 70% 50% / 0.3)' }}>
-                            <p style={{ fontSize: '0.72rem', fontWeight: '600', color: 'hsl(200 15% 45%)', marginBottom: '0.375rem' }}>Report Description</p>
-                            <p style={{ color: 'hsl(200 25% 15%)', fontSize: '0.875rem', lineHeight: '1.5', margin: 0 }}>{report.report_description ?? 'No description provided'}</p>
-                          </div>
-
-                          {/* Related Property */}
-                          {report.rental && (
-                            <div style={{ backgroundColor: 'hsl(174 62% 32% / 0.05)', padding: '0.875rem', borderRadius: '0.5rem', marginBottom: '1rem', border: '1px solid hsl(174 62% 32% / 0.2)' }}>
-                              <p style={{ fontSize: '0.72rem', fontWeight: '600', color: 'hsl(174 62% 32%)', marginBottom: '0.5rem' }}>Related Property</p>
-                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: '0.75rem', flexWrap: 'wrap' }}>
-                                <div style={{ flex: 1 }}>
-                                  <p style={{ fontSize: '0.875rem', fontWeight: '500', color: 'hsl(200 25% 15%)', marginBottom: '0.2rem' }}>{report.rental.title ?? 'Untitled Property'}</p>
-                                  <p style={{ fontSize: '0.75rem', color: 'hsl(200 15% 45%)', marginBottom: '0.2rem' }}>{report.rental.address}, {report.rental.city}</p>
-                                  <p style={{ fontSize: '0.75rem', color: 'hsl(200 15% 45%)' }}>Property ID: #{report.rental_id}</p>
-                                  {report.rental.agent && <p style={{ fontSize: '0.75rem', color: 'hsl(200 15% 45%)', marginTop: '0.2rem' }}>Agent: {report.rental.agent.fullName ?? 'Unknown'}</p>}
-                                </div>
-                                <button onClick={() => handleViewClick(report.rental)} style={{ padding: '0.3rem 0.65rem', border: '1px solid hsl(174 62% 32%)', borderRadius: '0.375rem', backgroundColor: 'white', color: 'hsl(174 62% 32%)', fontSize: '0.75rem', fontWeight: '500', cursor: 'pointer', whiteSpace: 'nowrap' }}
-                                  onMouseEnter={e => e.currentTarget.style.backgroundColor = 'hsl(174 62% 32% / 0.05)'}
-                                  onMouseLeave={e => e.currentTarget.style.backgroundColor = 'white'}
-                                >View Property</button>
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Evidence */}
-                          {evidence.length > 0 && (
-                            <div style={{ backgroundColor: 'hsl(40 30% 97%)', padding: '0.875rem', borderRadius: '0.5rem', marginBottom: '1rem' }}>
-                              <p style={{ fontSize: '0.72rem', fontWeight: '600', color: 'hsl(200 15% 45%)', marginBottom: '0.5rem' }}>Evidence Attached ({evidence.length})</p>
-                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
-                                {evidence.map((item, idx) => {
-                                  const filename = typeof item === 'string' ? item.split('/').pop() : (item.name ?? `Evidence ${idx + 1}`);
-                                  return (
-                                    <a
-                                      key={idx}
-                                      href={`/admin/reports/${report.report_id || report.id}/evidence/${encodeURIComponent(filename)}`}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      style={{
-                                        padding: '0.2rem 0.5rem',
-                                        fontSize: '0.75rem',
-                                        backgroundColor: 'white',
-                                        color: 'hsl(214 100% 40%)',
-                                        borderRadius: '0.375rem',
-                                        border: '1px solid hsl(40 20% 88%)',
-                                        textDecoration: 'none',
-                                        cursor: 'pointer',
-                                        display: 'inline-block'
-                                      }}
-                                      onMouseEnter={e => e.currentTarget.style.backgroundColor = 'hsl(214 100% 40% / 0.05)'}
-                                      onMouseLeave={e => e.currentTarget.style.backgroundColor = 'white'}
-                                    >
-                                      📎 {filename}
-                                    </a>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Action buttons */}
-                          {(!report.status || report.status === 'pending') && (
-                            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                              <button onClick={() => router.put(`/admin/reports/${report.id}/status`, { status: 'reviewing' }, { onSuccess: () => showToast('Status Updated', 'Marked as reviewing.') })}
-                                style={{ padding: '0.35rem 0.7rem', background: 'linear-gradient(135deg, hsl(214 100% 40%) 0%, hsl(214 100% 35%) 100%)', color: 'white', border: 'none', borderRadius: '0.375rem', fontSize: '0.8rem', fontWeight: '500', cursor: 'pointer' }}>
-                                Mark as Reviewing
-                              </button>
-                              <button onClick={() => { if (confirm('Resolve this report?')) router.put(`/admin/reports/${report.id}/status`, { status: 'resolved' }, { onSuccess: () => showToast('Report Resolved', 'Marked as resolved.') }); }}
-                                style={{ padding: '0.35rem 0.7rem', background: 'linear-gradient(135deg, hsl(152 60% 40%) 0%, hsl(152 50% 35%) 100%)', color: 'white', border: 'none', borderRadius: '0.375rem', fontSize: '0.8rem', fontWeight: '500', cursor: 'pointer' }}>
-                                Resolve Report
-                              </button>
-                              <button onClick={() => { if (confirm('Dismiss this report?')) router.put(`/admin/reports/${report.id}/status`, { status: 'dismissed' }, { onSuccess: () => showToast('Report Dismissed', '') }); }}
-                                style={{ padding: '0.35rem 0.7rem', border: '1px solid hsl(0 0% 70%)', borderRadius: '0.375rem', backgroundColor: 'white', color: 'hsl(0 0% 45%)', fontSize: '0.8rem', fontWeight: '500', cursor: 'pointer' }}
-                                onMouseEnter={e => e.currentTarget.style.backgroundColor = 'hsl(0 0% 95%)'}
-                                onMouseLeave={e => e.currentTarget.style.backgroundColor = 'white'}
-                              >Dismiss Report</button>
-                            </div>
-                          )}
-                          {report.status === 'reviewing' && (
-                            <div style={{ padding: '0.625rem', backgroundColor: 'hsl(214 100% 95%)', borderRadius: '0.5rem', color: 'hsl(214 100% 40%)', fontSize: '0.8rem', fontWeight: '500', textAlign: 'center' }}>⏳ This report is under review</div>
-                          )}
-                          {report.status === 'resolved' && (
-                            <div style={{ padding: '0.625rem', backgroundColor: 'hsl(152 60% 95%)', borderRadius: '0.5rem', color: 'hsl(152 60% 35%)', fontSize: '0.8rem', fontWeight: '500', textAlign: 'center' }}>✓ This report has been resolved</div>
-                          )}
-                          {report.status === 'dismissed' && (
-                            <div style={{ padding: '0.625rem', backgroundColor: 'hsl(0 0% 95%)', borderRadius: '0.5rem', color: 'hsl(0 0% 45%)', fontSize: '0.8rem', fontWeight: '500', textAlign: 'center' }}>Report dismissed</div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.75rem', padding: '3rem', textAlign: 'center' }}>
-                    <AlertCircle style={{ height: '3rem', width: '3rem', color: 'hsl(200 15% 70%)', margin: '0 auto 1rem' }} />
-                    <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: 'hsl(200 25% 15%)', marginBottom: '0.5rem' }}>No Reports Yet</h3>
-                    <p style={{ color: 'hsl(200 15% 45%)' }}>There are no reports on the platform yet.</p>
-                  </div>
-                )}
-              </div>
+                <ReportsTab 
+                    reports={reports || []}
+                    onViewProperty={handleViewClick}
+                    showToast={showToast}
+                />
             )}
 
             {/* ── VERIFICATIONS TAB ────────────────────────────────────────── */}
@@ -869,253 +559,44 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, verif
 
             {/* ── REVIEWS TAB ──────────────────────────────────────────────── */}
             {activeTab === 'reviews' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                <h2 style={{ fontSize: '1.125rem', fontWeight: '600', color: 'hsl(200 25% 15%)' }}>All Platform Reviews ({filteredReviews.length})</h2>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <input
-                    type="search"
-                    value={reviewsFilter}
-                    onChange={(e) => setReviewsFilter(e.target.value)}
-                    placeholder="Search reviews by guest, property, comment..."
-                    style={{ width: '100%', minWidth: '260px', padding: '0.75rem 1rem', borderRadius: '0.5rem', border: '1px solid hsl(200 15% 85%)', fontSize: '0.9rem' }}
-                  />
-                  <select
-                    value={reviewsRatingFilter}
-                    onChange={(e) => setReviewsRatingFilter(e.target.value)}
-                    style={{ padding: '0.75rem 1rem', borderRadius: '0.5rem', border: '1px solid hsl(200 15% 85%)', fontSize: '0.9rem', minWidth: '160px' }}
-                  >
-                    <option value="all">All ratings</option>
-                    <option value="5">5 stars</option>
-                    <option value="4">4 stars</option>
-                    <option value="3">3 stars</option>
-                    <option value="2">2 stars</option>
-                    <option value="1">1 star</option>
-                  </select>
-                </div>
-                {filteredReviews.length > 0 ? (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1rem' }}>
-                    {filteredReviews.map(review => (
-                      <div key={review.id} style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.75rem', padding: '1.5rem' }}>
-                        {/* Header */}
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.875rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-                          <div style={{ flex: 1 }}>
-                            <p style={{ fontSize: '0.78rem', color: 'hsl(200 15% 45%)', marginBottom: '0.4rem' }}>Review for Property #{review.rental_id ?? 'Unknown'}</p>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginBottom: '0.4rem' }}>
-                              <div style={{ width: '2rem', height: '2rem', borderRadius: '50%', backgroundColor: 'hsl(174 62% 32% / 0.1)', color: 'hsl(174 62% 32%)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.875rem', fontWeight: '600', flexShrink: 0 }}>
-                                {review.full_name?.[0] ?? 'T'}
-                              </div>
-                              <div>
-                                <p style={{ fontWeight: '600', color: 'hsl(200 25% 15%)', fontSize: '0.875rem', margin: 0 }}>{review.full_name ?? 'Anonymous'}</p>
-                                <div style={{ display: 'flex', gap: '0.2rem' }}>{renderStars(review.overall_rating)}</div>
-                              </div>
-                            </div>
-                          </div>
-                          <span style={{ fontSize: '0.75rem', color: 'hsl(200 15% 45%)' }}>{new Date(review.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</span>
-                        </div>
-
-                        {/* Attribute pills */}
-                        {(review.landlord_responsive || review.property_matched_description || review.fair_pricing || review.good_communication) && (
-                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.375rem', marginBottom: '0.875rem' }}>
-                            {review.landlord_responsive == 1 && <span style={{ padding: '0.2rem 0.55rem', fontSize: '0.72rem', backgroundColor: 'hsl(152 60% 95%)', color: 'hsl(152 60% 35%)', borderRadius: '9999px', border: '1px solid hsl(152 60% 85%)' }}>✓ Responsive Landlord</span>}
-                            {review.property_matched_description == 1 && <span style={{ padding: '0.2rem 0.55rem', fontSize: '0.72rem', backgroundColor: 'hsl(152 60% 95%)', color: 'hsl(152 60% 35%)', borderRadius: '9999px', border: '1px solid hsl(152 60% 85%)' }}>✓ Accurate Description</span>}
-                            {review.fair_pricing == 1 && <span style={{ padding: '0.2rem 0.55rem', fontSize: '0.72rem', backgroundColor: 'hsl(152 60% 95%)', color: 'hsl(152 60% 35%)', borderRadius: '9999px', border: '1px solid hsl(152 60% 85%)' }}>✓ Fair Pricing</span>}
-                            {review.good_communication == 1 && <span style={{ padding: '0.2rem 0.55rem', fontSize: '0.72rem', backgroundColor: 'hsl(152 60% 95%)', color: 'hsl(152 60% 35%)', borderRadius: '9999px', border: '1px solid hsl(152 60% 85%)' }}>✓ Good Communication</span>}
-                          </div>
-                        )}
-
-                        {/* Comment */}
-                        {review.comments && (
-                          <p style={{ color: 'hsl(200 15% 45%)', fontSize: '0.875rem', lineHeight: '1.5', padding: '0.75rem', backgroundColor: 'hsl(40 30% 97%)', borderRadius: '0.5rem', borderLeft: '3px solid hsl(174 62% 32% / 0.3)', marginBottom: '0.875rem' }}>"{review.comments}"</p>
-                        )}
-
-                        {/* Agent response */}
-                        {review.response && (
-                          <div style={{ backgroundColor: 'hsl(210 20% 98%)', padding: '0.75rem', borderRadius: '0.5rem', marginBottom: '0.875rem', borderLeft: '3px solid hsl(174 62% 32%)' }}>
-                            <p style={{ fontSize: '0.72rem', fontWeight: '600', color: 'hsl(174 62% 32%)', marginBottom: '0.25rem' }}>Response {review.response_person ? `by ${review.response_person}` : ''}</p>
-                            <p style={{ fontSize: '0.875rem', color: 'hsl(200 25% 15%)', lineHeight: '1.5', margin: 0 }}>{review.response}</p>
-                          </div>
-                        )}
-
-                        {/* Actions */}
-                        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                          {review.review_type === 'rent' && (
-                            <button onClick={() => { const r = properties.find(p => p.id === review.rental_id); if (r) handleViewClick(r); }}
-                              style={{ padding: '0.35rem 0.7rem', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.375rem', backgroundColor: 'white', color: 'hsl(174 62% 32%)', fontSize: '0.8rem', fontWeight: '500', cursor: 'pointer' }}
-                              onMouseEnter={e => e.currentTarget.style.backgroundColor = 'hsl(174 62% 32% / 0.05)'}
-                              onMouseLeave={e => e.currentTarget.style.backgroundColor = 'white'}
-                            >View Property</button>
-                          )}
-                          <button onClick={() => { if (confirm('Delete this review? This cannot be undone.')) router.delete(`/admin/reviews/${review.id}`, { onSuccess: () => showToast('Review Deleted', 'Removed successfully.'), onError: () => showToast('Delete Failed', 'Please try again.', 'error') }); }}
-                            style={{ padding: '0.35rem 0.7rem', border: '1px solid hsl(0 70% 50%)', borderRadius: '0.375rem', backgroundColor: 'white', color: 'hsl(0 70% 50%)', fontSize: '0.8rem', fontWeight: '500', cursor: 'pointer' }}
-                            onMouseEnter={e => e.currentTarget.style.backgroundColor = 'hsl(0 70% 50% / 0.05)'}
-                            onMouseLeave={e => e.currentTarget.style.backgroundColor = 'white'}
-                          >Delete Review</button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.75rem', padding: '3rem', textAlign: 'center' }}>
-                    <Star style={{ height: '3rem', width: '3rem', color: 'hsl(200 15% 70%)', margin: '0 auto 1rem', fill: 'none' }} />
-                    <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: 'hsl(200 25% 15%)', marginBottom: '0.5rem' }}>No Reviews Yet</h3>
-                    <p style={{ color: 'hsl(200 15% 45%)' }}>There are no reviews on the platform yet.</p>
-                  </div>
-                )}
-              </div>
+                <ReviewsTab 
+                    reviews={reviews || []}
+                    properties={properties || []}
+                    onViewProperty={handleViewClick}
+                    showToast={showToast}
+                />
             )}
 
-            {activeTab === 'inquiries' && <InquiriesTab inquiries={inquiries} rentals={rentals} onView={handleViewClick} />}
+            {/* ── INQUIRIES TAB ──────────────────────────────────────────────────── */}
+            {activeTab === 'inquiries' && (
+                <InquiriesTab 
+                    inquiries={inquiries || []}
+                    rentals={rentals || []}
+                    onViewProperty={(rental) => {
+                        if (rental) {
+                            handleViewClick(rental);
+                        }
+                    }}
+                />
+            )}
 
-            {/* {activeTab === 'inquiries' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(1rem, 3vw, 1.5rem)' }}>
-                  <h2 style={{ color: 'hsl(200 25% 15%)', fontSize: 'clamp(1rem, 3vw, 1.125rem)', fontWeight: '600' }}>Property Inquiries ({inquiries.length})</h2>
-                  {inquiries.length > 0 ? (
-                    <div className="review-grid" style={{ display: 'grid', gap: 'clamp(0.75rem, 2vw, 1rem)' }}>
-                      {inquiries.map((inquiry) => {
-                        const propertyTitle = rentals?.find(r => r.id === inquiry.rental_id)?.title || `Property #${inquiry.rental_id}`;
-                        const propertyAddress = rentals?.find(r => r.id === inquiry.rental_id)?.address || 'Unknown';
-                        const propertyCity = rentals?.find(r => r.id === inquiry.rental_id)?.city || 'Unknown';
-                        
-                        return (
-                          <div key={inquiry.id} style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.5rem, 2vw, 0.75rem)', padding: 'clamp(0.75rem, 2vw, 1rem)' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 'clamp(0.75rem, 2vw, 1rem)', gap: 'clamp(0.5rem, 2vw, 1rem)', flexWrap: 'wrap' }}>
-                              <div style={{ flex: 1, minWidth: 0 }}>
-                                <h3 style={{ color: 'hsl(200 25% 15%)', fontSize: 'clamp(0.875rem, 2.5vw, 1rem)', fontWeight: '600', marginBottom: 'clamp(0.25rem, 1vw, 0.5rem)', wordBreak: 'break-word' }}>{propertyTitle}</h3>
-                                <p style={{ fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', color: 'hsl(200 15% 45%)', marginBottom: 'clamp(0.5rem, 2vw, 0.75rem)', wordBreak: 'break-word' }}>{propertyAddress}, {propertyCity}</p>
-                              </div>
-                              <span style={{ padding: 'clamp(0.25rem, 1vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem)', fontSize: 'clamp(0.6875rem, 2vw, 0.75rem)', fontWeight: '500', backgroundColor: 'hsl(174 62% 32% / 0.1)', color: 'hsl(174 62% 32%)', borderRadius: '9999px', whiteSpace: 'nowrap' }}>
-                                {inquiry.type === 'form' ? '📝 Form' : inquiry.type === 'whatsapp' ? '💬 WhatsApp' : '📞 Phone'}
-                              </span>
-                            </div>
+            {/* ── VIEWS TAB ────────────────────────────────────────────────── */}
+            {activeTab === 'views' && (
+                <ViewsTab 
+                    views={views || []}
+                    totalViews={totalViews || 0}
+                    onViewDetails={handleViewClick}
+                />
+            )}
 
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.75rem, 2vw, 1rem)', marginBottom: 'clamp(0.75rem, 2vw, 1rem)', paddingBottom: 'clamp(0.75rem, 2vw, 1rem)', borderBottom: '1px solid hsl(40 20% 88%)' }}>
-                              <div style={{ width: 'clamp(2rem, 8vw, 2.5rem)', height: 'clamp(2rem, 8vw, 2.5rem)', borderRadius: '50%', backgroundColor: 'hsl(174 62% 32% / 0.1)', color: 'hsl(174 62% 32%)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 'clamp(0.875rem, 2.5vw, 1rem)', fontWeight: '600', flexShrink: 0 }}>
-                                {inquiry.user?.name?.[0] || 'T'}
-                              </div>
-                              <div style={{ flex: 1, minWidth: 0 }}>
-                                <p style={{ fontSize: 'clamp(0.875rem, 2.5vw, 1rem)', fontWeight: '500', color: 'hsl(200 25% 15%)', margin: 0, wordBreak: 'break-word' }}>
-                                  {inquiry.user?.name || 'Anonymous Tenant'}
-                                </p>
-                                <p style={{ fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', color: 'hsl(200 15% 45%)', margin: '0.25rem 0 0', wordBreak: 'break-word' }}>
-                                  {inquiry.user?.email || 'No email provided'}
-                                </p>
-                                <p style={{ fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', color: 'hsl(200 15% 45%)', margin: '0.25rem 0 0', wordBreak: 'break-word' }}>
-                                  {inquiry.user?.phone || 'No number provided'}
-                                </p>
-                              </div>
-                              <span style={{ fontSize: 'clamp(0.75rem, 2vw, 0.75rem)', color: 'hsl(200 15% 45%)', whiteSpace: 'nowrap' }}>
-                                {new Date(inquiry.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
-                              </span>
-                            </div>
-
-                            {inquiry.message && (
-                              <div style={{ backgroundColor: 'hsl(40 33% 98%)', padding: 'clamp(0.75rem, 2vw, 1rem)', borderRadius: 'clamp(0.375rem, 2vw, 0.5rem)', marginBottom: 'clamp(0.75rem, 2vw, 1rem)' }}>
-                                <p style={{ fontSize: 'clamp(0.75rem, 2vw, 0.75rem)', fontWeight: '600', color: 'hsl(200 25% 15%)', marginBottom: '0.5rem' }}>Message:</p>
-                                <p style={{ fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)', color: 'hsl(200 15% 45%)', margin: 0, lineHeight: '1.5', wordBreak: 'break-word' }}>"{inquiry.message}"</p>
-                              </div>
-                            )}
-
-                            <button onClick={() => handleViewClick(inquiry.rental)}
-                              style={{ padding: '0.35rem 0.7rem', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.375rem', backgroundColor: 'white', color: 'hsl(174 62% 32%)', fontSize: '0.8rem', fontWeight: '500', cursor: 'pointer' }}
-                              onMouseEnter={e => e.currentTarget.style.backgroundColor = 'hsl(174 62% 32% / 0.05)'}
-                              onMouseLeave={e => e.currentTarget.style.backgroundColor = 'white'}
-                            >View Property</button>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <div style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.75rem', padding: '3rem', textAlign: 'center' }}>
-                      <Inbox style={{ height: '3rem', width: '3rem', color: 'hsl(200 15% 70%)', margin: '0 auto 1rem' }} />
-                      <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: 'hsl(200 25% 15%)', marginBottom: '0.5rem' }}>No Inquiries Yet</h3>
-                      <p style={{ color: 'hsl(200 15% 45%)' }}>There are no property inquiries yet.</p>
-                    </div>
-                  )}
-                </div>
-              )} */}
-
-            {/* Views Tab */}
-              {activeTab === 'views' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                
-                  {/* Header */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-                    <div>
-                      <h2 style={{ fontSize: '1.125rem', fontWeight: '700', color: 'hsl(200 25% 15%)', margin: '0 0 0.15rem' }}>
-                        Property Views
-                      </h2>
-                      <p style={{ margin: 0, fontSize: '0.78rem', color: 'hsl(200 15% 48%)' }}>
-                        {views.length} propert{views.length !== 1 ? 'ies' : 'y'} viewed · {totalViews} total view{totalViews !== 1 ? 's' : ''}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Empty state */}
-                  {views.length === 0 && (
-                    <div style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.75rem', padding: '3rem', textAlign: 'center' }}>
-                      <Eye style={{ height: '3rem', width: '3rem', color: 'hsl(200 15% 70%)', margin: '0 auto 1rem' }} />
-                      <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: 'hsl(200 25% 15%)', marginBottom: '0.5rem' }}>No Views Yet</h3>
-                      <p style={{ color: 'hsl(200 15% 45%)' }}>No listings have been viewed yet.</p>
-                    </div>
-                  )}
-
-                  {/* Grid */}
-                  {views.length > 0 && (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
-                      {views.map((property) => {
-                        const isRent     = property.purpose === 'rent';
-                        const priceStr   = isRent
-                          ? `GH₵${property.rent_min?.toLocaleString() ?? '—'} – GH₵${property.rent_max?.toLocaleString() ?? '—'} / yr`
-                          : `GH₵${property.sale_price?.toLocaleString() ?? '—'}`;
-                        const priceColor = isRent ? 'hsl(174 55% 28%)' : 'hsl(36 75% 30%)';
-                      
-                        return (
-                          <div key={property.id} style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.75rem', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
-                          
-                            {/* Property info */}
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.75rem' }}>
-                              <div style={{ flex: 1, minWidth: 0 }}>
-                                <h3 style={{ margin: '0 0 0.2rem', fontWeight: '600', color: 'hsl(200 25% 15%)', fontSize: '0.9375rem', wordBreak: 'break-word' }}>
-                                  {property.title}
-                                </h3>
-                                <p style={{ margin: '0 0 0.3rem', fontSize: '0.8rem', color: 'hsl(200 15% 48%)' }}>
-                                  {[property.address, property.city].filter(Boolean).join(', ')}
-                                </p>
-                                <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: '600', color: priceColor }}>
-                                  {priceStr}
-                                </p>
-                              </div>
-                              <div style={{ flexShrink: 0 }}>
-                                {getStatusBadge(property.status)}
-                              </div>
-                            </div>
-                        
-                            {/* Divider */}
-                            <div style={{ height: '1px', backgroundColor: 'hsl(40 20% 92%)' }} />
-                        
-                            {/* Views count + action */}
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.875rem', fontWeight: '600', color: 'hsl(174 55% 28%)' }}>
-                                <Eye style={{ height: '1rem', width: '1rem' }} />
-                                {property.views} view{property.views !== 1 ? 's' : ''}
-                              </div>
-                              <button
-                                onClick={() => handleViewClick(property)}
-                                style={{ padding: '0.35rem 0.7rem', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.375rem', backgroundColor: 'white', color: 'hsl(174 62% 32%)', fontSize: '0.8rem', fontWeight: '500', cursor: 'pointer' }}
-                                onMouseEnter={e => e.currentTarget.style.backgroundColor = 'hsl(174 62% 32% / 0.05)'}
-                                onMouseLeave={e => e.currentTarget.style.backgroundColor = 'white'}
-                              >
-                                View Details
-                              </button>
-                            </div>
-                        
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              )}
+            {/* ── SUBSCRIPTIONS TAB ─────────────────────────────────────────── */}
+            {activeTab === 'subscriptions' && (
+                <SubscriptionsTab 
+                    agents={agentData || []}
+                    onViewAgent={handleViewProfile}
+                    onUpgrade={handleGrantClick}
+                />
+            )}
 
           </div>
         </main>

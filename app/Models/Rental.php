@@ -78,7 +78,7 @@ class Rental extends Model
 
     public function user()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id');
     }
  
     public function agent()
@@ -206,19 +206,19 @@ class Rental extends Model
     /**
      * Scope for active boost
      */
-    public function scopeActiveBoost($query)
-    {
-        return $query->where('is_boosted', true)
-                     ->where('boost_expires_at', '>', now());
-    }
+    // public function scopeActiveBoost($query)
+    // {
+    //     return $query->where('is_boosted', true)
+    //                  ->where('boost_expires_at', '>', now());
+    // }
 
-    /**
-     * Check if boost is active
-     */
-    public function isBoostActive(): bool
-    {
-        return $this->is_boosted && $this->boost_expires_at && $this->boost_expires_at->isFuture();
-    }
+    // /**
+    //  * Check if boost is active
+    //  */
+    // public function isBoostActive(): bool
+    // {
+    //     return $this->is_boosted && $this->boost_expires_at && $this->boost_expires_at->isFuture();
+    // }
 
     /**
      * Get user's plan priority

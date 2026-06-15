@@ -9,6 +9,8 @@ const AdminEditAgentModal = ({ agent, isOpen, onClose, onSuccess }) => {
     company: agent?.company ?? '',
     bio: agent?.bio ?? '',
     fee: agent?.fee ?? '',
+    role: agent?.role ?? 'agent',
+    location: agent?.location ?? '',
   });
 
   useEffect(() => {
@@ -22,6 +24,8 @@ const AdminEditAgentModal = ({ agent, isOpen, onClose, onSuccess }) => {
     setData('company', agent.company ?? '');
     setData('bio', agent.bio ?? '');
     setData('fee', agent.fee ?? '');
+    setData('role', agent.role ?? 'agent');
+    setData('location', agent.location ?? '');
   }, [agent]);
 
   const handleSubmit = (event) => {
@@ -45,7 +49,8 @@ const AdminEditAgentModal = ({ agent, isOpen, onClose, onSuccess }) => {
   if (!isOpen || !agent) {
     return null;
   }
-
+// Uncaught ReferenceError: labelStyle is not defined
+//     at AdminEditAgentModal (
   return (
     <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.58)', zIndex: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
       <div style={{ width: '100%', maxWidth: '560px', borderRadius: '1rem', backgroundColor: '#0f0e0c', color: '#f5f0e8', boxShadow: '0 25px 80px rgba(0,0,0,0.35)', overflow: 'hidden' }}>
@@ -122,7 +127,8 @@ const AdminEditAgentModal = ({ agent, isOpen, onClose, onSuccess }) => {
             {errors.bio && <span style={{ color: '#ff6b6b', fontSize: '0.78rem' }}>{errors.bio}</span>}
           </label>
 
-          <label style={{ display: 'grid', gap: '0.4rem', fontSize: '0.85rem', color: '#d7d2c9' }}>
+          <div style={{ display: 'grid', gap: '1rem', gridTemplateColumns: '1fr 1fr' }}>
+            <label style={{ display: 'grid', gap: '0.4rem', fontSize: '0.85rem', color: '#d7d2c9' }}>
             Fee %
             <input
               type="number"
@@ -133,6 +139,31 @@ const AdminEditAgentModal = ({ agent, isOpen, onClose, onSuccess }) => {
               style={{ width: '100%', padding: '0.85rem 1rem', borderRadius: '0.75rem', border: '1px solid rgba(255,255,255,0.08)', backgroundColor: '#161512', color: '#f5f0e8', outline: 'none' }}
             />
             {errors.fee && <span style={{ color: '#ff6b6b', fontSize: '0.78rem' }}>{errors.fee}</span>}
+          </label>
+            <label style={{ display: 'grid', gap: '0.4rem', fontSize: '0.85rem', color: '#d7d2c9' }}>
+              Role
+              <select
+                value={data.role}
+                onChange={(e) => setData('role', e.target.value)}
+                style={{ width: '100%', padding: '0.85rem 1rem', borderRadius: '0.75rem', border: '1px solid rgba(255,255,255,0.08)', backgroundColor: '#161512', color: '#f5f0e8', outline: 'none' }}
+              >
+                <option value="">Select a role</option>
+                <option value="agent">Agent</option>
+                <option value="landlord">Landlord</option>
+              </select>
+              {errors.role && <span style={{ color: '#ff6b6b', fontSize: '0.78rem' }}>{errors.role}</span>}
+            </label>
+          </div>
+
+          <label style={{ display: 'grid', gap: '0.4rem', fontSize: '0.85rem', color: '#d7d2c9' }}>
+            Location
+            <input
+              type="text" value={data.location}
+              onChange={(e) => setData('location', e.target.value)}
+              placeholder="City, State"
+              style={{ width: '100%', padding: '0.85rem 1rem', borderRadius: '0.75rem', border: '1px solid rgba(255,255,255,0.08)', backgroundColor: '#161512', color: '#f5f0e8', outline: 'none' }}
+            />
+            {errors.location && <span style={{ color: '#ff6b6b', fontSize: '0.78rem' }}>{errors.location}</span>}
           </label>
 
           <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '0.5rem' }}>

@@ -249,27 +249,12 @@ const FailureState = ({ error, onRetry, onCancel }) => (
       <button onClick={onCancel} style={{ display: "inline-flex", alignItems: "center", padding: "clamp(0.75rem, 2.5vw, 1rem) clamp(1.5rem, 4vw, 2rem)", backgroundColor: "white", color: "hsl(200 25% 15%)", border: "1px solid hsl(40 20% 88%)", borderRadius: "0.5rem", cursor: "pointer", fontWeight: "600", fontSize: "clamp(0.9375rem, 2vw, 1rem)" }}>Cancel</button>
     </div>
     <p style={{ color: "hsl(200 15% 45%)", fontSize: "0.8125rem", marginTop: "2rem" }}>
-      Need help? <Link href={route('contact.page')} style={{ color: "hsl(174 62% 32%)", fontWeight: "500", textDecoration: "none" }}>Contact Support</Link>
+      Need help? <Link href='/contact' style={{ color: "hsl(174 62% 32%)", fontWeight: "500", textDecoration: "none" }}>Contact Support</Link>
     </p>
   </div>
 );
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
-/**
- * Props from CheckoutController::show():
- *   plan: {
- *     id, name, slug, price, description,
- *     features[],                ← pre-built, matches PricingModal
- *     listing_limit, listing_limit_display,
- *     boost_limit, lead_limit,
- *     verified_badge, priority_ranking, analytics_access
- *   }
- *   allPlans: [...]              ← all available plans from plansForModal()
- *
- * Reached via:
- *   router.visit('/checkout/plan=' + encodeURIComponent(pkg))   ← PricingModal
- *   router.visit('/checkout/' + plan.id)                        ← any other caller
- */
 const CheckoutPage = ({ plan, allPlans = [] }) => {
   const { flash } = usePage().props;
 

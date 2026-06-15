@@ -4,7 +4,7 @@ import Footer from '../Components/Layouts/Footer';
 import SEO from '../Components/SEO';
 import JsonLd from '../Components/JsonLd';
 import { Link, usePage, useForm } from "@inertiajs/react";
-import { ChevronLeft, ChevronRight, BedDouble, Bath } from 'lucide-react';
+import { ChevronLeft, ChevronRight, BedDouble, Bath, Phone, Mail } from 'lucide-react';
 import ReportListingDialog from "../Components/Modules/ReportListingDialog";
 import ReviewForm from "../Components/Modules/ReviewForm";
 import InquiryModal from "../Components/Modules/InquiryForm";
@@ -115,7 +115,7 @@ const buildPropertySchema = (rental, seo) => {
         },
         'brand': {
             '@type': 'Organization',
-            'name': rental.user?.name || 'RentTrustGh',
+            'name': rental.agent?.name || rental.agent_name,  // Use agent name
         },
     };
 };
@@ -147,7 +147,7 @@ const buildBreadcrumbSchema = (rental, seo) => ({
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
-export default function PropertyDetailsPage({ rental, reviews, seo }) {
+export default function PropertyDetailsPage({ rental, reviews, seo, agent }) {
     const { auth } = usePage().props;
 
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -161,7 +161,7 @@ export default function PropertyDetailsPage({ rental, reviews, seo }) {
     const images    = parseImages(rental.images);
     const amenities = typeof rental.amenities === 'string' ? JSON.parse(rental.amenities || '[]') : (rental.amenities ?? []);
     const advance   = rental.advance_duration ?? rental.advance_months ?? 0;
-    const agentFee  = (rental.rent_max ?? 0) * ((rental.user?.fee ?? 0) / 100);
+    const agentFee  = (rental.rent_max ?? 0) * ((agent?.fee ?? 0) / 100);
     const upfront   = (rental.rent_max ?? 0) * advance;
     const total     = upfront + agentFee;
 
@@ -169,6 +169,8 @@ export default function PropertyDetailsPage({ rental, reviews, seo }) {
         setToast({ title, description, variant });
         setTimeout(() => setToast(null), 4000);
     };
+
+    console.log(agent);
 
     const authRedirect = (fn) => {
         if (!auth?.agent && !auth?.super && !auth?.tenant) {
@@ -569,7 +571,7 @@ export default function PropertyDetailsPage({ rental, reviews, seo }) {
                                             </div>
                                             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                                                 <span style={{ color: 'hsl(200 15% 45%)' }}>Agent Fee</span>
-                                                <span style={{ fontWeight: '500', color: 'hsl(200 25% 15%)' }}>{rental.user?.fee ?? 0}%</span>
+                                                <span style={{ fontWeight: '500', color: 'hsl(200 25% 15%)' }}>{agent?.fee ?? 0}%</span>
                                             </div>
                                             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                                                 <span style={{ color: 'hsl(200 15% 45%)' }}>Location</span>
@@ -586,7 +588,7 @@ export default function PropertyDetailsPage({ rental, reviews, seo }) {
                                                     <span style={{ fontWeight: '600', color: 'hsl(200 25% 22%)' }}>{fmt(upfront)}</span>
                                                 </div>
                                                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                    <span style={{ color: 'hsl(200 15% 45%)' }}>Agent fee ({rental.user?.fee ?? 0}%)</span>
+                                                    <span style={{ color: 'hsl(200 15% 45%)' }}>Agent fee ({agent?.fee ?? 0}%)</span>
                                                     <span style={{ fontWeight: '600', color: 'hsl(200 25% 22%)' }}>{fmt(agentFee)}</span>
                                                 </div>
                                                 <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid hsl(40 20% 90%)', paddingTop: '0.35rem', marginTop: '0.1rem' }}>
@@ -600,7 +602,8 @@ export default function PropertyDetailsPage({ rental, reviews, seo }) {
                                 </div>
 
                                 {/* Agent card */}
-                                {rental.user && (
+                                {/* Agent card - Using rental's agent fields directly */}
+                                {rental.agent_name && (
                                     <div style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.75rem' }}>
                                         <div style={{ padding: 'clamp(1rem, 3vw, 1.5rem)', borderBottom: '1px solid hsl(40 20% 88%)' }}>
                                             <h3 style={{ color: 'hsl(200 25% 15%)', fontSize: 'clamp(1rem, 3vw, 1.125rem)', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -610,27 +613,140 @@ export default function PropertyDetailsPage({ rental, reviews, seo }) {
                                         </div>
                                         <div style={{ padding: 'clamp(1rem, 3vw, 1.5rem)', display: 'flex', flexDirection: 'column', gap: 'clamp(0.75rem, 2vw, 1rem)' }}>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.75rem, 2vw, 1rem)' }}>
-                                                <div style={{ width: 'clamp(2.5rem, 8vw, 3rem)', height: 'clamp(2.5rem, 8vw, 3rem)', borderRadius: '50%', backgroundColor: `hsl(${hue(rental.user.name ?? 'A')} 50% 88%)`, color: `hsl(${hue(rental.user.name ?? 'A')} 50% 28%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 'clamp(1rem, 3vw, 1.25rem)', fontWeight: '800', flexShrink: 0 }}>
-                                                    {(rental.user.name ?? 'A').charAt(0).toUpperCase()}
+                                                <div style={{ 
+                                                    width: 'clamp(2.5rem, 8vw, 3rem)', 
+                                                    height: 'clamp(2.5rem, 8vw, 3rem)', 
+                                                    borderRadius: '50%', 
+                                                    backgroundColor: `hsl(${hue(rental.agent_name)} 50% 88%)`, 
+                                                    color: `hsl(${hue(rental.agent_name)} 50% 28%)`, 
+                                                    display: 'flex', 
+                                                    alignItems: 'center', 
+                                                    justifyContent: 'center', 
+                                                    fontSize: 'clamp(1rem, 3vw, 1.25rem)', 
+                                                    fontWeight: '800', 
+                                                    flexShrink: 0 
+                                                }}>
+                                                    {rental.agent_name.charAt(0).toUpperCase()}
                                                 </div>
                                                 <div style={{ minWidth: 0 }}>
-                                                    <p style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: 'clamp(0.875rem, 2.5vw, 1rem)', fontWeight: '700', color: 'hsl(200 25% 15%)', wordBreak: 'break-word' }}>
-                                                        {rental.user.name}
-                                                        {rental.user.verification_status === 'verified' && (
-                                                            <Shield style={{ height: 'clamp(0.875rem, 2.5vw, 1rem)', width: 'clamp(0.875rem, 2.5vw, 1rem)', color: 'hsl(152 60% 40%)', flexShrink: 0 }} />
-                                                        )}
+                                                    <p style={{ 
+                                                        display: 'flex', 
+                                                        alignItems: 'center', 
+                                                        gap: '0.5rem', 
+                                                        fontSize: 'clamp(0.875rem, 2.5vw, 1rem)', 
+                                                        fontWeight: '700', 
+                                                        color: 'hsl(200 25% 15%)', 
+                                                        wordBreak: 'break-word' 
+                                                    }}>
+                                                        {rental.agent_name}
                                                     </p>
                                                     <p style={{ fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', color: 'hsl(200 15% 45%)' }}>
-                                                        {rental.user.company || 'Independent Agent'}
+                                                        {rental.agent_phone && (
+                                                            <span style={{ display: 'block' }}>{rental.agent_phone}</span>
+                                                        )}
+                                                        {rental.agent_email && (
+                                                            <span style={{ display: 'block', fontSize: '0.7rem' }}>{rental.agent_email}</span>
+                                                        )}
                                                     </p>
                                                 </div>
                                             </div>
 
-                                            {rental.user.average_rating > 0 && (
+                                            {/* Contact buttons */}
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                                {rental.agent_phone && (
+                                                    <a
+                                                        href={`tel:${rental.agent_phone}`}
+                                                        style={{ 
+                                                            width: '100%', 
+                                                            padding: 'clamp(0.625rem, 2vw, 0.75rem)', 
+                                                            border: '1px solid hsl(40 20% 88%)', 
+                                                            borderRadius: '0.5rem', 
+                                                            backgroundColor: 'white', 
+                                                            color: 'hsl(174 62% 32%)', 
+                                                            fontWeight: '500', 
+                                                            cursor: 'pointer', 
+                                                            fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)', 
+                                                            textDecoration: 'none',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            gap: '0.5rem'
+                                                        }}
+                                                    >
+                                                        <Phone size={16} />
+                                                        Call Agent
+                                                    </a>
+                                                )}
+
+                                                {rental.agent_email && (
+                                                    <a
+                                                        href={`mailto:${rental.agent_email}`}
+                                                        style={{ 
+                                                            width: '100%', 
+                                                            padding: 'clamp(0.625rem, 2vw, 0.75rem)', 
+                                                            border: '1px solid hsl(40 20% 88%)', 
+                                                            borderRadius: '0.5rem', 
+                                                            backgroundColor: 'white', 
+                                                            color: 'hsl(174 62% 32%)', 
+                                                            fontWeight: '500', 
+                                                            cursor: 'pointer', 
+                                                            fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)', 
+                                                            textDecoration: 'none',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            gap: '0.5rem'
+                                                        }}
+                                                    >
+                                                        <Mail size={16} />
+                                                        Email Agent
+                                                    </a>
+                                                )}
+
+                                                <button
+                                                    className="action-button"
+                                                    onClick={() => setShowAgent(true)}
+                                                    style={{ width: '100%', padding: 'clamp(0.625rem, 2vw, 0.75rem)', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.5rem', backgroundColor: 'white', color: 'hsl(174 62% 32%)', fontWeight: '500', cursor: 'pointer', fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)', touchAction: 'manipulation' }}
+                                                >
+                                                    View Profile
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Agent card */}
+                                {/* {agent && (
+                                    <div style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.75rem' }}>
+                                        <div style={{ padding: 'clamp(1rem, 3vw, 1.5rem)', borderBottom: '1px solid hsl(40 20% 88%)' }}>
+                                            <h3 style={{ color: 'hsl(200 25% 15%)', fontSize: 'clamp(1rem, 3vw, 1.125rem)', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                <User style={{ height: 'clamp(1rem, 3vw, 1.25rem)', width: 'clamp(1rem, 3vw, 1.25rem)' }} />
+                                                Listed by
+                                            </h3>
+                                        </div>
+                                        <div style={{ padding: 'clamp(1rem, 3vw, 1.5rem)', display: 'flex', flexDirection: 'column', gap: 'clamp(0.75rem, 2vw, 1rem)' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.75rem, 2vw, 1rem)' }}>
+                                                <div style={{ width: 'clamp(2.5rem, 8vw, 3rem)', height: 'clamp(2.5rem, 8vw, 3rem)', borderRadius: '50%', backgroundColor: `hsl(${hue(agent.name ?? 'A')} 50% 88%)`, color: `hsl(${hue(agent.name ?? 'A')} 50% 28%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 'clamp(1rem, 3vw, 1.25rem)', fontWeight: '800', flexShrink: 0 }}>
+                                                    {(agent.name ?? 'A').charAt(0).toUpperCase()}
+                                                </div>
+                                                <div style={{ minWidth: 0 }}>
+                                                    <p style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: 'clamp(0.875rem, 2.5vw, 1rem)', fontWeight: '700', color: 'hsl(200 25% 15%)', wordBreak: 'break-word' }}>
+                                                        {agent.name}
+                                                        {agent.verification_status === 'verified' && (
+                                                            <Shield style={{ height: 'clamp(0.875rem, 2.5vw, 1rem)', width: 'clamp(0.875rem, 2.5vw, 1rem)', color: 'hsl(152 60% 40%)', flexShrink: 0 }} />
+                                                        )}
+                                                    </p>
+                                                    <p style={{ fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', color: 'hsl(200 15% 45%)' }}>
+                                                        {agent.company || 'Independent Agent'}
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            {agent.average_rating > 0 && (
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                                                    <div style={{ display: 'flex' }}>{renderStars(rental.user.average_rating)}</div>
+                                                    <div style={{ display: 'flex' }}>{renderStars(agent.average_rating)}</div>
                                                     <span style={{ fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', color: 'hsl(200 15% 45%)' }}>
-                                                        {rental.user.average_rating?.toFixed(1)} ({rental.user.total_reviews ?? 0} reviews)
+                                                        {agent.average_rating?.toFixed(1)} ({agent.total_reviews ?? 0} reviews)
                                                     </span>
                                                 </div>
                                             )}
@@ -644,7 +760,7 @@ export default function PropertyDetailsPage({ rental, reviews, seo }) {
                                             </button>
                                         </div>
                                     </div>
-                                )}
+                                )} */}
 
                                 {/* CTA buttons */}
                                 <button
@@ -857,7 +973,7 @@ export default function PropertyDetailsPage({ rental, reviews, seo }) {
                 {/* ── MODALS ───────────────────────────────────────────────── */}
 
                 {/* Agent profile */}
-                <AgentProfileModal agent={rental.user} rentalId={rental.id} isOpen={showAgent} onClose={() => setShowAgent(false)} auth={auth} />
+                <AgentProfileModal agent={agent} rentalId={rental.id} isOpen={showAgent} onClose={() => setShowAgent(false)} auth={auth} />
 
                 {/* Report */}
                 {showReport && (

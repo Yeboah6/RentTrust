@@ -20,7 +20,7 @@ class AgentController extends Controller
     public function agent()
     {
         $agents = User::where('role', 'agent')
-            ->whereIn('status', ['verified', 'unverified'])
+            // ->whereIn('status', ['verified', 'unverified', 'pending'])
             ->withCount('rentals')
             ->withCount('reviews')
             ->withAvg('reviews', 'overall_rating')

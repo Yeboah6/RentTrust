@@ -144,13 +144,6 @@ const FeatureRow = ({ label, value, included }) => (
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-/**
- * Props:
- *   billing  — { subscription: {...} | null, payments: [...] }
- *              passed from DashboardController::agentDashboard()
- *   plans    — [] — active plan records from DB used to resolve the exact current plan
- *   onUpgrade — () => void  — opens PricingModal
- */
 const BillingModule = ({ billing, plans = [], onUpgrade }) => {
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [cancelLoading, setCancelLoading] = useState(false);

@@ -3,6 +3,12 @@
 namespace App\Http\Controllers\SuperAdmin;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
+use App\Models\Rental;
+use App\Models\Payment;
+use App\Models\Subscription;
+use App\Models\ListingView;
+use App\Models\ListingInquiry;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -10,332 +16,336 @@ use Carbon\Carbon;
 
 class AnalyticsController extends Controller
 {
-    public function index(Request $request)
+    // ── Date helpers ──────────────────────────────────────────────────────────
+
+    /**
+     * Return the strftime-compatible month format string.
+     * SQLite uses strftime; MySQL uses DATE_FORMAT.
+     */
+    private function monthFormat(string $column): string
     {
-        $range  = $request->input('range', '6m');  // 7d | 30d | 3m | 6m | 12m | all
-        $from   = $this->resolveFrom($range);
-        $to     = Carbon::now();
+        $driver = DB::getDriverName();
 
-        $analytics = [
-            // ── Revenue ────────────────────────────────────────────────────────
-            'monthly_revenue'      => $this->monthlyRevenue($from, $to),
-            'provider_split'       => $this->providerSplit($from, $to),
-            'status_breakdown'     => $this->statusBreakdown($from, $to),
-            'total_revenue'        => $this->totalRevenue($from, $to),
-            'avg_payment'          => $this->avgPayment($from, $to),
-
-            // ── Subscriptions ─────────────────────────────────────────────────
-            'subscription_summary' => $this->subscriptionSummary(),
-            'monthly_new_subs'     => $this->monthlyNewSubs($from, $to),
-
-            // ── Users ─────────────────────────────────────────────────────────
-            'user_growth'          => $this->userGrowth($from, $to),
-            'users_by_role'        => $this->usersByRole(),
-            'users_by_package'     => $this->usersByPackage(),
-            'total_users'          => DB::table('users')->count(),
-            'new_users_period'     => DB::table('users')
-                                        ->whereBetween('created_at', [$from, $to])
-                                        ->count(),
-
-            // ── Listings ──────────────────────────────────────────────────────
-            'listing_stats'        => $this->listingStats(),
-            'listings_by_type'     => $this->listingsByType(),
-            'listings_by_city'     => $this->listingsByCity(),
-            'listings_by_purpose'  => $this->listingsByPurpose(),
-            'listing_growth'       => $this->listingGrowth($from, $to),
-
-            // ── Engagement ────────────────────────────────────────────────────
-            'total_views'          => DB::table('listing_views')
-                                        ->whereBetween('created_at', [$from, $to])
-                                        ->count(),
-            'unique_viewers'       => DB::table('listing_views')
-                                        ->whereBetween('created_at', [$from, $to])
-                                        ->distinct('ip')
-                                        ->count('ip'),
-            'views_over_time'      => $this->viewsOverTime($from, $to),
-            'top_listings'         => $this->topListings($from, $to),
-            'inquiries_summary'    => $this->inquiriesSummary($from, $to),
-            'inquiries_by_type'    => $this->inquiriesByType($from, $to),
-            'inquiries_over_time'  => $this->inquiriesOverTime($from, $to),
-
-            // ── Meta ──────────────────────────────────────────────────────────
-            'range'    => $range,
-            'from'     => $from->toDateString(),
-            'to'       => $to->toDateString(),
-        ];
-
-        return Inertia::render('SuperAdmin/Analytics/Index', compact('analytics'));
+        return $driver === 'sqlite'
+            ? "strftime('%Y-%m', {$column})"
+            : "DATE_FORMAT({$column}, '%Y-%m')";
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
-
+    /**
+     * Resolve a Carbon start date from a range shorthand.
+     */
     private function resolveFrom(string $range): Carbon
     {
-        return match ($range) {
-            '7d'  => Carbon::now()->subDays(7),
-            '30d' => Carbon::now()->subDays(30),
-            '3m'  => Carbon::now()->subMonths(3),
-            '6m'  => Carbon::now()->subMonths(6),
-            '12m' => Carbon::now()->subMonths(12),
-            'all' => Carbon::createFromDate(2020, 1, 1),
-            default => Carbon::now()->subMonths(6),
+        return match (strtoupper($range)) {
+            '7D'  => now()->subDays(7),
+            '30D' => now()->subDays(30),
+            '3M'  => now()->subMonths(3),
+            '12M' => now()->subMonths(12),
+            'ALL' => Carbon::createFromDate(2000, 1, 1),
+            default => now()->subMonths(6), // 6M
         };
     }
 
-    // ── Revenue ───────────────────────────────────────────────────────────────
+    // ── Main action ───────────────────────────────────────────────────────────
 
-    private function monthlyRevenue(Carbon $from, Carbon $to): array
+    public function index(Request $request)
     {
-        return DB::table('payments')
+        $range = $request->input('range', '6M');
+        $from  = $this->resolveFrom($range);
+        $to    = now();
+
+        $monthFmt = $this->monthFormat('created_at');
+
+        // ── Revenue / Payments ────────────────────────────────────────────────
+
+        $paymentsBase = Payment::whereBetween('created_at', [$from, $to]);
+
+        $totalRevenue = (clone $paymentsBase)->where('status', 'success')->sum('amount');
+        $avgPayment   = (clone $paymentsBase)->where('status', 'success')->avg('amount') ?? 0;
+
+        $monthlyRevenue = (clone $paymentsBase)
+            ->where('status', 'success')
             ->select(
-                DB::raw("strftime('%Y-%m', created_at) as month"),
+                DB::raw("{$monthFmt} as month"),
                 DB::raw('SUM(amount) as revenue'),
                 DB::raw('COUNT(*) as transactions')
             )
-            ->where('status', 'success')
-            ->whereBetween('created_at', [$from, $to])
             ->groupBy('month')
             ->orderBy('month')
             ->get()
-            ->toArray();
-    }
+            ->map(fn ($r) => [
+                'month'        => $r->month,
+                'revenue'      => (float) $r->revenue,
+                'transactions' => (int)   $r->transactions,
+            ]);
 
-    private function providerSplit(Carbon $from, Carbon $to): array
-    {
-        return DB::table('payments')
-            ->select('provider', DB::raw('SUM(amount) as total'), DB::raw('COUNT(*) as count'))
+        $providerSplit = (clone $paymentsBase)
             ->where('status', 'success')
-            ->whereBetween('created_at', [$from, $to])
+            ->select(
+                'provider',
+                DB::raw('SUM(amount) as total'),
+                DB::raw('COUNT(*) as count')
+            )
             ->groupBy('provider')
             ->orderByDesc('total')
             ->get()
-            ->toArray();
-    }
+            ->map(fn ($r) => [
+                'provider' => $r->provider,
+                'total'    => (float) $r->total,
+                'count'    => (int)   $r->count,
+            ]);
 
-    private function statusBreakdown(Carbon $from, Carbon $to): array
-    {
-        $rows = DB::table('payments')
-            ->select('status', DB::raw('COUNT(*) as count'), DB::raw('SUM(amount) as total'))
-            ->whereBetween('created_at', [$from, $to])
-            ->groupBy('status')
-            ->get();
-
-        $out = [];
-        foreach ($rows as $row) {
-            $out[$row->status] = ['count' => $row->count, 'total' => $row->total];
-        }
-        return $out;
-    }
-
-    private function totalRevenue(Carbon $from, Carbon $to): float
-    {
-        return (float) DB::table('payments')
-            ->where('status', 'success')
-            ->whereBetween('created_at', [$from, $to])
-            ->sum('amount');
-    }
-
-    private function avgPayment(Carbon $from, Carbon $to): float
-    {
-        return (float) DB::table('payments')
-            ->where('status', 'success')
-            ->whereBetween('created_at', [$from, $to])
-            ->avg('amount') ?? 0;
-    }
-
-    // ── Subscriptions ─────────────────────────────────────────────────────────
-
-    private function subscriptionSummary(): array
-    {
-        $rows = DB::table('subscriptions')
-            ->select('status', DB::raw('COUNT(*) as count'))
-            ->groupBy('status')
-            ->get();
-
-        $out = [];
-        foreach ($rows as $row) {
-            $out[$row->status] = (int) $row->count;
-        }
-        return $out;
-    }
-
-    private function monthlyNewSubs(Carbon $from, Carbon $to): array
-    {
-        return DB::table('subscriptions')
+        $statusBreakdown = Payment::whereBetween('created_at', [$from, $to])
             ->select(
-                DB::raw("strftime('%Y-%m', created_at) as month"),
+                'status',
+                DB::raw('COUNT(*) as count'),
+                DB::raw('SUM(amount) as total')
+            )
+            ->groupBy('status')
+            ->get()
+            ->mapWithKeys(fn ($r) => [
+                $r->status => [
+                    'count' => (int)   $r->count,
+                    'total' => (float) $r->total,
+                ],
+            ]);
+
+        // Ensure all four keys exist
+        foreach (['success', 'failed', 'pending', 'refunded'] as $key) {
+            if (!isset($statusBreakdown[$key])) {
+                $statusBreakdown[$key] = ['count' => 0, 'total' => 0];
+            }
+        }
+
+        // ── Subscriptions ─────────────────────────────────────────────────────
+
+        $subscriptionSummary = Subscription::select(
+            'status',
+            DB::raw('COUNT(*) as count')
+        )
+            ->groupBy('status')
+            ->get()
+            ->mapWithKeys(fn ($r) => [$r->status => (int) $r->count]);
+
+        foreach (['active', 'cancelled', 'expired', 'pending'] as $key) {
+            if (!isset($subscriptionSummary[$key])) {
+                $subscriptionSummary[$key] = 0;
+            }
+        }
+
+        $monthlyNewSubs = Subscription::whereBetween('created_at', [$from, $to])
+            ->select(
+                DB::raw("{$monthFmt} as month"),
                 DB::raw('COUNT(*) as count')
             )
-            ->whereBetween('created_at', [$from, $to])
             ->groupBy('month')
             ->orderBy('month')
             ->get()
-            ->toArray();
-    }
+            ->map(fn ($r) => [
+                'month' => $r->month,
+                'count' => (int) $r->count,
+            ]);
 
-    // ── Users ─────────────────────────────────────────────────────────────────
+        // ── Users ─────────────────────────────────────────────────────────────
 
-    private function userGrowth(Carbon $from, Carbon $to): array
-    {
-        return DB::table('users')
+        $totalUsers      = User::count();
+        $newUsersPeriod  = User::whereBetween('created_at', [$from, $to])->count();
+
+        $userGrowth = User::whereBetween('created_at', [$from, $to])
             ->select(
-                DB::raw("strftime('%Y-%m', created_at) as month"),
+                DB::raw("{$monthFmt} as month"),
                 DB::raw('COUNT(*) as count')
             )
-            ->whereBetween('created_at', [$from, $to])
             ->groupBy('month')
             ->orderBy('month')
             ->get()
-            ->toArray();
-    }
+            ->map(fn ($r) => [
+                'month' => $r->month,
+                'count' => (int) $r->count,
+            ]);
 
-    private function usersByRole(): array
-    {
-        return DB::table('users')
-            ->select('role', DB::raw('COUNT(*) as count'))
+        $usersByRole = User::select('role', DB::raw('COUNT(*) as count'))
             ->groupBy('role')
-            ->orderByDesc('count')
             ->get()
-            ->toArray();
-    }
+            ->map(fn ($r) => ['role' => $r->role, 'count' => (int) $r->count]);
 
-    private function usersByPackage(): array
-    {
-        return DB::table('users')
-            ->select('package', DB::raw('COUNT(*) as count'))
+        $usersByPackage = User::select('package', DB::raw('COUNT(*) as count'))
+            ->whereNotNull('package')
             ->groupBy('package')
-            ->orderByDesc('count')
             ->get()
-            ->toArray();
-    }
+            ->map(fn ($r) => ['package' => $r->package, 'count' => (int) $r->count]);
 
-    // ── Listings ──────────────────────────────────────────────────────────────
+        // ── Listings ──────────────────────────────────────────────────────────
 
-    private function listingStats(): array
-    {
-        return [
-            'total'    => DB::table('rentals')->count(),
-            'active'   => DB::table('rentals')->where('status', 'active')->count(),
-            'pending'  => DB::table('rentals')->where('status', 'pending')->count(),
-            'featured' => DB::table('rentals')->where('is_featured', true)->count(),
-            'boosted'  => DB::table('rentals')->where('is_boosted', true)->count(),
-            'sold'     => DB::table('rentals')->where('is_sold', true)->count(),
-            'rented'   => DB::table('rentals')->where('status', 'rented')->count(),
+        $totalListings   = Rental::count();
+        $activeListings  = Rental::where('status', 'approved')->where('is_sold', false)->count();
+        $pendingListings = Rental::where('status', 'pending')->count();
+        $featuredListings= Rental::where('is_featured', true)->count();
+        $boostedListings = Rental::where('is_boosted', true)->count();
+        $soldListings    = Rental::where('is_sold', true)->count();
+        $rentedListings  = Rental::where('purpose', 'rent')->where('status', 'rented')->count();
+
+        $listingStats = [
+            'total'    => $totalListings,
+            'active'   => $activeListings,
+            'pending'  => $pendingListings,
+            'featured' => $featuredListings,
+            'boosted'  => $boostedListings,
+            'sold'     => $soldListings,
+            'rented'   => $rentedListings,
         ];
-    }
 
-    private function listingsByType(): array
-    {
-        return DB::table('rentals')
-            ->select('property_type', DB::raw('COUNT(*) as count'))
+        $listingsByType = Rental::select('property_type', DB::raw('COUNT(*) as count'))
+            ->whereNotNull('property_type')
             ->groupBy('property_type')
             ->orderByDesc('count')
-            ->limit(8)
             ->get()
-            ->toArray();
-    }
+            ->map(fn ($r) => ['property_type' => $r->property_type, 'count' => (int) $r->count]);
 
-    private function listingsByCity(): array
-    {
-        return DB::table('rentals')
-            ->select('city', DB::raw('COUNT(*) as count'))
+        $listingsByCity = Rental::select('city', DB::raw('COUNT(*) as count'))
+            ->whereNotNull('city')
             ->groupBy('city')
             ->orderByDesc('count')
             ->limit(8)
             ->get()
-            ->toArray();
-    }
+            ->map(fn ($r) => ['city' => $r->city, 'count' => (int) $r->count]);
 
-    private function listingsByPurpose(): array
-    {
-        return DB::table('rentals')
-            ->select('purpose', DB::raw('COUNT(*) as count'))
+        $listingsByPurpose = Rental::select('purpose', DB::raw('COUNT(*) as count'))
+            ->whereNotNull('purpose')
             ->groupBy('purpose')
             ->get()
-            ->toArray();
-    }
+            ->map(fn ($r) => ['purpose' => $r->purpose, 'count' => (int) $r->count]);
 
-    private function listingGrowth(Carbon $from, Carbon $to): array
-    {
-        return DB::table('rentals')
+        $listingGrowth = Rental::whereBetween('created_at', [$from, $to])
             ->select(
-                DB::raw("strftime('%Y-%m', created_at) as month"),
+                DB::raw("{$monthFmt} as month"),
                 DB::raw('COUNT(*) as count')
             )
-            ->whereBetween('created_at', [$from, $to])
             ->groupBy('month')
             ->orderBy('month')
             ->get()
-            ->toArray();
-    }
+            ->map(fn ($r) => ['month' => $r->month, 'count' => (int) $r->count]);
 
-    // ── Engagement ────────────────────────────────────────────────────────────
+        // ── Views ─────────────────────────────────────────────────────────────
 
-    private function viewsOverTime(Carbon $from, Carbon $to): array
-    {
-        return DB::table('listing_views')
+        $viewMonthFmt = $this->monthFormat('listing_views.created_at');
+
+        $totalViews    = ListingView::whereBetween('created_at', [$from, $to])->count();
+        $uniqueViewers = ListingView::whereBetween('created_at', [$from, $to])
+            ->distinct('ip')
+            ->count('ip');
+
+        $viewsOverTime = ListingView::whereBetween('created_at', [$from, $to])
             ->select(
-                DB::raw("strftime('%Y-%m', created_at) as month"),
+                DB::raw("{$viewMonthFmt} as month"),
                 DB::raw('COUNT(*) as views'),
                 DB::raw('COUNT(DISTINCT ip) as unique_viewers')
             )
-            ->whereBetween('created_at', [$from, $to])
             ->groupBy('month')
             ->orderBy('month')
             ->get()
-            ->toArray();
-    }
+            ->map(fn ($r) => [
+                'month'          => $r->month,
+                'views'          => (int) $r->views,
+                'unique_viewers' => (int) $r->unique_viewers,
+            ]);
 
-    private function topListings(Carbon $from, Carbon $to): array
-    {
-        return DB::table('listing_views')
+        // Top listings by views (within period)
+        $topListings = ListingView::whereBetween('listing_views.created_at', [$from, $to])
             ->join('rentals', 'rentals.id', '=', 'listing_views.rental_id')
             ->select(
-                'rentals.id',
                 'rentals.title',
                 'rentals.city',
                 'rentals.property_type',
                 DB::raw('COUNT(listing_views.id) as views'),
                 DB::raw('COUNT(DISTINCT listing_views.ip) as unique_views')
             )
-            ->whereBetween('listing_views.created_at', [$from, $to])
             ->groupBy('rentals.id', 'rentals.title', 'rentals.city', 'rentals.property_type')
             ->orderByDesc('views')
-            ->limit(10)
+            ->limit(5)
             ->get()
-            ->toArray();
-    }
+            ->map(fn ($r) => [
+                'title'         => $r->title,
+                'city'          => $r->city,
+                'property_type' => $r->property_type,
+                'views'         => (int) $r->views,
+                'unique_views'  => (int) $r->unique_views,
+            ]);
 
-    private function inquiriesSummary(Carbon $from, Carbon $to): array
-    {
-        return [
-            'total'        => DB::table('listing_inquiries')->whereBetween('created_at', [$from, $to])->count(),
-            'from_users'   => DB::table('listing_inquiries')->whereBetween('created_at', [$from, $to])->whereNotNull('user_id')->count(),
-            'from_guests'  => DB::table('listing_inquiries')->whereBetween('created_at', [$from, $to])->whereNull('user_id')->count(),
-        ];
-    }
+        // ── Inquiries ─────────────────────────────────────────────────────────
 
-    private function inquiriesByType(Carbon $from, Carbon $to): array
-    {
-        return DB::table('listing_inquiries')
+        $inqBase = ListingInquiry::whereBetween('created_at', [$from, $to]);
+
+        $inquiriesTotal     = (clone $inqBase)->count();
+        $inquiriesFromUsers = (clone $inqBase)->whereNotNull('user_id')->count();
+        $inquiriesFromGuests= $inquiriesTotal - $inquiriesFromUsers;
+
+        $inquiriesByType = (clone $inqBase)
             ->select('type', DB::raw('COUNT(*) as count'))
-            ->whereBetween('created_at', [$from, $to])
             ->groupBy('type')
+            ->orderByDesc('count')
             ->get()
-            ->toArray();
-    }
+            ->map(fn ($r) => ['type' => $r->type, 'count' => (int) $r->count]);
 
-    private function inquiriesOverTime(Carbon $from, Carbon $to): array
-    {
-        return DB::table('listing_inquiries')
+        $inqMonthFmt = $this->monthFormat('created_at');
+        $inquiriesOverTime = (clone $inqBase)
             ->select(
-                DB::raw("strftime('%Y-%m', created_at) as month"),
+                DB::raw("{$inqMonthFmt} as month"),
                 DB::raw('COUNT(*) as count')
             )
-            ->whereBetween('created_at', [$from, $to])
             ->groupBy('month')
             ->orderBy('month')
             ->get()
-            ->toArray();
+            ->map(fn ($r) => ['month' => $r->month, 'count' => (int) $r->count]);
+
+        // ── Assemble and return ───────────────────────────────────────────────
+
+        return Inertia::render('SuperAdmin/Analytics/Index', [
+            'analytics' => [
+                'range'    => strtoupper($range),
+                'from'     => $from->format('M Y'),
+                'to'       => $to->format('M Y'),
+
+                // Revenue
+                'total_revenue'     => (float) $totalRevenue,
+                'avg_payment'       => (float) round($avgPayment, 2),
+                'monthly_revenue'   => $monthlyRevenue,
+                'provider_split'    => $providerSplit,
+                'status_breakdown'  => $statusBreakdown,
+
+                // Subscriptions
+                'subscription_summary' => $subscriptionSummary,
+                'monthly_new_subs'     => $monthlyNewSubs,
+
+                // Users
+                'total_users'      => $totalUsers,
+                'new_users_period' => $newUsersPeriod,
+                'user_growth'      => $userGrowth,
+                'users_by_role'    => $usersByRole,
+                'users_by_package' => $usersByPackage,
+
+                // Listings
+                'listing_stats'      => $listingStats,
+                'listings_by_type'   => $listingsByType,
+                'listings_by_city'   => $listingsByCity,
+                'listings_by_purpose'=> $listingsByPurpose,
+                'listing_growth'     => $listingGrowth,
+
+                // Views
+                'total_views'    => $totalViews,
+                'unique_viewers' => $uniqueViewers,
+                'views_over_time'=> $viewsOverTime,
+                'top_listings'   => $topListings,
+
+                // Inquiries
+                'inquiries_summary' => [
+                    'total'       => $inquiriesTotal,
+                    'from_users'  => $inquiriesFromUsers,
+                    'from_guests' => $inquiriesFromGuests,
+                ],
+                'inquiries_by_type'   => $inquiriesByType,
+                'inquiries_over_time' => $inquiriesOverTime,
+            ],
+        ]);
     }
 }

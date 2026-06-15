@@ -101,7 +101,7 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
     company: agentData?.company || null,
     status: agentData?.status || "unverified",
     plan: agentData?.plan || "free",
-    average_rating: 4.7,
+    // average_rating: 4.7,
   };
 
   const properties = rentals && rentals.length > 0
@@ -146,8 +146,11 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
     }))
     : [];
 
+    // Uncaught ReferenceError: route is not defined
+    // at FailureState (CheckoutPage.jsx:252:30)
+
   const calculateAverageRating = () => {
-    if (!formattedReviews || formattedReviews.length === 0) return 4.7;
+    if (!formattedReviews || formattedReviews.length === 0);
     const sum = formattedReviews.reduce((acc, review) => acc + (review.overall_rating || 0), 0);
     return (sum / formattedReviews.length).toFixed(1);
   };
@@ -640,10 +643,10 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
                           🚀 Grow Faster with Pro
                         </h3>
                         <p style={{ margin: '0 0 0.875rem', color: 'rgba(255,255,255,0.8)', fontSize: '0.875rem', lineHeight: '1.5' }}>
-                          Top agents on RentTrust use Pro. Join them and unlock unlimited listings, priority placement & full lead access.
+                          Top agents on RentTrustGh use Pro. Join them and unlock more listings, priority placement & full lead access.
                         </p>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
-                          {['Unlimited listings', 'Full lead access', 'Advanced analytics', 'WhatsApp automation'].map(f => (
+                          {['Verified badge', 'Respond to tenant reviews', 'Advanced analytics', 'View inquiries from tenants'].map(f => (
                             <span key={f} style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', color: 'rgba(255,255,255,0.9)', fontSize: '0.8rem' }}>
                               <CheckCircle style={{ width: '0.875rem', height: '0.875rem', color: 'rgba(255,255,255,0.85)' }} />
                               {f}
@@ -668,7 +671,7 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
                         cursor: 'pointer'
                       }}>
                         <Zap style={{ width: '1rem', height: '1rem' }} />
-                        Upgrade – GHS 149/mo
+                        Upgrade to Pro
                       </button>
                     </div>
                   </div>

@@ -29,7 +29,7 @@ use App\Http\Controllers\ContactController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\setupPassword;
 use App\Http\Controllers\AgentSetupController;
-use Illuminate\Support\Facades\{DB, Log, Hash, Mail};
+// use Illuminate\Support\Facades\{DB, Log, Hash, Mail};
 
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap.index');
 Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');

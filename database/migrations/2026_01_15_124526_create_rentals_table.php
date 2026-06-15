@@ -37,10 +37,14 @@ return new class extends Migration
             $table->enum('purpose', ['rent', 'sale'])->default('rent')->after('property_type');
             $table->decimal('sale_price', 15, 2)->nullable()->after('rent_max');
 
-            $table->boolean('is_boosted')->default(false)->after('is_featured');
+            $table->boolean('is_featured_queued')->default(false)->after('is_featured');
+            $table->integer('featured_queue_position')->nullable()->after('featured_priority');
+            $table->timestamp('queued_at')->nullable()->after('featured_at');
+            $table->integer('times_featured')->default(0)->after('queued_at');
+            $table->timestamp('last_featured_at')->nullable()->after('times_featured');
+
             $table->timestamp('featured_at')->nullable()->after('is_featured');
             $table->timestamp('featured_expires_at')->nullable()->after('featured_at');
-            $table->timestamp('boost_expires_at')->nullable()->after('is_boosted');
             $table->integer('featured_priority')->default(0)->after('boost_expires_at');
             
             // Track when sale was completed

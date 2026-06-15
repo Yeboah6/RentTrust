@@ -229,17 +229,6 @@ const AdminAddAgentModal = ({ isOpen, onClose, onSuccess }) => {
             </label>
           </div>
 
-          {/* <label style={labelStyle}>
-            Fee %
-            <input
-              type="number" value={data.fee}
-              onChange={(e) => setData('fee', e.target.value)}
-              placeholder="e.g. 10" min="0"
-              style={getInputStyle(!!errors.fee)}
-            />
-            <ErrorMsg msg={errors.fee} />
-          </label> */}
-
           <label style={labelStyle}>
             Location
             <input

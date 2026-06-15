@@ -1,91 +1,6 @@
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState } from "react";
+import { usePage } from "@inertiajs/react";
 import SuperAdminLayout from '@/Layouts/SuperAdminLayout';
-
-// ─── Data ─────────────────────────────────────────────────────────────────────
-const DATA = {
-  range: "6m", from: "Aug 2024", to: "Jan 2025",
-  total_revenue: 284500, avg_payment: 188,
-  total_users: 977, new_users_period: 238,
-  total_views: 28450, unique_viewers: 12890,
-  monthly_revenue: [
-    { month: "2024-08", revenue: 22500, transactions: 145 },
-    { month: "2024-09", revenue: 24300, transactions: 162 },
-    { month: "2024-10", revenue: 25800, transactions: 178 },
-    { month: "2024-11", revenue: 27200, transactions: 191 },
-    { month: "2024-12", revenue: 26900, transactions: 185 },
-    { month: "2025-01", revenue: 28900, transactions: 204 },
-  ],
-  provider_split: [
-    { provider: "paystack", total: 145600, count: 890 },
-    { provider: "flutterwave", total: 89200, count: 610 },
-  ],
-  status_breakdown: {
-    success:  { count: 1247, total: 234700 },
-    failed:   { count: 183,  total: 0 },
-    pending:  { count: 42,   total: 0 },
-    refunded: { count: 28,   total: 5200 },
-  },
-  subscription_summary: { active: 234, cancelled: 45, expired: 18, pending: 12 },
-  monthly_new_subs: [
-    { month: "2024-08", count: 34 }, { month: "2024-09", count: 41 },
-    { month: "2024-10", count: 38 }, { month: "2024-11", count: 52 },
-    { month: "2024-12", count: 48 }, { month: "2025-01", count: 61 },
-  ],
-  user_growth: [
-    { month: "2024-08", count: 120 }, { month: "2024-09", count: 145 },
-    { month: "2024-10", count: 162 }, { month: "2024-11", count: 189 },
-    { month: "2024-12", count: 201 }, { month: "2025-01", count: 238 },
-  ],
-  users_by_role: [
-    { role: "tenant", count: 820 }, { role: "agent", count: 145 }, { role: "admin", count: 12 },
-  ],
-  users_by_package: [
-    { package: "free", count: 680 }, { package: "basic", count: 210 },
-    { package: "pro", count: 75 }, { package: "premium", count: 12 },
-  ],
-  listing_stats: { total: 1284, active: 876, pending: 124, featured: 48, boosted: 32, sold: 89, rented: 287 },
-  listings_by_type: [
-    { property_type: "Apartment", count: 534 }, { property_type: "House", count: 312 },
-    { property_type: "Studio", count: 198 }, { property_type: "Townhouse", count: 145 },
-    { property_type: "Office", count: 67 }, { property_type: "Shop", count: 28 },
-  ],
-  listings_by_city: [
-    { city: "Accra", count: 612 }, { city: "Kumasi", count: 234 },
-    { city: "Takoradi", count: 145 }, { city: "Tema", count: 132 },
-    { city: "Cape Coast", count: 89 }, { city: "Tamale", count: 72 },
-  ],
-  listings_by_purpose: [{ purpose: "rent", count: 1195 }, { purpose: "sale", count: 89 }],
-  listing_growth: [
-    { month: "2024-08", count: 89 }, { month: "2024-09", count: 112 },
-    { month: "2024-10", count: 134 }, { month: "2024-11", count: 145 },
-    { month: "2024-12", count: 128 }, { month: "2025-01", count: 167 },
-  ],
-  total_views: 28450, unique_viewers: 12890,
-  views_over_time: [
-    { month: "2024-08", views: 3200, unique_viewers: 1450 },
-    { month: "2024-09", views: 4100, unique_viewers: 1890 },
-    { month: "2024-10", views: 5200, unique_viewers: 2340 },
-    { month: "2024-11", views: 4800, unique_viewers: 2180 },
-    { month: "2024-12", views: 5600, unique_viewers: 2520 },
-    { month: "2025-01", views: 5550, unique_viewers: 2510 },
-  ],
-  top_listings: [
-    { title: "3-Bed Apt in East Legon", city: "Accra",  property_type: "Apartment", views: 1245, unique_views: 892 },
-    { title: "Modern Studio in Osu",    city: "Accra",  property_type: "Studio",    views: 987,  unique_views: 743 },
-    { title: "4-Bed House in Adum",     city: "Kumasi", property_type: "House",     views: 876,  unique_views: 654 },
-    { title: "2-Bed Flat in Ridge",     city: "Accra",  property_type: "Apartment", views: 765,  unique_views: 589 },
-    { title: "Office Space in Labone",  city: "Accra",  property_type: "Office",    views: 654,  unique_views: 498 },
-  ],
-  inquiries_summary: { total: 3420, from_users: 2180, from_guests: 1240 },
-  inquiries_by_type: [
-    { type: "whatsapp", count: 1890 }, { type: "phone", count: 980 }, { type: "form", count: 550 },
-  ],
-  inquiries_over_time: [
-    { month: "2024-08", count: 420 }, { month: "2024-09", count: 512 },
-    { month: "2024-10", count: 634 }, { month: "2024-11", count: 589 },
-    { month: "2024-12", count: 612 }, { month: "2025-01", count: 653 },
-  ],
-};
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 const T = {
@@ -97,12 +12,12 @@ const T = {
   text:      "hsl(220 25% 12%)",
   textSub:   "hsl(220 15% 50%)",
   textDim:   "hsl(220 15% 68%)",
-  chart1:    "hsl(214 80% 50%)",   // blue
-  chart2:    "hsl(162 63% 41%)",   // teal
-  chart3:    "hsl(142 55% 38%)",   // green
-  chart4:    "hsl(40 82% 47%)",    // amber
-  chart5:    "hsl(0 65% 48%)",     // red
-  chart6:    "hsl(270 55% 50%)",   // purple
+  chart1:    "hsl(214 80% 50%)",
+  chart2:    "hsl(162 63% 41%)",
+  chart3:    "hsl(142 55% 38%)",
+  chart4:    "hsl(40 82% 47%)",
+  chart5:    "hsl(0 65% 48%)",
+  chart6:    "hsl(270 55% 50%)",
 };
 
 const PALETTE = [T.chart1, T.chart2, T.chart3, T.chart4, T.chart5, T.chart6];
@@ -110,10 +25,11 @@ const PALETTE = [T.chart1, T.chart2, T.chart3, T.chart4, T.chart5, T.chart6];
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const fmt    = (n) => Number(n || 0).toLocaleString("en-GH");
 const fmtC   = (n) => `GH\u20B5${fmt(n)}`;
-const fmtK   = (n) => n >= 1000 ? (n / 1000).toFixed(1).replace(/\.0$/, "") + "K" : String(n);
+const fmtK   = (n) => n >= 1000 ? (n / 1000).toFixed(1).replace(/\.0$/, "") + "K" : String(n || 0);
 const pct    = (a, b) => b > 0 ? ((a / b) * 100).toFixed(1) : "0.0";
 const cap    = (s) => s ? s.charAt(0).toUpperCase() + s.slice(1) : "";
 const fmtMonth = (m) => {
+  if (!m) return "";
   const [y, mo] = m.split("-");
   return new Date(Number(y), Number(mo) - 1).toLocaleDateString("en-US", { month: "short", year: "2-digit" });
 };
@@ -121,7 +37,9 @@ const fmtMonth = (m) => {
 // ─── SVG Bar Chart ────────────────────────────────────────────────────────────
 const BarChart = ({ data, color = T.chart1, valueFormat = fmt, height = 160 }) => {
   const [hov, setHov] = useState(null);
-  if (!data.length) return <div style={{ height, display: "flex", alignItems: "center", justifyContent: "center", color: T.textDim, fontSize: 13 }}>No data</div>;
+  if (!data || !data.length) return (
+    <div style={{ height, display: "flex", alignItems: "center", justifyContent: "center", color: T.textDim, fontSize: 13 }}>No data</div>
+  );
   const max = Math.max(...data.map(d => d.value), 1);
   const W = data.length * 52;
   return (
@@ -153,7 +71,7 @@ const BarChart = ({ data, color = T.chart1, valueFormat = fmt, height = 160 }) =
 // ─── SVG Donut Chart ──────────────────────────────────────────────────────────
 const DonutChart = ({ data, centerLabel = "Total" }) => {
   const [hov, setHov] = useState(null);
-  if (!data.length) return null;
+  if (!data || !data.length) return null;
   const total = data.reduce((s, d) => s + d.value, 0);
   const R = 72; const CX = 92; const CY = 92; const SW = 24;
   const polar = deg => {
@@ -209,10 +127,10 @@ const DonutChart = ({ data, centerLabel = "Total" }) => {
 
 // ─── Horizontal rank bars ─────────────────────────────────────────────────────
 const RankBars = ({ data, valueFormat = fmt }) => {
-  const max = Math.max(...data.map(d => d.value), 1);
+  const max = Math.max(...(data || []).map(d => d.value), 1);
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-      {data.map((item, i) => (
+      {(data || []).map((item, i) => (
         <div key={i}>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
             <span style={{ fontSize: 12, color: T.textSub, fontWeight: 500 }}>{item.label}</span>
@@ -297,18 +215,18 @@ const I = {
 };
 
 // ─── Download CSV ─────────────────────────────────────────────────────────────
-const downloadCSV = () => {
-  const rows = [`# RentTrustGH Analytics — ${DATA.from} to ${DATA.to}\n`];
+const downloadCSV = (D) => {
+  const rows = [`# RentTrustGH Analytics — ${D.from} to ${D.to}\n`];
   rows.push("# Monthly Revenue\nMonth,Revenue,Transactions");
-  DATA.monthly_revenue.forEach(r => rows.push(`${r.month},${r.revenue},${r.transactions}`));
+  (D.monthly_revenue || []).forEach(r => rows.push(`${r.month},${r.revenue},${r.transactions}`));
   rows.push("\n# User Growth\nMonth,New Users");
-  DATA.user_growth.forEach(r => rows.push(`${r.month},${r.count}`));
+  (D.user_growth || []).forEach(r => rows.push(`${r.month},${r.count}`));
   rows.push("\n# Views Over Time\nMonth,Views,Unique");
-  DATA.views_over_time.forEach(r => rows.push(`${r.month},${r.views},${r.unique_viewers}`));
+  (D.views_over_time || []).forEach(r => rows.push(`${r.month},${r.views},${r.unique_viewers}`));
   const blob = new Blob([rows.join("\n")], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a"); a.href = url;
-  a.download = `analytics_${DATA.from}_${DATA.to}.csv`.replace(/ /g, "_");
+  a.download = `analytics_${D.from}_${D.to}.csv`.replace(/ /g, "_");
   a.click(); URL.revokeObjectURL(url);
 };
 
@@ -326,7 +244,7 @@ const TopTable = ({ data }) => (
         <div key={h} style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", color: T.textSub }}>{h}</div>
       ))}
     </div>
-    {data.map((l, i) => (
+    {(data || []).map((l, i) => (
       <div key={i} style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) 7rem 7rem 5rem 6rem", gap: "0.75rem", padding: "0.6rem 1.1rem", borderBottom: i < data.length - 1 ? `1px solid ${T.borderSub}` : "none", transition: "background 0.1s" }}
         onMouseEnter={e => e.currentTarget.style.backgroundColor = T.headBg}
         onMouseLeave={e => e.currentTarget.style.backgroundColor = "transparent"}>
@@ -346,43 +264,60 @@ const TopTable = ({ data }) => (
 // MAIN
 // ═══════════════════════════════════════════════════════════════════════════════
 export default function AnalyticsDashboard() {
+  const { analytics: D } = usePage().props;
+
   const [tab,   setTab]   = useState("Overview");
-  const [range, setRange] = useState("6M");
+  const [range, setRange] = useState(D.range || "6M");
 
-  // ── Derived chart data ──────────────────────────────────────────────────────
-  const mrrData    = DATA.monthly_revenue.map(m => ({ label: fmtMonth(m.month), value: m.revenue }));
-  const subsData   = DATA.monthly_new_subs.map(m => ({ label: fmtMonth(m.month), value: m.count }));
-  const userGrowth = DATA.user_growth.map(m => ({ label: fmtMonth(m.month), value: m.count }));
-  const listGrowth = DATA.listing_growth.map(m => ({ label: fmtMonth(m.month), value: m.count }));
-  const viewsOT    = DATA.views_over_time.map(m => ({ label: fmtMonth(m.month), value: m.views }));
-  const inqOT      = DATA.inquiries_over_time.map(m => ({ label: fmtMonth(m.month), value: m.count }));
+  // ── Range change → Inertia reload ──────────────────────────────────────────
+  const handleRangeChange = (r) => {
+    setRange(r);
+    // Use Inertia router to reload the page with the new range param
+    // keeping existing scroll position and preserving state
+    window.location.href = `?range=${r}`;
+  };
 
-  const providerDonut = DATA.provider_split.map((p, i) => ({ label: cap(p.provider), value: p.total, color: PALETTE[i] }));
+  // ── Derived chart data (mapped from real props) ─────────────────────────────
+  const mrrData    = (D.monthly_revenue   || []).map(m => ({ label: fmtMonth(m.month), value: m.revenue }));
+  const subsData   = (D.monthly_new_subs  || []).map(m => ({ label: fmtMonth(m.month), value: m.count }));
+  const userGrowth = (D.user_growth       || []).map(m => ({ label: fmtMonth(m.month), value: m.count }));
+  const listGrowth = (D.listing_growth    || []).map(m => ({ label: fmtMonth(m.month), value: m.count }));
+  const viewsOT    = (D.views_over_time   || []).map(m => ({ label: fmtMonth(m.month), value: m.views }));
+  const inqOT      = (D.inquiries_over_time || []).map(m => ({ label: fmtMonth(m.month), value: m.count }));
 
-  const sbKeys = Object.keys(DATA.status_breakdown);
-  const outcomeDonut = sbKeys.map(k => ({
-    label: cap(k), value: DATA.status_breakdown[k].count,
+  const providerDonut = (D.provider_split || []).map((p, i) => ({
+    label: cap(p.provider), value: p.total, color: PALETTE[i],
+  }));
+
+  const sb = D.status_breakdown || {};
+  const outcomeDonut = Object.entries(sb).map(([k, v]) => ({
+    label: cap(k), value: v.count,
     color: k === "success" ? T.chart3 : k === "failed" ? T.chart5 : k === "refunded" ? T.chart6 : T.chart4,
   }));
 
-  const subStatusDonut = Object.entries(DATA.subscription_summary).map(([k, v]) => ({
+  const ss = D.subscription_summary || {};
+  const subStatusDonut = Object.entries(ss).map(([k, v]) => ({
     label: cap(k), value: v,
     color: k === "active" ? T.chart3 : k === "cancelled" ? T.chart5 : k === "expired" ? T.chart4 : T.chart2,
   }));
 
-  const roleDonut = DATA.users_by_role.map((r, i) => ({ label: cap(r.role), value: r.count, color: PALETTE[i] }));
-  const pkgDonut  = DATA.users_by_package.map((p, i) => ({ label: cap(p.package), value: p.count, color: PALETTE[i] }));
-  const purposeDonut = DATA.listings_by_purpose.map((p, i) => ({ label: cap(p.purpose), value: p.count, color: [T.chart1, T.chart2][i] }));
-  const typeHBar  = DATA.listings_by_type.map(t => ({ label: t.property_type, value: t.count }));
-  const cityHBar  = DATA.listings_by_city.map(c => ({ label: c.city, value: c.count }));
-  const inqTypeHBar = DATA.inquiries_by_type.map(t => ({ label: cap(t.type), value: t.count }));
-  const inqTypeDonut = inqTypeHBar.map((d, i) => ({ ...d, color: PALETTE[i] }));
+  const roleDonut = (D.users_by_role    || []).map((r, i) => ({ label: cap(r.role),    value: r.count, color: PALETTE[i] }));
+  const pkgDonut  = (D.users_by_package || []).map((p, i) => ({ label: cap(p.package), value: p.count, color: PALETTE[i] }));
 
-  const ls = DATA.listing_stats;
-  const ss = DATA.subscription_summary;
-  const is = DATA.inquiries_summary;
+  const purposeDonut = (D.listings_by_purpose || []).map((p, i) => ({
+    label: cap(p.purpose), value: p.count, color: [T.chart1, T.chart2][i],
+  }));
+
+  const typeHBar    = (D.listings_by_type || []).map(t => ({ label: t.property_type, value: t.count }));
+  const cityHBar    = (D.listings_by_city || []).map(c => ({ label: c.city,          value: c.count }));
+  const inqTypeHBar = (D.inquiries_by_type || []).map(t => ({ label: cap(t.type),    value: t.count }));
+  const inqTypeDonut= inqTypeHBar.map((d, i) => ({ ...d, color: PALETTE[i] }));
+
+  const ls = D.listing_stats     || {};
+  const is = D.inquiries_summary || {};
+
   const totalPmts   = outcomeDonut.reduce((s, d) => s + d.value, 0);
-  const successPmts = DATA.status_breakdown.success.count;
+  const successPmts = sb.success?.count || 0;
   const successRate = pct(successPmts, totalPmts);
 
   // ── Styles ──────────────────────────────────────────────────────────────────
@@ -420,12 +355,12 @@ export default function AnalyticsDashboard() {
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "1rem", marginBottom: "1.25rem", flexWrap: "wrap" }}>
           <div>
             <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: T.text, letterSpacing: "-0.02em" }}>Analytics</h1>
-            <p style={{ margin: "4px 0 0", fontSize: 13, color: T.textSub }}>{DATA.from} &rarr; {DATA.to} &middot; RentTrustGH platform</p>
+            <p style={{ margin: "4px 0 0", fontSize: 13, color: T.textSub }}>{D.from} &rarr; {D.to} &middot; RentTrustGH platform</p>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
             <div style={{ display: "flex", gap: 4 }}>
               {RANGES.map(r => (
-                <button key={r} style={s.rangeBtn(range === r)} onClick={() => setRange(r)}>{r}</button>
+                <button key={r} style={s.rangeBtn(range === r)} onClick={() => handleRangeChange(r.replace("All","ALL"))}>{r}</button>
               ))}
             </div>
             <div style={{ width: 1, height: 22, backgroundColor: T.border }} />
@@ -433,7 +368,7 @@ export default function AnalyticsDashboard() {
               style={s.dlBtn}
               onMouseEnter={e => { e.currentTarget.style.borderColor = T.chart1; e.currentTarget.style.color = T.chart1; }}
               onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.text; }}
-              onClick={downloadCSV}
+              onClick={() => downloadCSV(D)}
             >
               {I.download} Export CSV
             </button>
@@ -454,14 +389,14 @@ export default function AnalyticsDashboard() {
         {tab === "Overview" && (
           <>
             <KpiGrid>
-              <StatCard label="Total Revenue"   value={fmtC(DATA.total_revenue)} sub={`Avg ${fmtC(DATA.avg_payment)} / pmt`}      accent={T.chart3} iconBg="hsl(142 55% 93%)" iconColor={T.chart3} icon={I.trending} bar={T.chart3}  trend={7.4} />
-              <StatCard label="Total Users"     value={fmt(DATA.total_users)}    sub={`+${fmt(DATA.new_users_period)} this period`} accent={T.chart1} iconBg="hsl(214 100% 95%)" iconColor={T.chart1} icon={I.users}   bar={T.chart1}  trend={18.4} />
-              <StatCard label="Active Listings" value={fmt(ls.active)}           sub={`${fmt(ls.total)} total`}                    accent="hsl(200 65% 36%)" iconBg="hsl(200 60% 93%)" iconColor="hsl(200 65% 36%)" icon={I.home} bar="hsl(200 65% 36%)" trend={4.2} />
-              <StatCard label="Total Views"     value={fmtK(DATA.total_views)}   sub={`${fmtK(DATA.unique_viewers)} unique`}        accent={T.chart6} iconBg="hsl(270 60% 95%)" iconColor={T.chart6} icon={I.eye}     bar={T.chart6}  trend={11.1} />
-              <StatCard label="Active Subs"     value={fmt(ss.active)}           sub={`${fmt(ss.cancelled)} cancelled`}            accent={T.chart1} iconBg="hsl(214 100% 95%)" iconColor={T.chart1} icon={I.check}  bar={T.chart1} />
-              <StatCard label="Success Rate"    value={`${successRate}%`}        sub={`${fmt(successPmts)} successful`}             accent={T.chart3} iconBg="hsl(142 55% 93%)" iconColor={T.chart3} icon={I.check}  bar={T.chart3} />
-              <StatCard label="Inquiries"       value={fmtK(is.total)}           sub={`${fmt(is.from_users)} registered`}          accent={T.chart4} iconBg="hsl(40 90% 93%)" iconColor={T.chart4} icon={I.chat}    bar={T.chart4} />
-              <StatCard label="Featured"        value={fmt(ls.featured)}         sub={`${fmt(ls.boosted)} boosted`}                accent={T.chart4} iconBg="hsl(40 90% 93%)" iconColor={T.chart4} icon={I.star}    bar={T.chart4} />
+              <StatCard label="Total Revenue"   value={fmtC(D.total_revenue)}    sub={`Avg ${fmtC(D.avg_payment)} / pmt`}           accent={T.chart3} iconBg="hsl(142 55% 93%)" iconColor={T.chart3} icon={I.trending} bar={T.chart3} />
+              <StatCard label="Total Users"     value={fmt(D.total_users)}        sub={`+${fmt(D.new_users_period)} this period`}    accent={T.chart1} iconBg="hsl(214 100% 95%)" iconColor={T.chart1} icon={I.users}   bar={T.chart1} />
+              <StatCard label="Active Listings" value={fmt(ls.active)}            sub={`${fmt(ls.total)} total`}                     accent="hsl(200 65% 36%)" iconBg="hsl(200 60% 93%)" iconColor="hsl(200 65% 36%)" icon={I.home} bar="hsl(200 65% 36%)" />
+              <StatCard label="Total Views"     value={fmtK(D.total_views)}       sub={`${fmtK(D.unique_viewers)} unique`}           accent={T.chart6} iconBg="hsl(270 60% 95%)" iconColor={T.chart6} icon={I.eye}     bar={T.chart6} />
+              <StatCard label="Active Subs"     value={fmt(ss.active)}            sub={`${fmt(ss.cancelled)} cancelled`}             accent={T.chart1} iconBg="hsl(214 100% 95%)" iconColor={T.chart1} icon={I.check}  bar={T.chart1} />
+              <StatCard label="Success Rate"    value={`${successRate}%`}         sub={`${fmt(successPmts)} successful`}             accent={T.chart3} iconBg="hsl(142 55% 93%)" iconColor={T.chart3} icon={I.check}  bar={T.chart3} />
+              <StatCard label="Inquiries"       value={fmtK(is.total)}            sub={`${fmt(is.from_users)} registered`}           accent={T.chart4} iconBg="hsl(40 90% 93%)" iconColor={T.chart4} icon={I.chat}    bar={T.chart4} />
+              <StatCard label="Featured"        value={fmt(ls.featured)}          sub={`${fmt(ls.boosted)} boosted`}                 accent={T.chart4} iconBg="hsl(40 90% 93%)" iconColor={T.chart4} icon={I.star}    bar={T.chart4} />
             </KpiGrid>
             <ChartGrid>
               <ChartCard title="Monthly Revenue (GH₵)"><BarChart data={mrrData} color={T.chart1} valueFormat={fmtC} /></ChartCard>
@@ -476,8 +411,8 @@ export default function AnalyticsDashboard() {
         {tab === "Revenue" && (
           <>
             <KpiGrid>
-              <StatCard label="Total Revenue"   value={fmtC(DATA.total_revenue)} accent={T.chart3} iconBg="hsl(142 55% 93%)" iconColor={T.chart3} icon={I.trending} bar={T.chart3} />
-              <StatCard label="Avg per Payment" value={fmtC(DATA.avg_payment)}   accent={T.chart1} iconBg="hsl(214 100% 95%)" iconColor={T.chart1} icon={I.trending} bar={T.chart1} />
+              <StatCard label="Total Revenue"   value={fmtC(D.total_revenue)}  accent={T.chart3} iconBg="hsl(142 55% 93%)" iconColor={T.chart3} icon={I.trending} bar={T.chart3} />
+              <StatCard label="Avg per Payment" value={fmtC(D.avg_payment)}    accent={T.chart1} iconBg="hsl(214 100% 95%)" iconColor={T.chart1} icon={I.trending} bar={T.chart1} />
               <StatCard label="Successful Pmts" value={fmt(successPmts)} sub={`${successRate}% rate`} accent={T.chart3} iconBg="hsl(142 55% 93%)" iconColor={T.chart3} icon={I.check} bar={T.chart3} />
               <StatCard label="Active Subs"     value={fmt(ss.active)} sub={`${fmt(ss.cancelled)} cancelled`} accent={T.chart1} iconBg="hsl(214 100% 95%)" iconColor={T.chart1} icon={I.star} bar={T.chart1} />
             </KpiGrid>
@@ -499,12 +434,12 @@ export default function AnalyticsDashboard() {
         {tab === "Listings" && (
           <>
             <KpiGrid>
-              <StatCard label="Total"       value={fmt(ls.total)}            accent={T.chart1}           iconBg="hsl(214 100% 95%)" iconColor={T.chart1}            icon={I.home}      bar={T.chart1} />
-              <StatCard label="Active"      value={fmt(ls.active)}  sub={`${pct(ls.active, ls.total)}% of total`} accent={T.chart3} iconBg="hsl(142 55% 93%)" iconColor={T.chart3} icon={I.check} bar={T.chart3} />
-              <StatCard label="Pending"     value={fmt(ls.pending)}           accent={T.chart4}           iconBg="hsl(40 90% 93%)"   iconColor={T.chart4}            icon={I.warn}      bar={T.chart4} />
-              <StatCard label="Featured"    value={fmt(ls.featured)} sub={`${fmt(ls.boosted)} boosted`}  accent={T.chart4}           iconBg="hsl(40 90% 93%)"   iconColor={T.chart4}            icon={I.star}      bar={T.chart4} />
-              <StatCard label="Rented Out"  value={fmt(ls.rented)}            accent={T.chart6}           iconBg="hsl(270 60% 95%)"  iconColor={T.chart6}            icon={I.key}       bar={T.chart6} />
-              <StatCard label="Sold"        value={fmt(ls.sold)}              accent="hsl(200 65% 36%)"   iconBg="hsl(200 60% 93%)"  iconColor="hsl(200 65% 36%)"    icon={I.briefcase} bar="hsl(200 65% 36%)" />
+              <StatCard label="Total"       value={fmt(ls.total)}                                                    accent={T.chart1}         iconBg="hsl(214 100% 95%)" iconColor={T.chart1}            icon={I.home}      bar={T.chart1} />
+              <StatCard label="Active"      value={fmt(ls.active)}  sub={`${pct(ls.active, ls.total)}% of total`}   accent={T.chart3}         iconBg="hsl(142 55% 93%)" iconColor={T.chart3}             icon={I.check}     bar={T.chart3} />
+              <StatCard label="Pending"     value={fmt(ls.pending)}                                                  accent={T.chart4}         iconBg="hsl(40 90% 93%)"  iconColor={T.chart4}             icon={I.warn}      bar={T.chart4} />
+              <StatCard label="Featured"    value={fmt(ls.featured)} sub={`${fmt(ls.boosted)} boosted`}              accent={T.chart4}         iconBg="hsl(40 90% 93%)"  iconColor={T.chart4}             icon={I.star}      bar={T.chart4} />
+              <StatCard label="Rented Out"  value={fmt(ls.rented)}                                                   accent={T.chart6}         iconBg="hsl(270 60% 95%)" iconColor={T.chart6}             icon={I.key}       bar={T.chart6} />
+              <StatCard label="Sold"        value={fmt(ls.sold)}                                                     accent="hsl(200 65% 36%)" iconBg="hsl(200 60% 93%)" iconColor="hsl(200 65% 36%)"    icon={I.briefcase} bar="hsl(200 65% 36%)" />
             </KpiGrid>
             <SH>Growth</SH>
             <ChartGrid>
@@ -523,10 +458,10 @@ export default function AnalyticsDashboard() {
         {tab === "Users" && (
           <>
             <KpiGrid>
-              <StatCard label="Total Users"    value={fmt(DATA.total_users)}        accent={T.chart1} iconBg="hsl(214 100% 95%)" iconColor={T.chart1} icon={I.users} bar={T.chart1} />
-              <StatCard label="New This Period" value={fmt(DATA.new_users_period)}   accent={T.chart3} iconBg="hsl(142 55% 93%)" iconColor={T.chart3} icon={I.users} bar={T.chart3} />
-              <StatCard label="Agents"         value={fmt(DATA.users_by_role.find(r => r.role === "agent")?.count ?? 0)}  accent="hsl(200 65% 36%)" iconBg="hsl(200 60% 93%)" iconColor="hsl(200 65% 36%)" icon={I.users} bar="hsl(200 65% 36%)" />
-              <StatCard label="Tenants"        value={fmt(DATA.users_by_role.find(r => r.role === "tenant")?.count ?? 0)} accent={T.chart6} iconBg="hsl(270 60% 95%)" iconColor={T.chart6} icon={I.users} bar={T.chart6} />
+              <StatCard label="Total Users"     value={fmt(D.total_users)}         accent={T.chart1}         iconBg="hsl(214 100% 95%)" iconColor={T.chart1}         icon={I.users} bar={T.chart1} />
+              <StatCard label="New This Period"  value={fmt(D.new_users_period)}    accent={T.chart3}         iconBg="hsl(142 55% 93%)" iconColor={T.chart3}          icon={I.users} bar={T.chart3} />
+              <StatCard label="Agents"           value={fmt((D.users_by_role || []).find(r => r.role === "agent")?.count  ?? 0)} accent="hsl(200 65% 36%)" iconBg="hsl(200 60% 93%)" iconColor="hsl(200 65% 36%)" icon={I.users} bar="hsl(200 65% 36%)" />
+              <StatCard label="Tenants"          value={fmt((D.users_by_role || []).find(r => r.role === "tenant")?.count ?? 0)} accent={T.chart6}         iconBg="hsl(270 60% 95%)" iconColor={T.chart6}         icon={I.users} bar={T.chart6} />
             </KpiGrid>
             <SH>Growth</SH>
             <ChartGrid>
@@ -541,9 +476,9 @@ export default function AnalyticsDashboard() {
         {tab === "Engagement" && (
           <>
             <KpiGrid>
-              <StatCard label="Total Views"     value={fmtK(DATA.total_views)}   accent={T.chart6} iconBg="hsl(270 60% 95%)" iconColor={T.chart6} icon={I.eye}  bar={T.chart6} />
-              <StatCard label="Unique Viewers"  value={fmtK(DATA.unique_viewers)} sub={`${pct(DATA.unique_viewers, DATA.total_views)}% unique`} accent={T.chart1} iconBg="hsl(214 100% 95%)" iconColor={T.chart1} icon={I.eye} bar={T.chart1} />
-              <StatCard label="Inquiries"       value={fmtK(is.total)}           accent={T.chart4} iconBg="hsl(40 90% 93%)"  iconColor={T.chart4} icon={I.chat} bar={T.chart4} />
+              <StatCard label="Total Views"     value={fmtK(D.total_views)}    accent={T.chart6} iconBg="hsl(270 60% 95%)" iconColor={T.chart6} icon={I.eye}   bar={T.chart6} />
+              <StatCard label="Unique Viewers"  value={fmtK(D.unique_viewers)} sub={`${pct(D.unique_viewers, D.total_views)}% unique`} accent={T.chart1} iconBg="hsl(214 100% 95%)" iconColor={T.chart1} icon={I.eye} bar={T.chart1} />
+              <StatCard label="Inquiries"       value={fmtK(is.total)}         accent={T.chart4} iconBg="hsl(40 90% 93%)"  iconColor={T.chart4} icon={I.chat}  bar={T.chart4} />
               <StatCard label="From Registered" value={fmt(is.from_users)} sub={`${fmt(is.from_guests)} guests`} accent={T.chart3} iconBg="hsl(142 55% 93%)" iconColor={T.chart3} icon={I.users} bar={T.chart3} />
             </KpiGrid>
             <SH>Views &amp; Inquiries Over Time</SH>
@@ -557,7 +492,7 @@ export default function AnalyticsDashboard() {
               <ChartCard title="Channel Comparison"><RankBars data={inqTypeHBar} /></ChartCard>
             </ChartGrid>
             <SH>Top Performing Listings</SH>
-            <TopTable data={DATA.top_listings} />
+            <TopTable data={D.top_listings} />
           </>
         )}
 

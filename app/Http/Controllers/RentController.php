@@ -319,7 +319,14 @@ class RentController extends Controller
             Log::warning('Failed to track listing view: ' . $e->getMessage());
         }
 
-        $rent->load('user');
+        $userIds = collect([$rent->agent_id, $rent->user_id])->filter()->unique();
+
+        $users = User::whereIn('id', $userIds)
+            ->select('id', 'name', 'email', 'phone', 'company', 'bio', 'status', 'fee', 'role')
+            ->get()
+            ->keyBy('id');
+
+        $agent = $users->get($rent->agent_id) ?? $users->get($rent->user_id);
 
         $reviews = Review::where('rental_id', $rent->id)
             ->orderBy('created_at', 'desc')
@@ -327,6 +334,7 @@ class RentController extends Controller
 
         return inertia('PropertyDetailsPage', [
             'rental' => $rent,
+            'agent' => $agent,
             'reviews' => $reviews,
             'seo' => app(SeoService::class)->propertyMeta($rent),
         ]);
@@ -717,28 +725,6 @@ class RentController extends Controller
     /**
      * Record an inquiry event tied to a listing.
      */
-    // public function trackInquiry(Request $request, Rental $rent)
-    // {
-    //     $data = $request->validate([
-    //         'type'    => ['required', 'in:' . implode(',', ListingInquiry::validTypes())],
-    //         'message' => 'required|string|max:1000',
-    //     ]);
-
-    //     ListingInquiry::create([
-    //         'listing_inquiry_id' => ListingInquiry::generateUUID(),
-    //         'rental_id' => $rent->id,
-    //         'user_id'   => Auth::id(),
-    //         'type'      => $data['type'],
-    //         'message'   => $data['message'],
-    //         'ip'        => $request->ip(),
-    //     ]);
-
-    //     return redirect()->back()->with([
-    //         'success' => true,
-    //         'message' => 'Your inquiry has been sent to the agent. They will contact you soon.'
-    //     ]);
-    // }
-
     public function trackInquiry(Request $request, Rental $rent)
     {
         $data = $request->validate([

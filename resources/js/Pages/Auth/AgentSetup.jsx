@@ -1,5 +1,5 @@
+import { useForm } from '@inertiajs/react';
 import { useState } from 'react';
-import { Link, useForm } from '@inertiajs/react';
 
 // ── Icons ─────────────────────────────────────────────────────────────────────
 
@@ -29,18 +29,6 @@ const SpinnerIcon = () => (
     </svg>
 );
 
-const CheckCircleIcon = () => (
-    <svg width="48" height="48" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-    </svg>
-);
-
-const ArrowRightIcon = () => (
-    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-    </svg>
-);
-
 // ── Password strength ─────────────────────────────────────────────────────────
 
 const getStrength = (pw) => {
@@ -55,10 +43,10 @@ const getStrength = (pw) => {
 
 const STRENGTH_META = [
     null,
-    { label: 'Weak',        color: 'hsl(0 72% 51%)',   bg: 'hsl(0 72% 51%)' },
-    { label: 'Fair',        color: 'hsl(38 92% 50%)',  bg: 'hsl(38 92% 50%)' },
-    { label: 'Strong',      color: 'hsl(174 62% 36%)', bg: 'hsl(174 62% 36%)' },
-    { label: 'Very strong', color: 'hsl(142 60% 36%)', bg: 'hsl(142 60% 36%)' },
+    { label: 'Weak',        color: 'hsl(0 72% 51%)',    bg: 'hsl(0 72% 51%)' },
+    { label: 'Fair',        color: 'hsl(38 92% 50%)',   bg: 'hsl(38 92% 50%)' },
+    { label: 'Strong',      color: 'hsl(174 62% 36%)',  bg: 'hsl(174 62% 36%)' },
+    { label: 'Very strong', color: 'hsl(142 60% 36%)',  bg: 'hsl(142 60% 36%)' },
 ];
 
 const StrengthBar = ({ password }) => {
@@ -88,10 +76,9 @@ const StrengthBar = ({ password }) => {
 // ── Requirements checklist ────────────────────────────────────────────────────
 
 const REQUIREMENTS = [
-    { test: pw => pw.length >= 8,           label: 'At least 8 characters' },
-    { test: pw => /[A-Z]/.test(pw),         label: 'One uppercase letter' },
-    { test: pw => /[0-9]/.test(pw),         label: 'One number' },
-    { test: pw => /[^A-Za-z0-9]/.test(pw), label: 'One special character' },
+    { test: pw => pw.length >= 8,          label: 'At least 8 characters' },
+    { test: pw => /[A-Z]/.test(pw),        label: 'One uppercase letter' },
+    { test: pw => /[0-9]/.test(pw),        label: 'One number' },
 ];
 
 const RequirementItem = ({ met, label }) => (
@@ -173,43 +160,29 @@ const PasswordField = ({ label, value, onChange, error, show, onToggle, placehol
     </div>
 );
 
-// ── Role label ────────────────────────────────────────────────────────────────
-
-const ROLE_LABELS = {
-    agent:       'Agent',
-    admin:       'Admin',
-    super_admin: 'Super Admin',
-};
-
 // ── Main ──────────────────────────────────────────────────────────────────────
 
-const ResetPasswordPage = ({ token, email, userType }) => {
-    const [showPw,    setShowPw]    = useState(false);
-    const [showPw2,   setShowPw2]   = useState(false);
-    const [resetDone, setResetDone] = useState(false);
+const AgentSetup = ({ token, agentName, agentEmail }) => {
+    const [showPw,  setShowPw]  = useState(false);
+    const [showPw2, setShowPw2] = useState(false);
 
     const { data, setData, post, processing, errors } = useForm({
-        token:                 token,
-        email:                 email,
-        userType:              userType,
         password:              '',
         password_confirmation: '',
     });
 
-    const confirmFilled  = data.password_confirmation.length > 0;
-    const passwordsMatch = data.password === data.password_confirmation;
-    const confirmIsValid = confirmFilled && passwordsMatch && !errors.password_confirmation;
-    const confirmError   = errors.password_confirmation || (confirmFilled && !passwordsMatch ? 'Passwords do not match.' : '');
-    const allReqsMet     = REQUIREMENTS.every(r => r.test(data.password));
+    const confirmFilled   = data.password_confirmation.length > 0;
+    const passwordsMatch  = data.password === data.password_confirmation;
+    const confirmIsValid  = confirmFilled && passwordsMatch && !errors.password_confirmation;
+    const confirmHasError = !!errors.password_confirmation || (confirmFilled && !passwordsMatch);
+    const allReqsMet      = REQUIREMENTS.every(r => r.test(data.password));
 
-    const roleLabel = ROLE_LABELS[userType] || 'User';
-    const emailInitial = (email || 'U').charAt(0).toUpperCase();
+    const liveHue  = [...(agentName || '')].reduce((a, c) => a + c.charCodeAt(0), 0) % 360;
+    const initials = (agentName || '').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        post('/reset-password', {
-            onSuccess: () => setResetDone(true),
-        });
+        post(`/agent/setup/${token}`);
     };
 
     return (
@@ -218,15 +191,8 @@ const ResetPasswordPage = ({ token, email, userType }) => {
                 @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@400;500;600;700&display=swap');
                 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
                 body { background: hsl(168 30% 96%); }
-                @keyframes spin { to { transform: rotate(360deg); } }
-                @keyframes fadeUp {
-                    from { opacity: 0; transform: translateY(16px); }
-                    to   { opacity: 1; transform: translateY(0); }
-                }
-                @keyframes popIn {
-                    from { opacity: 0; transform: scale(0.85); }
-                    to   { opacity: 1; transform: scale(1); }
-                }
+                @keyframes spin    { to { transform: rotate(360deg); } }
+                @keyframes fadeUp  { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
                 @media (max-width: 640px) {
                     input[type="password"], input[type="text"] { font-size: 16px !important; }
                 }
@@ -241,6 +207,7 @@ const ResetPasswordPage = ({ token, email, userType }) => {
                 fontFamily: "'DM Sans', system-ui, sans-serif",
                 position: 'relative', overflow: 'hidden',
             }}>
+
                 {/* Background texture */}
                 <div style={{
                     position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0,
@@ -252,95 +219,29 @@ const ResetPasswordPage = ({ token, email, userType }) => {
                     backgroundSize: 'auto, auto, 28px 28px',
                 }} />
 
-                {/* Card wrapper */}
+                {/* Card */}
                 <div style={{
                     width: '100%', maxWidth: '440px',
                     position: 'relative', zIndex: 1,
                     animation: 'fadeUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) both',
                 }}>
-                    {/* Logo */}
+
+                    {/* Brand mark */}
                     <div style={{ textAlign: 'center', marginBottom: '1.75rem' }}>
-                        <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '1rem 1.25rem' }}>
-                            <img src="/rent-trust.png" alt="RentTrustGH" style={{ width: '100px', height: '100px' }} />
+                        <div style={{
+                            display: 'inline-flex', flexDirection: 'column',
+                            alignItems: 'center', justifyContent: 'center',
+                            padding: '1rem 1.25rem',
+                        }}>
+                            <img
+                                src="/rent-trust.png"
+                                alt="RentTrustGh Logo"
+                                style={{ width: '100px', height: '100px' }}
+                            />
                         </div>
                     </div>
 
-                    {/* ── SUCCESS STATE ─────────────────────────────────── */}
-                    {resetDone ? (
-                        <div style={{
-                            backgroundColor: 'white',
-                            borderRadius: '1.25rem',
-                            border: '1px solid hsl(174 25% 88%)',
-                            boxShadow: '0 4px 24px hsl(174 40% 20% / 0.09), 0 1px 4px hsl(174 40% 20% / 0.06)',
-                            overflow: 'hidden',
-                            textAlign: 'center',
-                        }}>
-                            {/* Green header bar */}
-                            <div style={{
-                                background: 'linear-gradient(135deg, hsl(142 55% 30%) 0%, hsl(142 50% 24%) 100%)',
-                                padding: '2rem',
-                                position: 'relative', overflow: 'hidden',
-                            }}>
-                                <div style={{
-                                    position: 'absolute', inset: 0, pointerEvents: 'none',
-                                    backgroundImage: 'radial-gradient(hsl(142 80% 80% / 0.08) 1px, transparent 1px)',
-                                    backgroundSize: '18px 18px',
-                                }} />
-                                <div style={{
-                                    position: 'absolute', top: '-2rem', right: '-2rem',
-                                    width: '8rem', height: '8rem', borderRadius: '50%',
-                                    background: 'hsl(142 60% 50% / 0.15)', filter: 'blur(20px)',
-                                }} />
-                                <div style={{
-                                    width: '4rem', height: '4rem', borderRadius: '50%',
-                                    backgroundColor: 'hsl(142 55% 40% / 0.25)',
-                                    border: '2px solid hsl(142 60% 60% / 0.35)',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    margin: '0 auto',
-                                    color: 'hsl(142 60% 78%)',
-                                    animation: 'popIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both',
-                                }}>
-                                    <CheckCircleIcon />
-                                </div>
-                            </div>
-
-                            <div style={{ padding: '2rem 2rem 2.5rem' }}>
-                                <h2 style={{
-                                    fontFamily: "'DM Serif Display', Georgia, serif",
-                                    fontSize: '1.5rem', fontWeight: 400,
-                                    color: 'hsl(200 25% 12%)', marginBottom: '0.6rem',
-                                    letterSpacing: '-0.01em',
-                                }}>
-                                    Password Reset!
-                                </h2>
-                                <p style={{
-                                    fontSize: '0.85rem', color: 'hsl(200 15% 50%)',
-                                    lineHeight: 1.6, marginBottom: '1.75rem',
-                                }}>
-                                    Your password has been updated. You can now sign in to your account with your new credentials.
-                                </p>
-                                <Link
-                                    href="/login"
-                                    style={{
-                                        display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
-                                        padding: '0.875rem 1.75rem',
-                                        background: 'linear-gradient(135deg, hsl(174 62% 32%), hsl(174 55% 26%))',
-                                        color: 'white', textDecoration: 'none',
-                                        borderRadius: '0.75rem', fontWeight: 700,
-                                        fontSize: '0.9rem', fontFamily: 'inherit',
-                                        boxShadow: '0 2px 12px hsl(174 62% 28% / 0.3)',
-                                        transition: 'box-shadow 0.2s',
-                                    }}
-                                    onMouseEnter={e => e.currentTarget.style.boxShadow = '0 4px 20px hsl(174 62% 28% / 0.45)'}
-                                    onMouseLeave={e => e.currentTarget.style.boxShadow = '0 2px 12px hsl(174 62% 28% / 0.3)'}
-                                >
-                                    Sign In Now <ArrowRightIcon />
-                                </Link>
-                            </div>
-                        </div>
-                    ) : (
-
-                    // ── FORM STATE ────────────────────────────────────────
+                    {/* Main card */}
                     <div style={{
                         backgroundColor: 'white',
                         borderRadius: '1.25rem',
@@ -348,10 +249,11 @@ const ResetPasswordPage = ({ token, email, userType }) => {
                         boxShadow: '0 4px 24px hsl(174 40% 20% / 0.09), 0 1px 4px hsl(174 40% 20% / 0.06)',
                         overflow: 'hidden',
                     }}>
+
                         {/* Teal header */}
                         <div style={{
                             background: 'linear-gradient(135deg, hsl(174 62% 28%) 0%, hsl(174 55% 22%) 100%)',
-                            padding: '1.75rem 2rem',
+                            padding: '1.75rem',
                             position: 'relative', overflow: 'hidden',
                         }}>
                             <div style={{
@@ -372,22 +274,23 @@ const ResetPasswordPage = ({ token, email, userType }) => {
                                     backgroundColor: 'hsl(174 60% 50% / 0.15)',
                                     border: '1px solid hsl(174 60% 60% / 0.25)',
                                     borderRadius: '999px', padding: '0.25rem 0.7rem',
-                                    marginBottom: '0.75rem',
+                                    marginBottom: '0.875rem',
                                 }}>
                                     <span style={{ fontSize: '0.65rem', fontWeight: 800, letterSpacing: '0.1em', color: 'hsl(174 60% 75%)', textTransform: 'uppercase' }}>
-                                        Password Reset
+                                        Agent Activation
                                     </span>
                                 </div>
                                 <h1 style={{
                                     fontFamily: "'DM Serif Display', Georgia, serif",
                                     fontSize: '1.5rem', fontWeight: 400,
                                     color: 'white', lineHeight: 1.2,
-                                    marginBottom: '0.4rem', letterSpacing: '-0.01em',
+                                    marginBottom: '0.4rem',
+                                    letterSpacing: '-0.01em',
                                 }}>
-                                    Create a new password
+                                    Welcome, {(agentName || '').split(' ')[0]}
                                 </h1>
                                 <p style={{ fontSize: '0.82rem', color: 'hsl(174 30% 72%)', lineHeight: 1.5 }}>
-                                    Choose a strong password to secure your RentTrustGH account.
+                                    Set a password to activate your agent account on RentTrustGH.
                                 </p>
                             </div>
                         </div>
@@ -401,20 +304,21 @@ const ResetPasswordPage = ({ token, email, userType }) => {
                             border: '1px solid hsl(174 35% 88%)',
                             display: 'flex', alignItems: 'center', gap: '0.65rem',
                         }}>
+                            {/* Live avatar */}
                             <div style={{
-                                width: '2.25rem', height: '2.25rem', borderRadius: '50%', flexShrink: 0,
-                                backgroundColor: 'hsl(174 62% 32%)',
+                                width: '2.25rem', height: '2.25rem', borderRadius: '0.5rem', flexShrink: 0,
+                                backgroundColor: `hsl(${liveHue} 50% 50%)`,
                                 color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                fontSize: '0.78rem', fontWeight: 800,
+                                fontSize: '0.78rem', fontWeight: 800, letterSpacing: '0.02em',
                             }}>
-                                {emailInitial}
+                                {initials}
                             </div>
                             <div style={{ minWidth: 0 }}>
                                 <div style={{ fontSize: '0.82rem', fontWeight: 700, color: 'hsl(200 25% 15%)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                    {email}
+                                    {agentName}
                                 </div>
-                                <div style={{ fontSize: '0.72rem', color: 'hsl(174 40% 38%)' }}>
-                                    Resetting password for this account
+                                <div style={{ fontSize: '0.72rem', color: 'hsl(174 40% 38%)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                    {agentEmail}
                                 </div>
                             </div>
                             <div style={{
@@ -424,7 +328,7 @@ const ResetPasswordPage = ({ token, email, userType }) => {
                                 backgroundColor: 'hsl(174 62% 32%)', color: 'white',
                                 textTransform: 'uppercase',
                             }}>
-                                {roleLabel}
+                                Agent
                             </div>
                         </div>
 
@@ -433,7 +337,7 @@ const ResetPasswordPage = ({ token, email, userType }) => {
                             <div style={{ padding: '1.25rem 1.75rem', display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
 
                                 <PasswordField
-                                    label="New Password"
+                                    label="Create Password"
                                     value={data.password}
                                     onChange={e => setData('password', e.target.value)}
                                     error={errors.password}
@@ -464,7 +368,7 @@ const ResetPasswordPage = ({ token, email, userType }) => {
                                     label="Confirm Password"
                                     value={data.password_confirmation}
                                     onChange={e => setData('password_confirmation', e.target.value)}
-                                    error={confirmError}
+                                    error={confirmHasError && !errors.password_confirmation ? 'Passwords do not match.' : errors.password_confirmation}
                                     show={showPw2}
                                     onToggle={() => setShowPw2(v => !v)}
                                     placeholder="••••••••"
@@ -481,69 +385,49 @@ const ResetPasswordPage = ({ token, email, userType }) => {
                                     </div>
                                 )}
 
-                                {/* General error (e.g. invalid/expired token) */}
-                                {errors.email && (
-                                    <div style={{
-                                        padding: '0.75rem 1rem', borderRadius: '0.65rem',
-                                        backgroundColor: 'hsl(0 72% 51% / 0.06)',
-                                        border: '1px solid hsl(0 72% 51% / 0.2)',
-                                        fontSize: '0.8rem', color: 'hsl(0 65% 44%)', fontWeight: 600,
-                                    }}>
-                                        {errors.email}
-                                    </div>
-                                )}
-
                                 {/* Submit */}
                                 <button
                                     type="submit"
                                     disabled={processing}
                                     style={{
-                                        width: '100%', padding: '0.875rem', border: 'none',
+                                        width: '100%',
+                                        padding: '0.875rem',
+                                        border: 'none',
                                         borderRadius: '0.75rem',
                                         background: processing || !allReqsMet
                                             ? 'hsl(174 20% 78%)'
                                             : 'linear-gradient(135deg, hsl(174 62% 32%), hsl(174 55% 26%))',
                                         color: processing || !allReqsMet ? 'hsl(174 10% 55%)' : 'white',
-                                        fontSize: '0.9rem', fontWeight: 700,
+                                        fontSize: '0.9rem',
+                                        fontWeight: 700,
                                         cursor: processing ? 'not-allowed' : 'pointer',
                                         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
-                                        fontFamily: 'inherit', transition: 'all 0.2s',
+                                        fontFamily: 'inherit',
+                                        transition: 'all 0.2s',
                                         boxShadow: processing || !allReqsMet ? 'none' : '0 2px 12px hsl(174 62% 28% / 0.3)',
                                         marginTop: '0.25rem',
                                     }}
                                     onMouseEnter={e => { if (!processing && allReqsMet) e.currentTarget.style.boxShadow = '0 4px 20px hsl(174 62% 28% / 0.4)'; }}
                                     onMouseLeave={e => { if (!processing && allReqsMet) e.currentTarget.style.boxShadow = '0 2px 12px hsl(174 62% 28% / 0.3)'; }}
                                 >
-                                    {processing ? <><SpinnerIcon /> Resetting password…</> : 'Reset Password →'}
+                                    {processing ? <><SpinnerIcon /> Activating account…</> : 'Activate My Account →'}
                                 </button>
-
-                                {/* Back to login */}
-                                <p style={{ textAlign: 'center', fontSize: '0.78rem', color: 'hsl(200 15% 52%)' }}>
-                                    Remembered it?{' '}
-                                    <Link href="/login" style={{ color: 'hsl(174 62% 32%)', fontWeight: 700, textDecoration: 'none' }}>
-                                        Back to sign in
-                                    </Link>
-                                </p>
                             </div>
                         </form>
                     </div>
-                    )}
 
                     {/* Footer note */}
-                    {!resetDone && (
-                        <p style={{
-                            textAlign: 'center', marginTop: '1.25rem',
-                            fontSize: '0.75rem', color: 'hsl(200 15% 52%)', lineHeight: 1.6,
-                        }}>
-                            This link expires in 24 hours.<br />
-                            Need help? Contact{' '}
-                            <span style={{ color: 'hsl(174 62% 32%)', fontWeight: 600 }}>renttrust2026@gmail.com</span>
-                        </p>
-                    )}
+                    <p style={{
+                        textAlign: 'center', marginTop: '1.25rem',
+                        fontSize: '0.75rem', color: 'hsl(200 15% 52%)', lineHeight: 1.6,
+                    }}>
+                        This link is single-use and will expire after activation.<br />
+                        Need help? Contact <span style={{ color: 'hsl(174 62% 32%)', fontWeight: 600 }}>renttrust2026@gmail.com</span>
+                    </p>
                 </div>
             </div>
         </>
     );
 };
 
-export default ResetPasswordPage;
+export default AgentSetup;

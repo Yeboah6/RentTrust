@@ -6,8 +6,15 @@ import AddRentalPage from "@/Components/Modules/AddRentals";
 import EditRentals from "@/Components/Modules/EditRentals";
 import VerificationRequestModal from "@/Components/Modules/VerifyRentals";
 import ViewRentals from "@/Components/Modules/ViewRental";
-import BillingModule from "@/Components/Modules/BillingModule";
+// import BillingModule from "@/Components/Modules/BillingModule";
 import PricingModal from '@/Components/Modules/PricingModal';
+import OverviewTab from '@/Components/Modules/Agent/AgentOverviewTab';
+import ListingsTab from '@/Components/Modules/Agent/ListingsTab';
+import InquiriesTab from '@/Components/Modules/Agent/InquiriesTab';
+import ReviewsTab from '@/Components/Modules/Agent/ReviewsTab';
+import ViewsTab from '@/Components/Modules/Agent/ViewsTab';
+import BillingTab from '@/Components/Modules/Agent/BillingsTab';
+
 
 // Icon components
 const Shield = ({ style }) => (
@@ -176,7 +183,6 @@ const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views
     company: agentData?.company || null,
     status: agentData?.status || "unverified",
     avatar_url: null,
-    average_rating: 4.7,
   };
 
   const formattedReviews = reviews && reviews.length > 0
@@ -232,15 +238,9 @@ const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views
   };
 
   const calculateAverageRating = () => {
-    if (!formattedReviews || formattedReviews.length === 0) return 4.7;
+    if (!formattedReviews || formattedReviews.length === 0) return 0;
     const sum = formattedReviews.reduce((acc, review) => acc + (review.overall_rating || 0), 0);
     return (sum / formattedReviews.length).toFixed(1);
-  };
-
-  const agentWithRealData = {
-    ...agent,
-    average_rating: calculateAverageRating(),
-    total_reviews: formattedReviews.length
   };
 
   const totalViews = properties.reduce((sum, p) => sum + (p.views || 0), 0);
@@ -414,7 +414,7 @@ const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.25rem, 1vw, 0.375rem)', color: 'hsl(200 15% 45%)' }}>
                         <Star style={{ height: 'clamp(0.875rem, 2.5vw, 1rem)', width: 'clamp(0.875rem, 2.5vw, 1rem)' }} />
-                        {agent.average_rating} ({reviews.length} reviews)
+                        {calculateAverageRating()} ({reviews.length} reviews)
                       </div>
                     </div>
                   </div>
@@ -447,396 +447,69 @@ const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views
 
               {/* Overview Tab */}
               {activeTab === 'overview' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(1.5rem, 4vw, 2rem)' }}>
-                  <div className="stats-grid" style={{ display: 'grid', gap: 'clamp(0.75rem, 2vw, 1.25rem)' }}>
-                    {[
-                      { icon: <Home style={{ width: '1.125rem', height: '1.125rem', color: 'hsl(174 62% 32%)' }} />, value: properties.length, label: 'Active Listings', trend: null },
-                      { icon: <Eye style={{ width: '1.125rem', height: '1.125rem', color: 'hsl(174 62% 32%)' }} />, value: totalViews, label: 'Total Views', trend: null },
-                      { icon: <Users style={{ width: '1.125rem', height: '1.125rem', color: 'hsl(174 62% 32%)' }} />, value: totalInquiries, label: 'Total Inquiries', trend: null },
-                      { icon: <TrendingUp style={{ width: '1.125rem', height: '1.125rem', color: 'hsl(174 62% 32%)' }} />, value: `${conversionRate}%`, label: 'Conversion Rate', trend: null },
-                    ].map(({ icon, value, label, trend }) => (
-                      <div key={label} style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.75rem', padding: 'clamp(1rem, 3vw, 1.25rem)', boxShadow: '0 2px 8px -2px hsl(200 25% 15% / 0.08)' }}>
-                        <div style={{ width: '2.25rem', height: '2.25rem', borderRadius: '0.5rem', background: 'hsl(174 62% 32% / 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '0.75rem' }}>{icon}</div>
-                        <p style={{ fontSize: 'clamp(1.5rem, 4vw, 1.875rem)', fontWeight: '700', color: 'hsl(200 25% 15%)', margin: 0, lineHeight: 1 }}>{value}</p>
-                        <p style={{ fontSize: '0.8125rem', color: 'hsl(200 15% 45%)', margin: '0.25rem 0 0' }}>{label}</p>
-                        {trend && <p style={{ fontSize: '0.75rem', color: 'hsl(152 60% 40%)', marginTop: '0.25rem', fontWeight: 600 }}>{trend}</p>}
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Plan Limits Section */}
-                  <div style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.75rem', padding: 'clamp(1rem, 3vw, 1.5rem)', boxShadow: '0 2px 8px -2px hsl(200 25% 15% / 0.08)' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-                      <h2 style={{ fontSize: 'clamp(1rem, 3vw, 1.125rem)', fontWeight: '600', color: 'hsl(200 25% 15%)', margin: 0 }}>Plan Limits</h2>
-                      <span style={{ fontSize: '0.875rem', color: 'hsl(200 15% 45%)', backgroundColor: 'hsl(40 30% 94%)', padding: '0.25rem 0.5rem', borderRadius: '0.375rem' }}>{limitStatus?.plan?.name ?? limitStatus?.plan ?? 'Free'}</span>
-                    </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
-                      {/* Rental Limits */}
-                      <div style={{ padding: '1rem', backgroundColor: 'hsl(40 33% 98%)', borderRadius: '0.5rem', border: '1px solid hsl(40 20% 88%)' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                          <Home style={{ width: '1rem', height: '1rem', color: 'hsl(174 62% 32%)' }} />
-                          <span style={{ fontSize: '0.875rem', fontWeight: '600', color: 'hsl(200 25% 15%)' }}>Rental Listings</span>
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <span style={{ fontSize: '1.25rem', fontWeight: '700', color: 'hsl(200 25% 15%)' }}>
-                            {limitStatus?.rentals?.active || 0}
-                            {limitStatus?.rentals?.limit ? ` / ${limitStatus.rentals.limit}` : ''}
-                          </span>
-                          {limitStatus?.rentals?.limit && (
-                            <span style={{ fontSize: '0.75rem', color: limitStatus.rentals.can_create ? 'hsl(152 60% 40%)' : 'hsl(0 84% 60%)', fontWeight: '500' }}>
-                              {limitStatus.rentals.remaining === null ? 'Unlimited' : `${limitStatus.rentals.remaining} left`}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Sale Limits */}
-                      <div style={{ padding: '1rem', backgroundColor: 'hsl(40 33% 98%)', borderRadius: '0.5rem', border: '1px solid hsl(40 20% 88%)' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                          <svg style={{ width: '1rem', height: '1rem', color: 'hsl(38 92% 50%)' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                          </svg>
-                          <span style={{ fontSize: '0.875rem', fontWeight: '600', color: 'hsl(200 25% 15%)' }}>Sale Listings</span>
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <span style={{ fontSize: '1.25rem', fontWeight: '700', color: 'hsl(200 25% 15%)' }}>
-                            {limitStatus?.sales?.active || 0}
-                            {limitStatus?.sales?.limit ? ` / ${limitStatus.sales.limit}` : ''}
-                          </span>
-                          {limitStatus?.sales?.limit && (
-                            <span style={{ fontSize: '0.75rem', color: limitStatus.sales.can_create ? 'hsl(152 60% 40%)' : 'hsl(0 84% 60%)', fontWeight: '500' }}>
-                              {limitStatus.sales.remaining === null ? 'Unlimited' : `${limitStatus.sales.remaining} left`}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    {(!limitStatus?.rentals?.can_create || !limitStatus?.sales?.can_create) && (
-                      <div style={{ marginTop: '1rem', padding: '0.75rem', backgroundColor: 'hsl(45 100% 95%)', border: '1px solid hsl(45 86% 83%)', borderRadius: '0.5rem' }}>
-                        <p style={{ margin: 0, fontSize: '0.875rem', color: 'hsl(25 95% 53%)', fontWeight: '500' }}>
-                          You've reached your plan limits. Upgrade your plan to add more listings.
-                        </p>
-                      </div>
-                    )}
-                  </div>
-
-                  <div style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.75rem', padding: 'clamp(1rem, 3vw, 1.5rem)', boxShadow: '0 2px 8px -2px hsl(200 25% 15% / 0.08)' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-                      <h2 style={{ fontSize: 'clamp(1rem, 3vw, 1.125rem)', fontWeight: '600', color: 'hsl(200 25% 15%)', margin: 0 }}>Recent Listings</h2>
-                      <button onClick={() => setActiveTab('listings')} style={{ background: 'transparent', border: 'none', color: 'hsl(174 62% 32%)', fontSize: '0.875rem', fontWeight: '500', cursor: 'pointer', padding: '0.25rem 0.5rem' }}>View all →</button>
-                    </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '1rem' }}>
-                      {properties.slice(0, 3).map((property) => (
-                        <div key={property.id} style={{ padding: '0.875rem', backgroundColor: 'hsl(40 33% 98%)', borderRadius: '0.625rem', border: '1px solid hsl(40 20% 88%)' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '0.5rem' }}>
-                            <h3 style={{ margin: 0, fontSize: '0.875rem', fontWeight: '600', color: 'hsl(200 25% 15%)' }}>{property.title}</h3>
-                            {getStatusBadge(property.effective_listing_status)}
-                          </div>
-                          <p style={{ margin: '0 0 0.5rem', fontSize: '0.75rem', color: 'hsl(200 15% 45%)' }}>{property.address}, {property.city}</p>
-                          <div style={{ display: 'flex', gap: '1rem', fontSize: '0.75rem', color: 'hsl(200 15% 45%)' }}>
-                            <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}><Eye style={{ width: '0.75rem', height: '0.75rem' }} /> {property.views}</span>
-                            <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}><Users style={{ width: '0.75rem', height: '0.75rem' }} /> {property.inquiries}</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    {properties.length === 0 && <p style={{ textAlign: 'center', color: 'hsl(200 15% 45%)', padding: '2rem', fontSize: '0.875rem' }}>No listings yet. Add your first property to get started!</p>}
-                  </div>
-                </div>
+                  <OverviewTab 
+                      properties={properties}
+                      totalViews={totalViews}
+                      totalInquiries={totalInquiries}
+                      conversionRate={conversionRate}
+                      limitStatus={limitStatus}
+                      getStatusBadge={getStatusBadge}
+                      onViewAllListings={() => setActiveTab('listings')}
+                  />
               )}
 
               {/* Listings Tab */}
               {activeTab === 'listings' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(1rem, 3vw, 1.5rem)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 'clamp(0.75rem, 2vw, 1rem)' }}>
-                    <h2 style={{ color: 'hsl(200 25% 15%)', fontSize: 'clamp(1rem, 3vw, 1.125rem)', fontWeight: '600' }}>Your Listings</h2>
-                    <button onClick={() => setShowAddListingModal(true)} className="action-button mobile-full-width" style={{ padding: 'clamp(0.5rem, 2vw, 0.5rem) clamp(0.75rem, 3vw, 1rem)', background: 'linear-gradient(135deg, hsl(174 62% 32%) 0%, hsl(174 50% 25%) 100%)', color: 'white', border: 'none', borderRadius: 'clamp(0.375rem, 2vw, 0.5rem)', fontWeight: '500', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 'clamp(0.25rem, 1vw, 0.5rem)', fontSize: 'clamp(0.875rem, 2vw, 0.875rem)', whiteSpace: 'nowrap' }}>
-                      <Home style={{ height: 'clamp(0.875rem, 2.5vw, 1rem)', width: 'clamp(0.875rem, 2.5vw, 1rem)' }} />
-                      Add Listing
-                    </button>
-                  </div>
-
-                  {/* Rental Listings */}
-                  {properties.filter(p => p.purpose === 'rent').length > 0 && (
-                    <div>
-                      <h3 style={{ color: 'hsl(200 25% 15%)', fontSize: '0.9375rem', fontWeight: '600', marginBottom: '0.75rem' }}>
-                        🏠 Rental Listings ({properties.filter(p => p.purpose === 'rent').length})
-                      </h3>
-                      <div className="listing-grid" style={{ display: 'grid', gap: 'clamp(0.75rem, 2vw, 1rem)' }}>
-                        {properties.filter(p => p.purpose === 'rent').map((property) => (
-                          <div key={property.id} className="listing-card" style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.5rem, 2vw, 0.75rem)', padding: 'clamp(0.75rem, 2vw, 1rem)', display: 'flex', flexDirection: 'column', gap: 'clamp(0.75rem, 2vw, 1rem)' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: 'clamp(0.5rem, 2vw, 1rem)' }}>
-                              <div style={{ flex: 1, minWidth: 0 }}>
-                                <h3 style={{ color: 'hsl(200 25% 15%)', marginBottom: 'clamp(0.125rem, 1vw, 0.25rem)', fontSize: 'clamp(0.875rem, 2.5vw, 1rem)', fontWeight: '600', wordBreak: 'break-word' }}>{property.title}</h3>
-                                <p style={{ margin: '0 0 0.5rem', fontSize: '0.75rem', color: 'hsl(200 15% 45%)' }}>
-                                  {property.address}, {property.city}
-                                </p>
-                                <p style={{ margin: '0 0 0.5rem', fontSize: '0.75rem', fontWeight: '500', color: property.purpose === 'sale' ? 'hsl(38 92% 50%)' : 'hsl(174 62% 32%)' }}>
-                                  {property.purpose === 'sale'
-                                    ? `GH₵${Math.round(property.sale_price).toLocaleString()}`
-                                    : `GH₵${Math.round(property.rent_min).toLocaleString()} – GH₵${Math.round(property.rent_max).toLocaleString()} / yr`
-                                  }
-                                </p>
-                              </div>
-                              {getStatusBadge(property.effective_listing_status)}
-                            </div>
-                            <div className="mobile-button-group" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'clamp(0.375rem, 1.5vw, 0.5rem)', marginBottom: 'clamp(0.375rem, 1.5vw, 0.5rem)' }}>
-                              <button onClick={() => handleViewClick(property)} className="action-button" style={{ padding: 'clamp(0.375rem, 2vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem)', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.25rem, 1.5vw, 0.375rem)', backgroundColor: 'white', color: 'hsl(174 62% 32%)', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', fontWeight: '500', cursor: 'pointer', textAlign: 'center' }}>View</button>
-                              <button onClick={() => handleEditClick(property)} className="action-button" style={{ padding: 'clamp(0.375rem, 2vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem)', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.25rem, 1.5vw, 0.375rem)', backgroundColor: 'white', color: 'hsl(174 62% 32%)', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', fontWeight: '500', cursor: 'pointer', textAlign: 'center' }}>Edit</button>
-                            </div>
-                            <button onClick={() => {
-                                const disabled = isVerificationButtonDisabled(property.effective_listing_status, property.verification_status);
-                                if (!disabled) {
-                                  setSelectedRentalForVerification(property);
-                                  setShowVerificationModal(true);
-                                }
-                              }} className="action-button mobile-full-width" style={{ width: '100%', padding: 'clamp(0.375rem, 2vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem)', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.25rem, 1.5vw, 0.375rem)', backgroundColor: property.verification_status === 'pending' ? 'hsl(48 96% 89%)' : 'white', color: isVerificationButtonDisabled(property.effective_listing_status, property.verification_status) ? 'hsl(48 96% 30%)' : 'hsl(174 62% 32%)', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', fontWeight: '500', cursor: isVerificationButtonDisabled(property.effective_listing_status, property.verification_status) ? 'default' : 'pointer', opacity: isVerificationButtonDisabled(property.effective_listing_status, property.verification_status) ? 0.7 : 1 }}>
-                              {getVerificationButtonText(property.effective_listing_status, property.verification_status)}
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Sale Listings */}
-                  {properties.filter(p => p.purpose === 'sale').length > 0 && (
-                    <div style={{ marginTop: properties.filter(p => p.purpose === 'rent').length > 0 ? 'clamp(0.5rem, 2vw, 0.75rem)' : 0 }}>
-                      <h3 style={{ color: 'hsl(200 25% 15%)', fontSize: '0.9375rem', fontWeight: '600', marginBottom: '0.75rem' }}>
-                        🏷️ Sale Listings ({properties.filter(p => p.purpose === 'sale').length})
-                      </h3>
-                      <div className="listing-grid" style={{ display: 'grid', gap: 'clamp(0.75rem, 2vw, 1rem)' }}>
-                        {properties.filter(p => p.purpose === 'sale').map((property) => (
-                          <div key={property.id} style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.5rem, 2vw, 0.75rem)', padding: 'clamp(0.75rem, 2vw, 1rem)', display: 'flex', flexDirection: 'column', gap: 'clamp(0.75rem, 2vw, 1rem)' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: 'clamp(0.5rem, 2vw, 1rem)' }}>
-                              <div style={{ flex: 1, minWidth: 0 }}>
-                                <h3 style={{ color: 'hsl(200 25% 15%)', marginBottom: 'clamp(0.125rem, 1vw, 0.25rem)', fontSize: 'clamp(0.875rem, 2.5vw, 1rem)', fontWeight: '600', wordBreak: 'break-word' }}>{property.title}</h3>
-                                <p style={{ fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', color: 'hsl(200 15% 45%)', marginBottom: 'clamp(0.25rem, 1vw, 0.5rem)', wordBreak: 'break-word' }}>{property.address}, {property.city}</p>
-                                <p style={{ fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', color: 'hsl(38 92% 50%)', fontWeight: '500' }}>
-                                  GH₵{Math.round(property.sale_price).toLocaleString()}
-                                </p>
-                              </div>
-                              {getStatusBadge(property.effective_listing_status)}
-                            </div>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'clamp(0.375rem, 1.5vw, 0.5rem)', marginBottom: 'clamp(0.375rem, 1.5vw, 0.5rem)' }}>
-                              <button onClick={() => handleViewClick(property)} className="action-button" style={{ padding: 'clamp(0.375rem, 2vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem)', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.25rem, 1.5vw, 0.375rem)', backgroundColor: 'white', color: 'hsl(174 62% 32%)', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', fontWeight: '500', cursor: 'pointer', textAlign: 'center' }}>View</button>
-                              <button onClick={() => handleEditClick(property)} className="action-button" style={{ padding: 'clamp(0.375rem, 2vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem)', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.25rem, 1.5vw, 0.375rem)', backgroundColor: 'white', color: 'hsl(174 62% 32%)', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', fontWeight: '500', cursor: 'pointer', textAlign: 'center' }}>Edit</button>
-                            </div>
-                            <button onClick={() => {
-                                const disabled = isVerificationButtonDisabled(property.effective_listing_status, property.verification_status);
-                                if (!disabled) {
-                                  setSelectedRentalForVerification(property);
-                                  setShowVerificationModal(true);
-                                }
-                              }} className="action-button" style={{ width: '100%', padding: 'clamp(0.375rem, 2vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem)', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.25rem, 1.5vw, 0.375rem)', backgroundColor: property.verification_status === 'pending' ? 'hsl(48 96% 89%)' : 'white', color: isVerificationButtonDisabled(property.effective_listing_status, property.verification_status) ? 'hsl(48 96% 30%)' : 'hsl(38 92% 50%)', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', fontWeight: '500', cursor: isVerificationButtonDisabled(property.effective_listing_status, property.verification_status) ? 'default' : 'pointer', opacity: isVerificationButtonDisabled(property.effective_listing_status, property.verification_status) ? 0.7 : 1 }}>
-                              {getVerificationButtonText(property.effective_listing_status, property.verification_status)}
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Empty state */}
-                  {properties.length === 0 && (
-                    <div style={{ gridColumn: '1 / -1', padding: 'clamp(1.5rem, 4vw, 2rem)', textAlign: 'center', backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.5rem, 2vw, 0.75rem)' }}>
-                      <p style={{ color: 'hsl(200 15% 45%)', marginBottom: 'clamp(0.75rem, 2vw, 1rem)', fontSize: 'clamp(0.875rem, 2vw, 1rem)' }}>
-                        No listings yet. Add your first property to get started!
-                      </p>
-                    </div>
-                  )}
-                </div>
+                  <ListingsTab 
+                      properties={properties}
+                      onAddListing={() => setShowAddListingModal(true)}
+                      onView={handleViewClick}
+                      onEdit={handleEditClick}
+                      onVerify={(property) => {
+                          setSelectedRentalForVerification(property);
+                          setShowVerificationModal(true);
+                      }}
+                      getVerificationButtonText={getVerificationButtonText}
+                      isVerificationButtonDisabled={isVerificationButtonDisabled}
+                  />
               )}
 
               {/* Reviews Tab */}
               {activeTab === 'reviews' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(1rem, 3vw, 1.5rem)' }}>
-                  <h2 style={{ color: 'hsl(200 25% 15%)', fontSize: 'clamp(1rem, 3vw, 1.125rem)', fontWeight: '600' }}>Tenant Reviews ({formattedReviews.length})</h2>
-                  {formattedReviews.length > 0 ? (
-                    <div className="review-grid" style={{ display: 'grid', gap: 'clamp(0.75rem, 2vw, 1rem)' }}>
-                      {formattedReviews.map((review) => (
-                        <div key={review.id} style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.5rem, 2vw, 0.75rem)', padding: 'clamp(0.75rem, 2vw, 1rem)' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 'clamp(0.75rem, 2vw, 1rem)', flexDirection: 'column', gap: 'clamp(0.5rem, 2vw, 0.75rem)' }}>
-                            <div>
-                              <p style={{ fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', color: 'hsl(200 15% 45%)', marginBottom: 'clamp(0.5rem, 2vw, 0.5rem)' }}>Review for Property #{review.rental_id}</p>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.5rem, 2vw, 0.5rem)', marginBottom: 'clamp(0.5rem, 2vw, 0.5rem)' }}>
-                                <div style={{ width: 'clamp(2rem, 8vw, 2rem)', height: 'clamp(2rem, 8vw, 2rem)', borderRadius: '50%', backgroundColor: 'hsl(174 62% 32% / 0.1)', color: 'hsl(174 62% 32%)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 'clamp(0.875rem, 2.5vw, 0.875rem)', fontWeight: '600', flexShrink: 0 }}>
-                                  {review.full_name?.[0] || 'T'}
-                                </div>
-                                <div style={{ flex: 1, minWidth: 0 }}>
-                                  <span style={{ color: 'hsl(200 25% 15%)', display: 'block', fontSize: 'clamp(0.875rem, 2.5vw, 0.875rem)', fontWeight: '500', marginBottom: 'clamp(0.125rem, 1vw, 0.25rem)', wordBreak: 'break-word' }}>{review.full_name || 'Anonymous Tenant'}</span>
-                                  <div style={{ display: 'flex' }}>{renderStars(review.overall_rating)}</div>
-                                </div>
-                              </div>
-                            </div>
-                            <span style={{ fontSize: 'clamp(0.75rem, 2vw, 0.75rem)', color: 'hsl(200 15% 45%)', alignSelf: 'flex-start' }}>
-                              {new Date(review.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
-                            </span>
-                          </div>
-                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'clamp(0.375rem, 1.5vw, 0.5rem)', marginBottom: 'clamp(0.5rem, 2vw, 0.75rem)' }}>
-                            {review.landlord_responsive === 1 && <span style={{ padding: 'clamp(0.1875rem, 1vw, 0.25rem) clamp(0.5rem, 2vw, 0.625rem)', fontSize: 'clamp(0.6875rem, 2vw, 0.75rem)', backgroundColor: 'hsl(152 60% 95%)', color: 'hsl(152 60% 35%)', borderRadius: '9999px', border: '1px solid hsl(152 60% 85%)', whiteSpace: 'nowrap' }}>✓ Responsive</span>}
-                            {review.property_matched_description === 1 && <span style={{ padding: 'clamp(0.1875rem, 1vw, 0.25rem) clamp(0.5rem, 2vw, 0.625rem)', fontSize: 'clamp(0.6875rem, 2vw, 0.75rem)', backgroundColor: 'hsl(152 60% 95%)', color: 'hsl(152 60% 35%)', borderRadius: '9999px', border: '1px solid hsl(152 60% 85%)', whiteSpace: 'nowrap' }}>✓ Accurate</span>}
-                            {review.fair_pricing === 1 && <span style={{ padding: 'clamp(0.1875rem, 1vw, 0.25rem) clamp(0.5rem, 2vw, 0.625rem)', fontSize: 'clamp(0.6875rem, 2vw, 0.75rem)', backgroundColor: 'hsl(152 60% 95%)', color: 'hsl(152 60% 35%)', borderRadius: '9999px', border: '1px solid hsl(152 60% 85%)', whiteSpace: 'nowrap' }}>✓ Fair Price</span>}
-                            {review.good_communication === 1 && <span style={{ padding: 'clamp(0.1875rem, 1vw, 0.25rem) clamp(0.5rem, 2vw, 0.625rem)', fontSize: 'clamp(0.6875rem, 2vw, 0.75rem)', backgroundColor: 'hsl(152 60% 95%)', color: 'hsl(152 60% 35%)', borderRadius: '9999px', border: '1px solid hsl(152 60% 85%)', whiteSpace: 'nowrap' }}>✓ Good Comm</span>}
-                          </div>
-                          {review.comments && <p style={{ color: 'hsl(200 15% 45%)', marginBottom: 'clamp(0.75rem, 2vw, 1rem)', fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)', lineHeight: '1.5' }}>"{review.comments}"</p>}
-                          {review.response ? (
-                            <div style={{ backgroundColor: 'hsl(210 20% 98%)', padding: 'clamp(0.5rem, 2vw, 0.75rem)', borderRadius: 'clamp(0.375rem, 2vw, 0.5rem)', borderLeft: '3px solid hsl(174 62% 32%)', marginTop: 'clamp(0.5rem, 2vw, 0.5rem)' }}>
-                              <p style={{ fontSize: 'clamp(0.6875rem, 2vw, 0.75rem)', fontWeight: '600', color: 'hsl(174 62% 32%)', marginBottom: 'clamp(0.125rem, 1vw, 0.25rem)' }}>Your Response {review.response_name && `by ${review.response_name}`}</p>
-                              <p style={{ fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', color: 'hsl(200 25% 15%)', lineHeight: '1.5' }}>{review.response}</p>
-                            </div>
-                          ) : respondingTo === review.id ? (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(0.5rem, 2vw, 0.5rem)', marginTop: 'clamp(0.5rem, 2vw, 0.5rem)' }}>
-                              <form onSubmit={(e) => handleResponse(e, review.id)}>
-                                <textarea placeholder="Write your response to this review..." value={responseText} onChange={(e) => setResponseText(e.target.value)} rows={3} style={{ width: '100%', padding: 'clamp(0.5rem, 2vw, 0.75rem)', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.375rem, 2vw, 0.5rem)', fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)', outline: 'none', fontFamily: 'inherit', resize: 'vertical' }} />
-                                <div style={{ display: 'flex', gap: 'clamp(0.375rem, 1.5vw, 0.5rem)', marginTop: 'clamp(0.5rem, 2vw, 0.5rem)' }}>
-                                  <button type="submit" disabled={processing} className="action-button" style={{ flex: 1, padding: 'clamp(0.375rem, 2vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem)', background: !processing ? 'linear-gradient(135deg, hsl(174 62% 32%) 0%, hsl(174 50% 25%) 100%)' : 'hsl(200 15% 70%)', color: 'white', border: 'none', borderRadius: 'clamp(0.25rem, 1.5vw, 0.375rem)', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', fontWeight: '500', cursor: !processing ? 'pointer' : 'not-allowed', opacity: processing ? 0.7 : 1 }}>{processing ? 'Submitting...' : 'Submit'}</button>
-                                  <button type="button" onClick={() => { setRespondingTo(null); }} disabled={processing} className="action-button" style={{ flex: 1, padding: 'clamp(0.375rem, 2vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem)', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.25rem, 1.5vw, 0.375rem)', backgroundColor: 'white', color: 'hsl(200 25% 15%)', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', fontWeight: '500', cursor: processing ? 'not-allowed' : 'pointer', opacity: processing ? 0.7 : 1 }}>Cancel</button>
-                                </div>
-                              </form>
-                            </div>
-                          ) : (
-                            <button onClick={() => setRespondingTo(review.id)} className="action-button" style={{ width: '100%', padding: 'clamp(0.375rem, 2vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem)', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.25rem, 1.5vw, 0.375rem)', backgroundColor: 'white', color: 'hsl(174 62% 32%)', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', fontWeight: '500', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'clamp(0.25rem, 1vw, 0.5rem)', marginTop: 'clamp(0.5rem, 2vw, 0.5rem)' }}>
-                              <MessageSquare style={{ height: 'clamp(0.875rem, 2.5vw, 1rem)', width: 'clamp(0.875rem, 2.5vw, 1rem)' }} />
-                              Respond
-                            </button>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.5rem, 2vw, 0.75rem)', padding: 'clamp(1.5rem, 4vw, 2rem)', textAlign: 'center' }}>
-                      <MessageSquare style={{ height: 'clamp(2.5rem, 10vw, 3rem)', width: 'clamp(2.5rem, 10vw, 3rem)', color: 'hsl(200 15% 45%)', margin: '0 auto clamp(0.75rem, 2vw, 1rem) auto' }} />
-                      <h3 style={{ fontSize: 'clamp(1rem, 3vw, 1.125rem)', fontWeight: '600', color: 'hsl(200 25% 15%)', marginBottom: 'clamp(0.375rem, 1.5vw, 0.5rem)' }}>No Reviews Yet</h3>
-                      <p style={{ color: 'hsl(200 15% 45%)', fontSize: 'clamp(0.875rem, 2vw, 0.875rem)' }}>You haven't received any reviews from tenants yet.</p>
-                    </div>
-                  )}
-                </div>
+                  <ReviewsTab 
+                      reviews={formattedReviews}
+                      respondingTo={respondingTo}
+                      setRespondingTo={setRespondingTo}
+                      responseText={responseText}
+                      setResponseText={setResponseText}
+                      onSubmitResponse={(reviewId) => handleResponse({ preventDefault: () => {} }, reviewId)}
+                      processing={processing}
+                  />
               )}
 
               {/* Inquiries Tab */}
               {activeTab === 'inquiries' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(1rem, 3vw, 1.5rem)' }}>
-                  <h2 style={{ color: 'hsl(200 25% 15%)', fontSize: 'clamp(1rem, 3vw, 1.125rem)', fontWeight: '600' }}>Property Inquiries ({inquiries.length})</h2>
-                  {inquiries.length > 0 ? (
-                    <div className="review-grid" style={{ display: 'grid', gap: 'clamp(0.75rem, 2vw, 1rem)' }}>
-                      {inquiries.map((inquiry) => {
-                        const propertyTitle = rentals?.find(r => r.id === inquiry.rental_id)?.title || `Property #${inquiry.rental_id}`;
-                        const propertyAddress = rentals?.find(r => r.id === inquiry.rental_id)?.address || 'Unknown';
-                        const propertyCity = rentals?.find(r => r.id === inquiry.rental_id)?.city || 'Unknown';
-                        
-                        return (
-                          <div key={inquiry.id} style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.5rem, 2vw, 0.75rem)', padding: 'clamp(0.75rem, 2vw, 1rem)' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 'clamp(0.75rem, 2vw, 1rem)', gap: 'clamp(0.5rem, 2vw, 1rem)', flexWrap: 'wrap' }}>
-                              <div style={{ flex: 1, minWidth: 0 }}>
-                                <h3 style={{ color: 'hsl(200 25% 15%)', fontSize: 'clamp(0.875rem, 2.5vw, 1rem)', fontWeight: '600', marginBottom: 'clamp(0.25rem, 1vw, 0.5rem)', wordBreak: 'break-word' }}>{propertyTitle}</h3>
-                                <p style={{ fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', color: 'hsl(200 15% 45%)', marginBottom: 'clamp(0.5rem, 2vw, 0.75rem)', wordBreak: 'break-word' }}>{propertyAddress}, {propertyCity}</p>
-                              </div>
-                              <span style={{ padding: 'clamp(0.25rem, 1vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem)', fontSize: 'clamp(0.6875rem, 2vw, 0.75rem)', fontWeight: '500', backgroundColor: 'hsl(174 62% 32% / 0.1)', color: 'hsl(174 62% 32%)', borderRadius: '9999px', whiteSpace: 'nowrap' }}>
-                                {inquiry.type === 'form' ? '📝 Form' : inquiry.type === 'whatsapp' ? '💬 WhatsApp' : '📞 Phone'}
-                              </span>
-                            </div>
-
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.75rem, 2vw, 1rem)', marginBottom: 'clamp(0.75rem, 2vw, 1rem)', paddingBottom: 'clamp(0.75rem, 2vw, 1rem)', borderBottom: '1px solid hsl(40 20% 88%)' }}>
-                              <div style={{ width: 'clamp(2rem, 8vw, 2.5rem)', height: 'clamp(2rem, 8vw, 2.5rem)', borderRadius: '50%', backgroundColor: 'hsl(174 62% 32% / 0.1)', color: 'hsl(174 62% 32%)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 'clamp(0.875rem, 2.5vw, 1rem)', fontWeight: '600', flexShrink: 0 }}>
-                                {inquiry.user?.name?.[0] || 'T'}
-                              </div>
-                              <div style={{ flex: 1, minWidth: 0 }}>
-                                <p style={{ fontSize: 'clamp(0.875rem, 2.5vw, 1rem)', fontWeight: '500', color: 'hsl(200 25% 15%)', margin: 0, wordBreak: 'break-word' }}>
-                                  {inquiry.user?.name || 'Anonymous Tenant'}
-                                </p>
-                                <p style={{ fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', color: 'hsl(200 15% 45%)', margin: '0.25rem 0 0', wordBreak: 'break-word' }}>
-                                  {inquiry.user?.email || 'No email provided'}
-                                </p>
-                                <p style={{ fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', color: 'hsl(200 15% 45%)', margin: '0.25rem 0 0', wordBreak: 'break-word' }}>
-                                  {inquiry.user?.phone || 'No number provided'}
-                                </p>
-                              </div>
-                              <span style={{ fontSize: 'clamp(0.75rem, 2vw, 0.75rem)', color: 'hsl(200 15% 45%)', whiteSpace: 'nowrap' }}>
-                                {new Date(inquiry.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
-                              </span>
-                            </div>
-
-                            {inquiry.message && (
-                              <div style={{ backgroundColor: 'hsl(40 33% 98%)', padding: 'clamp(0.75rem, 2vw, 1rem)', borderRadius: 'clamp(0.375rem, 2vw, 0.5rem)', marginBottom: 'clamp(0.75rem, 2vw, 1rem)' }}>
-                                <p style={{ fontSize: 'clamp(0.75rem, 2vw, 0.75rem)', fontWeight: '600', color: 'hsl(200 25% 15%)', marginBottom: '0.5rem' }}>Message:</p>
-                                <p style={{ fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)', color: 'hsl(200 15% 45%)', margin: 0, lineHeight: '1.5', wordBreak: 'break-word' }}>"{inquiry.message}"</p>
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <div style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.5rem, 2vw, 0.75rem)', padding: 'clamp(1.5rem, 4vw, 2rem)', textAlign: 'center' }}>
-                      <MessageSquare style={{ height: 'clamp(2.5rem, 10vw, 3rem)', width: 'clamp(2.5rem, 10vw, 3rem)', color: 'hsl(200 15% 45%)', margin: '0 auto clamp(0.75rem, 2vw, 1rem) auto' }} />
-                      <h3 style={{ fontSize: 'clamp(1rem, 3vw, 1.125rem)', fontWeight: '600', color: 'hsl(200 25% 15%)', marginBottom: 'clamp(0.375rem, 1.5vw, 0.5rem)' }}>No Inquiries Yet</h3>
-                      <p style={{ color: 'hsl(200 15% 45%)', fontSize: 'clamp(0.875rem, 2vw, 0.875rem)' }}>You haven't received any inquiries from tenants yet.</p>
-                    </div>
-                  )}
-                </div>
+                  <InquiriesTab 
+                      inquiries={inquiries || []}
+                      rentals={rentals || []}
+                  />
               )}
 
               {/* Views Tab */}
               {activeTab === 'views' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(1rem, 3vw, 1.5rem)' }}>
-                  <h2 style={{ color: 'hsl(200 25% 15%)', fontSize: 'clamp(1rem, 3vw, 1.125rem)', fontWeight: '600' }}>Property Views</h2>
-                  {viewedProperties.length > 0 ? (
-                    <div className="listing-grid" style={{ display: 'grid', gap: 'clamp(0.75rem, 2vw, 1rem)' }}>
-                      {viewedProperties.map((property) => (
-                        <div key={property.id} style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.5rem, 2vw, 0.75rem)', padding: 'clamp(0.75rem, 2vw, 1rem)', display: 'flex', flexDirection: 'column', gap: 'clamp(0.75rem, 2vw, 1rem)' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: 'clamp(0.5rem, 2vw, 1rem)' }}>
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                              <h3 style={{ color: 'hsl(200 25% 15%)', marginBottom: 'clamp(0.125rem, 1vw, 0.25rem)', fontSize: 'clamp(0.875rem, 2.5vw, 1rem)', fontWeight: '600', wordBreak: 'break-word' }}>{property.title}</h3>
-                              <p style={{ margin: '0 0 0.5rem', fontSize: '0.75rem', color: 'hsl(200 15% 45%)' }}>
-                                {property.address}, {property.city}
-                              </p>
-                              <p style={{ margin: '0 0 0.5rem', fontSize: '0.75rem', fontWeight: '500', color: property.purpose === 'sale' ? 'hsl(38 92% 50%)' : 'hsl(174 62% 32%)' }}>
-                                {property.purpose === 'sale'
-                                  ? `GH₵${Math.round(property.sale_price).toLocaleString()}`
-                                  : `GH₵${Math.round(property.rent_min).toLocaleString()} – GH₵${Math.round(property.rent_max).toLocaleString()} / yr`
-                                }
-                              </p>
-                            </div>
-                            {getStatusBadge(property.effective_listing_status)}
-                          </div>
-
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 'clamp(0.75rem, 2vw, 1rem)', borderTop: '1px solid hsl(40 20% 88%)' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.5rem, 2vw, 0.75rem)', fontSize: 'clamp(0.875rem, 2vw, 0.875rem)', color: 'hsl(200 15% 45%)' }}>
-                              <Eye style={{ height: 'clamp(1rem, 2.5vw, 1.125rem)', width: 'clamp(1rem, 2.5vw, 1.125rem)', color: 'hsl(174 62% 32%)' }} />
-                              <span>{property.views || 0} views</span>
-                            </div>
-                            <button onClick={() => handleViewClick(property)} className="action-button" style={{ padding: 'clamp(0.375rem, 2vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem)', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.25rem, 1.5vw, 0.375rem)', backgroundColor: 'white', color: 'hsl(174 62% 32%)', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', fontWeight: '500', cursor: 'pointer', textAlign: 'center' }}>
-                              View Details
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.5rem, 2vw, 0.75rem)', padding: 'clamp(1.5rem, 4vw, 2rem)', textAlign: 'center' }}>
-                      <Eye style={{ height: 'clamp(2.5rem, 10vw, 3rem)', width: 'clamp(2.5rem, 10vw, 3rem)', color: 'hsl(200 15% 45%)', margin: '0 auto clamp(0.75rem, 2vw, 1rem) auto' }} />
-                      <h3 style={{ fontSize: 'clamp(1rem, 3vw, 1.125rem)', fontWeight: '600', color: 'hsl(200 25% 15%)', marginBottom: 'clamp(0.375rem, 1.5vw, 0.5rem)' }}>No Viewed Properties Yet</h3>
-                      <p style={{ color: 'hsl(200 15% 45%)', fontSize: 'clamp(0.875rem, 2vw, 0.875rem)' }}>Only listings with at least one view are shown here.</p>
-                    </div>
-                  )}
-                </div>
+                  <ViewsTab 
+                      properties={properties}
+                      onView={handleViewClick}
+                  />
               )}
 
               {/* ── Billing Tab ──────────────────────────────────────────────────── */}
               {activeTab === 'billing' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(1rem, 3vw, 1.5rem)' }}>
-                  <h2 style={{ color: 'hsl(200 25% 15%)', fontSize: 'clamp(1rem, 3vw, 1.125rem)', fontWeight: '600', margin: 0 }}>
-                    Billing & Subscription
-                  </h2>
-
-                  {/* ↓ billing and onUpgrade now both passed */}
-                  <BillingModule
-                    billing={billing}
-                    plans={plans ?? []}
-                    onUpgrade={() => setShowPricingModal(true)}
+                  <BillingTab 
+                      billing={billing}
+                      plans={plans ?? []}
+                      onUpgrade={() => setShowPricingModal(true)}
                   />
-                </div>
               )}
 
             </div>

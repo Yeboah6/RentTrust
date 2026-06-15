@@ -15,6 +15,7 @@ use App\Models\Report;
 use App\Models\VerificationRequest;
 use App\Models\ListingInquiry;
 use App\Models\ListingView;
+use App\Models\Subscription;
 use Illuminate\Support\Facades\{Auth, DB};
 
 class DashboardController extends Controller
@@ -143,7 +144,36 @@ class DashboardController extends Controller
             ->with(['subscription' => function($q) {
                 $q->where('status', 'active')->orderByDesc('ends_at');
             }])
-            ->get();
+            ->get()
+            ->map(function ($agent) {
+                $sub = $agent->subscription->first();
+
+                return [
+                    'id' => $agent->id,
+                    'name' => $agent->name,
+                    'email' => $agent->email,
+                    'phone' => $agent->phone,
+                    'company' => $agent->company,
+                    'status' => $agent->status,
+                    'package' => $agent->package ?? 'free',
+                    'total_listings' => $agent->rentals_count,
+                    'subscription' => $sub ? [
+                        'plan_name' => $sub->plan?->name,
+                        'plan_slug' => $sub->plan?->slug,
+                        'plan_price' => (float) ($sub->plan?->price ?? 0),
+                        'status' => $sub->status,
+                        'starts_at' => $sub->starts_at?->toDateString(),
+                        'ends_at' => $sub->ends_at?->toDateString(),
+                        'days_left' => $sub->ends_at 
+                            ? max(0, (int) now()->diffInDays($sub->ends_at, false))
+                            : null,
+                        'grace' => $sub->inGracePeriod(),
+                        'verified_badge' => (bool) ($sub->plan?->verified_badge ?? false),
+                        'priority_ranking' => (bool) ($sub->plan?->priority_ranking ?? false),
+                        'analytics_access' => (bool) ($sub->plan?->analytics_access ?? false),
+                    ] : null,
+                ];
+            });
         $reports = Report::with([
             'rental:id,title,address,city,status,purpose',
             'rental.user:id,fullName,email',
@@ -184,6 +214,11 @@ class DashboardController extends Controller
         $locations = Location::all();
         $propertyTypes = PropertyType::all();
         $amenities = Amenity::all();
+
+        $plans = Plan::where('id', 2)
+            ->orWhere('id', 3)
+            ->get(); // only pro and premium plans are relevant for admin dashboard
+        $subscriptions = Subscription::where('plan', $plans->first()->id)->count();
         
         return inertia('Dashboards/AdminDashboard', [
             'adminData' => $adminData,
@@ -198,47 +233,10 @@ class DashboardController extends Controller
             'locations' => $locations,
             'propertyTypes' => $propertyTypes,
             'amenities' => $amenities,
+            'subscriptions' => $subscriptions,
             'plans' => app(\App\Http\Controllers\CheckoutController::class)->plansForModal(),
             'open_plan_modal' => is_null($adminData->package)
                 || session()->pull('show_plan_modal', false),
-    
-            // Billing data for BillingDashboard tab
-            'billing' => [
-                'subscription' => $sub ? [
-                    'plan_name'  => $sub->plan?->name,
-                    'plan_slug'  => $sub->plan?->slug,
-                    'plan_price' => (float) ($sub->plan?->price ?? 0),
-                    'status'     => $sub->status,
-                    'starts_at'  => $sub->starts_at?->toDateString(),
-                    'ends_at'    => $sub->ends_at?->toDateString(),
-                    'days_left'  => $sub->ends_at
-                        ? max(0, (int) now()->diffInDays($sub->ends_at, false))
-                        : null,
-                    'grace'         => $sub->inGracePeriod(),
-                    'is_free'       => $sub->plan?->isFree() ?? true,
-                    'verified_badge'   => (bool) ($sub->plan?->verified_badge ?? false),
-                    'priority_ranking' => (bool) ($sub->plan?->priority_ranking ?? false),
-                    'analytics_access' => (bool) ($sub->plan?->analytics_access ?? false),
-                    'listing_limit'    => $sub->plan?->listing_limit_display ?? 'Limited',
-                    'lead_limit'       => $sub->plan?->lead_limit ?? 0,
-                ] : null,
-    
-                // Last 10 payments for history table
-                'payments' => Payment::where('user_id', $adminData->id)
-                    ->orderByDesc('created_at')
-                    ->limit(10)
-                    ->get()
-                    ->map(fn ($p) => [
-                        'id'         => $p->id,
-                        'reference'  => $p->reference,
-                        'amount'     => (float) $p->amount,
-                        'currency'   => $p->currency ?? 'GHS',
-                        'provider'   => $p->provider,
-                        'status'     => $p->status,
-                        'created_at' => $p->created_at->format('M d, Y'),
-                    ])
-                    ->toArray(),
-            ],
             ]
         );
     }
@@ -247,7 +245,17 @@ class DashboardController extends Controller
         $agentData = Auth::user();
 
         // include counts for free tier dashboard as well
-        $rentals = Rental::where('user_id', $agentData->id)
+        $rentals = Rental::where(function ($query) use ($agentData) {
+            $query->where('user_id', $agentData->id)
+                  ->orWhere('agent_id', $agentData->id);
+        })
+        ->select(
+            'id', 'rental_id', 'title', 'property_type', 'purpose',
+            'city', 'area', 'address', 'rent_min', 'rent_max', 'sale_price',
+            'status', 'is_verified', 'is_featured', 'images', 'created_at', 'updated_at',
+            'bedrooms', 'bathrooms', 'description', 'amenities',
+            'verification_status', 'advance_duration', 'agent_id', 'agent_name', 'agent_phone', 'agent_email'
+        )
             ->withCount(['views', 'inquiries', 'reviews'])
             ->latest()
             ->get();

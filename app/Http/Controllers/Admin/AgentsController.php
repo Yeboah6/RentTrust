@@ -9,6 +9,7 @@ use App\Models\AdminAuditLog;
 use App\Mail\AgentInvitation;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\{Hash, Log, DB, Mail};
+use Illuminate\Validation\Rule;
 use Illuminate\Support\Str;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -75,54 +76,57 @@ class AgentsController extends Controller
     }
 
     public function storeAgentByAdmin(Request $request) {
+
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
-            'phone' => 'required|string|max:20|unique:users,phone',
-            'role' => 'required|string|max:255',
-            'company' => 'nullable|string|max:255',
-            'bio' => 'nullable|string|max:1000',
-            'fee' => 'nullable|numeric|min:0',
-            'location' => 'nullable|string|max:255',
+            'name'     => ['required', 'string', 'max:255'],
+            'email'    => ['required', 'email', 'unique:users,email'],
+            'phone'    => ['nullable', 'string', 'max:30', 'unique:users,phone'],
+            'fee'     => ['nullable', 'numeric', 'min:0'],
+            'company'  => ['nullable', 'string', 'max:255'],
+            'type'     => ['nullable', 'string', 'max:100'],
+            'bio'      => ['nullable', 'string', 'max:2000'],
+            // 'status'   => ['required', Rule::in(['active', 'pending', 'verified'])],
+            'location' => ['nullable', 'string', 'max:255']
         ]);
 
-        // Generate temporary password (will be set via password reset link)
-        $temporaryPassword = Str::random(32);
+        DB::beginTransaction();
 
-        $userData = [
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'phone' => $validated['phone'],
-            'company' => $validated['company'] ?? null,
-            'bio' => $validated['bio'] ?? null,
-            'fee' => $validated['fee'] ?? null,
-            'location' => $validated['location'] ?? null,
-            'password' => Hash::make($temporaryPassword),
-            'role' => $validated['role'],
-            'type' => 'Agent',
-            'status' => 'unverified',
-            'package' => null,
-            'user_id' => (string) Str::uuid(),
-        ];
+        try{
+            $setupToken = Str::random(64);
 
-        $agent = User::create($userData);
+            $agent = User::create([
+            'user_id'                => (string) Str::uuid(),
+            'name'                   => $validated['name'],
+            'email'                  => $validated['email'],
+            'phone'                  => $validated['phone']   ?? null,
+            'fee'                   => $validated['fees']    ?? null,
+            'company'                => $validated['company'] ?? null,
+            'type'                   => $validated['type']    ?? null,
+            'bio'                    => $validated['bio']     ?? null,
+            'role'                   => 'agent',
+            'location'               => $validated['location'] ?? null,
+            'package'                => null,
+            'status'                 => "pending",
+            'password'               => Hash::make(Str::random(32)), // unusable until setup
+            'setup_token'            => hash('sha256', $setupToken),
+            'setup_token_expires_at' => now()->addHours(48),         // agents get 48hrs
+        ]);
 
-        // Generate setup/invitation URL
-        $setupToken = Str::random(64);
-        $setupUrl = route('password.reset', ['token' => $setupToken, 'email' => $agent->email]);
-        $expiresAt = now()->addDays(7)->toDateTimeString();
+        $setupUrl = route('agent.setup', ['token' => $setupToken]);
 
         // Send invitation email
-        Mail::to($agent->email)->send(new AgentInvitation(
-            $agent->name,
-            $agent->email,
-            $setupUrl,
-            $expiresAt
-        ));
+        Mail::to($agent->email)->send(
+            new AgentInvitation(
+                agentName: $agent->name,
+                agentEmail: $agent->email,
+                setupUrl:  $setupUrl,
+                expiresAt: $agent->setup_token_expires_at->format('M j, Y g:i A'),
+            )
+        );
 
         AdminAuditLog::record('user', 'Agent created', [
             'affected_user' => $agent->name,
-            'affected_id' => $agent->id,
+            'affected_id'   => $agent->id,
             'notes' => 'Admin created a new agent account and sent invitation email.',
             'properties' => [
                 'email' => $agent->email,
@@ -132,7 +136,17 @@ class AgentsController extends Controller
             ],
         ]);
 
+        DB::commit();
+
         return redirect()->back()->with('success', 'Agent created successfully and invitation email sent');
+
+        } catch(\Throwable $e) {
+            DB::rollBack();
+            Log::error('Agent creation failed', ['error' => $e->getMessage()]);
+
+            return back()->withErrors(['email' => $e->getMessage()]);
+
+        }
     }
 
     public function updateAgentByAdmin(Request $request, $id) {
@@ -144,6 +158,7 @@ class AgentsController extends Controller
             'company'=>'nullable|string|max:255',
             'fee'=>'nullable|numeric|min:0',
             'location'=>'nullable|string|max:255',
+            'role' => ['nullable', Rule::in(['agent', 'admin'])],
         ]);
 
         $agent = User::where('id', $id)
@@ -158,6 +173,7 @@ class AgentsController extends Controller
             'company' => $validated['company'] ?? $agent->company,
             'fee' => $validated['fee'] ?? $agent->fee,
             'location' => $validated['location'] ?? $agent->location,
+            'role' => $validated['role'] ?? $agent->role,
         ]);
 
         AdminAuditLog::record('user', 'Agent updated', [
@@ -244,7 +260,7 @@ class AgentsController extends Controller
 
         // Generate setup/invitation URL
         $setupToken = Str::random(64);
-        $setupUrl = route('password.reset', ['token' => $setupToken, 'email' => $agent->email]);
+        $setupUrl = route('agent.setup', ['token' => $setupToken, 'email' => $agent->email]);
         $expiresAt = now()->addDays(7)->toDateTimeString();
 
         // Send invitation email
