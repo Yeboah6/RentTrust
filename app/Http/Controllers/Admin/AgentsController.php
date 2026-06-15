@@ -158,11 +158,12 @@ class AgentsController extends Controller
             'company'=>'nullable|string|max:255',
             'fee'=>'nullable|numeric|min:0',
             'location'=>'nullable|string|max:255',
-            'role' => ['nullable', Rule::in(['agent', 'admin'])],
+            'role' => ['nullable', Rule::in(['agent', 'landlord'])],
         ]);
 
         $agent = User::where('id', $id)
             ->where('role', 'agent')
+            ->orWhere('role', 'landlord')
             ->firstOrFail();
 
         $agent->update([

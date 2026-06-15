@@ -140,6 +140,7 @@ class DashboardController extends Controller
         $rentals = Rental::all();
         // Load agents with their total listings count and active subscription
         $agentData = User::where('role', 'agent')
+            ->orWhere('role', 'landlord')
             ->withCount('rentals')
             ->with(['subscription' => function($q) {
                 $q->where('status', 'active')->orderByDesc('ends_at');

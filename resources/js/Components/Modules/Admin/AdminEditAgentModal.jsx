@@ -49,8 +49,6 @@ const AdminEditAgentModal = ({ agent, isOpen, onClose, onSuccess }) => {
   if (!isOpen || !agent) {
     return null;
   }
-// Uncaught ReferenceError: labelStyle is not defined
-//     at AdminEditAgentModal (
   return (
     <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.58)', zIndex: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
       <div style={{ width: '100%', maxWidth: '560px', borderRadius: '1rem', backgroundColor: '#0f0e0c', color: '#f5f0e8', boxShadow: '0 25px 80px rgba(0,0,0,0.35)', overflow: 'hidden' }}>
