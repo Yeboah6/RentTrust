@@ -140,11 +140,11 @@ Route::prefix('super-admin')
     Route::put  ('profile/password',[ProfileController::class, 'updatePassword']) ->name('profile.password');
 
     Route::get ('reports-reviews',             [ReviewsReportsController::class, 'index'])           ->name('reports-reviews');
-    Route::post('reviews/{review}/reply',      [ReviewsReportsController::class, 'reply'])           ->name('reviews.reply');
-    Route::post('reports/{report}/status',     [ReviewsReportsController::class, 'reportStatus'])    ->name('reports.status');
-    Route::delete('reviews/{review}',          [ReviewsReportsController::class, 'deleteReview'])    ->name('reviews.destroy');
-    Route::delete('app-reviews/{review}',      [ReviewsReportsController::class, 'deleteAppReview'])->name('app-reviews.destroy');
-    Route::delete('reports/{report}',          [ReviewsReportsController::class, 'deleteReport'])    ->name('reports.destroy');
+    Route::post('reviews/{review}/reply', [ReviewsReportsController::class, 'reply'])->name('reviews.reply');
+    Route::post('reports/{report}/status', [ReviewsReportsController::class, 'reportStatus'])->name('reports.status');
+    Route::delete('reviews/{review}', [ReviewsReportsController::class, 'deleteReview'])->name('reviews.destroy');
+    Route::delete('app-reviews/{review}', [ReviewsReportsController::class, 'deleteAppReview'])->name('app-reviews.destroy');
+    Route::delete('reports/{report}', [ReviewsReportsController::class, 'deleteReport'])->name('reports.destroy');
     Route::get('/reports/{report}/evidence/{filename}', [ReviewsReportsController::class, 'downloadReportEvidence'])
         ->name('reports.evidence.download');
 });

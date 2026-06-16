@@ -19,6 +19,7 @@ const Icons = {
     home:       <Ico d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />,
     whatsapp:   <Ico d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />,
     form:       <Ico d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />,
+    eye:        <Ico d={['M15 12a3 3 0 11-6 0 3 3 0 016 0z','M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z']} />,
     empty:      <Ico d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" size="2.5rem" sw={1.2} />,
 };
 
@@ -51,7 +52,7 @@ const fmtDate = (v) => {
 };
 
 // ─── Inquiry Card ─────────────────────────────────────────────────────────────
-const InquiryCard = ({ inquiry, propertyTitle, propertyAddress, propertyCity }) => {
+const InquiryCard = ({ inquiry, propertyTitle, propertyAddress, propertyCity, onView }) => {
     const isGuest = !inquiry.user?.name;
 
     return (
@@ -160,12 +161,34 @@ const InquiryCard = ({ inquiry, propertyTitle, propertyAddress, propertyCity }) 
                     </div>
                 )}
             </div>
+
+            {/* Footer Actions */}
+            <div style={{ 
+                borderTop: '1px solid hsl(220 15% 93%)', 
+                padding: '0.6rem 1rem', 
+                backgroundColor: 'hsl(220 15% 98.5%)',
+            }}>
+                <button
+                    onClick={() => onView?.(inquiry)}
+                    style={{
+                        display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
+                        padding: '0.35rem 0.7rem', borderRadius: '0.4rem',
+                        border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white',
+                        color: 'hsl(174 62% 30%)', fontSize: '0.7rem', fontWeight: 700,
+                        cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.12s',
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = 'hsl(174 62% 40%)'; e.currentTarget.style.backgroundColor = 'hsl(174 40% 97%)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = 'hsl(220 15% 88%)'; e.currentTarget.style.backgroundColor = 'white'; }}
+                >
+                    {Icons.eye} View Property
+                </button>
+            </div>
         </div>
     );
 };
 
 // ─── Inquiries Tab Module ─────────────────────────────────────────────────────
-const InquiriesTab = ({ inquiries = [], rentals = [] }) => {
+const InquiriesTab = ({ inquiries = [], rentals = [], onView }) => {
     const total = inquiries.length;
     const whatsapp = inquiries.filter(i => i.type === 'whatsapp').length;
     const phone = inquiries.filter(i => i.type === 'phone').length;
@@ -222,6 +245,7 @@ const InquiriesTab = ({ inquiries = [], rentals = [] }) => {
                                 propertyTitle={rental?.title || `Property #${inquiry.rental_id}`}
                                 propertyAddress={rental?.address || 'Unknown'}
                                 propertyCity={rental?.city || 'Unknown'}
+                                onView={onView}
                             />
                         );
                     })}

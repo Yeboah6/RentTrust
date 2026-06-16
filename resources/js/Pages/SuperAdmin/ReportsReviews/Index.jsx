@@ -139,7 +139,7 @@ const Pagination = ({ page, total, onChange }) => {
 // ─── Detail drawer ────────────────────────────────────────────────────────────
 
 const DetailDrawer = ({ item, type, onClose, onAction, processing }) => {
-    const [replyText, setReplyText] = useState(item?.response ?? '');
+    // const [replyText, setReplyText] = useState(item?.response ?? '');
 
     if (!item) return null;
     const hue = avatarHue(item.full_name ?? item.reviewer_name ?? 'U');
@@ -206,6 +206,97 @@ const DetailDrawer = ({ item, type, onClose, onAction, processing }) => {
                                 </div>
                             )}
 
+                            {/* Agent Response Section */}
+                            <div style={{ marginTop: '1.25rem' }}>
+                                <p style={{ margin: '0 0 0.75rem', fontSize: '0.72rem', fontWeight: '800', letterSpacing: '0.07em', textTransform: 'uppercase', color: 'hsl(220 15% 50%)' }}>
+                                    Agent Response
+                                </p>
+                                
+                                {item.response ? (
+                                    <div style={{ 
+                                        padding: '1rem', 
+                                        borderRadius: '0.65rem', 
+                                        backgroundColor: 'hsl(152 55% 96%)', 
+                                        border: '1px solid hsl(152 55% 88%)',
+                                        borderLeft: '4px solid hsl(152 55% 45%)'
+                                    }}>
+                                        <div style={{ 
+                                            display: 'flex', 
+                                            alignItems: 'center', 
+                                            gap: '0.5rem', 
+                                            marginBottom: '0.75rem',
+                                            paddingBottom: '0.75rem',
+                                            borderBottom: '1px solid hsl(152 55% 90%)'
+                                        }}>
+                                            <div style={{
+                                                width: '1.75rem',
+                                                height: '1.75rem',
+                                                borderRadius: '50%',
+                                                backgroundColor: 'hsl(152 55% 85%)',
+                                                color: 'hsl(152 55% 30%)',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                fontSize: '0.65rem',
+                                                fontWeight: '700'
+                                            }}>
+                                                {item.response_person?.[0]?.toUpperCase() ?? 'A'}
+                                            </div>
+                                            <div>
+                                                <div style={{ fontSize: '0.78rem', fontWeight: '700', color: 'hsl(152 55% 25%)' }}>
+                                                    {item.response_person ?? 'Agent'}
+                                                </div>
+                                                {item.response_date && (
+                                                    <div style={{ fontSize: '0.68rem', color: 'hsl(152 25% 45%)' }}>
+                                                        {fmtDate(item.response_date)}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <p style={{ 
+                                            margin: 0, 
+                                            fontSize: '0.83rem', 
+                                            color: 'hsl(220 15% 35%)', 
+                                            lineHeight: 1.65,
+                                            fontStyle: 'italic'
+                                        }}>
+                                            "{item.response}"
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <div style={{ 
+                                        padding: '1.25rem', 
+                                        borderRadius: '0.65rem', 
+                                        backgroundColor: 'hsl(220 15% 97%)', 
+                                        border: '1px dashed hsl(220 15% 85%)',
+                                        textAlign: 'center'
+                                    }}>
+                                        <div style={{ 
+                                            fontSize: '1.5rem', 
+                                            marginBottom: '0.5rem',
+                                            opacity: 0.3
+                                        }}>
+                                            💬
+                                        </div>
+                                        <p style={{ 
+                                            margin: 0, 
+                                            fontSize: '0.83rem', 
+                                            color: 'hsl(220 15% 50%)',
+                                            fontWeight: '500'
+                                        }}>
+                                            No agent response yet
+                                        </p>
+                                        <p style={{ 
+                                            margin: '0.25rem 0 0', 
+                                            fontSize: '0.72rem', 
+                                            color: 'hsl(220 15% 60%)'
+                                        }}>
+                                            The agent hasn't responded to this review
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+
                             {/* Related listing — clickable link to super admin listing view */}
                             {(item.listing_title ?? item.property_title) && (
                                 <div style={{ marginTop: '1rem', padding: '0.75rem', borderRadius: '0.65rem', backgroundColor: 'hsl(214 100% 97%)', border: '1px solid hsl(214 80% 88%)' }}>
@@ -225,28 +316,6 @@ const DetailDrawer = ({ item, type, onClose, onAction, processing }) => {
                                     </div>
                                 </div>
                             )}
-
-                            {/* Admin reply */}
-                            <div style={{ marginTop: '1.25rem' }}>
-                                <p style={{ margin: '0 0 0.5rem', fontSize: '0.72rem', fontWeight: '800', letterSpacing: '0.07em', textTransform: 'uppercase', color: 'hsl(220 15% 50%)' }}>
-                                    {item.response ? 'Edit Reply' : 'Add Reply'}
-                                </p>
-                                <textarea
-                                    value={replyText}
-                                    onChange={e => setReplyText(e.target.value)}
-                                    placeholder="Write a response to this review…"
-                                    rows={3}
-                                    style={{ width: '100%', padding: '0.65rem 0.875rem', border: '1.5px solid hsl(220 15% 88%)', borderRadius: '0.6rem', fontSize: '0.855rem', color: 'hsl(220 25% 16%)', resize: 'vertical', outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit', lineHeight: 1.5 }}
-                                    onFocus={e => e.target.style.borderColor = 'hsl(220 60% 55%)'}
-                                    onBlur={e => e.target.style.borderColor = 'hsl(220 15% 88%)'}
-                                />
-                                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem', justifyContent: 'flex-end' }}>
-                                    <button onClick={() => onAction('reply', item.id, replyText)} disabled={processing || !replyText.trim()}
-                                        style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', padding: '0.5rem 1rem', borderRadius: '0.55rem', border: 'none', backgroundColor: (!replyText.trim() || processing) ? 'hsl(220 15% 88%)' : 'hsl(220 25% 15%)', color: (!replyText.trim() || processing) ? 'hsl(220 15% 55%)' : 'white', fontWeight: '700', fontSize: '0.8rem', cursor: (!replyText.trim() || processing) ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}>
-                                        {processing ? <Icons.spinner /> : <Icons.reply />} {item.response ? 'Update Reply' : 'Post Reply'}
-                                    </button>
-                                </div>
-                            </div>
                         </>
                     )}
 
@@ -282,7 +351,7 @@ const DetailDrawer = ({ item, type, onClose, onAction, processing }) => {
                                     <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: '600', color: 'hsl(220 25% 18%)' }}>{item.title}</p>
                                 </div>
                             )}
-                            <div style={{ marginBottom: '1.25rem' }}>
+                             <div style={{ marginBottom: '1.25rem' }}>
                                 <p style={{ margin: '0 0 0.25rem', fontSize: '0.72rem', fontWeight: '800', letterSpacing: '0.07em', textTransform: 'uppercase', color: 'hsl(220 15% 50%)' }}>Description</p>
                                 <p style={{ margin: 0, fontSize: '0.83rem', color: 'hsl(220 15% 35%)', lineHeight: 1.65 }}>{item.report_description ?? item.description}</p>
                             </div>
@@ -361,7 +430,7 @@ const DetailDrawer = ({ item, type, onClose, onAction, processing }) => {
                             )}
 
                             {/* Status action buttons */}
-                            <div>
+                             <div>
                                 <p style={{ margin: '0 0 0.5rem', fontSize: '0.72rem', fontWeight: '800', letterSpacing: '0.07em', textTransform: 'uppercase', color: 'hsl(220 15% 50%)' }}>Update Status</p>
                                 <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
                                     {[
@@ -521,35 +590,85 @@ const ReviewsReports = ({
 
     const handleTabChange = (tab) => { setActiveTab(tab); setSearch(''); setFilter('all'); setPage(1); setDrawer(null); };
 
-    const handleAction = (action, id, payload) => {
-        setProcessing(true);
-        const urlMap = {
-            reply:         `/super-admin/reviews/${id}/reply`,
-            report_status: `/super-admin/reports/${id}/status`,
-            delete:        drawer?.type === 'report'
-                ? `/super-admin/reports/${id}`
-                : `/super-admin/reviews/${id}`,
-        };
-        const method = action === 'delete' ? 'delete' : 'post';
-        const data   = action === 'reply'         ? { response: payload }
-                     : action === 'report_status' ? { status: payload }
-                     : {};
+    // const handleAction = (action, id, payload) => {
+    //     setProcessing(true);
+    //     const urlMap = {
+    //         reply:         `/super-admin/reviews/${id}/reply`,
+    //         report_status: `/super-admin/reports/${id}/status`,
+    //         delete:        drawer?.type === 'report'
+    //             ? `/super-admin/reports/${id}`
+    //             : `/super-admin/reviews/${id}`,
+    //     };
+    //     const method = action === 'delete' ? 'delete' : 'post';
+    //     const data   = action === 'reply'         ? { response: payload }
+    //                  : action === 'report_status' ? { status: payload }
+    //                  : {};
 
-        router[method](urlMap[action], data, {
-            preserveScroll: true,
-            onSuccess: () => {
-                showToast(
-                    action === 'delete'        ? 'Deleted successfully.'          :
-                    action === 'reply'         ? 'Reply posted successfully.'     :
-                    action === 'report_status' ? `Status updated to ${payload}.`  : 'Done.'
-                );
-                if (action === 'delete') setDrawer(null);
-                router.reload({ only: ['reviews', 'reports', 'app_reviews'] });
-            },
-            onError:  () => showToast('Action failed. Please try again.', 'error'),
-            onFinish: () => setProcessing(false),
-        });
-    };
+    //     router[method](urlMap[action], data, {
+    //         preserveScroll: true,
+    //         onSuccess: () => {
+    //             showToast(
+    //                 action === 'delete'        ? 'Deleted successfully.'          :
+    //                 action === 'reply'         ? 'Reply posted successfully.'     :
+    //                 action === 'report_status' ? `Status updated to ${payload}.`  : 'Done.'
+    //             );
+    //             if (action === 'delete') setDrawer(null);
+    //             router.reload({ only: ['reviews', 'reports', 'app_reviews'] });
+    //         },
+    //         onError:  () => showToast('Action failed. Please try again.', 'error'),
+    //         onFinish: () => setProcessing(false),
+    //     });
+    // };
+
+const handleAction = (action, itemId, payload) => {
+    setProcessing(true);
+    
+    let url = '';
+    let method = 'post';
+    let data = {};
+
+    switch (action) {
+        case 'report_status':
+            url = `/super-admin/reports/${itemId}/status`;
+            method = 'post';
+            data = { status: payload };
+            break;
+            
+        case 'delete':
+            const type = drawer?.type;
+            if (type === 'report') {
+                url = `/super-admin/reports/${itemId}`;
+            } else if (type === 'app_review') {
+                url = `/super-admin/app-reviews/${itemId}`;
+            } else {
+                url = `/super-admin/reviews/${itemId}`;
+            }
+            method = 'delete';
+            break;
+            
+        default:
+            console.error('Unknown action:', action);
+            setProcessing(false);
+            return;
+    }
+
+    router[method](url, data, {
+        preserveScroll: true,
+        onSuccess: () => {
+            showToast(
+                action === 'delete' ? 'Deleted successfully.' :
+                action === 'report_status' ? `Status updated to ${payload}.` : 'Done.'
+            );
+            if (action === 'delete') setDrawer(null);
+            router.reload({ only: ['reviews', 'reports', 'app_reviews'] });
+        },
+        onError: (errors) => {
+            console.error('Action failed:', errors);
+            showToast('Action failed. Please try again.', 'error');
+        },
+        onFinish: () => setProcessing(false),
+    });
+};
 
     // KPIs
     const avgRating     = rawReviews.length ? (rawReviews.reduce((s, r) => s + (r.overall_rating ?? 0), 0) / rawReviews.length).toFixed(1) : '—';

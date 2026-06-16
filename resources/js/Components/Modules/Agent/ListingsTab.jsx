@@ -60,7 +60,7 @@ const fmtPrice = (property) => {
     }
     return { 
         text: `GH₵${Math.round(property.rent_min || 0).toLocaleString()} – GH₵${Math.round(property.rent_max || 0).toLocaleString()}`, 
-        sub: '/ yr',
+        sub: '/ month',
         color: 'hsl(174 62% 32%)' 
     };
 };

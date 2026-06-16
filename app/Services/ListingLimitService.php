@@ -42,6 +42,7 @@ class ListingLimitService
     public function countActiveRentals(User $user): int
     {
         return Rental::where('user_id', $user->id)
+            ->orWhere('agent_id', $user->id)
             ->where('purpose', 'rent')
             ->whereIn('status', ['approved', 'pending'])
             ->where('is_sold', false)
@@ -54,6 +55,7 @@ class ListingLimitService
     public function countActiveSales(User $user): int
     {
         return Rental::where('user_id', $user->id)
+            ->orWhere('agent_id', $user->id)
             ->where('purpose', 'sale')
             ->whereIn('status', ['approved', 'pending'])
             ->where('is_sold', false)

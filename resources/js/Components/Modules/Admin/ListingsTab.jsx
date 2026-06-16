@@ -55,7 +55,7 @@ const fmtPrice = (property) => {
     if (isRent) {
         const min = property.rent_min?.toLocaleString() ?? '—';
         const max = property.rent_max?.toLocaleString() ?? '—';
-        return { text: `GH₵${min} – GH₵${max}`, sub: '/ yr', color: 'hsl(174 55% 28%)' };
+        return { text: `GH₵${min} – GH₵${max}`, sub: '/ month', color: 'hsl(174 55% 28%)' };
     }
     return { 
         text: `GH₵${property.sale_price?.toLocaleString() ?? '—'}`, 

@@ -211,6 +211,8 @@ const OverviewTab = ({
                             {limitStatus?.plan?.name || limitStatus?.plan || 'Free'}
                         </span>
                     </div>
+
+                    {/* Uncaught Error: Objects are not valid as a React child (found: object with keys {active, limit, remaining, can_create}). If you meant to render a collection of children, use an array instead. */}
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
                         <LimitCard 
                             icon={Icons.home}

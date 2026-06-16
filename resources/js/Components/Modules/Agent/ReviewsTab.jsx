@@ -16,6 +16,7 @@ const Icons = {
     calendar:   <Ico d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />,
     message:    <Ico d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />,
     check:      <Ico d="M5 13l4 4L19 7" />,
+    eye:        <Ico d={['M15 12a3 3 0 11-6 0 3 3 0 016 0z','M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z']} />,
     send:       <Ico d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />,
     empty:      <Ico d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" size="2.5rem" sw={1.2} />,
 };
@@ -47,7 +48,7 @@ const fmtDate = (v) => {
 };
 
 // ─── Review Card ──────────────────────────────────────────────────────────────
-const ReviewCard = ({ review, onRespond, respondingTo, responseText, setResponseText, onSubmitResponse, onCancelResponse, processing }) => {
+const ReviewCard = ({ review, onRespond, respondingTo, responseText, setResponseText, onSubmitResponse, onCancelResponse, processing, onView }) => {
     const hasAttributes = review.landlord_responsive || review.property_matched_description || review.fair_pricing || review.good_communication;
     const isResponding = respondingTo === review.id;
 
@@ -214,13 +215,31 @@ const ReviewCard = ({ review, onRespond, respondingTo, responseText, setResponse
                 )}
             </div>
 
-            {/* Footer action */}
-            {!review.response && !isResponding && (
-                <div style={{ 
-                    borderTop: '1px solid hsl(220 15% 93%)', 
-                    padding: '0.6rem 1rem', 
-                    backgroundColor: 'hsl(220 15% 98.5%)',
-                }}>
+            {/* Footer actions */}
+            <div style={{ 
+                borderTop: '1px solid hsl(220 15% 93%)', 
+                padding: '0.6rem 1rem', 
+                backgroundColor: 'hsl(220 15% 98.5%)',
+                display: 'flex', gap: '0.4rem',
+            }}>
+                {/* View Property button */}
+                <button
+                    onClick={() => onView?.(review)}
+                    style={{
+                        display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
+                        padding: '0.35rem 0.7rem', borderRadius: '0.4rem',
+                        border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white',
+                        color: 'hsl(174 62% 30%)', fontSize: '0.7rem', fontWeight: 700,
+                        cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.12s',
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = 'hsl(174 62% 40%)'; e.currentTarget.style.backgroundColor = 'hsl(174 40% 97%)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = 'hsl(220 15% 88%)'; e.currentTarget.style.backgroundColor = 'white'; }}
+                >
+                    {Icons.eye} View Property
+                </button>
+
+                {/* Respond button (only if no response yet) */}
+                {!review.response && !isResponding && (
                     <button
                         onClick={() => onRespond(review.id)}
                         style={{
@@ -229,14 +248,15 @@ const ReviewCard = ({ review, onRespond, respondingTo, responseText, setResponse
                             border: '1px solid hsl(174 62% 40%)', backgroundColor: 'white',
                             color: 'hsl(174 62% 30%)', fontSize: '0.7rem', fontWeight: 700,
                             cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.12s',
+                            marginLeft: 'auto',
                         }}
                         onMouseEnter={e => { e.currentTarget.style.borderColor = 'hsl(174 62% 30%)'; e.currentTarget.style.backgroundColor = 'hsl(174 40% 95%)'; }}
                         onMouseLeave={e => { e.currentTarget.style.borderColor = 'hsl(174 62% 40%)'; e.currentTarget.style.backgroundColor = 'white'; }}
                     >
                         {Icons.message} Respond
                     </button>
-                </div>
-            )}
+                )}
+            </div>
         </div>
     );
 };
@@ -250,6 +270,8 @@ const ReviewsTab = ({
     setResponseText,
     onSubmitResponse,
     processing,
+    onView,
+    properties = [],
 }) => {
     const total = reviews.length;
     const avgRating = total > 0 
@@ -302,6 +324,7 @@ const ReviewsTab = ({
                             onSubmitResponse={onSubmitResponse}
                             onCancelResponse={() => { setRespondingTo(null); setResponseText(''); }}
                             processing={processing}
+                            onView={onView}
                         />
                     ))}
                 </div>

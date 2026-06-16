@@ -6,7 +6,6 @@ import AddRentalPage from "@/Components/Modules/AddRentals";
 import EditRentals from "@/Components/Modules/EditRentals";
 import VerificationRequestModal from "@/Components/Modules/VerifyRentals";
 import ViewRentals from "@/Components/Modules/ViewRental";
-// import BillingModule from "@/Components/Modules/BillingModule";
 import PricingModal from '@/Components/Modules/PricingModal';
 import OverviewTab from '@/Components/Modules/Agent/AgentOverviewTab';
 import ListingsTab from '@/Components/Modules/Agent/ListingsTab';
@@ -484,6 +483,13 @@ const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views
                       setResponseText={setResponseText}
                       onSubmitResponse={(reviewId) => handleResponse({ preventDefault: () => {} }, reviewId)}
                       processing={processing}
+                      onView={(review) => {
+                          const rental = rentals?.find(r => r.id === review.rental_id);
+                          if (rental) {
+                              handleViewClick(rental);
+                          }
+                      }}
+                      properties={properties}
                   />
               )}
 
@@ -492,6 +498,12 @@ const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views
                   <InquiriesTab 
                       inquiries={inquiries || []}
                       rentals={rentals || []}
+                      onView={(inquiry) => {
+                          const rental = rentals?.find(r => r.id === inquiry.rental_id);
+                          if (rental) {
+                              handleViewClick(rental);
+                          }
+                      }}
                   />
               )}
 
