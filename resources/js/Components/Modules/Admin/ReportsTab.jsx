@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { router } from '@inertiajs/react';
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
@@ -20,6 +20,8 @@ const Icons = {
     check:      <Ico d="M5 13l4 4L19 7" />,
     clock:      <Ico d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />,
     x:          <Ico d="M6 18L18 6M6 6l12 12" />,
+    chevronLeft:  <Ico d="M15 19l-7-7 7-7" />,
+    chevronRight: <Ico d="M9 5l7 7-7 7" />,
     empty:      <Ico d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" size="2.5rem" sw={1.2} />,
     property:   <Ico d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />,
 };
@@ -71,12 +73,145 @@ const TypeBadge = ({ type }) => {
     );
 };
 
+// ─── Pagination ───────────────────────────────────────────────────────────────
+const Pagination = ({ currentPage, totalPages, onPageChange }) => {
+    if (totalPages <= 1) return null;
+
+    const pages = [];
+    const maxVisible = 5;
+    
+    let start = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+    let end = Math.min(totalPages, start + maxVisible - 1);
+    
+    if (end - start + 1 < maxVisible) {
+        start = Math.max(1, end - maxVisible + 1);
+    }
+
+    for (let i = start; i <= end; i++) {
+        pages.push(i);
+    }
+
+    return (
+        <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            gap: '0.25rem', padding: '1rem 0',
+        }}>
+            <button
+                onClick={() => onPageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                style={{
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                    width: '2rem', height: '2rem', borderRadius: '0.375rem',
+                    border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white',
+                    color: currentPage === 1 ? 'hsl(220 15% 70%)' : 'hsl(220 25% 35%)',
+                    cursor: currentPage === 1 ? 'default' : 'pointer',
+                    opacity: currentPage === 1 ? 0.5 : 1,
+                    transition: 'all 0.12s',
+                }}
+            >
+                {Icons.chevronLeft}
+            </button>
+
+            {start > 1 && (
+                <>
+                    <button
+                        onClick={() => onPageChange(1)}
+                        style={{
+                            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                            width: '2rem', height: '2rem', borderRadius: '0.375rem',
+                            border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white',
+                            color: 'hsl(220 25% 35%)', fontSize: '0.75rem', fontWeight: 600,
+                            cursor: 'pointer', fontFamily: 'inherit',
+                        }}
+                    >
+                        1
+                    </button>
+                    {start > 2 && (
+                        <span style={{ color: 'hsl(220 15% 60%)', fontSize: '0.75rem', padding: '0 0.25rem' }}>
+                            ...
+                        </span>
+                    )}
+                </>
+            )}
+
+            {pages.map(page => (
+                <button
+                    key={page}
+                    onClick={() => onPageChange(page)}
+                    style={{
+                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                        width: '2rem', height: '2rem', borderRadius: '0.375rem',
+                        border: page === currentPage ? 'none' : '1px solid hsl(220 15% 88%)',
+                        backgroundColor: page === currentPage ? 'hsl(174 62% 32%)' : 'white',
+                        color: page === currentPage ? 'white' : 'hsl(220 25% 35%)',
+                        fontSize: '0.75rem', fontWeight: 700,
+                        cursor: 'pointer', fontFamily: 'inherit',
+                        transition: 'all 0.12s',
+                    }}
+                    onMouseEnter={e => {
+                        if (page !== currentPage) {
+                            e.currentTarget.style.backgroundColor = 'hsl(220 15% 95%)';
+                        }
+                    }}
+                    onMouseLeave={e => {
+                        if (page !== currentPage) {
+                            e.currentTarget.style.backgroundColor = 'white';
+                        }
+                    }}
+                >
+                    {page}
+                </button>
+            ))}
+
+            {end < totalPages && (
+                <>
+                    {end < totalPages - 1 && (
+                        <span style={{ color: 'hsl(220 15% 60%)', fontSize: '0.75rem', padding: '0 0.25rem' }}>
+                            ...
+                        </span>
+                    )}
+                    <button
+                        onClick={() => onPageChange(totalPages)}
+                        style={{
+                            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                            width: '2rem', height: '2rem', borderRadius: '0.375rem',
+                            border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white',
+                            color: 'hsl(220 25% 35%)', fontSize: '0.75rem', fontWeight: 600,
+                            cursor: 'pointer', fontFamily: 'inherit',
+                        }}
+                    >
+                        {totalPages}
+                    </button>
+                </>
+            )}
+
+            <button
+                onClick={() => onPageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                style={{
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                    width: '2rem', height: '2rem', borderRadius: '0.375rem',
+                    border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white',
+                    color: currentPage === totalPages ? 'hsl(220 15% 70%)' : 'hsl(220 25% 35%)',
+                    cursor: currentPage === totalPages ? 'default' : 'pointer',
+                    opacity: currentPage === totalPages ? 0.5 : 1,
+                    transition: 'all 0.12s',
+                }}
+            >
+                {Icons.chevronRight}
+            </button>
+        </div>
+    );
+};
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const initial = (name) => (name || 'R').charAt(0).toUpperCase();
 const fmtDate = (v) => {
     if (!v) return '—';
     return new Date(v).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 };
+
+const ITEMS_PER_PAGE = 9;
 
 // ─── Single Report Card ───────────────────────────────────────────────────────
 const ReportCard = ({ report, onViewProperty, onStatusChange }) => {
@@ -342,26 +477,47 @@ const ReportCard = ({ report, onViewProperty, onStatusChange }) => {
 const ReportsTab = ({ reports = [], onViewProperty, onStatusChange, showToast }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
+    const [currentPage, setCurrentPage] = useState(1);
     
-    const filteredReports = reports.filter(report => {
-        const q = searchTerm.toLowerCase();
-        const matchesSearch = !q || [
-            report.full_name,
-            report.email,
-            report.report_type,
-            report.report_description,
-            report.status,
-        ].filter(Boolean).some(value => value?.toString().toLowerCase().includes(q));
-        
-        const matchesStatus = statusFilter === 'all' || report.status === statusFilter;
-        return matchesSearch && matchesStatus;
-    });
+    const filteredReports = useMemo(() => {
+        return reports.filter(report => {
+            const q = searchTerm.toLowerCase();
+            const matchesSearch = !q || [
+                report.full_name,
+                report.email,
+                report.report_type,
+                report.report_description,
+                report.status,
+            ].filter(Boolean).some(value => value?.toString().toLowerCase().includes(q));
+            
+            const matchesStatus = statusFilter === 'all' || report.status === statusFilter;
+            return matchesSearch && matchesStatus;
+        });
+    }, [reports, searchTerm, statusFilter]);
+
+    const handleSearchChange = (e) => {
+        setSearchTerm(e.target.value);
+        setCurrentPage(1);
+    };
+
+    const handleStatusFilterChange = (e) => {
+        setStatusFilter(e.target.value);
+        setCurrentPage(1);
+    };
 
     const total     = reports.length;
+    const filteredTotal = filteredReports.length;
     const pending   = reports.filter(r => !r.status || r.status === 'pending').length;
     const reviewing = reports.filter(r => r.status === 'reviewing').length;
     const resolved  = reports.filter(r => r.status === 'resolved').length;
     const dismissed = reports.filter(r => r.status === 'dismissed').length;
+
+    // Pagination
+    const totalPages = Math.ceil(filteredTotal / ITEMS_PER_PAGE);
+    const paginatedReports = filteredReports.slice(
+        (currentPage - 1) * ITEMS_PER_PAGE,
+        currentPage * ITEMS_PER_PAGE
+    );
 
     const handleStatusChange = (reportId, newStatus) => {
         const statusMessages = {
@@ -433,7 +589,7 @@ const ReportsTab = ({ reports = [], onViewProperty, onStatusChange, showToast })
                     <input
                         type="search"
                         value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
+                        onChange={handleSearchChange}
                         placeholder="Search reports by type, reporter, description..."
                         style={{
                             width: '100%', padding: '0.65rem 1rem 0.65rem 2.5rem',
@@ -451,7 +607,7 @@ const ReportsTab = ({ reports = [], onViewProperty, onStatusChange, showToast })
                 </div>
                 <select
                     value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
+                    onChange={handleStatusFilterChange}
                     style={{
                         padding: '0.65rem 1rem', borderRadius: '0.625rem',
                         border: '1px solid hsl(220 15% 88%)',
@@ -471,22 +627,43 @@ const ReportsTab = ({ reports = [], onViewProperty, onStatusChange, showToast })
                 </select>
             </div>
 
-            {/* Grid or empty state */}
-            {filteredReports.length > 0 ? (
-                <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(3, 1fr)',
-                    gap: '0.875rem',
+            {/* Results info */}
+            {filteredTotal > 0 && (
+                <div style={{ 
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    fontSize: '0.72rem', color: 'hsl(220 15% 50%)', fontWeight: 500,
                 }}>
-                    {filteredReports.map(report => (
-                        <ReportCard
-                            key={report.id}
-                            report={report}
-                            onViewProperty={onViewProperty}
-                            onStatusChange={handleStatusChange}
-                        />
-                    ))}
+                    <span>
+                        Showing {((currentPage - 1) * ITEMS_PER_PAGE) + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, filteredTotal)} of {filteredTotal} report{filteredTotal !== 1 ? 's' : ''}
+                    </span>
                 </div>
+            )}
+
+            {/* Grid or empty state */}
+            {filteredTotal > 0 ? (
+                <>
+                    <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(3, 1fr)',
+                        gap: '0.875rem',
+                    }}>
+                        {paginatedReports.map(report => (
+                            <ReportCard
+                                key={report.id}
+                                report={report}
+                                onViewProperty={onViewProperty}
+                                onStatusChange={handleStatusChange}
+                            />
+                        ))}
+                    </div>
+
+                    {/* Pagination */}
+                    <Pagination 
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={setCurrentPage}
+                    />
+                </>
             ) : (
                 <div style={{
                     backgroundColor: 'white', 

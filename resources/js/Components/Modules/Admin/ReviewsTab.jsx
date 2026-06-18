@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { router } from '@inertiajs/react';
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
@@ -19,6 +19,8 @@ const Icons = {
     trash:      <Ico d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />,
     message:    <Ico d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />,
     check:      <Ico d="M5 13l4 4L19 7" />,
+    chevronLeft:  <Ico d="M15 19l-7-7 7-7" />,
+    chevronRight: <Ico d="M9 5l7 7-7 7" />,
     empty:      <Ico d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" size="2.5rem" sw={1.2} />,
 };
 
@@ -49,6 +51,139 @@ const StarRating = ({ rating }) => {
         </svg>
     ));
 };
+
+// ─── Pagination ───────────────────────────────────────────────────────────────
+const Pagination = ({ currentPage, totalPages, onPageChange }) => {
+    if (totalPages <= 1) return null;
+
+    const pages = [];
+    const maxVisible = 5;
+    
+    let start = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+    let end = Math.min(totalPages, start + maxVisible - 1);
+    
+    if (end - start + 1 < maxVisible) {
+        start = Math.max(1, end - maxVisible + 1);
+    }
+
+    for (let i = start; i <= end; i++) {
+        pages.push(i);
+    }
+
+    return (
+        <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            gap: '0.25rem', padding: '1rem 0',
+        }}>
+            <button
+                onClick={() => onPageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                style={{
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                    width: '2rem', height: '2rem', borderRadius: '0.375rem',
+                    border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white',
+                    color: currentPage === 1 ? 'hsl(220 15% 70%)' : 'hsl(220 25% 35%)',
+                    cursor: currentPage === 1 ? 'default' : 'pointer',
+                    opacity: currentPage === 1 ? 0.5 : 1,
+                    transition: 'all 0.12s',
+                }}
+            >
+                {Icons.chevronLeft}
+            </button>
+
+            {start > 1 && (
+                <>
+                    <button
+                        onClick={() => onPageChange(1)}
+                        style={{
+                            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                            width: '2rem', height: '2rem', borderRadius: '0.375rem',
+                            border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white',
+                            color: 'hsl(220 25% 35%)', fontSize: '0.75rem', fontWeight: 600,
+                            cursor: 'pointer', fontFamily: 'inherit',
+                        }}
+                    >
+                        1
+                    </button>
+                    {start > 2 && (
+                        <span style={{ color: 'hsl(220 15% 60%)', fontSize: '0.75rem', padding: '0 0.25rem' }}>
+                            ...
+                        </span>
+                    )}
+                </>
+            )}
+
+            {pages.map(page => (
+                <button
+                    key={page}
+                    onClick={() => onPageChange(page)}
+                    style={{
+                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                        width: '2rem', height: '2rem', borderRadius: '0.375rem',
+                        border: page === currentPage ? 'none' : '1px solid hsl(220 15% 88%)',
+                        backgroundColor: page === currentPage ? 'hsl(174 62% 32%)' : 'white',
+                        color: page === currentPage ? 'white' : 'hsl(220 25% 35%)',
+                        fontSize: '0.75rem', fontWeight: 700,
+                        cursor: 'pointer', fontFamily: 'inherit',
+                        transition: 'all 0.12s',
+                    }}
+                    onMouseEnter={e => {
+                        if (page !== currentPage) {
+                            e.currentTarget.style.backgroundColor = 'hsl(220 15% 95%)';
+                        }
+                    }}
+                    onMouseLeave={e => {
+                        if (page !== currentPage) {
+                            e.currentTarget.style.backgroundColor = 'white';
+                        }
+                    }}
+                >
+                    {page}
+                </button>
+            ))}
+
+            {end < totalPages && (
+                <>
+                    {end < totalPages - 1 && (
+                        <span style={{ color: 'hsl(220 15% 60%)', fontSize: '0.75rem', padding: '0 0.25rem' }}>
+                            ...
+                        </span>
+                    )}
+                    <button
+                        onClick={() => onPageChange(totalPages)}
+                        style={{
+                            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                            width: '2rem', height: '2rem', borderRadius: '0.375rem',
+                            border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white',
+                            color: 'hsl(220 25% 35%)', fontSize: '0.75rem', fontWeight: 600,
+                            cursor: 'pointer', fontFamily: 'inherit',
+                        }}
+                    >
+                        {totalPages}
+                    </button>
+                </>
+            )}
+
+            <button
+                onClick={() => onPageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                style={{
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                    width: '2rem', height: '2rem', borderRadius: '0.375rem',
+                    border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white',
+                    color: currentPage === totalPages ? 'hsl(220 15% 70%)' : 'hsl(220 25% 35%)',
+                    cursor: currentPage === totalPages ? 'default' : 'pointer',
+                    opacity: currentPage === totalPages ? 0.5 : 1,
+                    transition: 'all 0.12s',
+                }}
+            >
+                {Icons.chevronRight}
+            </button>
+        </div>
+    );
+};
+
+const ITEMS_PER_PAGE = 9;
 
 // ─── Single Review Card ───────────────────────────────────────────────────────
 const ReviewCard = ({ review, properties, onViewProperty, onDelete }) => {
@@ -275,22 +410,36 @@ const ReviewCard = ({ review, properties, onViewProperty, onDelete }) => {
 const ReviewsTab = ({ reviews = [], properties = [], onViewProperty, showToast }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [ratingFilter, setRatingFilter] = useState('all');
+    const [currentPage, setCurrentPage] = useState(1);
     
-    const filteredReviews = reviews.filter(review => {
-        const q = searchTerm.toLowerCase();
-        const matchesSearch = !q || [
-            review.full_name,
-            review.comments,
-            review.review_type,
-            review.rental_id?.toString(),
-            review.response,
-        ].filter(Boolean).some(value => value?.toString().toLowerCase().includes(q));
-        
-        const matchesRating = ratingFilter === 'all' || String(review.overall_rating) === ratingFilter;
-        return matchesSearch && matchesRating;
-    });
+    const filteredReviews = useMemo(() => {
+        return reviews.filter(review => {
+            const q = searchTerm.toLowerCase();
+            const matchesSearch = !q || [
+                review.full_name,
+                review.comments,
+                review.review_type,
+                review.rental_id?.toString(),
+                review.response,
+            ].filter(Boolean).some(value => value?.toString().toLowerCase().includes(q));
+            
+            const matchesRating = ratingFilter === 'all' || String(review.overall_rating) === ratingFilter;
+            return matchesSearch && matchesRating;
+        });
+    }, [reviews, searchTerm, ratingFilter]);
+
+    const handleSearchChange = (e) => {
+        setSearchTerm(e.target.value);
+        setCurrentPage(1);
+    };
+
+    const handleRatingFilterChange = (e) => {
+        setRatingFilter(e.target.value);
+        setCurrentPage(1);
+    };
 
     const total = reviews.length;
+    const filteredTotal = filteredReviews.length;
     const avgRating = total > 0 
         ? (reviews.reduce((sum, r) => sum + (Number(r.overall_rating) || 0), 0) / total).toFixed(1) 
         : '0.0';
@@ -302,6 +451,13 @@ const ReviewsTab = ({ reviews = [], properties = [], onViewProperty, showToast }
         2: reviews.filter(r => Math.floor(Number(r.overall_rating) || 0) === 2).length,
         1: reviews.filter(r => Math.floor(Number(r.overall_rating) || 0) === 1).length,
     };
+
+    // Pagination
+    const totalPages = Math.ceil(filteredTotal / ITEMS_PER_PAGE);
+    const paginatedReviews = filteredReviews.slice(
+        (currentPage - 1) * ITEMS_PER_PAGE,
+        currentPage * ITEMS_PER_PAGE
+    );
 
     const handleDelete = (reviewId) => {
         router.delete(`/admin/reviews/${reviewId}`, {
@@ -367,7 +523,7 @@ const ReviewsTab = ({ reviews = [], properties = [], onViewProperty, showToast }
                     <input
                         type="search"
                         value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
+                        onChange={handleSearchChange}
                         placeholder="Search reviews by guest, property, comment..."
                         style={{
                             width: '100%', padding: '0.65rem 1rem 0.65rem 2.5rem',
@@ -385,7 +541,7 @@ const ReviewsTab = ({ reviews = [], properties = [], onViewProperty, showToast }
                 </div>
                 <select
                     value={ratingFilter}
-                    onChange={(e) => setRatingFilter(e.target.value)}
+                    onChange={handleRatingFilterChange}
                     style={{
                         padding: '0.65rem 1rem', borderRadius: '0.625rem',
                         border: '1px solid hsl(220 15% 88%)',
@@ -406,23 +562,44 @@ const ReviewsTab = ({ reviews = [], properties = [], onViewProperty, showToast }
                 </select>
             </div>
 
-            {/* Grid or empty state */}
-            {filteredReviews.length > 0 ? (
-                <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(3, 1fr)',
-                    gap: '0.875rem',
+            {/* Results info */}
+            {filteredTotal > 0 && (
+                <div style={{ 
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    fontSize: '0.72rem', color: 'hsl(220 15% 50%)', fontWeight: 500,
                 }}>
-                    {filteredReviews.map(review => (
-                        <ReviewCard
-                            key={review.id}
-                            review={review}
-                            properties={properties}
-                            onViewProperty={onViewProperty}
-                            onDelete={handleDelete}
-                        />
-                    ))}
+                    <span>
+                        Showing {((currentPage - 1) * ITEMS_PER_PAGE) + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, filteredTotal)} of {filteredTotal} review{filteredTotal !== 1 ? 's' : ''}
+                    </span>
                 </div>
+            )}
+
+            {/* Grid or empty state */}
+            {filteredTotal > 0 ? (
+                <>
+                    <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(3, 1fr)',
+                        gap: '0.875rem',
+                    }}>
+                        {paginatedReviews.map(review => (
+                            <ReviewCard
+                                key={review.id}
+                                review={review}
+                                properties={properties}
+                                onViewProperty={onViewProperty}
+                                onDelete={handleDelete}
+                            />
+                        ))}
+                    </div>
+
+                    {/* Pagination */}
+                    <Pagination 
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={setCurrentPage}
+                    />
+                </>
             ) : (
                 <div style={{
                     backgroundColor: 'white', 

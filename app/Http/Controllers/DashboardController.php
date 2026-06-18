@@ -38,6 +38,7 @@ class DashboardController extends Controller
             $query->where('user_id', $agentData->id)
                   ->orWhere('agent_id', $agentData->id);
         })
+        ->orWhere('is_featured', true)
         ->select(
             'id', 'rental_id', 'title', 'property_type', 'purpose',
             'city', 'area', 'address', 'rent_min', 'rent_max', 'sale_price',

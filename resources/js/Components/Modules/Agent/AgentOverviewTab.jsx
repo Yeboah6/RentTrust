@@ -169,6 +169,7 @@ const OverviewTab = ({
                     icon={Icons.home} 
                     value={properties.length} 
                     label="Active Listings" 
+                    // label="Featured Listings"
                 />
                 <StatCard 
                     icon={Icons.eye} 

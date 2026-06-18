@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { router } from '@inertiajs/react';
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
@@ -23,6 +23,8 @@ const Icons = {
     star:       <Ico d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />,
     trending:   <Ico d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />,
     dollar:     <Ico d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />,
+    chevronLeft:  <Ico d="M15 19l-7-7 7-7" />,
+    chevronRight: <Ico d="M9 5l7 7-7 7" />,
     empty:      <Ico d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" size="2.5rem" sw={1.2} />,
 };
 
@@ -70,6 +72,139 @@ const PlanBadge = ({ plan }) => {
         </span>
     );
 };
+
+// ─── Pagination ───────────────────────────────────────────────────────────────
+const Pagination = ({ currentPage, totalPages, onPageChange }) => {
+    if (totalPages <= 1) return null;
+
+    const pages = [];
+    const maxVisible = 5;
+    
+    let start = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+    let end = Math.min(totalPages, start + maxVisible - 1);
+    
+    if (end - start + 1 < maxVisible) {
+        start = Math.max(1, end - maxVisible + 1);
+    }
+
+    for (let i = start; i <= end; i++) {
+        pages.push(i);
+    }
+
+    return (
+        <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            gap: '0.25rem', padding: '1rem 0',
+        }}>
+            <button
+                onClick={() => onPageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                style={{
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                    width: '2rem', height: '2rem', borderRadius: '0.375rem',
+                    border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white',
+                    color: currentPage === 1 ? 'hsl(220 15% 70%)' : 'hsl(220 25% 35%)',
+                    cursor: currentPage === 1 ? 'default' : 'pointer',
+                    opacity: currentPage === 1 ? 0.5 : 1,
+                    transition: 'all 0.12s',
+                }}
+            >
+                {Icons.chevronLeft}
+            </button>
+
+            {start > 1 && (
+                <>
+                    <button
+                        onClick={() => onPageChange(1)}
+                        style={{
+                            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                            width: '2rem', height: '2rem', borderRadius: '0.375rem',
+                            border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white',
+                            color: 'hsl(220 25% 35%)', fontSize: '0.75rem', fontWeight: 600,
+                            cursor: 'pointer', fontFamily: 'inherit',
+                        }}
+                    >
+                        1
+                    </button>
+                    {start > 2 && (
+                        <span style={{ color: 'hsl(220 15% 60%)', fontSize: '0.75rem', padding: '0 0.25rem' }}>
+                            ...
+                        </span>
+                    )}
+                </>
+            )}
+
+            {pages.map(page => (
+                <button
+                    key={page}
+                    onClick={() => onPageChange(page)}
+                    style={{
+                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                        width: '2rem', height: '2rem', borderRadius: '0.375rem',
+                        border: page === currentPage ? 'none' : '1px solid hsl(220 15% 88%)',
+                        backgroundColor: page === currentPage ? 'hsl(174 62% 32%)' : 'white',
+                        color: page === currentPage ? 'white' : 'hsl(220 25% 35%)',
+                        fontSize: '0.75rem', fontWeight: 700,
+                        cursor: 'pointer', fontFamily: 'inherit',
+                        transition: 'all 0.12s',
+                    }}
+                    onMouseEnter={e => {
+                        if (page !== currentPage) {
+                            e.currentTarget.style.backgroundColor = 'hsl(220 15% 95%)';
+                        }
+                    }}
+                    onMouseLeave={e => {
+                        if (page !== currentPage) {
+                            e.currentTarget.style.backgroundColor = 'white';
+                        }
+                    }}
+                >
+                    {page}
+                </button>
+            ))}
+
+            {end < totalPages && (
+                <>
+                    {end < totalPages - 1 && (
+                        <span style={{ color: 'hsl(220 15% 60%)', fontSize: '0.75rem', padding: '0 0.25rem' }}>
+                            ...
+                        </span>
+                    )}
+                    <button
+                        onClick={() => onPageChange(totalPages)}
+                        style={{
+                            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                            width: '2rem', height: '2rem', borderRadius: '0.375rem',
+                            border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white',
+                            color: 'hsl(220 25% 35%)', fontSize: '0.75rem', fontWeight: 600,
+                            cursor: 'pointer', fontFamily: 'inherit',
+                        }}
+                    >
+                        {totalPages}
+                    </button>
+                </>
+            )}
+
+            <button
+                onClick={() => onPageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                style={{
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                    width: '2rem', height: '2rem', borderRadius: '0.375rem',
+                    border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white',
+                    color: currentPage === totalPages ? 'hsl(220 15% 70%)' : 'hsl(220 25% 35%)',
+                    cursor: currentPage === totalPages ? 'default' : 'pointer',
+                    opacity: currentPage === totalPages ? 0.5 : 1,
+                    transition: 'all 0.12s',
+                }}
+            >
+                {Icons.chevronRight}
+            </button>
+        </div>
+    );
+};
+
+const ITEMS_PER_PAGE = 9;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const initial = (name) => (name || 'A').charAt(0).toUpperCase();
@@ -299,26 +434,47 @@ const SubscriptionCard = ({ agent, onViewDetails, onUpgrade }) => {
 const SubscriptionsTab = ({ agents = [], onViewAgent, onUpgrade }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [planFilter, setPlanFilter] = useState('all');
+    const [currentPage, setCurrentPage] = useState(1);
     
-    const filteredAgents = agents.filter(agent => {
-        const q = searchTerm.toLowerCase();
-        const matchesSearch = !q || [
-            agent.name,
-            agent.email,
-            agent.package,
-            agent.subscription?.plan_name,
-            agent.subscription?.status,
-        ].filter(Boolean).some(value => value?.toString().toLowerCase().includes(q));
-        
-        const matchesPlan = planFilter === 'all' || (agent.package || 'free') === planFilter;
-        return matchesSearch && matchesPlan;
-    });
+    const filteredAgents = useMemo(() => {
+        return agents.filter(agent => {
+            const q = searchTerm.toLowerCase();
+            const matchesSearch = !q || [
+                agent.name,
+                agent.email,
+                agent.package,
+                agent.subscription?.plan_name,
+                agent.subscription?.status,
+            ].filter(Boolean).some(value => value?.toString().toLowerCase().includes(q));
+            
+            const matchesPlan = planFilter === 'all' || (agent.package || 'free') === planFilter;
+            return matchesSearch && matchesPlan;
+        });
+    }, [agents, searchTerm, planFilter]);
+
+    const handleSearchChange = (e) => {
+        setSearchTerm(e.target.value);
+        setCurrentPage(1);
+    };
+
+    const handlePlanFilterChange = (e) => {
+        setPlanFilter(e.target.value);
+        setCurrentPage(1);
+    };
 
     const total = agents.length;
+    const filteredTotal = filteredAgents.length;
     const activeSubs = agents.filter(a => a.subscription?.status === 'active').length;
     const freePlan = agents.filter(a => !a.package || a.package === 'free').length;
     const proPlan = agents.filter(a => a.package === 'pro').length;
     const gracePeriod = agents.filter(a => a.subscription?.status === 'grace').length;
+
+    // Pagination
+    const totalPages = Math.ceil(filteredTotal / ITEMS_PER_PAGE);
+    const paginatedAgents = filteredAgents.slice(
+        (currentPage - 1) * ITEMS_PER_PAGE,
+        currentPage * ITEMS_PER_PAGE
+    );
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
@@ -370,7 +526,7 @@ const SubscriptionsTab = ({ agents = [], onViewAgent, onUpgrade }) => {
                     <input
                         type="search"
                         value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
+                        onChange={handleSearchChange}
                         placeholder="Search by agent name, email, plan..."
                         style={{
                             width: '100%', padding: '0.65rem 1rem 0.65rem 2.5rem',
@@ -388,7 +544,7 @@ const SubscriptionsTab = ({ agents = [], onViewAgent, onUpgrade }) => {
                 </div>
                 <select
                     value={planFilter}
-                    onChange={(e) => setPlanFilter(e.target.value)}
+                    onChange={handlePlanFilterChange}
                     style={{
                         padding: '0.65rem 1rem', borderRadius: '0.625rem',
                         border: '1px solid hsl(220 15% 88%)',
@@ -407,22 +563,43 @@ const SubscriptionsTab = ({ agents = [], onViewAgent, onUpgrade }) => {
                 </select>
             </div>
 
-            {/* Grid or empty state */}
-            {filteredAgents.length > 0 ? (
-                <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(3, 1fr)',
-                    gap: '0.875rem',
+            {/* Results info */}
+            {filteredTotal > 0 && (
+                <div style={{ 
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    fontSize: '0.72rem', color: 'hsl(220 15% 50%)', fontWeight: 500,
                 }}>
-                    {filteredAgents.map(agent => (
-                        <SubscriptionCard
-                            key={agent.id}
-                            agent={agent}
-                            onViewDetails={onViewAgent}
-                            onUpgrade={onUpgrade}
-                        />
-                    ))}
+                    <span>
+                        Showing {((currentPage - 1) * ITEMS_PER_PAGE) + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, filteredTotal)} of {filteredTotal} agent{filteredTotal !== 1 ? 's' : ''}
+                    </span>
                 </div>
+            )}
+
+            {/* Grid or empty state */}
+            {filteredTotal > 0 ? (
+                <>
+                    <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(3, 1fr)',
+                        gap: '0.875rem',
+                    }}>
+                        {paginatedAgents.map(agent => (
+                            <SubscriptionCard
+                                key={agent.id}
+                                agent={agent}
+                                onViewDetails={onViewAgent}
+                                onUpgrade={onUpgrade}
+                            />
+                        ))}
+                    </div>
+
+                    {/* Pagination */}
+                    <Pagination 
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={setCurrentPage}
+                    />
+                </>
             ) : (
                 <div style={{
                     backgroundColor: 'white', 

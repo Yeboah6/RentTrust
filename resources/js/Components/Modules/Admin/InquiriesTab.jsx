@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 const Ico = ({ d, size = '1rem', sw = 1.8 }) => (
@@ -17,8 +17,143 @@ const Icons = {
     msg:      <Ico d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" size="0.78rem" />,
     chevDown: <Ico d="M19 9l-7 7-7-7" size="0.78rem" />,
     eye:      <Ico d={['M15 12a3 3 0 11-6 0 3 3 0 016 0z','M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z']} size="0.78rem" />,
+    chevronLeft:  <Ico d="M15 19l-7-7 7-7" />,
+    chevronRight: <Ico d="M9 5l7 7-7 7" />,
     inbox:    <Ico d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" size="2.5rem" sw={1.2} />,
 };
+
+// ─── Pagination ───────────────────────────────────────────────────────────────
+const Pagination = ({ currentPage, totalPages, onPageChange }) => {
+    if (totalPages <= 1) return null;
+
+    const pages = [];
+    const maxVisible = 5;
+    
+    let start = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+    let end = Math.min(totalPages, start + maxVisible - 1);
+    
+    if (end - start + 1 < maxVisible) {
+        start = Math.max(1, end - maxVisible + 1);
+    }
+
+    for (let i = start; i <= end; i++) {
+        pages.push(i);
+    }
+
+    return (
+        <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            gap: '0.25rem', padding: '1rem 0',
+        }}>
+            <button
+                onClick={() => onPageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                style={{
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                    width: '2rem', height: '2rem', borderRadius: '0.375rem',
+                    border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white',
+                    color: currentPage === 1 ? 'hsl(220 15% 70%)' : 'hsl(220 25% 35%)',
+                    cursor: currentPage === 1 ? 'default' : 'pointer',
+                    opacity: currentPage === 1 ? 0.5 : 1,
+                    transition: 'all 0.12s',
+                }}
+            >
+                {Icons.chevronLeft}
+            </button>
+
+            {start > 1 && (
+                <>
+                    <button
+                        onClick={() => onPageChange(1)}
+                        style={{
+                            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                            width: '2rem', height: '2rem', borderRadius: '0.375rem',
+                            border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white',
+                            color: 'hsl(220 25% 35%)', fontSize: '0.75rem', fontWeight: 600,
+                            cursor: 'pointer', fontFamily: 'inherit',
+                        }}
+                    >
+                        1
+                    </button>
+                    {start > 2 && (
+                        <span style={{ color: 'hsl(220 15% 60%)', fontSize: '0.75rem', padding: '0 0.25rem' }}>
+                            ...
+                        </span>
+                    )}
+                </>
+            )}
+
+            {pages.map(page => (
+                <button
+                    key={page}
+                    onClick={() => onPageChange(page)}
+                    style={{
+                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                        width: '2rem', height: '2rem', borderRadius: '0.375rem',
+                        border: page === currentPage ? 'none' : '1px solid hsl(220 15% 88%)',
+                        backgroundColor: page === currentPage ? 'hsl(174 62% 32%)' : 'white',
+                        color: page === currentPage ? 'white' : 'hsl(220 25% 35%)',
+                        fontSize: '0.75rem', fontWeight: 700,
+                        cursor: 'pointer', fontFamily: 'inherit',
+                        transition: 'all 0.12s',
+                    }}
+                    onMouseEnter={e => {
+                        if (page !== currentPage) {
+                            e.currentTarget.style.backgroundColor = 'hsl(220 15% 95%)';
+                        }
+                    }}
+                    onMouseLeave={e => {
+                        if (page !== currentPage) {
+                            e.currentTarget.style.backgroundColor = 'white';
+                        }
+                    }}
+                >
+                    {page}
+                </button>
+            ))}
+
+            {end < totalPages && (
+                <>
+                    {end < totalPages - 1 && (
+                        <span style={{ color: 'hsl(220 15% 60%)', fontSize: '0.75rem', padding: '0 0.25rem' }}>
+                            ...
+                        </span>
+                    )}
+                    <button
+                        onClick={() => onPageChange(totalPages)}
+                        style={{
+                            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                            width: '2rem', height: '2rem', borderRadius: '0.375rem',
+                            border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white',
+                            color: 'hsl(220 25% 35%)', fontSize: '0.75rem', fontWeight: 600,
+                            cursor: 'pointer', fontFamily: 'inherit',
+                        }}
+                    >
+                        {totalPages}
+                    </button>
+                </>
+            )}
+
+            <button
+                onClick={() => onPageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                style={{
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                    width: '2rem', height: '2rem', borderRadius: '0.375rem',
+                    border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white',
+                    color: currentPage === totalPages ? 'hsl(220 15% 70%)' : 'hsl(220 25% 35%)',
+                    cursor: currentPage === totalPages ? 'default' : 'pointer',
+                    opacity: currentPage === totalPages ? 0.5 : 1,
+                    transition: 'all 0.12s',
+                }}
+            >
+                {Icons.chevronRight}
+            </button>
+        </div>
+    );
+};
+
+const ITEMS_PER_PAGE = 9;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const fmtDate = (v) => {
@@ -172,10 +307,20 @@ const InquiryCard = ({ inquiry, rentals, onViewProperty }) => {
 
 // ─── Inquiries tab module ─────────────────────────────────────────────────────
 const InquiriesTab = ({ inquiries = [], rentals = [], onViewProperty }) => {
+    const [currentPage, setCurrentPage] = useState(1);
+
     const total     = inquiries.length;
+    const filteredTotal = inquiries.length;
     const whatsapp  = inquiries.filter(i => i.type === 'whatsapp').length;
     const phone     = inquiries.filter(i => i.type === 'phone').length;
     const form      = inquiries.filter(i => i.type === 'form').length;
+
+    // Pagination
+    const totalPages = Math.ceil(filteredTotal / ITEMS_PER_PAGE);
+    const paginatedInquiries = inquiries.slice(
+        (currentPage - 1) * ITEMS_PER_PAGE,
+        currentPage * ITEMS_PER_PAGE
+    );
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
@@ -208,22 +353,43 @@ const InquiriesTab = ({ inquiries = [], rentals = [], onViewProperty }) => {
                 )}
             </div>
 
+            {/* Results info */}
+            {filteredTotal > 0 && (
+                <div style={{ 
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    fontSize: '0.72rem', color: 'hsl(220 15% 50%)', fontWeight: 500,
+                }}>
+                    <span>
+                        Showing {((currentPage - 1) * ITEMS_PER_PAGE) + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, filteredTotal)} of {filteredTotal} inquir{filteredTotal !== 1 ? 'ies' : 'y'}
+                    </span>
+                </div>
+            )}
+
             {/* Grid or empty */}
             {total > 0 ? (
-                <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(3, 1fr)',
-                    gap: '0.875rem',
-                }}>
-                    {inquiries.map(inquiry => (
-                        <InquiryCard
-                            key={inquiry.id}
-                            inquiry={inquiry}
-                            rentals={rentals}
-                            onViewProperty={onViewProperty}
-                        />
-                    ))}
-                </div>
+                <>
+                    <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(3, 1fr)',
+                        gap: '0.875rem',
+                    }}>
+                        {paginatedInquiries.map(inquiry => (
+                            <InquiryCard
+                                key={inquiry.id}
+                                inquiry={inquiry}
+                                rentals={rentals}
+                                onViewProperty={onViewProperty}
+                            />
+                        ))}
+                    </div>
+
+                    {/* Pagination */}
+                    <Pagination 
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={setCurrentPage}
+                    />
+                </>
             ) : (
                 <div style={{
                     backgroundColor: 'white', border: '1px solid hsl(220 15% 91%)',

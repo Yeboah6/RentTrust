@@ -1,4 +1,4 @@
-import React, { useState, useRef, useMemo } from 'react';
+import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { Link, router, usePage } from '@inertiajs/react';
 import SuperAdminLayout from '@/Layouts/SuperAdminLayout';
 import { useRefresh } from '@/Hooks/useRefresh';
@@ -29,6 +29,12 @@ const Icons = {
     refresh:  () => <Icon d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" size="0.9rem" />,
     dollar:   () => <Icon d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" size="1.1rem" />,
     trending: () => <Icon d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" size="1.1rem" />,
+    spinner: () => (
+        <svg style={{ width: '0.9rem', height: '0.9rem', animation: 'spin 0.75s linear infinite', flexShrink: 0 }} fill="none" viewBox="0 0 24 24">
+            <circle style={{ opacity: 0.2 }} cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path style={{ opacity: 0.85 }} fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+        </svg>
+    ),
     clock:    () => <Icon d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" size="1.1rem" />,
     warning:  () => <Icon d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" size="1.1rem" />,
 };
@@ -208,9 +214,9 @@ const Toast = ({ toast }) => {
 const PaymentsIndex = ({ payments: raw = [] }) => {
     // const initial = raw.map(normalise);
     const { payments: rawPayments = [] } = usePage().props;
-    const payments = useMemo(() => rawPayments.map(normalise), [rawPayments]);
+    const initial = useMemo(() => rawPayments.map(normalise), [rawPayments]);
 
-    // const [payments,       setPayments]       = useState(initial);
+    const [payments,       setPayments]       = useState(initial);
     const [search,         setSearch]         = useState('');
     const [filterStatus,   setFilterStatus]   = useState('all');
     const [filterType,     setFilterType]     = useState('all');
@@ -231,6 +237,10 @@ const PaymentsIndex = ({ payments: raw = [] }) => {
         setToast({ msg, type });
         toastTimer.current = setTimeout(() => setToast(null), 3500);
     };
+
+    useEffect(() => {
+        setPayments(initial);
+    }, [initial]);
 
     // ── sort ──────────────────────────────────────────────────────────────────
     const toggleSort = (field) => {
@@ -626,7 +636,12 @@ const PaymentsIndex = ({ payments: raw = [] }) => {
                 </div>
             </div>
 
-            <style>{`@keyframes slideIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }`}</style>
+            <style>
+                {
+                `@keyframes slideIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
+                @keyframes spin { to { transform: rotate(360deg); } }
+                `}
+            </style>
         </>
     );
 };

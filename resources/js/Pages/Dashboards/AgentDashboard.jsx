@@ -216,6 +216,7 @@ const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views
       total_reviews: rental.reviews_count || 0,
       views: rental.views_count || 0,
       inquiries: rental.inquiries_count || 0,
+      is_featured: rental.is_featured,  // ← Add this line
     }))
     : [];
 
@@ -236,11 +237,10 @@ const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views
     ));
   };
 
-  const calculateAverageRating = () => {
-    if (!formattedReviews || formattedReviews.length === 0) return 0;
-    const sum = formattedReviews.reduce((acc, review) => acc + (review.overall_rating || 0), 0);
-    return (sum / formattedReviews.length).toFixed(1);
-  };
+  const total = reviews.length;
+    const avgRating = total > 0 
+        ? (reviews.reduce((sum, r) => sum + (Number(r.overall_rating) || 0), 0) / total).toFixed(1) 
+        : '0.0';
 
   const totalViews = properties.reduce((sum, p) => sum + (p.views || 0), 0);
   const totalInquiries = properties.reduce((sum, p) => sum + (p.inquiries || 0), 0);
@@ -413,7 +413,7 @@ const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.25rem, 1vw, 0.375rem)', color: 'hsl(200 15% 45%)' }}>
                         <Star style={{ height: 'clamp(0.875rem, 2.5vw, 1rem)', width: 'clamp(0.875rem, 2.5vw, 1rem)' }} />
-                        {calculateAverageRating()} ({reviews.length} reviews)
+                        {avgRating} ({reviews.length} reviews)
                       </div>
                     </div>
                   </div>

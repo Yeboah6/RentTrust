@@ -7,7 +7,7 @@ use App\Models\User;
 use App\Models\ListingInquiry;
 use App\Models\ListingView;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\{Cache, DB};
 
 class ReportService
 {
@@ -49,11 +49,11 @@ class ReportService
             return [
                 'total_listings' => Rental::count(),
                 'active_rentals' => Rental::where('purpose', 'rent')
-                    ->where('status', 'approved')
+                    // ->where('status', 'approved')
                     ->where('is_sold', false)
                     ->count(),
                 'active_sales' => Rental::where('purpose', 'sale')
-                    ->where('status', 'approved')
+                    // ->where('status', 'approved')
                     ->where('is_sold', false)
                     ->count(),
                 'total_agents' => User::where('role', 'agent')->count(),
@@ -74,20 +74,32 @@ class ReportService
         return [
             'most_viewed' => Rental::where('rentals.created_at', '>=', $startDate)
                 ->where('rentals.created_at', '<=', $endDate)
-                ->select('rentals.id', 'rentals.title', 'rentals.purpose', 'rentals.city', 'rentals.created_at')
+                ->select('rentals.id', 'rentals.title', 'rentals.purpose', 'rentals.area', 'rentals.created_at')
                 ->selectRaw('COUNT(listing_views.id) as views')
                 ->leftJoin('listing_views', 'rentals.id', '=', 'listing_views.rental_id')
-                ->groupBy('rentals.id', 'rentals.title', 'rentals.purpose', 'rentals.city', 'rentals.created_at')
+                ->groupBy('rentals.id', 'rentals.title', 'rentals.purpose', 'rentals.area', 'rentals.created_at')
                 ->orderByDesc('views')
                 ->limit(10)
                 ->get(),
 
-            'most_inquiries' => Rental::where('created_at', '>=', $startDate)
-                ->where('created_at', '<=', $endDate)
-                ->withCount('inquiries')
+            'most_inquiries' => Rental::whereBetween('rentals.created_at', [$startDate, $endDate])
+                ->leftJoin('listing_inquiries', 'rentals.id', '=', 'listing_inquiries.rental_id')
+                ->select(
+                    'rentals.id',
+                    'rentals.title', 
+                    'rentals.purpose', 
+                    'rentals.area', 
+                    'rentals.created_at',
+                    DB::raw('COUNT(listing_inquiries.id) as inquiries_count')
+                )
+                ->groupBy('rentals.id',
+                    'rentals.title', 
+                    'rentals.purpose', 
+                    'rentals.area', 
+                    'rentals.created_at'
+                )
                 ->orderByDesc('inquiries_count')
                 ->limit(10)
-                ->select('id', 'title', 'purpose', 'city', 'created_at')
                 ->get(),
 
             'zero_engagement' => Rental::leftJoin('listing_views', 'rentals.id', '=', 'listing_views.rental_id')
@@ -96,7 +108,7 @@ class ReportService
                 ->where('rentals.created_at', '<=', $endDate)
                 ->whereNull('listing_views.id')
                 ->limit(20)
-                ->select('rentals.id', 'rentals.title', 'rentals.purpose', 'rentals.city', 'rentals.created_at')
+                ->select('rentals.id', 'rentals.title', 'rentals.purpose', 'rentals.area', 'rentals.created_at')
                 ->distinct()
                 ->get(),
 
@@ -116,14 +128,33 @@ class ReportService
     public function getAgentPerformance($startDate, $endDate)
     {
         return [
-            'top_agents_by_listings' => User::where('role', 'agent')
-                ->withCount('rentals')
+            'top_agents_by_listings' => User::where('role', ['agent', 'landlord'])
+                ->leftJoin('rentals', function ($join) {
+                    $join->on('users.id', '=', 'rentals.agent_id')
+                         ->orOn('users.id', '=', 'rentals.user_id');
+                })
+                ->select(
+                    'users.id', 
+                    'users.user_id', 
+                    'users.name', 
+                    'users.email', 
+                    'users.company', 
+                    'users.status',
+                    DB::raw('COUNT(rentals.id) as rentals_count')
+                    )
+                ->groupBy(
+                    'users.id', 
+                    'users.user_id', 
+                    'users.name', 
+                    'users.email', 
+                    'users.company', 
+                    'users.status',
+                )
                 ->orderByDesc('rentals_count')
                 ->limit(10)
-                ->select('id', 'user_id', 'name', 'email', 'company', 'status')
                 ->get(),
 
-            'top_agents_by_views' => User::where('role', 'agent')
+            'top_agents_by_views' => User::where('role', ['agent', 'landlord'])
                 ->join('rentals', 'users.id', '=', 'rentals.user_id')
                 ->join('listing_views', 'rentals.id', '=', 'listing_views.rental_id')
                 ->selectRaw('users.id, users.user_id, users.name, users.email, users.company, users.status, COUNT(listing_views.id) as total_views')
@@ -132,7 +163,7 @@ class ReportService
                 ->limit(10)
                 ->get(),
 
-            'top_agents_by_inquiries' => User::where('role', 'agent')
+            'top_agents_by_inquiries' => User::where('role', ['agent', 'landlord'])
                 ->join('rentals', 'users.id', '=', 'rentals.user_id')
                 ->join('listing_inquiries', 'rentals.id', '=', 'listing_inquiries.rental_id')
                 ->selectRaw('users.id, users.user_id, users.name, users.email, users.company, users.status, COUNT(listing_inquiries.id) as total_inquiries')
@@ -222,21 +253,21 @@ class ReportService
         return [
             'top_locations_by_listings' => Rental::where('created_at', '>=', $startDate)
                 ->where('created_at', '<=', $endDate)
-                ->select('city')
+                ->select('area')
                 ->selectRaw('COUNT(*) as total')
-                ->whereNotNull('city')
-                ->groupBy('city')
+                ->whereNotNull('area')
+                ->groupBy('area')
                 ->orderByDesc('total')
                 ->limit(10)
                 ->get(),
 
             'top_locations_by_demand' => Rental::where('rentals.created_at', '>=', $startDate)
                 ->where('rentals.created_at', '<=', $endDate)
-                ->select('rentals.city')
+                ->select('rentals.area')
                 ->selectRaw('COUNT(listing_views.id) as total_views')
                 ->leftJoin('listing_views', 'rentals.id', '=', 'listing_views.rental_id')
-                ->whereNotNull('rentals.city')
-                ->groupBy('rentals.city')
+                ->whereNotNull('rentals.area')
+                ->groupBy('rentals.area')
                 ->orderByDesc('total_views')
                 ->limit(10)
                 ->get(),
@@ -246,10 +277,10 @@ class ReportService
                     ->where('created_at', '<=', $endDate);
             })
                 ->join('rentals', 'listing_inquiries.rental_id', '=', 'rentals.id')
-                ->select('rentals.city')
+                ->select('rentals.area')
                 ->selectRaw('COUNT(listing_inquiries.id) as total_inquiries')
-                ->whereNotNull('rentals.city')
-                ->groupBy('rentals.city')
+                ->whereNotNull('rentals.area')
+                ->groupBy('rentals.area')
                 ->orderByDesc('total_inquiries')
                 ->limit(10)
                 ->get(),

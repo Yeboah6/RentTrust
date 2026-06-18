@@ -590,35 +590,6 @@ const ReviewsReports = ({
 
     const handleTabChange = (tab) => { setActiveTab(tab); setSearch(''); setFilter('all'); setPage(1); setDrawer(null); };
 
-    // const handleAction = (action, id, payload) => {
-    //     setProcessing(true);
-    //     const urlMap = {
-    //         reply:         `/super-admin/reviews/${id}/reply`,
-    //         report_status: `/super-admin/reports/${id}/status`,
-    //         delete:        drawer?.type === 'report'
-    //             ? `/super-admin/reports/${id}`
-    //             : `/super-admin/reviews/${id}`,
-    //     };
-    //     const method = action === 'delete' ? 'delete' : 'post';
-    //     const data   = action === 'reply'         ? { response: payload }
-    //                  : action === 'report_status' ? { status: payload }
-    //                  : {};
-
-    //     router[method](urlMap[action], data, {
-    //         preserveScroll: true,
-    //         onSuccess: () => {
-    //             showToast(
-    //                 action === 'delete'        ? 'Deleted successfully.'          :
-    //                 action === 'reply'         ? 'Reply posted successfully.'     :
-    //                 action === 'report_status' ? `Status updated to ${payload}.`  : 'Done.'
-    //             );
-    //             if (action === 'delete') setDrawer(null);
-    //             router.reload({ only: ['reviews', 'reports', 'app_reviews'] });
-    //         },
-    //         onError:  () => showToast('Action failed. Please try again.', 'error'),
-    //         onFinish: () => setProcessing(false),
-    //     });
-    // };
 
 const handleAction = (action, itemId, payload) => {
     setProcessing(true);
@@ -671,7 +642,8 @@ const handleAction = (action, itemId, payload) => {
 };
 
     // KPIs
-    const avgRating     = rawReviews.length ? (rawReviews.reduce((s, r) => s + (r.overall_rating ?? 0), 0) / rawReviews.length).toFixed(1) : '—';
+    const total = rawReviews.length;
+    const avgRating = total > 0 ? (rawReviews.reduce((sum, r) => sum + (Number(r.overall_rating) || 0), 0) / total).toFixed(1) : '0.0';
     const pendingRpts   = rawReports.filter(r => r.status?.toLowerCase() === 'pending').length;
     const avgAppRating  = rawAppReviews.length ? (rawAppReviews.reduce((s, r) => s + (r.overall_rating ?? 0), 0) / rawAppReviews.length).toFixed(1) : '—';
 

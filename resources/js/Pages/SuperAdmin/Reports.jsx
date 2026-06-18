@@ -142,7 +142,7 @@ const ListingTableRow = ({ listing, valueKey, valueSub }) => {
                     {isRent ? 'RENT' : 'SALE'}
                 </span>
             </div>
-            <div style={{ fontSize: '0.75rem', color: 'hsl(220 15% 50%)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{listing.city || '—'}</div>
+            <div style={{ fontSize: '0.75rem', color: 'hsl(220 15% 50%)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{listing.area || '—'}</div>
             <div style={{ textAlign: 'right' }}>
                 <div style={{ fontSize: '0.88rem', fontWeight: '900', color: 'hsl(220 25% 14%)' }}>{fmtNum(listing[valueKey])}</div>
                 <div style={{ fontSize: '0.6rem', fontWeight: '700', letterSpacing: '0.05em', textTransform: 'uppercase', color: 'hsl(220 15% 55%)' }}>{valueSub}</div>
@@ -370,7 +370,7 @@ const Reports = ({ analytics, filters }) => {
                             <CardHead title="Top Locations by Listings" accent="hsl(214 80% 50%)" />
                             {topLocByList.length > 0
                                 ? topLocByList.map((l, i) => (
-                                    <LocationRow key={i} location={l.city} rank={i + 1} value={l.total ?? 0} valueSub="listings" accentColor="hsl(214 80% 44%)" max={maxLocListings} />
+                                    <LocationRow key={i} location={l.area} rank={i + 1} value={l.total ?? 0} valueSub="listings" accentColor="hsl(214 80% 44%)" max={maxLocListings} />
                                 ))
                                 : <Empty emoji="📍" msg="No location data" />
                             }
@@ -380,7 +380,7 @@ const Reports = ({ analytics, filters }) => {
                             <CardHead title="Top Locations by Demand" accent="hsl(270 55% 50%)" />
                             {topLocByDem.length > 0
                                 ? topLocByDem.map((l, i) => (
-                                    <LocationRow key={i} location={l.city} rank={i + 1} value={l.total_views ?? 0} valueSub="views" accentColor="hsl(270 55% 44%)" max={maxLocViews} />
+                                    <LocationRow key={i} location={l.area} rank={i + 1} value={l.total_views ?? 0} valueSub="views" accentColor="hsl(270 55% 44%)" max={maxLocViews} />
                                 ))
                                 : <Empty emoji="📍" msg="No demand data" />
                             }
@@ -449,7 +449,7 @@ const Reports = ({ analytics, filters }) => {
                                     onMouseEnter={e => e.currentTarget.style.backgroundColor = 'hsl(220 15% 98.5%)'}
                                     onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}>
                                     <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '0.8rem', fontWeight: '700', color: 'hsl(220 25% 14%)' }}>{l.title}</div>
-                                    <div style={{ fontSize: '0.75rem', color: 'hsl(220 15% 50%)' }}>{l.city || '—'}</div>
+                                    <div style={{ fontSize: '0.75rem', color: 'hsl(220 15% 50%)' }}>{l.area || '—'}</div>
                                     <div style={{ fontSize: '0.73rem', fontWeight: '600', color: 'hsl(220 25% 35%)', textAlign: 'right' }}>{fmtDate(l.created_at)}</div>
                                 </div>
                             ))}

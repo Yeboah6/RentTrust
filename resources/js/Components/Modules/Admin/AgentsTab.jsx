@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { Home, Gift } from 'lucide-react';
+import { useState, useMemo } from 'react';
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 const Ico = ({ d, size = '1rem', sw = 1.8 }) => (
@@ -28,6 +27,8 @@ const Icons = {
     upgrade:    <Ico d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />,
     suspend:    <Ico d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />,
     check:      <Ico d="M5 13l4 4L19 7" />,
+    chevronLeft:  <Ico d="M15 19l-7-7 7-7" />,
+    chevronRight: <Ico d="M9 5l7 7-7 7" />,
     empty:      <Ico d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" size="2.5rem" sw={1.2} />,
 };
 
@@ -62,6 +63,7 @@ const PlanBadge = ({ plan }) => {
         basic:     { bg: 'hsl(174 40% 93%)',  color: 'hsl(174 62% 35%)' },
         premium:   { bg: 'hsl(271 50% 93%)',  color: 'hsl(271 60% 45%)' },
         enterprise:{ bg: 'hsl(214 60% 93%)',  color: 'hsl(214 70% 42%)' },
+        pro:       { bg: 'hsl(271 50% 93%)',  color: 'hsl(271 60% 45%)' },
     };
     const cfg = config[plan] || config.free;
     
@@ -78,6 +80,137 @@ const PlanBadge = ({ plan }) => {
     );
 };
 
+// ─── Pagination ───────────────────────────────────────────────────────────────
+const Pagination = ({ currentPage, totalPages, onPageChange }) => {
+    if (totalPages <= 1) return null;
+
+    const pages = [];
+    const maxVisible = 6;
+    
+    let start = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+    let end = Math.min(totalPages, start + maxVisible - 1);
+    
+    if (end - start + 1 < maxVisible) {
+        start = Math.max(1, end - maxVisible + 1);
+    }
+
+    for (let i = start; i <= end; i++) {
+        pages.push(i);
+    }
+
+    return (
+        <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            gap: '0.25rem', padding: '1rem 0',
+        }}>
+            <button
+                onClick={() => onPageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                style={{
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                    width: '2rem', height: '2rem', borderRadius: '0.375rem',
+                    border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white',
+                    color: currentPage === 1 ? 'hsl(220 15% 70%)' : 'hsl(220 25% 35%)',
+                    cursor: currentPage === 1 ? 'default' : 'pointer',
+                    opacity: currentPage === 1 ? 0.5 : 1,
+                    transition: 'all 0.12s',
+                }}
+            >
+                {Icons.chevronLeft}
+            </button>
+
+            {start > 1 && (
+                <>
+                    <button
+                        onClick={() => onPageChange(1)}
+                        style={{
+                            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                            width: '2rem', height: '2rem', borderRadius: '0.375rem',
+                            border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white',
+                            color: 'hsl(220 25% 35%)', fontSize: '0.75rem', fontWeight: 600,
+                            cursor: 'pointer', fontFamily: 'inherit',
+                        }}
+                    >
+                        1
+                    </button>
+                    {start > 2 && (
+                        <span style={{ color: 'hsl(220 15% 60%)', fontSize: '0.75rem', padding: '0 0.25rem' }}>
+                            ...
+                        </span>
+                    )}
+                </>
+            )}
+
+            {pages.map(page => (
+                <button
+                    key={page}
+                    onClick={() => onPageChange(page)}
+                    style={{
+                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                        width: '2rem', height: '2rem', borderRadius: '0.375rem',
+                        border: page === currentPage ? 'none' : '1px solid hsl(220 15% 88%)',
+                        backgroundColor: page === currentPage ? 'hsl(174 62% 32%)' : 'white',
+                        color: page === currentPage ? 'white' : 'hsl(220 25% 35%)',
+                        fontSize: '0.75rem', fontWeight: 700,
+                        cursor: 'pointer', fontFamily: 'inherit',
+                        transition: 'all 0.12s',
+                    }}
+                    onMouseEnter={e => {
+                        if (page !== currentPage) {
+                            e.currentTarget.style.backgroundColor = 'hsl(220 15% 95%)';
+                        }
+                    }}
+                    onMouseLeave={e => {
+                        if (page !== currentPage) {
+                            e.currentTarget.style.backgroundColor = 'white';
+                        }
+                    }}
+                >
+                    {page}
+                </button>
+            ))}
+
+            {end < totalPages && (
+                <>
+                    {end < totalPages - 1 && (
+                        <span style={{ color: 'hsl(220 15% 60%)', fontSize: '0.75rem', padding: '0 0.25rem' }}>
+                            ...
+                        </span>
+                    )}
+                    <button
+                        onClick={() => onPageChange(totalPages)}
+                        style={{
+                            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                            width: '2rem', height: '2rem', borderRadius: '0.375rem',
+                            border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white',
+                            color: 'hsl(220 25% 35%)', fontSize: '0.75rem', fontWeight: 600,
+                            cursor: 'pointer', fontFamily: 'inherit',
+                        }}
+                    >
+                        {totalPages}
+                    </button>
+                </>
+            )}
+
+            <button
+                onClick={() => onPageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                style={{
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                    width: '2rem', height: '2rem', borderRadius: '0.375rem',
+                    border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white',
+                    color: currentPage === totalPages ? 'hsl(220 15% 70%)' : 'hsl(220 25% 35%)',
+                    cursor: currentPage === totalPages ? 'default' : 'pointer',
+                    opacity: currentPage === totalPages ? 0.5 : 1,
+                    transition: 'all 0.12s',
+                }}
+            >
+                {Icons.chevronRight}
+            </button>
+        </div>
+    );
+};
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const initial = (name) => (name || 'A').charAt(0).toUpperCase();
 const hue = (s = '') => [...s].reduce((a, c) => a + c.charCodeAt(0), 0) % 360;
@@ -86,8 +219,10 @@ const fmtDate = (v) => {
     return new Date(v).toLocaleDateString('en-GH', { day: 'numeric', month: 'short', year: 'numeric' });
 };
 
+const ITEMS_PER_PAGE = 9;
+
 // ─── Single Agent Card ────────────────────────────────────────────────────────
-const AgentCard = ({ agent, onViewDetails, onEdit, onVerify, onSuspend, onUpgrade, onResendInvite }) => {
+const AgentCard = ({ agent, onViewDetails, onEdit, onVerify, onSuspend, onUpgrade, onResendInvite, onDelete }) => {
     return (
         <div style={{
             backgroundColor: 'white',
@@ -236,22 +371,20 @@ const AgentCard = ({ agent, onViewDetails, onEdit, onVerify, onSuspend, onUpgrad
                     {Icons.edit} Edit
                 </button>
 
-                {/* {agent.status === 'pending' && ( */}
-                    <button
-                        onClick={() => onResendInvite?.(agent)}
-                        style={{
-                            display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
-                            padding: '0.35rem 0.7rem', borderRadius: '0.4rem',
-                            border: '1px solid hsl(38 92% 70%)', backgroundColor: 'white',
-                            color: 'hsl(38 92% 40%)', fontSize: '0.7rem', fontWeight: 700,
-                            cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.12s',
-                        }}
-                        onMouseEnter={e => { e.currentTarget.style.borderColor = 'hsl(38 92% 50%)'; e.currentTarget.style.backgroundColor = 'hsl(38 92% 97%)'; }}
-                        onMouseLeave={e => { e.currentTarget.style.borderColor = 'hsl(38 92% 70%)'; e.currentTarget.style.backgroundColor = 'white'; }}
-                    >
-                        {Icons.mail} Invite
-                    </button>
-                {/* // )} */}
+                <button
+                    onClick={() => onResendInvite?.(agent)}
+                    style={{
+                        display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
+                        padding: '0.35rem 0.7rem', borderRadius: '0.4rem',
+                        border: '1px solid hsl(38 92% 70%)', backgroundColor: 'white',
+                        color: 'hsl(38 92% 40%)', fontSize: '0.7rem', fontWeight: 700,
+                        cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.12s',
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = 'hsl(38 92% 50%)'; e.currentTarget.style.backgroundColor = 'hsl(38 92% 97%)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = 'hsl(38 92% 70%)'; e.currentTarget.style.backgroundColor = 'white'; }}
+                >
+                    {Icons.mail} Invite
+                </button>
 
                 {(agent.status === 'unverified' || agent.status === 'pending') && (
                     <button
@@ -320,6 +453,24 @@ const AgentCard = ({ agent, onViewDetails, onEdit, onVerify, onSuspend, onUpgrad
                         {Icons.upgrade} Upgrade
                     </button>
                 )}
+
+                {/* Delete button - pushed to the right */}
+                <button
+                    onClick={() => onDelete?.(agent)}
+                    style={{
+                        display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
+                        padding: '0.35rem 0.7rem', borderRadius: '0.4rem',
+                        border: '1px solid hsl(0 72% 70%)', backgroundColor: 'white',
+                        color: 'hsl(0 72% 48%)', fontSize: '0.7rem', fontWeight: 700,
+                        cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.12s',
+                        marginLeft: 'auto',
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = 'hsl(0 72% 50%)'; e.currentTarget.style.backgroundColor = 'hsl(0 72% 97%)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = 'hsl(0 72% 70%)'; e.currentTarget.style.backgroundColor = 'white'; }}
+                >
+                    <Ico d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" size="0.7rem" />
+                    Delete
+                </button>
             </div>
         </div>
     );
@@ -335,24 +486,41 @@ const AgentsTab = ({
     onSuspend,
     onUpgrade,
     onResendInvite,
+    onDelete,
 }) => {
     const [searchTerm, setSearchTerm] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
     
-    const filteredAgents = agents.filter(agent => {
-        if (!searchTerm.trim()) return true;
-        const q = searchTerm.toLowerCase();
-        return (
-            agent.name?.toLowerCase().includes(q) ||
-            agent.email?.toLowerCase().includes(q) ||
-            agent.company?.toLowerCase().includes(q) ||
-            agent.status?.toLowerCase().includes(q)
-        );
-    });
+    const filteredAgents = useMemo(() => {
+        return agents.filter(agent => {
+            if (!searchTerm.trim()) return true;
+            const q = searchTerm.toLowerCase();
+            return (
+                agent.name?.toLowerCase().includes(q) ||
+                agent.email?.toLowerCase().includes(q) ||
+                agent.company?.toLowerCase().includes(q) ||
+                agent.status?.toLowerCase().includes(q)
+            );
+        });
+    }, [agents, searchTerm]);
+
+    const handleSearchChange = (e) => {
+        setSearchTerm(e.target.value);
+        setCurrentPage(1);
+    };
 
     const total    = agents.length;
+    const filteredTotal = filteredAgents.length;
     const verified = agents.filter(a => a.status === 'verified').length;
     const pending  = agents.filter(a => a.status === 'pending').length;
     const suspended = agents.filter(a => a.status === 'suspended').length;
+
+    // Pagination logic
+    const totalPages = Math.ceil(filteredTotal / ITEMS_PER_PAGE);
+    const paginatedAgents = filteredAgents.slice(
+        (currentPage - 1) * ITEMS_PER_PAGE,
+        currentPage * ITEMS_PER_PAGE
+    );
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
@@ -374,9 +542,9 @@ const AgentsTab = ({
                     {total > 0 && (
                         <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
                             {[
-                                { label: 'Verified',  val: verified,  ...StatusBadge({ status: 'verified' }) },
-                                { label: 'Pending',   val: pending,   ...StatusBadge({ status: 'pending' }) },
-                                { label: 'Suspended', val: suspended, ...StatusBadge({ status: 'suspended' }) },
+                                { label: 'Verified',  val: verified,  icon: Icons.shield,  bg: 'hsl(152 60% 93%)',  color: 'hsl(152 60% 35%)' },
+                                { label: 'Pending',   val: pending,   icon: Icons.clock,   bg: 'hsl(38 92% 93%)',   color: 'hsl(38 92% 40%)' },
+                                { label: 'Suspended', val: suspended, icon: Icons.suspend, bg: 'hsl(0 72% 93%)',    color: 'hsl(0 72% 45%)' },
                             ].filter(t => t.val > 0).map(t => (
                                 <span key={t.label} style={{ 
                                     display: 'inline-flex', alignItems: 'center', gap: '0.28rem',
@@ -421,7 +589,7 @@ const AgentsTab = ({
                 <input
                     type="search"
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onChange={handleSearchChange}
                     placeholder="Search agents by name, email, company..."
                     style={{
                         width: '100%', padding: '0.65rem 1rem 0.65rem 2.5rem',
@@ -438,26 +606,48 @@ const AgentsTab = ({
                 />
             </div>
 
-            {/* Grid or empty state */}
-            {filteredAgents.length > 0 ? (
-                <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(3, 1fr)',
-                    gap: '0.875rem',
+            {/* Results info */}
+            {filteredTotal > 0 && (
+                <div style={{ 
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    fontSize: '0.72rem', color: 'hsl(220 15% 50%)', fontWeight: 500,
                 }}>
-                    {filteredAgents.map(agent => (
-                        <AgentCard
-                            key={agent.id}
-                            agent={agent}
-                            onViewDetails={onViewDetails}
-                            onEdit={onEdit}
-                            onVerify={onVerify}
-                            onSuspend={onSuspend}
-                            onUpgrade={onUpgrade}
-                            onResendInvite={onResendInvite}
-                        />
-                    ))}
+                    <span>
+                        Showing {((currentPage - 1) * ITEMS_PER_PAGE) + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, filteredTotal)} of {filteredTotal} agent{filteredTotal !== 1 ? 's' : ''}
+                    </span>
                 </div>
+            )}
+
+            {/* Grid or empty state */}
+            {filteredTotal > 0 ? (
+                <>
+                    <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(3, 1fr)',
+                        gap: '0.875rem',
+                    }}>
+                        {paginatedAgents.map(agent => (
+                            <AgentCard
+                                key={agent.id}
+                                agent={agent}
+                                onViewDetails={onViewDetails}
+                                onEdit={onEdit}
+                                onVerify={onVerify}
+                                onSuspend={onSuspend}
+                                onUpgrade={onUpgrade}
+                                onResendInvite={onResendInvite}
+                                onDelete={onDelete}
+                            />
+                        ))}
+                    </div>
+
+                    {/* Pagination */}
+                    <Pagination 
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={setCurrentPage}
+                    />
+                </>
             ) : (
                 <div style={{
                     backgroundColor: 'white', 

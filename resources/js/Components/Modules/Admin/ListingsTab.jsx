@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 const Ico = ({ d, size = '1rem', sw = 1.8 }) => (
@@ -23,6 +23,8 @@ const Icons = {
     tag:        <Ico d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />,
     bed:        <Ico d="M2 4v16M2 8h20M2 8l2-4h16l2 4M6 12v4m4-4v4m4-4v4m4-4v4M2 20h20" size="0.78rem" />,
     bath:       <Ico d="M4 4v5a3 3 0 003 3h0M9 12v5a3 3 0 01-3 3M5 4h14M5 4l1-2h12l1 2M7 12h10v5a3 3 0 01-3 3h0a3 3 0 01-3-3v-5z" size="0.78rem" />,
+    chevronLeft:  <Ico d="M15 19l-7-7 7-7" />,
+    chevronRight: <Ico d="M9 5l7 7-7 7" />,
     empty:      <Ico d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" size="2.5rem" sw={1.2} />,
 };
 
@@ -49,6 +51,155 @@ const StatusBadge = ({ status }) => {
     );
 };
 
+// ─── Featured Badge ───────────────────────────────────────────────────────────
+const FeaturedBadge = () => (
+    <span style={{
+        display: 'inline-flex', alignItems: 'center', gap: '0.2rem',
+        padding: '0.18rem 0.55rem', borderRadius: 999,
+        fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.04em',
+        backgroundColor: 'hsl(38 92% 50% / 0.12)',
+        color: 'hsl(38 92% 35%)',
+        border: '1px solid hsl(38 92% 50% / 0.3)',
+        flexShrink: 0,
+    }}>
+        {Icons.sparkles}
+        Featured
+    </span>
+);
+
+const toBool = (v) => v === true || v === 1 || v === '1';
+
+// ─── Pagination ───────────────────────────────────────────────────────────────
+const Pagination = ({ currentPage, totalPages, onPageChange }) => {
+    if (totalPages <= 1) return null;
+
+    const pages = [];
+    const maxVisible = 5;
+    
+    let start = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+    let end = Math.min(totalPages, start + maxVisible - 1);
+    
+    if (end - start + 1 < maxVisible) {
+        start = Math.max(1, end - maxVisible + 1);
+    }
+
+    for (let i = start; i <= end; i++) {
+        pages.push(i);
+    }
+
+    return (
+        <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            gap: '0.25rem', padding: '1rem 0',
+        }}>
+            <button
+                onClick={() => onPageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                style={{
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                    width: '2rem', height: '2rem', borderRadius: '0.375rem',
+                    border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white',
+                    color: currentPage === 1 ? 'hsl(220 15% 70%)' : 'hsl(220 25% 35%)',
+                    cursor: currentPage === 1 ? 'default' : 'pointer',
+                    opacity: currentPage === 1 ? 0.5 : 1,
+                    transition: 'all 0.12s',
+                }}
+            >
+                {Icons.chevronLeft}
+            </button>
+
+            {start > 1 && (
+                <>
+                    <button
+                        onClick={() => onPageChange(1)}
+                        style={{
+                            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                            width: '2rem', height: '2rem', borderRadius: '0.375rem',
+                            border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white',
+                            color: 'hsl(220 25% 35%)', fontSize: '0.75rem', fontWeight: 600,
+                            cursor: 'pointer', fontFamily: 'inherit',
+                        }}
+                    >
+                        1
+                    </button>
+                    {start > 2 && (
+                        <span style={{ color: 'hsl(220 15% 60%)', fontSize: '0.75rem', padding: '0 0.25rem' }}>
+                            ...
+                        </span>
+                    )}
+                </>
+            )}
+
+            {pages.map(page => (
+                <button
+                    key={page}
+                    onClick={() => onPageChange(page)}
+                    style={{
+                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                        width: '2rem', height: '2rem', borderRadius: '0.375rem',
+                        border: page === currentPage ? 'none' : '1px solid hsl(220 15% 88%)',
+                        backgroundColor: page === currentPage ? 'hsl(174 62% 32%)' : 'white',
+                        color: page === currentPage ? 'white' : 'hsl(220 25% 35%)',
+                        fontSize: '0.75rem', fontWeight: 700,
+                        cursor: 'pointer', fontFamily: 'inherit',
+                        transition: 'all 0.12s',
+                    }}
+                    onMouseEnter={e => {
+                        if (page !== currentPage) {
+                            e.currentTarget.style.backgroundColor = 'hsl(220 15% 95%)';
+                        }
+                    }}
+                    onMouseLeave={e => {
+                        if (page !== currentPage) {
+                            e.currentTarget.style.backgroundColor = 'white';
+                        }
+                    }}
+                >
+                    {page}
+                </button>
+            ))}
+
+            {end < totalPages && (
+                <>
+                    {end < totalPages - 1 && (
+                        <span style={{ color: 'hsl(220 15% 60%)', fontSize: '0.75rem', padding: '0 0.25rem' }}>
+                            ...
+                        </span>
+                    )}
+                    <button
+                        onClick={() => onPageChange(totalPages)}
+                        style={{
+                            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                            width: '2rem', height: '2rem', borderRadius: '0.375rem',
+                            border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white',
+                            color: 'hsl(220 25% 35%)', fontSize: '0.75rem', fontWeight: 600,
+                            cursor: 'pointer', fontFamily: 'inherit',
+                        }}
+                    >
+                        {totalPages}
+                    </button>
+                </>
+            )}
+
+            <button
+                onClick={() => onPageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                style={{
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                    width: '2rem', height: '2rem', borderRadius: '0.375rem',
+                    border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white',
+                    color: currentPage === totalPages ? 'hsl(220 15% 70%)' : 'hsl(220 25% 35%)',
+                    cursor: currentPage === totalPages ? 'default' : 'pointer',
+                    opacity: currentPage === totalPages ? 0.5 : 1,
+                    transition: 'all 0.12s',
+                }}
+            >
+                {Icons.chevronRight}
+            </button>
+        </div>
+    );
+};
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const fmtPrice = (property) => {
     const isRent = property.purpose === 'rent';
@@ -64,31 +215,44 @@ const fmtPrice = (property) => {
     };
 };
 
+const ITEMS_PER_PAGE = 9;
+
 // ─── Single Listing Card ──────────────────────────────────────────────────────
 const ListingCard = ({ property, onView, onEdit, onApproveToggle, onDelete }) => {
     const price = fmtPrice(property);
     const isApproved = property.status === 'approved';
+    const isFeatured = toBool(property.is_featured);
 
     return (
         <div style={{
             backgroundColor: 'white',
-            border: '1px solid hsl(220 15% 91%)',
+            border: isFeatured ? '1px solid hsl(38 92% 50% / 0.4)' : '1px solid hsl(220 15% 91%)',
             borderRadius: '0.875rem',
             overflow: 'hidden',
-            boxShadow: '0 1px 3px hsl(220 20% 15% / 0.04)',
+            boxShadow: isFeatured 
+                ? '0 2px 12px hsl(38 92% 50% / 0.1), 0 1px 3px hsl(220 20% 15% / 0.04)' 
+                : '0 1px 3px hsl(220 20% 15% / 0.04)',
             display: 'flex', flexDirection: 'column',
-            transition: 'box-shadow 0.15s',
+            transition: 'box-shadow 0.15s, border-color 0.15s',
         }}
-            onMouseEnter={e => e.currentTarget.style.boxShadow = '0 4px 14px hsl(220 20% 15% / 0.08)'}
-            onMouseLeave={e => e.currentTarget.style.boxShadow = '0 1px 3px hsl(220 20% 15% / 0.04)'}
+            onMouseEnter={e => e.currentTarget.style.boxShadow = isFeatured 
+                ? '0 4px 20px hsl(38 92% 50% / 0.18), 0 4px 14px hsl(220 20% 15% / 0.08)' 
+                : '0 4px 14px hsl(220 20% 15% / 0.08)'}
+            onMouseLeave={e => e.currentTarget.style.boxShadow = isFeatured 
+                ? '0 2px 12px hsl(38 92% 50% / 0.1), 0 1px 3px hsl(220 20% 15% / 0.04)' 
+                : '0 1px 3px hsl(220 20% 15% / 0.04)'}
         >
-            {/* Status colour strip */}
+            {/* Status strip - gold for featured */}
             <div style={{ 
                 height: 3, 
-                backgroundColor: property.status === 'approved' ? 'hsl(152 60% 40%)' 
-                    : property.status === 'suspended' ? 'hsl(0 72% 48%)' 
-                    : 'hsl(38 92% 50%)',
-                opacity: 0.7 
+                background: isFeatured 
+                    ? 'linear-gradient(90deg, hsl(38 92% 50%), hsl(28 90% 45%))' 
+                    : property.effective_listing_status === 'approved' 
+                        ? 'hsl(152 60% 40%)' 
+                        : property.effective_listing_status === 'pending' 
+                            ? 'hsl(38 92% 50%)' 
+                            : 'hsl(220 15% 60%)',
+                opacity: isFeatured ? 1 : 0.7,
             }} />
 
             {/* Card body */}
@@ -105,7 +269,7 @@ const ListingCard = ({ property, onView, onEdit, onApproveToggle, onDelete }) =>
                             }}>
                                 {property.title || 'Untitled Property'}
                             </h3>
-                            <StatusBadge status={property.status} />
+                            <StatusBadge status={property.status} /> {isFeatured && <FeaturedBadge />}
                         </div>
                         <p style={{ 
                             margin: '0.15rem 0 0', fontSize: '0.7rem', color: 'hsl(220 15% 50%)',
@@ -182,59 +346,51 @@ const ListingCard = ({ property, onView, onEdit, onApproveToggle, onDelete }) =>
                 backgroundColor: 'hsl(220 15% 98.5%)',
                 display: 'flex', gap: '0.4rem', flexWrap: 'wrap',
             }}>
-                <button
-                    onClick={() => onView?.(property)}
-                    style={{
-                        display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
-                        padding: '0.35rem 0.7rem', borderRadius: '0.4rem',
-                        border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white',
-                        color: 'hsl(174 62% 30%)', fontSize: '0.7rem', fontWeight: 700,
-                        cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.12s',
-                    }}
+                <button onClick={() => onView?.(property)} style={{
+                    display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
+                    padding: '0.35rem 0.7rem', borderRadius: '0.4rem',
+                    border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white',
+                    color: 'hsl(174 62% 30%)', fontSize: '0.7rem', fontWeight: 700,
+                    cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.12s',
+                }}
                     onMouseEnter={e => { e.currentTarget.style.borderColor = 'hsl(174 62% 40%)'; e.currentTarget.style.backgroundColor = 'hsl(174 40% 97%)'; }}
                     onMouseLeave={e => { e.currentTarget.style.borderColor = 'hsl(220 15% 88%)'; e.currentTarget.style.backgroundColor = 'white'; }}
                 >
                     {Icons.eye} View
                 </button>
-                <button
-                    onClick={() => onEdit?.(property)}
-                    style={{
-                        display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
-                        padding: '0.35rem 0.7rem', borderRadius: '0.4rem',
-                        border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white',
-                        color: 'hsl(220 25% 35%)', fontSize: '0.7rem', fontWeight: 700,
-                        cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.12s',
-                    }}
+                <button onClick={() => onEdit?.(property)} style={{
+                    display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
+                    padding: '0.35rem 0.7rem', borderRadius: '0.4rem',
+                    border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white',
+                    color: 'hsl(220 25% 35%)', fontSize: '0.7rem', fontWeight: 700,
+                    cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.12s',
+                }}
                     onMouseEnter={e => { e.currentTarget.style.borderColor = 'hsl(220 15% 55%)'; e.currentTarget.style.backgroundColor = 'hsl(220 15% 95%)'; }}
                     onMouseLeave={e => { e.currentTarget.style.borderColor = 'hsl(220 15% 88%)'; e.currentTarget.style.backgroundColor = 'white'; }}
                 >
                     {Icons.edit} Edit
                 </button>
-                <button
-                    onClick={() => onApproveToggle?.(property)}
-                    style={{
-                        display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
-                        padding: '0.35rem 0.7rem', borderRadius: '0.4rem',
-                        border: 'none',
-                        backgroundColor: isApproved ? 'hsl(271 60% 50%)' : 'hsl(152 60% 40%)',
-                        color: 'white', fontSize: '0.7rem', fontWeight: 700,
-                        cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.12s',
-                    }}
+                <button onClick={() => onApproveToggle?.(property)} style={{
+                    display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
+                    padding: '0.35rem 0.7rem', borderRadius: '0.4rem',
+                    border: 'none',
+                    backgroundColor: isApproved ? 'hsl(271 60% 50%)' : 'hsl(152 60% 40%)',
+                    color: 'white', fontSize: '0.7rem', fontWeight: 700,
+                    cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.12s',
+                }}
                     onMouseEnter={e => { e.currentTarget.style.opacity = '0.9'; }}
                     onMouseLeave={e => { e.currentTarget.style.opacity = '1'; }}
                 >
                     {isApproved ? <>{Icons.undo} Revert</> : <>{Icons.check} Approve</>}
                 </button>
-                <button
-                    onClick={() => onDelete?.(property)}
-                    style={{
-                        display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
-                        padding: '0.35rem 0.7rem', borderRadius: '0.4rem',
-                        border: '1px solid hsl(0 72% 70%)', backgroundColor: 'white',
-                        color: 'hsl(0 72% 48%)', fontSize: '0.7rem', fontWeight: 700,
-                        cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.12s',
-                        marginLeft: 'auto',
-                    }}
+                <button onClick={() => onDelete?.(property)} style={{
+                    display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
+                    padding: '0.35rem 0.7rem', borderRadius: '0.4rem',
+                    border: '1px solid hsl(0 72% 70%)', backgroundColor: 'white',
+                    color: 'hsl(0 72% 48%)', fontSize: '0.7rem', fontWeight: 700,
+                    cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.12s',
+                    marginLeft: 'auto',
+                }}
                     onMouseEnter={e => { e.currentTarget.style.borderColor = 'hsl(0 72% 50%)'; e.currentTarget.style.backgroundColor = 'hsl(0 72% 97%)'; }}
                     onMouseLeave={e => { e.currentTarget.style.borderColor = 'hsl(0 72% 70%)'; e.currentTarget.style.backgroundColor = 'white'; }}
                 >
@@ -279,29 +435,53 @@ const ListingsTab = ({
 }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
+    const [currentPage, setCurrentPage] = useState(1);
     
-    const filteredListings = listings.filter(property => {
-        const q = searchTerm.toLowerCase();
-        const matchesSearch = !q || [
-            property.title,
-            property.address,
-            property.city,
-            property.agent_name,
-            property.status,
-            property.purpose,
-        ].filter(Boolean).some(value => value?.toString().toLowerCase().includes(q));
-        
-        const matchesStatus = statusFilter === 'all' || property.status === statusFilter;
-        return matchesSearch && matchesStatus;
-    });
+    const filteredListings = useMemo(() => {
+        return listings.filter(property => {
+            const q = searchTerm.toLowerCase();
+            const matchesSearch = !q || [
+                property.title,
+                property.address,
+                property.city,
+                property.agent_name,
+                property.status,
+                property.purpose,
+            ].filter(Boolean).some(value => value?.toString().toLowerCase().includes(q));
+            
+            const matchesStatus = statusFilter === 'all' || property.status === statusFilter;
+            return matchesSearch && matchesStatus;
+        });
+    }, [listings, searchTerm, statusFilter]);
+
+    // Reset page when filters change
+    const handleSearchChange = (e) => {
+        setSearchTerm(e.target.value);
+        setCurrentPage(1);
+    };
+
+    const handleStatusChange = (e) => {
+        setStatusFilter(e.target.value);
+        setCurrentPage(1);
+    };
 
     const total = listings.length;
+    const filteredTotal = filteredListings.length;
     const rentals = filteredListings.filter(p => p.purpose === 'rent');
     const sales = filteredListings.filter(p => p.purpose === 'sale');
     
     const approved = listings.filter(p => p.status === 'approved').length;
     const pending = listings.filter(p => p.status === 'pending').length;
     const suspended = listings.filter(p => p.status === 'suspended').length;
+
+    // Pagination logic
+    const totalPages = Math.ceil(filteredTotal / ITEMS_PER_PAGE);
+    const paginatedListings = filteredListings.slice(
+        (currentPage - 1) * ITEMS_PER_PAGE,
+        currentPage * ITEMS_PER_PAGE
+    );
+    const paginatedRentals = paginatedListings.filter(p => p.purpose === 'rent');
+    const paginatedSales = paginatedListings.filter(p => p.purpose === 'sale');
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
@@ -371,7 +551,7 @@ const ListingsTab = ({
                     <input
                         type="search"
                         value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
+                        onChange={handleSearchChange}
                         placeholder="Search listings by title, location, agent..."
                         style={{
                             width: '100%', padding: '0.65rem 1rem 0.65rem 2.5rem',
@@ -389,7 +569,7 @@ const ListingsTab = ({
                 </div>
                 <select
                     value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
+                    onChange={handleStatusChange}
                     style={{
                         padding: '0.65rem 1rem', borderRadius: '0.625rem',
                         border: '1px solid hsl(220 15% 88%)',
@@ -409,12 +589,24 @@ const ListingsTab = ({
                 </select>
             </div>
 
+            {/* Results info */}
+            {filteredTotal > 0 && (
+                <div style={{ 
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    fontSize: '0.72rem', color: 'hsl(220 15% 50%)', fontWeight: 500,
+                }}>
+                    <span>
+                        Showing {((currentPage - 1) * ITEMS_PER_PAGE) + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, filteredTotal)} of {filteredTotal} listing{filteredTotal !== 1 ? 's' : ''}
+                    </span>
+                </div>
+            )}
+
             {/* Grid or empty state */}
-            {filteredListings.length > 0 ? (
+            {filteredTotal > 0 ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                     
                     {/* Rental listings section */}
-                    {rentals.length > 0 && (
+                    {paginatedRentals.length > 0 && (
                         <div>
                             <SectionHeader 
                                 title="Rental Listings" 
@@ -429,7 +621,7 @@ const ListingsTab = ({
                                 gridTemplateColumns: 'repeat(3, 1fr)',
                                 gap: '0.875rem',
                             }}>
-                                {rentals.map(property => (
+                                {paginatedRentals.map(property => (
                                     <ListingCard
                                         key={property.id}
                                         property={property}
@@ -444,7 +636,7 @@ const ListingsTab = ({
                     )}
 
                     {/* Sale listings section */}
-                    {sales.length > 0 && (
+                    {paginatedSales.length > 0 && (
                         <div>
                             <SectionHeader 
                                 title="Sale Listings" 
@@ -459,7 +651,7 @@ const ListingsTab = ({
                                 gridTemplateColumns: 'repeat(3, 1fr)',
                                 gap: '0.875rem',
                             }}>
-                                {sales.map(property => (
+                                {paginatedSales.map(property => (
                                     <ListingCard
                                         key={property.id}
                                         property={property}
@@ -472,6 +664,13 @@ const ListingsTab = ({
                             </div>
                         </div>
                     )}
+
+                    {/* Pagination */}
+                    <Pagination 
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={setCurrentPage}
+                    />
                 </div>
             ) : (
                 <div style={{

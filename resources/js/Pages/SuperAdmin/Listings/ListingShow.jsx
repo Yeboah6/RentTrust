@@ -210,6 +210,8 @@ const ConfirmModal = ({ action, listing, onConfirm, onClose, processing }) => {
 
 const Gallery = ({ images }) => {
     const [idx, setIdx] = useState(0);
+    const [lightboxOpen, setLightboxOpen] = useState(false);
+    
     if (!images?.length) {
         return (
             <div style={{ aspectRatio: '16/9', borderRadius: '0.875rem', backgroundColor: 'hsl(220 15% 94%)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', color: 'hsl(220 15% 58%)', border: '1px solid hsl(220 15% 89%)' }}>
@@ -218,23 +220,32 @@ const Gallery = ({ images }) => {
             </div>
         );
     }
+    
+    const prevImage = () => setIdx(i => (i - 1 + images.length) % images.length);
+    const nextImage = () => setIdx(i => (i + 1) % images.length);
+    
     return (
         <div>
             {/* Main image */}
             <div style={{ position: 'relative', borderRadius: '0.875rem', overflow: 'hidden', aspectRatio: '16/9', backgroundColor: 'hsl(220 15% 10%)', marginBottom: '0.65rem' }}>
-                <img src={`/storage/rental_images/${images[idx]}`} alt="" style={{ width: '100%', height: '100%',  objectFit: 'cover',}} />
+                <img 
+                    src={`/storage/rental_images/${images[idx]}`} 
+                    alt="" 
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', cursor: 'pointer' }}
+                    onClick={() => setLightboxOpen(true)}
+                />
                 <div style={{ position: 'absolute', bottom: '0.75rem', right: '0.75rem', backgroundColor: 'hsl(220 25% 8% / 0.7)', backdropFilter: 'blur(6px)', color: 'white', fontSize: '0.72rem', fontWeight: '700', padding: '0.3rem 0.65rem', borderRadius: '999px' }}>
                     {idx + 1} / {images.length}
                 </div>
                 {images.length > 1 && (
                     <>
-                        <button onClick={() => setIdx(i => (i - 1 + images.length) % images.length)}
+                        <button onClick={prevImage}
                             style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', width: '2.1rem', height: '2.1rem', borderRadius: '50%', border: 'none', backgroundColor: 'hsl(220 25% 8% / 0.6)', backdropFilter: 'blur(6px)', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background-color 0.15s' }}
                             onMouseEnter={e => e.currentTarget.style.backgroundColor = 'hsl(220 25% 8% / 0.88)'}
                             onMouseLeave={e => e.currentTarget.style.backgroundColor = 'hsl(220 25% 8% / 0.6)'}>
                             <Icons.chevL />
                         </button>
-                        <button onClick={() => setIdx(i => (i + 1) % images.length)}
+                        <button onClick={nextImage}
                             style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', width: '2.1rem', height: '2.1rem', borderRadius: '50%', border: 'none', backgroundColor: 'hsl(220 25% 8% / 0.6)', backdropFilter: 'blur(6px)', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background-color 0.15s' }}
                             onMouseEnter={e => e.currentTarget.style.backgroundColor = 'hsl(220 25% 8% / 0.88)'}
                             onMouseLeave={e => e.currentTarget.style.backgroundColor = 'hsl(220 25% 8% / 0.6)'}>
@@ -253,6 +264,17 @@ const Gallery = ({ images }) => {
                         </button>
                     ))}
                 </div>
+            )}
+
+            {/* Lightbox */}
+            {lightboxOpen && (
+                <Lightbox 
+                    images={images}
+                    currentIndex={idx}
+                    onClose={() => setLightboxOpen(false)}
+                    onPrev={() => setIdx(i => (i - 1 + images.length) % images.length)}
+                    onNext={() => setIdx(i => (i + 1) % images.length)}
+                />
             )}
         </div>
     );
@@ -281,6 +303,148 @@ const CardHead = ({ title, sub }) => (
         {sub && <p style={{ margin: '0.1rem 0 0', fontSize: '0.68rem', color: 'hsl(220 15% 52%)' }}>{sub}</p>}
     </div>
 );
+
+// ─── Lightbox ─────────────────────────────────────────────────────────────────
+
+const Lightbox = ({ images, currentIndex, onClose, onPrev, onNext }) => {
+    if (!images?.length) return null;
+    
+    return (
+        <div 
+            onClick={onClose}
+            style={{ 
+                position: 'fixed', 
+                inset: 0, 
+                zIndex: 100, 
+                backgroundColor: 'hsl(220 25% 5% / 0.92)', 
+                backdropFilter: 'blur(12px)',
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center',
+                animation: 'lsModalIn 0.2s cubic-bezier(0.16,1,0.3,1)'
+            }}
+        >
+            {/* Close button */}
+            <button 
+                onClick={onClose}
+                style={{
+                    position: 'absolute',
+                    top: '1.5rem',
+                    right: '1.5rem',
+                    width: '2.5rem',
+                    height: '2.5rem',
+                    borderRadius: '50%',
+                    border: 'none',
+                    backgroundColor: 'hsl(220 25% 15% / 0.6)',
+                    backdropFilter: 'blur(8px)',
+                    color: 'white',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 101,
+                    transition: 'background-color 0.15s'
+                }}
+                onMouseEnter={e => e.currentTarget.style.backgroundColor = 'hsl(220 25% 15% / 0.85)'}
+                onMouseLeave={e => e.currentTarget.style.backgroundColor = 'hsl(220 25% 15% / 0.6)'}
+            >
+                <Icons.x />
+            </button>
+
+            {/* Previous button */}
+            {images.length > 1 && (
+                <button 
+                    onClick={(e) => { e.stopPropagation(); onPrev(); }}
+                    style={{
+                        position: 'absolute',
+                        left: '1.5rem',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        width: '3rem',
+                        height: '3rem',
+                        borderRadius: '50%',
+                        border: 'none',
+                        backgroundColor: 'hsl(220 25% 15% / 0.6)',
+                        backdropFilter: 'blur(8px)',
+                        color: 'white',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        zIndex: 101,
+                        transition: 'background-color 0.15s'
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.backgroundColor = 'hsl(220 25% 15% / 0.85)'}
+                    onMouseLeave={e => e.currentTarget.style.backgroundColor = 'hsl(220 25% 15% / 0.6)'}
+                >
+                    <Ico d="M15 19l-7-7 7-7" size="1.2rem" />
+                </button>
+            )}
+
+            {/* Next button */}
+            {images.length > 1 && (
+                <button 
+                    onClick={(e) => { e.stopPropagation(); onNext(); }}
+                    style={{
+                        position: 'absolute',
+                        right: '1.5rem',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        width: '3rem',
+                        height: '3rem',
+                        borderRadius: '50%',
+                        border: 'none',
+                        backgroundColor: 'hsl(220 25% 15% / 0.6)',
+                        backdropFilter: 'blur(8px)',
+                        color: 'white',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        zIndex: 101,
+                        transition: 'background-color 0.15s'
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.backgroundColor = 'hsl(220 25% 15% / 0.85)'}
+                    onMouseLeave={e => e.currentTarget.style.backgroundColor = 'hsl(220 25% 15% / 0.6)'}
+                >
+                    <Ico d="M9 5l7 7-7 7" size="1.2rem" />
+                </button>
+            )}
+
+            {/* Image */}
+            <img 
+                src={`/storage/rental_images/${images[currentIndex]}`}
+                alt=""
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                    maxWidth: '90vw',
+                    maxHeight: '85vh',
+                    objectFit: 'contain',
+                    borderRadius: '0.5rem',
+                    boxShadow: '0 25px 80px hsl(0 0% 0% / 0.4)',
+                }}
+            />
+
+            {/* Counter */}
+            <div style={{
+                position: 'absolute',
+                bottom: '2rem',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                backgroundColor: 'hsl(220 25% 15% / 0.6)',
+                backdropFilter: 'blur(8px)',
+                color: 'white',
+                padding: '0.4rem 1rem',
+                borderRadius: '999px',
+                fontSize: '0.8rem',
+                fontWeight: '600',
+                letterSpacing: '0.05em'
+            }}>
+                {currentIndex + 1} / {images.length}
+            </div>
+        </div>
+    );
+};
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
