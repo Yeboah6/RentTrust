@@ -38,12 +38,11 @@ class DashboardController extends Controller
             $query->where('user_id', $agentData->id)
                   ->orWhere('agent_id', $agentData->id);
         })
-        ->orWhere('is_featured', true)
         ->select(
             'id', 'rental_id', 'title', 'property_type', 'purpose',
             'city', 'area', 'address', 'rent_min', 'rent_max', 'sale_price',
             'status', 'is_verified', 'is_featured', 'images', 'created_at', 'updated_at',
-            'bedrooms', 'bathrooms', 'description', 'amenities',
+            'bedrooms', 'bathrooms', 'description', 'amenities', 'is_sold',
             'verification_status', 'advance_duration', 'agent_id', 'agent_name', 'agent_phone', 'agent_email'
         )
         ->withCount(['views', 'inquiries', 'reviews'])
@@ -138,7 +137,18 @@ class DashboardController extends Controller
 
         $sub  = $adminData->subscription()->with('plan')->first();
         
-        $rentals = Rental::all();
+        // $rentals = Rental::latest()->get();
+        $rentals = Rental::withCount(['views', 'inquiries', 'reviews'])
+            ->select(
+                'id', 'rental_id', 'title', 'property_type', 'purpose',
+                'city', 'area', 'address', 'rent_min', 'rent_max', 'sale_price',
+                'status', 'is_verified', 'is_featured', 'images', 'created_at', 'updated_at',
+                'bedrooms', 'bathrooms', 'description', 'amenities', 'is_sold',
+                'verification_status', 'advance_duration', 'agent_id', 'agent_name', 'agent_phone', 'agent_email'
+            )
+            ->latest()
+            ->get();
+
         // Load agents with their total listings count and active subscription
         $agentData = User::where('role', 'agent')
             ->orWhere('role', 'landlord')
@@ -191,6 +201,7 @@ class DashboardController extends Controller
             ->get();
 
         $views = ListingView::with('rental')
+            ->latest()
             ->select('rental_id', DB::raw('COUNT(*) as views'))
             ->groupBy('rental_id')
             ->get()
@@ -205,10 +216,13 @@ class DashboardController extends Controller
                 'sale_price'               => $v->rental?->sale_price,
                 'status'                   => $v->rental?->status,
                 'effective_listing_status' => $v->rental?->effective_listing_status,
+                'is_featured'              => $v->rental?->is_featured,
                 'views'                    => $v->views,
             ])
             ->filter(fn($v) => $v['id'] !== null)
             ->values();
+
+        $viewCount = ListingView::all()->count();
 
         $totalViews = ListingView::count();
         $inquiries = ListingInquiry::with('rental:id,title,address,city,status,purpose', 'user:id,name,email,phone')
@@ -220,10 +234,13 @@ class DashboardController extends Controller
         $propertyTypes = PropertyType::all();
         $amenities = Amenity::all();
 
-        $plans = Plan::where('id', 2)
-            ->orWhere('id', 3)
-            ->get(); // only pro and premium plans are relevant for admin dashboard
-        $subscriptions = Subscription::where('plan', $plans->first()->id)->count();
+        $plans = Plan::whereIn('id', [2, 3])->get(); // only pro and premium plans are relevant for admin dashboard
+        $subscriptions = Subscription::whereIn('plan', $plans->pluck('id'))
+            ->where('status', 'active')
+            ->distinct('user_id')
+            ->count('user_id');
+
+        $subsCount = Subscription::all()->count();
         
         return inertia('Dashboards/AdminDashboard', [
             'adminData' => $adminData,
@@ -239,6 +256,8 @@ class DashboardController extends Controller
             'propertyTypes' => $propertyTypes,
             'amenities' => $amenities,
             'subscriptions' => $subscriptions,
+            'viewCount' => $viewCount,
+            'subsCount' => $subsCount,
             'plans' => app(\App\Http\Controllers\CheckoutController::class)->plansForModal(),
             'open_plan_modal' => is_null($adminData->package)
                 || session()->pull('show_plan_modal', false),
@@ -258,7 +277,7 @@ class DashboardController extends Controller
             'id', 'rental_id', 'title', 'property_type', 'purpose',
             'city', 'area', 'address', 'rent_min', 'rent_max', 'sale_price',
             'status', 'is_verified', 'is_featured', 'images', 'created_at', 'updated_at',
-            'bedrooms', 'bathrooms', 'description', 'amenities',
+            'bedrooms', 'bathrooms', 'description', 'amenities', 'is_sold',
             'verification_status', 'advance_duration', 'agent_id', 'agent_name', 'agent_phone', 'agent_email'
         )
             ->withCount(['views', 'inquiries', 'reviews'])

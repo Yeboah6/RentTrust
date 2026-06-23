@@ -110,7 +110,6 @@ const normalise = (l) => {
     status_key:    (l.status        ?? 'pending').toLowerCase(),
     listing_type:  (l.listing_type  ?? l.type           ?? 'sale').toLowerCase(),
     property_type: (l.property_type ?? l.category       ?? ''),
-    // price:         l.sale_price     ?? l.rent_min         ?? 0,
     currency:      l.currency       ?? 'GH₵',
     location:      l.location       ?? l.city           ?? l.area ?? '—',
     address:       l.address        ?? '',
@@ -127,11 +126,21 @@ const normalise = (l) => {
     toilets:       l.toilets        ?? null,
     area_sqft:     l.area_sqft      ?? l.floor_area     ?? null,
     is_featured:   l.is_featured    ?? l.featured       ?? false,
+    featured_at:           l.featured_at           ?? null,
+    featured_expires_at:   l.featured_expires_at   ?? null,
+    featured_priority:     l.featured_priority     ?? 0,
+    times_featured:        l.times_featured        ?? 0,
+    is_featured_queued:    l.is_featured_queued    ?? false,
+    featured_queue_position: l.featured_queue_position ?? null,
+    queued_at:             l.queued_at             ?? null,
+    last_featured_at:      l.last_featured_at      ?? null,
     is_verified:   l.is_verified    ?? l.verified       ?? false,
     amenities:     l.amenities      ?? [],
     flagged_count: l.flagged_count  ?? l.reports_count  ?? 0,
     created_at:    l.created_at     ?? '',
     updated_at:    l.updated_at     ?? '',
+    is_sold: l.is_sold ?? false,
+    is_rented:     l.is_rented     ?? false,
     }
 };
 
@@ -524,6 +533,8 @@ const ListingShow = ({ listing: rawListing, property_types = [], regions = [] })
                                 <span style={{ fontSize: '0.72rem', color: 'hsl(220 15% 52%)' }}>#{listing._id} · Added {fmtDate(listing.created_at)}</span>
                                 {listing.is_featured && <span style={{ fontSize: '0.62rem', fontWeight: '800', backgroundColor: 'hsl(40 90% 93%)', color: 'hsl(40 80% 30%)', padding: '0.1rem 0.4rem', borderRadius: '0.3rem' }}>⭐ FEATURED</span>}
                                 {listing.is_verified && <span style={{ fontSize: '0.62rem', fontWeight: '800', backgroundColor: 'hsl(214 100% 95%)', color: 'hsl(214 80% 38%)', padding: '0.1rem 0.4rem', borderRadius: '0.3rem' }}>✓ VERIFIED</span>}
+                                {listing.is_sold && <span style={{ fontSize: '0.62rem', fontWeight: '800', backgroundColor: 'hsl(0 70% 95%)', color: 'hsl(0 70% 45%)', padding: '0.1rem 0.4rem', borderRadius: '0.3rem' }}>SOLD</span>}
+                                {listing.is_rented && <span style={{ fontSize: '0.62rem', fontWeight: '800', backgroundColor: 'hsl(214 100% 95%)', color: 'hsl(214 80% 38%)', padding: '0.1rem 0.4rem', borderRadius: '0.3rem' }}>RENTED</span>}
                             </div>
                         </div>
                     </div>
@@ -754,6 +765,34 @@ const ListingShow = ({ listing: rawListing, property_types = [], regions = [] })
                                 </button>
                             </div>
                         </Card>
+
+                        {listing.is_featured && (
+                        <Card>
+                            <CardHead title="Featured Info" sub="Featured listing details" />
+                            <div style={{ padding: '0.25rem 1.125rem 0.75rem' }}>
+                                {listing.featured_at && (
+                                    <InfoRow label="Featured Since" value={fmtDate(listing.featured_at)} />
+                                )}
+                                {listing.featured_expires_at && (
+                                    <InfoRow label="Expires" value={fmtDate(listing.featured_expires_at)} />
+                                )}
+                                <InfoRow label="Priority" value={listing.featured_priority} />
+                                <InfoRow label="Times Featured" value={listing.times_featured} />
+                                {listing.is_featured_queued && (
+                                    <InfoRow label="Queued" value="Yes" />
+                                )}
+                                {listing.featured_queue_position && (
+                                    <InfoRow label="Queue Position" value={listing.featured_queue_position} />
+                                )}
+                                {listing.queued_at && (
+                                    <InfoRow label="Queued At" value={fmtDate(listing.queued_at)} />
+                                )}
+                                {listing.last_featured_at && (
+                                    <InfoRow label="Last Featured" value={fmtDate(listing.last_featured_at)} />
+                                )}
+                            </div>
+                        </Card>
+                    )}
                     </div>
                 </div>
             </div>

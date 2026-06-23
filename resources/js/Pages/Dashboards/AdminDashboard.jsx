@@ -2,6 +2,7 @@ import { useState } from "react";
 import Header from "@/Components/Layouts/Header";
 import Footer from "@/Components/Layouts/Footer";
 import { Link, router, usePage } from "@inertiajs/react";
+import AdminOverview from "@/Components/Modules/Admin/AdminOverview";
 import AddRentalPage from "@/Components/Modules/AddRentals";
 import VerifyAgentDialog from '@/Components/Modules/Admin/VerifyAgent';
 import ViewRentals from "@/Components/Modules/ViewRental";
@@ -11,13 +12,14 @@ import AgentProfileModal from '@/Components/Modules/AgentProfileModal';
 import AdminEditAgentModal from '@/Components/Modules/Admin/AdminEditAgentModal';
 import AdminAddAgentModal from '@/Components/Modules/Admin/AdminAddAgentModal';
 import GrantSubscriptionModal from '@/Components/Modules/Admin/GrantSubscriptionModal';
-import InquiriesTab from '@/Components/Modules/Admin/InquiriesTab';
+import InquiriesViewsTab from '@/Components/Modules/Admin/InquiriesViewsTab';
 import AgentsTab from '@/Components/Modules/Admin/AgentsTab';
 import ReportsTab from '@/Components/Modules/Admin/ReportsTab';
 import ReviewsTab from '@/Components/Modules/Admin/ReviewsTab';
-import ViewsTab from '@/Components/Modules/Admin/ViewsTab';
+// import ViewsTab from '@/Components/Modules/Admin/ViewsTab';
 import ListingsTab from '@/Components/Modules/Admin/ListingsTab';
 import SubscriptionsTab from '@/Components/Modules/Admin/SubscriptionsTab';
+import AdminAnalyticsTab from '@/Components/Modules/Admin/AdminAnalyticsTab';
 import { MapPin } from 'lucide-react';
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
@@ -70,6 +72,12 @@ const ShieldCheck = ({ style }) => (
   </svg>
 );
 
+const BarChart = ({ style }) => (
+  <svg style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+  </svg>
+);
+
 const Settings = ({ style }) => (
   <svg style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
@@ -110,12 +118,10 @@ const PlanBadge = ({ plan }) => {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, verifications, plans, locations, propertyTypes, amenities, views, totalViews, inquiries, subscriptions }) => {
+const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, verifications, plans, locations, propertyTypes, amenities, views, totalViews, inquiries, subscriptions, viewCount, subsCount }) => {
   const { auth } = usePage().props;
   const findPlan = (packageSlug) => plans?.find(p => p.slug === packageSlug) ?? null;
-  const [activeTab, setActiveTab] = useState("agents");
-  // const [respondingTo, setRespondingTo] = useState(null);
-  // const [responseText, setResponseText] = useState("");
+  const [activeTab, setActiveTab] = useState("overview");
   const [selectedAgent, setSelectedAgent] = useState(null);
   const [showDialog, setShowDialog] = useState(false);
   const [selectedRental, setSelectedRental] = useState(null);
@@ -156,7 +162,6 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, verif
   const agents  = agentData || [];
   const properties = rentals || [];
 
-  // const viewedProperties = properties.filter(property => Number(property.views) > 0);
 
   // ── Handlers ──────────────────────────────────────────────────────────────
 
@@ -463,7 +468,7 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, verif
                   <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: 'hsl(200 15% 45%)' }}><MessageSquare style={{ height: '1rem', width: '1rem' }} />{reviews.length} Reviews</span>
                   <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: 'hsl(200 15% 45%)' }}><MessageSquare style={{ height: '1rem', width: '1rem' }} />{inquiries.length} inquiries</span>
                   <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: 'hsl(200 15% 45%)' }}><Eye style={{ height: '1rem', width: '1rem' }} />{totalViews} Views</span>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: 'hsl(200 15% 45%)' }}><Gift style={{ height: '1rem', width: '1rem' }} />{subscriptions} Subscriptions</span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: 'hsl(200 15% 45%)' }}><Gift style={{ height: '1rem', width: '1rem' }} />{subsCount} Subscriptions</span>
                 </div>
               </div>
               <Link href="/settings" style={{ padding: '0.5rem 1rem', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.5rem', backgroundColor: 'white', color: 'hsl(174 62% 32%)', fontWeight: '500', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none', alignSelf: 'flex-start' }}>
@@ -473,20 +478,52 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, verif
 
             {/* Tabs */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '0.5rem', backgroundColor: 'hsl(40 30% 94%)', padding: '0.25rem', borderRadius: '0.5rem', marginBottom: '2rem' }}>
-              {['agents', 'listings', 'verifications', 'reports', 'reviews', 'views', 'inquiries', 'subscriptions'].map(tab => (
+              {['overview', 'agents', 'listings', 'verifications', 'reports', 'reviews', 'inquiries-views', 'subscriptions', 'analytics'].map(tab => (
                 <button key={tab} onClick={() => setActiveTab(tab)} style={{ padding: '0.5rem 1rem', border: 'none', borderRadius: '0.375rem', backgroundColor: activeTab === tab ? 'white' : 'transparent', color: activeTab === tab ? 'hsl(200 25% 15%)' : 'hsl(200 15% 45%)', fontWeight: '500', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', transition: 'all 0.2s', boxShadow: activeTab === tab ? '0 1px 2px 0 hsl(200 25% 15% / 0.05)' : 'none', textTransform: 'capitalize' }}>
+                  {tab === 'overview' && <BarChart style={{ height: '1rem', width: '1rem' }} />}
                   {tab === 'agents' && <Shield style={{ height: '1rem', width: '1rem' }} />}
                   {tab === 'listings' && <Home style={{ height: '1rem', width: '1rem' }} />}
                   {tab === 'verifications' && <ShieldCheck style={{ height: '1rem', width: '1rem' }} />}
                   {tab === 'reports' && <AlertCircle style={{ height: '1rem', width: '1rem' }} />}
                   {tab === 'reviews' && <MessageSquare style={{ height: '1rem', width: '1rem' }} />}
-                  {tab === 'inquiries' && <MessageSquare style={{ height: '1rem', width: '1rem' }} />}
-                  {tab === 'views' && <Eye style={{ height: '1rem', width: '1rem' }} />}
+                  {tab === 'inquiries-views' && <Eye style={{ height: '1rem', width: '1rem' }} />}
+                  {/* {tab === 'views' && <Eye style={{ height: '1rem', width: '1rem' }} />} */}
                   {tab === 'subscriptions' && <Gift style={{ height: '1rem', width: '1rem' }} />}
+                  {tab === 'analytics' && <BarChart style={{ height: '1rem', width: '1rem' }} />}
                   {tab}
                 </button>
               ))}
             </div>
+
+            {activeTab === 'overview' && (
+                <AdminOverview 
+                    rentals={rentals}
+                    agentData={agentData}
+                    reviews={reviews}
+                    views={views}
+                    viewCount={viewCount}
+                    subsCount={subsCount}
+                    subscriptions={subscriptions}   // number of paid subscribers (comes from backend)
+                    inquiries={inquiries}
+                    reports={reports}
+                    onViewAllListings={() => setActiveTab('listings')}
+                    onViewAllAgents={() => setActiveTab('agents')}
+                    onViewAllReports={() => setActiveTab('reports')}
+                    onViewAllVerifications={() => setActiveTab('verifications')}
+                />
+            )}
+
+            {activeTab === 'analytics' && (
+                <AdminAnalyticsTab
+                    rentals={rentals}
+                    agentData={agentData}
+                    views={views}
+                    totalViews={totalViews}
+                    inquiries={inquiries}
+                    reviews={reviews}
+                    subscriptions={subscriptions}
+                />
+            )}
 
             {/* ── AGENTS TAB ──────────────────────────────────────────────────── */}
             {activeTab === 'agents' && (
@@ -578,26 +615,24 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, verif
             )}
 
             {/* ── INQUIRIES TAB ──────────────────────────────────────────────────── */}
-            {activeTab === 'inquiries' && (
-                <InquiriesTab 
-                    inquiries={inquiries || []}
-                    rentals={rentals || []}
-                    onViewProperty={(rental) => {
-                        if (rental) {
-                            handleViewClick(rental);
-                        }
-                    }}
+            {activeTab === 'inquiries-views' && (
+                <InquiriesViewsTab
+                    inquiries={inquiries}
+                    views={views}
+                    totalViews={totalViews}
+                    rentals={rentals}
+                    onViewProperty={handleViewClick}
                 />
             )}
 
             {/* ── VIEWS TAB ────────────────────────────────────────────────── */}
-            {activeTab === 'views' && (
+            {/* {activeTab === 'views' && (
                 <ViewsTab 
                     views={views || []}
                     totalViews={totalViews || 0}
                     onViewDetails={handleViewClick}
                 />
-            )}
+            )} */}
 
             {/* ── SUBSCRIPTIONS TAB ─────────────────────────────────────────── */}
             {activeTab === 'subscriptions' && (

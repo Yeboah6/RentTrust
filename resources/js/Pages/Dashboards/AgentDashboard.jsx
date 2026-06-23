@@ -4,7 +4,7 @@ import Header from "@/Components/Layouts/Header";
 import Footer from "@/Components/Layouts/Footer";
 import AddRentalPage from "@/Components/Modules/AddRentals";
 import EditRentals from "@/Components/Modules/EditRentals";
-import VerificationRequestModal from "@/Components/Modules/VerifyRentals";
+import VerificationRequestModal from "@/Components/Modules/Agent/VerificationRequestModal";
 import ViewRentals from "@/Components/Modules/ViewRental";
 import PricingModal from '@/Components/Modules/PricingModal';
 import OverviewTab from '@/Components/Modules/Agent/AgentOverviewTab';
@@ -200,7 +200,8 @@ const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views
       created_at: review.created_at || new Date().toISOString()
     }))
     : [];
-
+// proxy.js:1
+//  Uncaught Error: Attempting to use a disconnected port object
   const properties = rentals && rentals.length > 0
     ? rentals.map(rental => ({
       id: rental.id,
@@ -216,7 +217,8 @@ const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views
       total_reviews: rental.reviews_count || 0,
       views: rental.views_count || 0,
       inquiries: rental.inquiries_count || 0,
-      is_featured: rental.is_featured,  // ← Add this line
+      is_featured: rental.is_featured,
+      is_sold: rental.is_sold,
     }))
     : [];
 

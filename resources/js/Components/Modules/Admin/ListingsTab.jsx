@@ -23,6 +23,7 @@ const Icons = {
     tag:        <Ico d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />,
     bed:        <Ico d="M2 4v16M2 8h20M2 8l2-4h16l2 4M6 12v4m4-4v4m4-4v4m4-4v4M2 20h20" size="0.78rem" />,
     bath:       <Ico d="M4 4v5a3 3 0 003 3h0M9 12v5a3 3 0 01-3 3M5 4h14M5 4l1-2h12l1 2M7 12h10v5a3 3 0 01-3 3h0a3 3 0 01-3-3v-5z" size="0.78rem" />,
+    sparkles:   <Ico d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />,
     chevronLeft:  <Ico d="M15 19l-7-7 7-7" />,
     chevronRight: <Ico d="M9 5l7 7-7 7" />,
     empty:      <Ico d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" size="2.5rem" sw={1.2} />,
@@ -31,11 +32,15 @@ const Icons = {
 // ─── Status Badge ─────────────────────────────────────────────────────────────
 const StatusBadge = ({ status }) => {
     const config = {
-        approved:   { bg: 'hsl(152 60% 93%)',  color: 'hsl(152 60% 35%)', icon: Icons.check, label: 'Approved' },
-        pending:    { bg: 'hsl(38 92% 93%)',   color: 'hsl(38 92% 40%)',  icon: Icons.check, label: 'Pending' },
-        unverified: { bg: 'hsl(220 15% 93%)',  color: 'hsl(220 15% 45%)', icon: Icons.check, label: 'Unverified' },
-        suspended:  { bg: 'hsl(0 72% 93%)',    color: 'hsl(0 72% 45%)',   icon: Icons.check, label: 'Suspended' },
-        rejected:   { bg: 'hsl(0 72% 93%)',    color: 'hsl(0 72% 45%)',   icon: Icons.check, label: 'Rejected' },
+        approved:  { bg: 'hsl(152 60% 93%)', color: 'hsl(152 60% 35%)', icon: Icons.check, label: 'Approved' },
+        verified:  { bg: 'hsl(152 60% 93%)', color: 'hsl(152 60% 35%)', icon: Icons.check, label: 'Verified' },
+        active:    { bg: 'hsl(152 60% 93%)', color: 'hsl(152 60% 35%)', icon: Icons.check, label: 'Active' },
+        pending:   { bg: 'hsl(38 92% 93%)',  color: 'hsl(38 92% 40%)',  icon: Icons.clock, label: 'Pending' },
+        rejected:  { bg: 'hsl(0 72% 93%)',   color: 'hsl(0 72% 45%)',   icon: Icons.alert, label: 'Rejected' },
+        rented:    { bg: 'hsl(271 60% 93%)', color: 'hsl(271 60% 40%)',  icon: Icons.check, label: 'Rented' },
+        sold:      { bg: 'hsl(220 15% 93%)', color: 'hsl(220 25% 35%)',  icon: Icons.check, label: 'Sold' },
+        inactive:  { bg: 'hsl(220 15% 93%)', color: 'hsl(220 15% 45%)',  icon: Icons.alert, label: 'Inactive' },
+        unverified:{ bg: 'hsl(220 15% 93%)', color: 'hsl(220 15% 45%)',  icon: Icons.alert, label: 'Unverified' },
     };
     const cfg = config[status] || config.pending;
     
@@ -67,6 +72,20 @@ const FeaturedBadge = () => (
     </span>
 );
 
+const SoldBadge = () => (
+    <span style={{
+        display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
+        padding: '0.18rem 0.55rem', borderRadius: 999,
+        fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.04em',
+        backgroundColor: 'hsl(0 70% 45% / 0.12)',
+        color: 'hsl(0 70% 45%)',
+        border: '1px solid hsl(0 70% 45% / 0.3)',
+        flexShrink: 0,
+    }}>
+        {Icons.tag} Sold
+    </span>
+);
+
 const toBool = (v) => v === true || v === 1 || v === '1';
 
 // ─── Pagination ───────────────────────────────────────────────────────────────
@@ -92,108 +111,35 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             gap: '0.25rem', padding: '1rem 0',
         }}>
-            <button
-                onClick={() => onPageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-                style={{
-                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                    width: '2rem', height: '2rem', borderRadius: '0.375rem',
-                    border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white',
-                    color: currentPage === 1 ? 'hsl(220 15% 70%)' : 'hsl(220 25% 35%)',
-                    cursor: currentPage === 1 ? 'default' : 'pointer',
-                    opacity: currentPage === 1 ? 0.5 : 1,
-                    transition: 'all 0.12s',
-                }}
-            >
+            <button onClick={() => onPageChange(currentPage - 1)} disabled={currentPage === 1}
+                style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '2rem', height: '2rem', borderRadius: '0.375rem', border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white', color: currentPage === 1 ? 'hsl(220 15% 70%)' : 'hsl(220 25% 35%)', cursor: currentPage === 1 ? 'default' : 'pointer', opacity: currentPage === 1 ? 0.5 : 1 }}>
                 {Icons.chevronLeft}
             </button>
 
             {start > 1 && (
                 <>
-                    <button
-                        onClick={() => onPageChange(1)}
-                        style={{
-                            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                            width: '2rem', height: '2rem', borderRadius: '0.375rem',
-                            border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white',
-                            color: 'hsl(220 25% 35%)', fontSize: '0.75rem', fontWeight: 600,
-                            cursor: 'pointer', fontFamily: 'inherit',
-                        }}
-                    >
-                        1
-                    </button>
-                    {start > 2 && (
-                        <span style={{ color: 'hsl(220 15% 60%)', fontSize: '0.75rem', padding: '0 0.25rem' }}>
-                            ...
-                        </span>
-                    )}
+                    <button onClick={() => onPageChange(1)} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '2rem', height: '2rem', borderRadius: '0.375rem', border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white', color: 'hsl(220 25% 35%)', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>1</button>
+                    {start > 2 && <span style={{ color: 'hsl(220 15% 60%)', fontSize: '0.75rem', padding: '0 0.25rem' }}>...</span>}
                 </>
             )}
 
             {pages.map(page => (
-                <button
-                    key={page}
-                    onClick={() => onPageChange(page)}
-                    style={{
-                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                        width: '2rem', height: '2rem', borderRadius: '0.375rem',
-                        border: page === currentPage ? 'none' : '1px solid hsl(220 15% 88%)',
-                        backgroundColor: page === currentPage ? 'hsl(174 62% 32%)' : 'white',
-                        color: page === currentPage ? 'white' : 'hsl(220 25% 35%)',
-                        fontSize: '0.75rem', fontWeight: 700,
-                        cursor: 'pointer', fontFamily: 'inherit',
-                        transition: 'all 0.12s',
-                    }}
-                    onMouseEnter={e => {
-                        if (page !== currentPage) {
-                            e.currentTarget.style.backgroundColor = 'hsl(220 15% 95%)';
-                        }
-                    }}
-                    onMouseLeave={e => {
-                        if (page !== currentPage) {
-                            e.currentTarget.style.backgroundColor = 'white';
-                        }
-                    }}
-                >
-                    {page}
-                </button>
+                <button key={page} onClick={() => onPageChange(page)}
+                    style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '2rem', height: '2rem', borderRadius: '0.375rem', border: page === currentPage ? 'none' : '1px solid hsl(220 15% 88%)', backgroundColor: page === currentPage ? 'hsl(174 62% 32%)' : 'white', color: page === currentPage ? 'white' : 'hsl(220 25% 35%)', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.12s' }}
+                    onMouseEnter={e => { if (page !== currentPage) e.currentTarget.style.backgroundColor = 'hsl(220 15% 95%)'; }}
+                    onMouseLeave={e => { if (page !== currentPage) e.currentTarget.style.backgroundColor = 'white'; }}
+                >{page}</button>
             ))}
 
             {end < totalPages && (
                 <>
-                    {end < totalPages - 1 && (
-                        <span style={{ color: 'hsl(220 15% 60%)', fontSize: '0.75rem', padding: '0 0.25rem' }}>
-                            ...
-                        </span>
-                    )}
-                    <button
-                        onClick={() => onPageChange(totalPages)}
-                        style={{
-                            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                            width: '2rem', height: '2rem', borderRadius: '0.375rem',
-                            border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white',
-                            color: 'hsl(220 25% 35%)', fontSize: '0.75rem', fontWeight: 600,
-                            cursor: 'pointer', fontFamily: 'inherit',
-                        }}
-                    >
-                        {totalPages}
-                    </button>
+                    {end < totalPages - 1 && <span style={{ color: 'hsl(220 15% 60%)', fontSize: '0.75rem', padding: '0 0.25rem' }}>...</span>}
+                    <button onClick={() => onPageChange(totalPages)} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '2rem', height: '2rem', borderRadius: '0.375rem', border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white', color: 'hsl(220 25% 35%)', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>{totalPages}</button>
                 </>
             )}
 
-            <button
-                onClick={() => onPageChange(currentPage + 1)}
-                disabled={currentPage === totalPages}
-                style={{
-                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                    width: '2rem', height: '2rem', borderRadius: '0.375rem',
-                    border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white',
-                    color: currentPage === totalPages ? 'hsl(220 15% 70%)' : 'hsl(220 25% 35%)',
-                    cursor: currentPage === totalPages ? 'default' : 'pointer',
-                    opacity: currentPage === totalPages ? 0.5 : 1,
-                    transition: 'all 0.12s',
-                }}
-            >
+            <button onClick={() => onPageChange(currentPage + 1)} disabled={currentPage === totalPages}
+                style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '2rem', height: '2rem', borderRadius: '0.375rem', border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white', color: currentPage === totalPages ? 'hsl(220 15% 70%)' : 'hsl(220 25% 35%)', cursor: currentPage === totalPages ? 'default' : 'pointer', opacity: currentPage === totalPages ? 0.5 : 1 }}>
                 {Icons.chevronRight}
             </button>
         </div>
@@ -202,17 +148,10 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const fmtPrice = (property) => {
-    const isRent = property.purpose === 'rent';
-    if (isRent) {
-        const min = property.rent_min?.toLocaleString() ?? '—';
-        const max = property.rent_max?.toLocaleString() ?? '—';
-        return { text: `GH₵${min} – GH₵${max}`, sub: '/ month', color: 'hsl(174 55% 28%)' };
+    if (property.purpose === 'sale') {
+        return { text: `GH₵${property.sale_price?.toLocaleString() ?? '—'}`, color: 'hsl(36 75% 30%)' };
     }
-    return { 
-        text: `GH₵${property.sale_price?.toLocaleString() ?? '—'}`, 
-        sub: '', 
-        color: 'hsl(36 75% 30%)' 
-    };
+    return { text: `GH₵${property.rent_min?.toLocaleString() ?? '—'} – GH₵${property.rent_max?.toLocaleString() ?? '—'}`, sub: '/ month', color: 'hsl(174 55% 28%)' };
 };
 
 const ITEMS_PER_PAGE = 9;
@@ -222,6 +161,7 @@ const ListingCard = ({ property, onView, onEdit, onApproveToggle, onDelete }) =>
     const price = fmtPrice(property);
     const isApproved = property.status === 'approved';
     const isFeatured = toBool(property.is_featured);
+    const isSold = toBool(property.is_sold);
 
     return (
         <div style={{
@@ -242,14 +182,14 @@ const ListingCard = ({ property, onView, onEdit, onApproveToggle, onDelete }) =>
                 ? '0 2px 12px hsl(38 92% 50% / 0.1), 0 1px 3px hsl(220 20% 15% / 0.04)' 
                 : '0 1px 3px hsl(220 20% 15% / 0.04)'}
         >
-            {/* Status strip - gold for featured */}
+            {/* Status strip */}
             <div style={{ 
                 height: 3, 
                 background: isFeatured 
                     ? 'linear-gradient(90deg, hsl(38 92% 50%), hsl(28 90% 45%))' 
-                    : property.effective_listing_status === 'approved' 
+                    : property.status === 'approved' || property.status === 'active' 
                         ? 'hsl(152 60% 40%)' 
-                        : property.effective_listing_status === 'pending' 
+                        : property.status === 'pending' 
                             ? 'hsl(38 92% 50%)' 
                             : 'hsl(220 15% 60%)',
                 opacity: isFeatured ? 1 : 0.7,
@@ -269,7 +209,7 @@ const ListingCard = ({ property, onView, onEdit, onApproveToggle, onDelete }) =>
                             }}>
                                 {property.title || 'Untitled Property'}
                             </h3>
-                            <StatusBadge status={property.status} /> {isFeatured && <FeaturedBadge />}
+                            <StatusBadge status={property.status} /> {isFeatured && <FeaturedBadge />} {isSold && <SoldBadge />}
                         </div>
                         <p style={{ 
                             margin: '0.15rem 0 0', fontSize: '0.7rem', color: 'hsl(220 15% 50%)',
@@ -435,8 +375,22 @@ const ListingsTab = ({
 }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
+    const [typeFilter, setTypeFilter] = useState('all');
+    const [featuredFilter, setFeaturedFilter] = useState('all');
     const [currentPage, setCurrentPage] = useState(1);
-    
+
+    // Map filter values to actual data fields
+    const statusMap = {
+        active: ['approved', 'verified', 'active'],
+        pending: ['pending'],
+        sold: ['sold'],
+        rented: ['rented'],
+        draft: ['draft', 'inactive'],
+        flagged: ['flagged'],
+        rejected: ['rejected'],
+        expired: ['expired'],
+    };
+
     const filteredListings = useMemo(() => {
         return listings.filter(property => {
             const q = searchTerm.toLowerCase();
@@ -449,19 +403,26 @@ const ListingsTab = ({
                 property.purpose,
             ].filter(Boolean).some(value => value?.toString().toLowerCase().includes(q));
             
-            const matchesStatus = statusFilter === 'all' || property.status === statusFilter;
-            return matchesSearch && matchesStatus;
+            // Status filter
+            const matchesStatus = statusFilter === 'all' || 
+                (statusFilter === 'flagged' ? (property.flagged_count > 0) :
+                (statusMap[statusFilter] ? statusMap[statusFilter].includes(property.status?.toLowerCase()) : 
+                property.status === statusFilter));
+            
+            // Type filter
+            const matchesType = typeFilter === 'all' || property.purpose === typeFilter;
+            
+            // Featured filter
+            const matchesFeatured = featuredFilter === 'all' || 
+                (featuredFilter === 'featured' ? toBool(property.is_featured) : !toBool(property.is_featured));
+            
+            return matchesSearch && matchesStatus && matchesType && matchesFeatured;
         });
-    }, [listings, searchTerm, statusFilter]);
+    }, [listings, searchTerm, statusFilter, typeFilter, featuredFilter]);
 
-    // Reset page when filters change
-    const handleSearchChange = (e) => {
-        setSearchTerm(e.target.value);
-        setCurrentPage(1);
-    };
-
-    const handleStatusChange = (e) => {
-        setStatusFilter(e.target.value);
+    // Reset page when any filter changes
+    const handleFilterChange = (setter) => (e) => {
+        setter(e.target.value);
         setCurrentPage(1);
     };
 
@@ -470,9 +431,11 @@ const ListingsTab = ({
     const rentals = filteredListings.filter(p => p.purpose === 'rent');
     const sales = filteredListings.filter(p => p.purpose === 'sale');
     
-    const approved = listings.filter(p => p.status === 'approved').length;
-    const pending = listings.filter(p => p.status === 'pending').length;
-    const suspended = listings.filter(p => p.status === 'suspended').length;
+    // Counts for status pills
+    const activeCount = listings.filter(p => ['approved', 'verified', 'active'].includes(p.status?.toLowerCase())).length;
+    const pendingCount = listings.filter(p => p.status === 'pending').length;
+    const suspendedCount = listings.filter(p => p.status === 'suspended').length;
+    const flaggedCount = listings.filter(p => p.flagged_count > 0).length;
 
     // Pagination logic
     const totalPages = Math.ceil(filteredTotal / ITEMS_PER_PAGE);
@@ -503,9 +466,9 @@ const ListingsTab = ({
                     {total > 0 && (
                         <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
                             {[
-                                { label: 'Approved',  val: approved,  color: 'hsl(152 60% 40%)', bg: 'hsl(152 60% 93%)' },
-                                { label: 'Pending',   val: pending,   color: 'hsl(38 92% 40%)',  bg: 'hsl(38 92% 93%)' },
-                                { label: 'Suspended', val: suspended, color: 'hsl(0 72% 45%)',   bg: 'hsl(0 72% 93%)' },
+                                { label: 'Active',  val: activeCount,  color: 'hsl(152 60% 40%)', bg: 'hsl(152 60% 93%)' },
+                                { label: 'Pending', val: pendingCount, color: 'hsl(38 92% 40%)',  bg: 'hsl(38 92% 93%)' },
+                                { label: 'Flagged', val: flaggedCount, color: 'hsl(0 72% 45%)',   bg: 'hsl(0 72% 93%)' },
                             ].filter(t => t.val > 0).map(t => (
                                 <span key={t.label} style={{ 
                                     display: 'inline-flex', alignItems: 'center', gap: '0.28rem',
@@ -538,20 +501,16 @@ const ListingsTab = ({
                 </div>
             </div>
 
-            {/* Search + Filter */}
+            {/* Search + Filters */}
             <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
                 <div style={{ position: 'relative', flex: '1 1 260px' }}>
-                    <div style={{ 
-                        position: 'absolute', left: '0.75rem', top: '50%', 
-                        transform: 'translateY(-50%)', color: 'hsl(220 15% 55%)',
-                        display: 'flex',
-                    }}>
+                    <div style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'hsl(220 15% 55%)', display: 'flex' }}>
                         {Icons.search}
                     </div>
                     <input
                         type="search"
                         value={searchTerm}
-                        onChange={handleSearchChange}
+                        onChange={handleFilterChange(setSearchTerm)}
                         placeholder="Search listings by title, location, agent..."
                         style={{
                             width: '100%', padding: '0.65rem 1rem 0.65rem 2.5rem',
@@ -567,25 +526,65 @@ const ListingsTab = ({
                         onBlur={e => e.currentTarget.style.borderColor = 'hsl(220 15% 88%)'}
                     />
                 </div>
-                <select
-                    value={statusFilter}
-                    onChange={handleStatusChange}
+
+                {/* Status filter */}
+                <select value={statusFilter} onChange={handleFilterChange(setStatusFilter)}
                     style={{
                         padding: '0.65rem 1rem', borderRadius: '0.625rem',
                         border: '1px solid hsl(220 15% 88%)',
                         backgroundColor: 'white',
                         fontSize: '0.8rem', color: 'hsl(220 25% 15%)',
-                        fontFamily: 'inherit', minWidth: '150px',
+                        fontFamily: 'inherit', minWidth: '120px',
                         outline: 'none', cursor: 'pointer',
                     }}
                     onFocus={e => e.currentTarget.style.borderColor = 'hsl(174 62% 40%)'}
                     onBlur={e => e.currentTarget.style.borderColor = 'hsl(220 15% 88%)'}
                 >
-                    <option value="all">All statuses</option>
-                    <option value="approved">Approved</option>
+                    <option value="all">All Status</option>
+                    <option value="active">Active</option>
                     <option value="pending">Pending</option>
-                    <option value="unverified">Unverified</option>
-                    <option value="suspended">Suspended</option>
+                    <option value="sold">Sold</option>
+                    <option value="rented">Rented</option>
+                    <option value="draft">Draft</option>
+                    <option value="flagged">Flagged</option>
+                    <option value="rejected">Rejected</option>
+                    <option value="expired">Expired</option>
+                </select>
+
+                {/* Type filter */}
+                <select value={typeFilter} onChange={handleFilterChange(setTypeFilter)}
+                    style={{
+                        padding: '0.65rem 1rem', borderRadius: '0.625rem',
+                        border: '1px solid hsl(220 15% 88%)',
+                        backgroundColor: 'white',
+                        fontSize: '0.8rem', color: 'hsl(220 25% 15%)',
+                        fontFamily: 'inherit', minWidth: '120px',
+                        outline: 'none', cursor: 'pointer',
+                    }}
+                    onFocus={e => e.currentTarget.style.borderColor = 'hsl(174 62% 40%)'}
+                    onBlur={e => e.currentTarget.style.borderColor = 'hsl(220 15% 88%)'}
+                >
+                    <option value="all">All Types</option>
+                    <option value="sale">For Sale</option>
+                    <option value="rent">For Rent</option>
+                </select>
+
+                {/* Featured filter */}
+                <select value={featuredFilter} onChange={handleFilterChange(setFeaturedFilter)}
+                    style={{
+                        padding: '0.65rem 1rem', borderRadius: '0.625rem',
+                        border: '1px solid hsl(220 15% 88%)',
+                        backgroundColor: 'white',
+                        fontSize: '0.8rem', color: 'hsl(220 25% 15%)',
+                        fontFamily: 'inherit', minWidth: '130px',
+                        outline: 'none', cursor: 'pointer',
+                    }}
+                    onFocus={e => e.currentTarget.style.borderColor = 'hsl(174 62% 40%)'}
+                    onBlur={e => e.currentTarget.style.borderColor = 'hsl(220 15% 88%)'}
+                >
+                    <option value="all">All</option>
+                    <option value="featured">Featured</option>
+                    <option value="not-featured">Not Featured</option>
                 </select>
             </div>
 
@@ -693,14 +692,14 @@ const ListingsTab = ({
                         fontSize: '0.95rem', fontWeight: 800, 
                         color: 'hsl(220 25% 15%)', margin: '0 0 0.35rem' 
                     }}>
-                        {searchTerm || statusFilter !== 'all' ? 'No Listings Found' : 'No Listings Yet'}
+                        {searchTerm || statusFilter !== 'all' || typeFilter !== 'all' || featuredFilter !== 'all' ? 'No Listings Found' : 'No Listings Yet'}
                     </h3>
                     <p style={{ color: 'hsl(220 15% 52%)', fontSize: '0.82rem', margin: '0 0 1.25rem' }}>
-                        {searchTerm || statusFilter !== 'all'
+                        {(searchTerm || statusFilter !== 'all' || typeFilter !== 'all' || featuredFilter !== 'all')
                             ? 'No listings match your search criteria. Try different filters.'
                             : 'Add the first listing to get started.'}
                     </p>
-                    {!searchTerm && statusFilter === 'all' && (
+                    {!searchTerm && statusFilter === 'all' && typeFilter === 'all' && featuredFilter === 'all' && (
                         <button
                             onClick={onAddListing}
                             style={{

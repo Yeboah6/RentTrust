@@ -378,7 +378,7 @@ class RentController extends Controller
             'existingImages.*' => 'string',
             'removedImages' => 'nullable|array',
             'removedImages.*' => 'string',
-            'status' => 'nullable|in:active,inactive,rented,sold',
+            // 'status' => 'nullable|in:rented,sold',
         ];
 
         $purpose = $request->input('purpose', $rent->purpose);
@@ -512,21 +512,26 @@ class RentController extends Controller
                 'agent_email' => $request->agentEmail,
                 'images' => $finalImages ?? [],
                 'updated_at' => now(),
-                'status' => $request->status ?? 'active',
+                'status'   => $request->has('status') ? $request->status : $rent->status,
+                'is_sold' => $request->boolean('is_sold'), 
             ]);
             
             Log::info('Rental updated successfully', [
                 'rental_id' => $rent->id,
                 'title' => $rent->title
             ]);
-            
-            // Log audit trail if admin edited the listing
+
             if (Auth::user()?->role === 'admin') {
-                AdminAuditLog::record('listing', 'Listing updated', [
-                    'listing_title' => $rent->title,
-                    'listing_city' => $rent->city,
-                    'listing_area' => $rent->area,
-                ], affectedUser: $rent->user?->name, affectedId: $rent->id);
+                AdminAuditLog::record('listing', 'Listing Updated', [
+                    'affected_user' => $rent->user?->name,
+                    'affected_id' => $rent->id,
+                    'notes' => "Admin updated a {$purpose} listing.",
+                    'properties' => [
+                        'listing_title' => $rent->title,
+                        'listing_city' => $rent->city,
+                        'listing_area' => $rent->area,
+                    ],
+                ]);
             }
             
             return redirect()

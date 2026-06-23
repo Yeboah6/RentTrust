@@ -34,6 +34,11 @@ const Icons = {
     chevR:    () => <Ico d="M9 5l7 7-7 7" size="0.8rem" />,
     key:      () => <Ico d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" size="1.15rem" />,
     tag:      () => <Ico d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" size="1.15rem" />,
+    star:     ({ filled } = {}) => filled ? (
+        <svg style={{ width: '0.85rem', height: '0.85rem', flexShrink: 0 }} viewBox="0 0 24 24" fill="currentColor">
+            <path d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.562.562 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.562.562 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
+        </svg>
+    ) : <Ico d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.562.562 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.562.562 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" size="0.85rem" />,
     spinner:  () => (
         <svg style={{ width: '0.95rem', height: '0.95rem', animation: 'lstSpin 0.75s linear infinite', flexShrink: 0 }} fill="none" viewBox="0 0 24 24">
             <circle style={{ opacity: 0.2 }} cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -134,6 +139,8 @@ const normalise = (l) => ({
     is_sold:       l.is_sold       ?? false,
     created_at:    l.created_at    ?? '',
     flagged_count: l.flagged_count ?? l.reports_count ?? 0,
+    is_sold:       l.is_sold       ?? false,
+    is_rented:     l.is_rented     ?? false,
 });
 
 // ─── Atoms ────────────────────────────────────────────────────────────────────
@@ -234,7 +241,7 @@ const ActionModal = ({ listing, action, onConfirm, onClose, processing }) => {
 
     const meta = {
         delete:  { label: 'Delete Listing',      accent: 'hsl(0 65% 50%)',   accentBg: 'hsl(0 70% 95%)',   icon: Icons.trash,   confirmBg: 'hsl(0 65% 50%)',   confirmLabel: 'Delete' },
-        feature: { label: listing?.is_featured ? 'Remove Featured' : 'Mark as Featured', accent: 'hsl(40 80% 36%)', accentBg: 'hsl(40 90% 94%)', icon: Icons.check, confirmBg: 'hsl(40 80% 40%)', confirmLabel: listing?.is_featured ? 'Remove' : 'Feature It' },
+        feature: { label: listing?.is_featured ? 'Remove Featured' : 'Mark as Featured', accent: 'hsl(40 80% 36%)', accentBg: 'hsl(40 90% 94%)', icon: () => <Icons.star filled />, confirmBg: 'hsl(40 80% 40%)', confirmLabel: listing?.is_featured ? 'Remove' : 'Feature It' },
         approve: { label: 'Approve Listing',     accent: 'hsl(152 55% 32%)', accentBg: 'hsl(152 55% 93%)', icon: Icons.check,   confirmBg: 'hsl(152 55% 33%)', confirmLabel: 'Approve' },
         reject:  { label: 'Reject Listing',      accent: 'hsl(0 65% 50%)',   accentBg: 'hsl(0 70% 95%)',   icon: Icons.ban,     confirmBg: 'hsl(0 65% 50%)',   confirmLabel: 'Reject' },
         suspend: { label: 'Suspend Listing',     accent: 'hsl(0 65% 50%)',   accentBg: 'hsl(0 70% 95%)',   icon: Icons.ban,     confirmBg: 'hsl(0 65% 50%)',   confirmLabel: 'Suspend' },
@@ -377,6 +384,13 @@ const ListingRow = ({ listing: l, index, onAction }) => {
                     onMouseLeave={e => e.currentTarget.style.filter = 'none'}>
                     <Icons.edit />
                 </Link>
+                <button onClick={() => onAction(l, 'feature')}
+                    title={l.is_featured ? 'Remove from featured' : 'Mark as featured'}
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.38rem 0.5rem', borderRadius: '0.45rem', border: 'none', backgroundColor: 'hsl(40 90% 93%)', color: 'hsl(40 80% 38%)', cursor: 'pointer', transition: 'filter 0.15s', fontFamily: 'inherit' }}
+                    onMouseEnter={e => e.currentTarget.style.filter = 'brightness(0.92)'}
+                    onMouseLeave={e => e.currentTarget.style.filter = 'none'}>
+                    <Icons.star filled={l.is_featured} />
+                </button>
                 {l.status_key === 'pending' && (
                     <button onClick={() => onAction(l, 'approve')}
                         style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.38rem 0.5rem', borderRadius: '0.45rem', border: 'none', backgroundColor: 'hsl(152 55% 92%)', color: 'hsl(152 55% 30%)', cursor: 'pointer', transition: 'filter 0.15s', fontFamily: 'inherit' }}
@@ -421,6 +435,7 @@ const ListingsIndex = ({ listings: rawListings = [], metrics: serverMetrics = {}
     const [toast,       setToast]       = useState(null);
     const [refreshing,   refresh]   = useRefresh(['listings', 'metrics']);
     const toastTimer = useRef(null);
+    const [featuredFilter, setFeaturedFilter] = useState('all');
 
     const showToast = (msg, type = 'success') => {
         clearTimeout(toastTimer.current);
@@ -444,10 +459,16 @@ const ListingsIndex = ({ listings: rawListings = [], metrics: serverMetrics = {}
         return listings
             .filter(l => {
                 const okQ  = !q || l.title.toLowerCase().includes(q) || l.location.toLowerCase().includes(q) || l.agent_name.toLowerCase().includes(q);
-                const okSt = status   === 'all' || l.status_key    === status;
+                const okSt = (() => {
+                    if (status === 'all') return true;
+                    if (status === 'sold')   return l.is_sold === true;
+                    if (status === 'rented') return l.is_rented === true;
+                    return l.status_key === status;
+                })();
                 const okLt = lstType  === 'all' || l.listing_type  === lstType;
                 const okPt = propType === 'all' || l.property_type === propType;
-                return okQ && okSt && okLt && okPt;
+                const okFeat = featuredFilter === 'all' || (featuredFilter === 'featured' && l.is_featured) || (featuredFilter === 'not-featured' && !l.is_featured);
+                return okQ && okSt && okLt && okPt && okFeat;
             })
             .sort((a, b) => {
                 let av = a[sortCol], bv = b[sortCol];
@@ -457,7 +478,7 @@ const ListingsIndex = ({ listings: rawListings = [], metrics: serverMetrics = {}
                 if (typeof bv === 'string') bv = bv.toLowerCase();
                 return sortDir === 'asc' ? (av > bv ? 1 : -1) : (av < bv ? 1 : -1);
             });
-    }, [listings, search, status, lstType, propType, sortCol, sortDir]);
+    }, [listings, search, status, lstType, propType, sortCol, sortDir, featuredFilter]);
 
     const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
     const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
@@ -481,13 +502,18 @@ const ListingsIndex = ({ listings: rawListings = [], metrics: serverMetrics = {}
             approve: `/super-admin/listings/${listing._id}/approve`,
             reject:  `/super-admin/listings/${listing._id}/reject`,
             suspend: `/super-admin/listings/${listing._id}/suspend`,
+            feature: `/super-admin/listings/${listing._id}/feature`,
             delete:  `/super-admin/listings/${listing._id}`,
         };
         const method = action === 'delete' ? 'delete' : 'post';
+        const wasFeatured = listing.is_featured;
         router[method](routeMap[action], {}, {
             preserveScroll: true,
             onSuccess: () => {
-                showToast(`Listing "${listing.title}" ${action}d successfully.`);
+                const msg = action === 'feature'
+                    ? `"${listing.title}" ${wasFeatured ? 'removed from featured' : 'marked as featured'}.`
+                    : `Listing "${listing.title}" ${action}d successfully.`;
+                showToast(msg);
                 setModal(null);
                 router.reload({ only: ['listings', 'metrics'] });
             },
@@ -634,6 +660,36 @@ const ListingsIndex = ({ listings: rawListings = [], metrics: serverMetrics = {}
                                 style={{ padding: '0.3rem 0.65rem', borderRadius: '999px', border: `1.5px solid ${a ? (cfg?.dot ?? 'hsl(220 25% 20%)') : 'hsl(220 15% 88%)'}`, fontSize: '0.72rem', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s', backgroundColor: a ? (cfg?.bg ?? 'hsl(220 25% 15%)') : 'transparent', color: a ? (cfg?.color ?? 'white') : 'hsl(220 15% 48%)' }}>
                                 {t === 'all' ? 'All Types' : (cfg?.label ?? t)}
                             </button>;
+                        })}
+                    </div>
+
+                    {/* Featured pills */}
+                    <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                        <span style={{ fontSize: '0.7rem', fontWeight: '700', color: 'hsl(220 15% 52%)', marginRight: '0.2rem' }}>Featured:</span>
+                        {['all', 'featured', 'not-featured'].map(f => {
+                            const a = featuredFilter === f;
+                            const cfg = {
+                                all: { label: 'All', bg: 'transparent', color: 'hsl(220 15% 48%)', dot: 'hsl(220 15% 55%)' },
+                                featured: { label: 'Featured', bg: 'hsl(40 90% 93%)', color: 'hsl(40 80% 30%)', dot: 'hsl(40 80% 44%)' },
+                                'not-featured': { label: 'Not Featured', bg: 'hsl(220 15% 93%)', color: 'hsl(220 15% 40%)', dot: 'hsl(220 15% 55%)' },
+                            }[f];
+                            return (
+                                <button key={f} onClick={() => { setFeaturedFilter(f); setPage(1); }}
+                                    style={{
+                                        padding: '0.3rem 0.65rem',
+                                        borderRadius: '999px',
+                                        border: `1.5px solid ${a ? cfg.dot : 'hsl(220 15% 88%)'}`,
+                                        fontSize: '0.72rem',
+                                        fontWeight: '700',
+                                        cursor: 'pointer',
+                                        fontFamily: 'inherit',
+                                        transition: 'all 0.15s',
+                                        backgroundColor: a ? cfg.bg : 'transparent',
+                                        color: a ? cfg.color : 'hsl(220 15% 48%)',
+                                    }}>
+                                    {cfg.label}
+                                </button>
+                            );
                         })}
                     </div>
                 </div>

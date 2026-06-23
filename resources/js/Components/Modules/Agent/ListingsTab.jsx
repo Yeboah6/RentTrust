@@ -12,6 +12,7 @@ const Ico = ({ d, size = '1rem', sw = 1.8 }) => (
 const Icons = {
     home:       <Ico d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />,
     plus:       <Ico d="M12 4v16m8-8H4" />,
+    search:     <Ico d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />,
     eye:        <Ico d={['M15 12a3 3 0 11-6 0 3 3 0 016 0z','M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z']} />,
     edit:       <Ico d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />,
     check:      <Ico d="M5 13l4 4L19 7" />,
@@ -21,6 +22,8 @@ const Icons = {
     dollar:     <Ico d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />,
     verify:     <Ico d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />,
     sparkles:   <Ico d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />,
+    x:          <Ico d="M6 18L18 6M6 6l12 12" size="0.8rem" />,
+    tag:        <Ico d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />,
     chevronLeft:  <Ico d="M15 19l-7-7 7-7" />,
     chevronRight: <Ico d="M9 5l7 7-7 7" />,
     empty:      <Ico d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" size="2.5rem" sw={1.2} />,
@@ -66,6 +69,20 @@ const FeaturedBadge = () => (
     }}>
         {Icons.sparkles}
         Featured
+    </span>
+);
+
+const SoldBadge = () => (
+    <span style={{
+        display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
+        padding: '0.18rem 0.55rem', borderRadius: 999,
+        fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.04em',
+        backgroundColor: 'hsl(0 70% 45% / 0.12)',
+        color: 'hsl(0 70% 45%)',
+        border: '1px solid hsl(0 70% 45% / 0.3)',
+        flexShrink: 0,
+    }}>
+        {Icons.tag} Sold
     </span>
 );
 
@@ -150,6 +167,9 @@ const fmtPrice = (property) => {
 const ListingCard = ({ property, onView, onEdit, onVerify, getVerificationButtonText, isVerificationButtonDisabled }) => {
     const price = fmtPrice(property);
     const isFeatured = toBool(property.is_featured);
+    const isSold = toBool(property.is_sold);
+
+    console.log(isSold)
 
     return (
         <div style={{
@@ -186,16 +206,19 @@ const ListingCard = ({ property, onView, onEdit, onVerify, getVerificationButton
             <div style={{ padding: '1rem', flex: 1, display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: '0.5rem' }}>
                     <div style={{ minWidth: 0, flex: 1 }}>
-                        <h3 style={{ margin: 0, fontSize: '0.85rem', fontWeight: 700, color: 'hsl(220 25% 12%)', letterSpacing: '-0.01em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: '0.15rem' }}>
-                            {property.title || 'Untitled Property'}
-                        </h3>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem', flexWrap: 'wrap' }}>
+                            <h3 style={{ 
+                                margin: 0, fontSize: '0.85rem', fontWeight: 700, 
+                                color: 'hsl(220 25% 12%)', letterSpacing: '-0.01em',
+                                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                            }}>
+                                {property.title || 'Untitled Property'}
+                            </h3>
+                            <StatusBadge status={property.effective_listing_status} /> {isFeatured && <FeaturedBadge />} {isSold && <SoldBadge />}
+                        </div>
                         <p style={{ margin: '0 0 0.35rem', fontSize: '0.7rem', color: 'hsl(220 15% 50%)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                             {Icons.mapPin} {property.address}, {property.city}
                         </p>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexWrap: 'wrap' }}>
-                            <StatusBadge status={property.effective_listing_status} />
-                            {isFeatured && <FeaturedBadge />}
-                        </div>
                     </div>
                 </div>
 
@@ -237,10 +260,28 @@ const ListingsTab = ({
     getVerificationButtonText,
     isVerificationButtonDisabled,
 }) => {
+    const [searchTerm, setSearchTerm] = useState('');
+    const [statusFilter, setStatusFilter] = useState('all');
+    const [featuredFilter, setFeaturedFilter] = useState('all');
     const [currentPage, setCurrentPage] = useState(1);
 
-    const rentals = properties.filter(p => p.purpose !== 'sale');
-    const sales = properties.filter(p => p.purpose === 'sale');
+    // Filter properties based on search term and status
+    const filteredProperties = useMemo(() => {
+        return properties.filter(property => {
+            const matchesSearch = !searchTerm.trim() || (
+                (property.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                (property.address || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                (property.city || '').toLowerCase().includes(searchTerm.toLowerCase())
+            );
+            const matchesStatus = statusFilter === 'all' || property.effective_listing_status === statusFilter;
+            const matchesFeatured = featuredFilter === 'all' ||
+                (featuredFilter === 'featured' ? toBool(property.is_featured) : !toBool(property.is_featured));
+            return matchesSearch && matchesStatus && matchesFeatured;
+        });
+    }, [properties, searchTerm, statusFilter, featuredFilter]);
+
+    const rentals = filteredProperties.filter(p => p.purpose !== 'sale');
+    const sales = filteredProperties.filter(p => p.purpose === 'sale');
 
     // Paginate rentals
     const rentalTotalPages = Math.ceil(rentals.length / ITEMS_PER_PAGE);
@@ -250,11 +291,32 @@ const ListingsTab = ({
     const salesTotalPages = Math.ceil(sales.length / ITEMS_PER_PAGE);
     const paginatedSales = sales.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
     
-    // Use max pages between rentals and sales for the shared pagination
     const maxTotalPages = Math.max(rentalTotalPages, salesTotalPages, 1);
-    
-    // Adjust current page if it exceeds max pages
     const safePage = Math.min(currentPage, maxTotalPages);
+
+    const handleSearchChange = (e) => {
+        setSearchTerm(e.target.value);
+        setCurrentPage(1);
+    };
+
+    const handleStatusChange = (e) => {
+        setStatusFilter(e.target.value);
+        setCurrentPage(1);
+    };
+
+    const handleFeaturedChange = (e) => {
+        setFeaturedFilter(e.target.value);
+        setCurrentPage(1);
+    };
+
+    const clearFilters = () => {
+        setSearchTerm('');
+        setStatusFilter('all');
+        setFeaturedFilter('all');
+        setCurrentPage(1);
+    };
+
+    const hasFilters = searchTerm.trim() !== '' || statusFilter !== 'all' || featuredFilter !== 'all';
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -275,6 +337,83 @@ const ListingsTab = ({
                     onMouseLeave={e => e.currentTarget.style.backgroundColor = 'hsl(174 62% 32%)'}>
                     {Icons.plus} Add Listing
                 </button>
+            </div>
+
+            {/* Search & Filter */}
+            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                <div style={{ position: 'relative', flex: '1 1 260px' }}>
+                    <div style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'hsl(220 15% 55%)', display: 'flex' }}>
+                        {Icons.search}
+                    </div>
+                    <input
+                        type="search"
+                        value={searchTerm}
+                        onChange={handleSearchChange}
+                        placeholder="Search by title, address, city..."
+                        style={{
+                            width: '100%', padding: '0.65rem 1rem 0.65rem 2.5rem',
+                            borderRadius: '0.625rem',
+                            border: '1px solid hsl(220 15% 88%)',
+                            backgroundColor: 'white',
+                            fontSize: '0.8rem', color: 'hsl(220 25% 15%)',
+                            fontFamily: 'inherit',
+                            outline: 'none',
+                            transition: 'border-color 0.15s',
+                        }}
+                        onFocus={e => e.currentTarget.style.borderColor = 'hsl(174 62% 40%)'}
+                        onBlur={e => e.currentTarget.style.borderColor = 'hsl(220 15% 88%)'}
+                    />
+                </div>
+                <select
+                    value={statusFilter}
+                    onChange={handleStatusChange}
+                    style={{
+                        padding: '0.65rem 1rem', borderRadius: '0.625rem',
+                        border: '1px solid hsl(220 15% 88%)',
+                        backgroundColor: 'white',
+                        fontSize: '0.8rem', color: 'hsl(220 25% 15%)',
+                        fontFamily: 'inherit', minWidth: '150px',
+                        outline: 'none', cursor: 'pointer',
+                    }}
+                    onFocus={e => e.currentTarget.style.borderColor = 'hsl(174 62% 40%)'}
+                    onBlur={e => e.currentTarget.style.borderColor = 'hsl(220 15% 88%)'}
+                >
+                    <option value="all">All statuses</option>
+                    <option value="approved">Approved</option>
+                    <option value="pending">Pending</option>
+                    <option value="rejected">Rejected</option>
+                    <option value="rented">Rented</option>
+                    <option value="sold">Sold</option>
+                    <option value="inactive">Inactive</option>
+                    <option value="unverified">Unverified</option>
+                </select>
+
+                {/* Featured filter (NEW) */}
+                <select
+                    value={featuredFilter}
+                    onChange={handleFeaturedChange}
+                    style={{
+                        padding: '0.65rem 1rem', borderRadius: '0.625rem',
+                        border: '1px solid hsl(220 15% 88%)',
+                        backgroundColor: 'white',
+                        fontSize: '0.8rem', color: 'hsl(220 25% 15%)',
+                        fontFamily: 'inherit', minWidth: '140px',
+                        outline: 'none', cursor: 'pointer',
+                    }}
+                    onFocus={e => e.currentTarget.style.borderColor = 'hsl(174 62% 40%)'}
+                    onBlur={e => e.currentTarget.style.borderColor = 'hsl(220 15% 88%)'}
+                >
+                    <option value="all">All</option>
+                    <option value="featured">Featured</option>
+                    <option value="not-featured">Not Featured</option>
+                </select>
+
+                {hasFilters && (
+                    <button onClick={clearFilters}
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', padding: '0.35rem 0.7rem', borderRadius: '0.5rem', border: '1px solid hsl(220 15% 86%)', backgroundColor: 'hsl(220 15% 96%)', color: 'hsl(220 15% 44%)', fontSize: '0.73rem', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
+                        {Icons.x} Clear
+                    </button>
+                )}
             </div>
 
             {/* Rental Listings */}
@@ -320,10 +459,12 @@ const ListingsTab = ({
             )}
 
             {/* Pagination */}
-            <Pagination currentPage={safePage} totalPages={maxTotalPages} onPageChange={setCurrentPage} />
+            {filteredProperties.length > 0 && (
+                <Pagination currentPage={safePage} totalPages={maxTotalPages} onPageChange={setCurrentPage} />
+            )}
 
             {/* Empty state */}
-            {properties.length === 0 && (
+            {properties.length === 0 ? (
                 <div style={{ backgroundColor: 'white', border: '1px solid hsl(220 15% 91%)', borderRadius: '0.875rem', padding: '3rem', textAlign: 'center', boxShadow: '0 1px 3px hsl(220 20% 15% / 0.04)' }}>
                     <div style={{ color: 'hsl(220 15% 68%)', margin: '0 auto 1rem', display: 'flex', justifyContent: 'center' }}>{Icons.empty}</div>
                     <h3 style={{ fontSize: '0.95rem', fontWeight: 800, color: 'hsl(220 25% 15%)', margin: '0 0 0.35rem' }}>No Listings Yet</h3>
@@ -332,7 +473,15 @@ const ListingsTab = ({
                         {Icons.plus} Add First Listing
                     </button>
                 </div>
-            )}
+            ) : filteredProperties.length === 0 && hasFilters ? (
+                <div style={{ backgroundColor: 'white', border: '1px solid hsl(220 15% 91%)', borderRadius: '0.875rem', padding: '3rem', textAlign: 'center', boxShadow: '0 1px 3px hsl(220 20% 15% / 0.04)' }}>
+                    <div style={{ color: 'hsl(220 15% 68%)', margin: '0 auto 1rem', display: 'flex', justifyContent: 'center' }}>{Icons.empty}</div>
+                    <h3 style={{ fontSize: '0.95rem', fontWeight: 800, color: 'hsl(220 25% 15%)', margin: '0 0 0.35rem' }}>No Listings Match Filters</h3>
+                    <p style={{ color: 'hsl(220 15% 52%)', fontSize: '0.82rem', margin: 0 }}>
+                        Try adjusting your search or status filter.
+                    </p>
+                </div>
+            ) : null}
         </div>
     );
 };

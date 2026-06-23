@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Plan;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Str;
 
 class PlanSeeder extends Seeder
 {
@@ -15,7 +16,7 @@ class PlanSeeder extends Seeder
     {
         $plans = [
             [
-                'plan_id' => Plan::generateUUID(),
+                'plan_id' => Str::uuid(),
                 'name' => 'Free',
                 'description' => 'Perfect for getting started with basic listing features',
                 'slug' => 'free',
@@ -42,7 +43,7 @@ class PlanSeeder extends Seeder
                 'sort_order' => 1,
             ],
             [
-                'plan_id' => Plan::generateUUID(),
+                'plan_id' => Str::uuid(),
                 'name' => 'Pro',
                 'description' => 'Advanced features for serious property professionals',
                 'slug' => 'pro',
@@ -70,7 +71,7 @@ class PlanSeeder extends Seeder
                 'sort_order' => 2,
             ],
             [
-                'plan_id' => Plan::generateUUID(),
+                'plan_id' => Str::uuid(),
                 'name' => 'Elite',
                 'description' => 'Maximum exposure and premium features for top performers',
                 'slug' => 'elite',

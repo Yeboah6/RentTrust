@@ -300,7 +300,7 @@ const AgentCard = ({ agent: a, index, onAction }) => {
                     {[
                         { v: a.listings_count, l: 'Listings' },
                         { v: a.sold_count,     l: 'Sold/Rented' },
-                        { v: a.rating ? `${Number(a.rating).toFixed(1)}★` : '—', l: 'Rating' },
+                        { v: `${Number(a.rating).toFixed(1)}★`, l: 'Rating' },
                     ].map(({ v, l }) => (
                         <div key={l} style={{ textAlign: 'center', padding: '0.5rem 0.25rem', borderRadius: '0.5rem', backgroundColor: 'hsl(220 15% 97.5%)', border: '1px solid hsl(220 15% 93%)' }}>
                             <div style={{ fontSize: '0.95rem', fontWeight: '900', color: 'hsl(220 25% 14%)', lineHeight: 1 }}>{v ?? '—'}</div>
@@ -426,12 +426,12 @@ const AgentRow = ({ agent: a, index, onAction }) => {
 
             {/* Rating */}
             <div>
-                {a.rating ? (
-                    <>
-                        <div style={{ fontSize: '0.88rem', fontWeight: '800', color: 'hsl(220 25% 14%)' }}>{Number(a.rating).toFixed(1)} <span style={{ fontSize: '0.7rem', color: 'hsl(40 80% 44%)' }}>★</span></div>
-                        <div style={{ fontSize: '0.65rem', color: 'hsl(220 15% 55%)' }}>{a.reviews_count} review{a.reviews_count !== 1 ? 's' : ''}</div>
-                    </>
-                ) : <span style={{ fontSize: '0.73rem', color: 'hsl(220 15% 60%)', fontStyle: 'italic' }}>No rating</span>}
+                <div style={{ fontSize: '0.88rem', fontWeight: '800', color: 'hsl(220 25% 14%)' }}>
+                    {Number(a.rating).toFixed(1)} <span style={{ fontSize: '0.7rem', color: 'hsl(40 80% 44%)' }}>★</span>
+                </div>
+                <div style={{ fontSize: '0.65rem', color: 'hsl(220 15% 55%)' }}>
+                    {a.reviews_count} review{a.reviews_count !== 1 ? 's' : ''}
+                </div>
             </div>
 
             {/* Joined */}

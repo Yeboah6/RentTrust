@@ -97,13 +97,14 @@ const SectionHead = ({ title, accent = T.blue }) => (
 );
 
 // ─── Filter input ─────────────────────────────────────────────────────────────
-const FilterInput = ({ placeholder, value, onChange, icon, type = 'text' }) => (
+const FilterInput = ({ placeholder, value, onChange, icon, type = 'text', onKeyDown }) => (
     <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
         <span style={{ position: 'absolute', left: '0.65rem', color: T.textDim, pointerEvents: 'none' }}>{icon}</span>
         <input
             type={type}
             value={value}
             onChange={e => onChange(e.target.value)}
+            onKeyDown={onKeyDown}
             placeholder={placeholder}
             style={{
                 width: '100%', paddingLeft: '2rem', paddingRight: '0.75rem',

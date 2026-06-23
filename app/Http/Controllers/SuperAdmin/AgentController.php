@@ -38,8 +38,6 @@ class AgentController extends Controller
             ->with(['subscription.plan'])   // for tier/package
             ->addSelect([
                 'users.*',
-                // last time any of their listings was viewed as a proxy for last_active
-                // swap for sessions/login table if you track that separately
             ])
             ->get()
             ->map(function (User $user) {
@@ -52,16 +50,11 @@ class AgentController extends Controller
                     'type'       => $user->type,
                     'company'          => $user->company,
                     'bio'             => $user->bio,                    // add profile photo column if needed
-                    // 'is_verified'     => in_array($user->status, ['verified', 'active']),
-                    // 'is_featured'     => false,                         // add featured flag to users table if needed
-                    // 'tier'            => $user->subscription?->plan?->slug
-                    //                      ?? $user->package
-                    //                      ?? 'standard',             // add city/area column if needed
                     'listings_count'  => $user->listings_count  ?? 0,
                     'active_listings' => $user->active_listings ?? 0,
                     'sold_count'      => $user->sold_count      ?? 0,
-                    'rating'          => $user->rating          ? round($user->rating, 1) : null,
-                    'reviews_count'   => $user->reviews_count   ?? 0,       // add if you track commissions
+                    'rating'          => $user->rating ?? 0.0,
+                    'reviews_count'   => $user->reviews_count ?? 0,   // add if you track commissions
                     'joined_at'       => $user->created_at,
                     'last_active'     => $user->last_active,
                 ];
@@ -169,7 +162,7 @@ class AgentController extends Controller
         $agent->loadAvg('reviews as rating', 'overall_rating');
  
         // Load every listing for this agent so the page can show full listing details, not just counts.
-        $listings = Rental::where('user_id', $agent->user_id ?? $agent->id)
+        $listings = Rental::where('user_id', $agent->id)
             ->orWhere('agent_id', $agent->id)
             ->latest()
             ->get()
@@ -237,8 +230,6 @@ class AgentController extends Controller
                 }
             }
         });
- 
-        // $updatedBy = auth()->user() ?? $agent;
  
         try {
             $changeLines = collect($changes)
@@ -504,7 +495,7 @@ class AgentController extends Controller
             'listings_count' => $agent->listings_count ?? 0,
             'active_listings'=> $agent->active_listings ?? 0,
             'sold_count'     => $agent->sold_count      ?? $agent->properties_sold ?? 0,
-            'rating'        => $agent->rating ? round($agent->rating, 1) : null,
+            'rating' => $agent->rating ? round($agent->rating, 1) : 0.0,
             'reviews_count' => $agent->reviews_count ?? 0,
             'total_revenue'  => $agent->total_revenue   ?? null,
             'avatar'         => $agent->avatar

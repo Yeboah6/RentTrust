@@ -1,9 +1,10 @@
-import React from 'react';
-import { Home, MapPin, DollarSign, Calendar, User, Phone, Mail, Bed, Bath, CheckCircle2, X } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Home, MapPin, DollarSign, Calendar, User, Phone, Mail, Bed, Bath, CheckCircle2, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { usePage } from '@inertiajs/react';
 
 const ViewRentals = ({ rental, setShowViewModal }) => {
   const { auth } = usePage().props;
+  const [lightboxIndex, setLightboxIndex] = useState(null);
   
   // Parse amenities if they're stored as JSON string
   let parsedAmenities = [];
@@ -21,6 +22,37 @@ const ViewRentals = ({ rental, setShowViewModal }) => {
   // Handle images
   const images = rental.images || [];
 
+  // Keyboard navigation for lightbox
+  useEffect(() => {
+    if (lightboxIndex === null) return;
+    
+    const handleKey = (e) => {
+      if (e.key === 'Escape') {
+        setLightboxIndex(null);
+      } else if (e.key === 'ArrowLeft' && images.length > 1) {
+        setLightboxIndex(prev => (prev === 0 ? images.length - 1 : prev - 1));
+      } else if (e.key === 'ArrowRight' && images.length > 1) {
+        setLightboxIndex(prev => (prev === images.length - 1 ? 0 : prev + 1));
+      }
+    };
+    
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [lightboxIndex, images.length]);
+
+  const openLightbox = (index) => setLightboxIndex(index);
+  const closeLightbox = () => setLightboxIndex(null);
+  
+  const goToPrev = (e) => {
+    e.stopPropagation();
+    setLightboxIndex(prev => (prev === 0 ? images.length - 1 : prev - 1));
+  };
+  
+  const goToNext = (e) => {
+    e.stopPropagation();
+    setLightboxIndex(prev => (prev === images.length - 1 ? 0 : prev + 1));
+  };
+
   return (
     <>
       <style>{`
@@ -33,6 +65,15 @@ const ViewRentals = ({ rental, setShowViewModal }) => {
         @keyframes fadeIn {
           from { opacity: 0; transform: scale(0.95); }
           to { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes lightboxIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+
+        .lightbox-overlay {
+          animation: lightboxIn 0.2s ease;
         }
 
         /* Mobile touch optimization */
@@ -77,7 +118,7 @@ const ViewRentals = ({ rental, setShowViewModal }) => {
         @media (max-width: 480px) {
           .modal-content {
             max-height: 90vh !important;
-            border-radius: 0.5rem !important;
+            borderRadius: 0.5rem !important;
           }
 
           .section-padding {
@@ -183,66 +224,40 @@ const ViewRentals = ({ rental, setShowViewModal }) => {
             gap: 'clamp(0.5rem, 2vw, 1rem)',
             zIndex: 10
           }}>
-            <h2 style={{ 
-                color: 'hsl(200 25% 15%)',
-                fontSize: 'clamp(1.25rem, 4vw, 1.5rem)',
-                fontWeight: '700',
-                lineHeight: '1.2',
-                marginBottom: 'clamp(0.25rem, 1vw, 0.5rem)'
-              }}>
-                {rental.title}
-              </h2>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.5rem, 2vw, 0.75rem)', flexWrap: 'wrap' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.25rem, 1vw, 0.375rem)' }}>
-                <MapPin style={{
-                  height: 'clamp(0.875rem, 2.5vw, 1rem)',
-                  width: 'clamp(0.875rem, 2.5vw, 1rem)',
-                  color: 'hsl(200 15% 45%)'
-                }} />
-                <span style={{ fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)', color: 'hsl(200 15% 45%)' }}>
-                  {rental.area}, {rental.city}
-                </span>
-              </div>
-              <span style={{
-                padding: '0.2rem 0.6rem',
-                borderRadius: '9999px',
-                fontSize: '0.75rem',
-                fontWeight: '600',
-                backgroundColor: rental.purpose === 'sale' ? 'hsl(38 92% 50% / 0.15)' : 'hsl(174 62% 32% / 0.12)',
-                color: rental.purpose === 'sale' ? 'hsl(38 85% 40%)' : 'hsl(174 62% 32%)',
-                border: `1px solid ${rental.purpose === 'sale' ? 'hsl(38 92% 50% / 0.3)' : 'hsl(174 62% 32% / 0.25)'}`,
-              }}>
-                {rental.purpose === 'sale' ? '🏷️ For Sale' : '🏠 For Rent'}
-              </span>
-            </div>
-            {/* <div style={{ flex: 1, minWidth: 0 }}>
+            <div>
               <h2 style={{ 
-                color: 'hsl(200 25% 15%)',
-                fontSize: 'clamp(1.25rem, 4vw, 1.5rem)',
-                fontWeight: '700',
-                lineHeight: '1.2',
-                marginBottom: 'clamp(0.25rem, 1vw, 0.5rem)'
-              }}>
-                {rental.title}
-              </h2>
-              <div style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: 'clamp(0.25rem, 1vw, 0.375rem)' 
-              }}>
-                <MapPin style={{ 
-                  height: 'clamp(0.875rem, 2.5vw, 1rem)', 
-                  width: 'clamp(0.875rem, 2.5vw, 1rem)', 
-                  color: 'hsl(200 15% 45%)' 
-                }} />
-                <span style={{ 
-                  fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)', 
-                  color: 'hsl(200 15% 45%)' 
+                  color: 'hsl(200 25% 15%)',
+                  fontSize: 'clamp(1.25rem, 4vw, 1.5rem)',
+                  fontWeight: '700',
+                  lineHeight: '1.2',
+                  marginBottom: 'clamp(0.25rem, 1vw, 0.5rem)'
                 }}>
-                  {rental.area}, {rental.city}
+                  {rental.title}
+              </h2>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.5rem, 2vw, 0.75rem)', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.25rem, 1vw, 0.375rem)' }}>
+                  <MapPin style={{
+                    height: 'clamp(0.875rem, 2.5vw, 1rem)',
+                    width: 'clamp(0.875rem, 2.5vw, 1rem)',
+                    color: 'hsl(200 15% 45%)'
+                  }} />
+                  <span style={{ fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)', color: 'hsl(200 15% 45%)' }}>
+                    {rental.area}, {rental.city}
+                  </span>
+                </div>
+                <span style={{
+                  padding: '0.2rem 0.6rem',
+                  borderRadius: '9999px',
+                  fontSize: '0.75rem',
+                  fontWeight: '600',
+                  backgroundColor: rental.purpose === 'sale' ? 'hsl(38 92% 50% / 0.15)' : 'hsl(174 62% 32% / 0.12)',
+                  color: rental.purpose === 'sale' ? 'hsl(38 85% 40%)' : 'hsl(174 62% 32%)',
+                  border: `1px solid ${rental.purpose === 'sale' ? 'hsl(38 92% 50% / 0.3)' : 'hsl(174 62% 32% / 0.25)'}`,
+                }}>
+                  {rental.purpose === 'sale' ? '🏷️ For Sale' : '🏠 For Rent'}
                 </span>
               </div>
-            </div> */}
+            </div>
             <button
               className="close-button action-button"
               onClick={() => setShowViewModal && setShowViewModal(false)}
@@ -285,12 +300,17 @@ const ViewRentals = ({ rental, setShowViewModal }) => {
                   gap: 'clamp(0.5rem, 2vw, 0.75rem)'
                 }}>
                   {images.map((image, index) => (
-                    <div key={index} style={{
-                      aspectRatio: '1 / 1',
-                      backgroundColor: 'hsl(40 30% 94%)',
-                      borderRadius: 'clamp(0.5rem, 2vw, 0.75rem)',
-                      overflow: 'hidden'
-                    }}>
+                    <div 
+                      key={index} 
+                      onClick={() => openLightbox(index)}
+                      style={{
+                        aspectRatio: '1 / 1',
+                        backgroundColor: 'hsl(40 30% 94%)',
+                        borderRadius: 'clamp(0.5rem, 2vw, 0.75rem)',
+                        overflow: 'hidden',
+                        cursor: 'pointer'
+                      }}
+                    >
                       <img 
                         src={`/storage/rental_images/${image}`} 
                         alt={`Property ${index + 1}`} 
@@ -352,9 +372,10 @@ const ViewRentals = ({ rental, setShowViewModal }) => {
                     </span>
                     <span style={{ 
                       fontSize: 'clamp(0.875rem, 2.5vw, 1rem)', 
-                      color: 'hsl(200 25% 15%)' 
+                      color: 'hsl(200 25% 15%)',
+                      textTransform: 'capitalize'
                     }}>
-                      {rental.property_type || rental.propertyType}
+                      {rental.property_type}
                     </span>
                   </div>
                   
@@ -549,7 +570,7 @@ const ViewRentals = ({ rental, setShowViewModal }) => {
                         fontWeight: '600',
                         color: 'hsl(200 25% 15%)'
                       }}>
-                        {rental.advance_duration} {Number(rental.advance_duration) === 1 ? 'Year' : 'Years'}
+                        {rental.advance_duration} {Number(rental.advance_duration) === 1 ? 'Month' : 'Months'}
                       </span>
                     </div>
                   </div>
@@ -805,9 +826,236 @@ const ViewRentals = ({ rental, setShowViewModal }) => {
                 </a>
               )}
             </div>
+
+            {/* Featured Listing Info (admin only) */}
+            {auth?.super && rental.is_featured && (
+                <div className="section-padding" style={{
+                    backgroundColor: 'hsl(38 92% 50% / 0.06)',
+                    border: '2px solid hsl(38 92% 50% / 0.25)',
+                    borderRadius: 'clamp(0.5rem, 2vw, 0.75rem)',
+                    padding: 'clamp(1rem, 3vw, 1.25rem)'
+                }}>
+                    <div style={{ 
+                        display: 'flex', alignItems: 'center', gap: 'clamp(0.5rem, 2vw, 0.75rem)',
+                        marginBottom: 'clamp(0.75rem, 2vw, 1rem)' 
+                    }}>
+                        {/* small star icon */}
+                        <svg style={{ width:'1rem',height:'1rem',color:'hsl(38 92% 50%)' }} fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        <h3 style={{ color:'hsl(38 92% 40%)', fontSize:'clamp(1rem,3vw,1.125rem)', fontWeight:'600' }}>
+                            Featured Listing
+                        </h3>
+                    </div>
+                  
+                    <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                        gap: '0.6rem',
+                        fontSize: '0.8rem',
+                        color: 'hsl(200 25% 15%)'
+                    }}>
+                        {rental.featured_at && (
+                            <div>
+                                <span style={{ fontWeight:'500', color:'hsl(200 15% 45%)', display:'block' }}>Featured Since</span>
+                                <span>{new Date(rental.featured_at).toLocaleDateString()}</span>
+                            </div>
+                        )}
+                        {rental.featured_expires_at && (
+                            <div>
+                                <span style={{ fontWeight:'500', color:'hsl(200 15% 45%)', display:'block' }}>Expires</span>
+                                <span>{new Date(rental.featured_expires_at).toLocaleDateString()}</span>
+                            </div>
+                        )}
+                        <div>
+                            <span style={{ fontWeight:'500', color:'hsl(200 15% 45%)', display:'block' }}>Priority</span>
+                            <span>{rental.featured_priority ?? 0}</span>
+                        </div>
+                        <div>
+                            <span style={{ fontWeight:'500', color:'hsl(200 15% 45%)', display:'block' }}>Times Featured</span>
+                            <span>{rental.times_featured ?? 0}</span>
+                        </div>
+                        {rental.is_featured_queued && (
+                            <div>
+                                <span style={{ fontWeight:'500', color:'hsl(200 15% 45%)', display:'block' }}>Queued</span>
+                                <span style={{ color:'hsl(38 92% 40%)' }}>Yes</span>
+                            </div>
+                        )}
+                        {rental.featured_queue_position && (
+                            <div>
+                                <span style={{ fontWeight:'500', color:'hsl(200 15% 45%)', display:'block' }}>Queue Position</span>
+                                <span>{rental.featured_queue_position}</span>
+                            </div>
+                        )}
+                        {rental.queued_at && (
+                            <div>
+                                <span style={{ fontWeight:'500', color:'hsl(200 15% 45%)', display:'block' }}>Queued At</span>
+                                <span>{new Date(rental.queued_at).toLocaleDateString()}</span>
+                            </div>
+                        )}
+                        {rental.last_featured_at && (
+                            <div>
+                                <span style={{ fontWeight:'500', color:'hsl(200 15% 45%)', display:'block' }}>Last Featured</span>
+                                <span>{new Date(rental.last_featured_at).toLocaleDateString()}</span>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
           </div>
         </div>
       </div>
+
+      {/* Lightbox */}
+      {lightboxIndex !== null && (
+        <div
+          className="lightbox-overlay"
+          onClick={closeLightbox}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 100,
+            backgroundColor: 'rgba(0,0,0,0.95)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backdropFilter: 'blur(8px)',
+            padding: '2rem'
+          }}
+        >
+          {/* Close button */}
+          <button
+            onClick={closeLightbox}
+            style={{
+              position: 'absolute',
+              top: '1.5rem',
+              right: '1.5rem',
+              background: 'rgba(255,255,255,0.1)',
+              border: 'none',
+              borderRadius: '50%',
+              width: '2.5rem',
+              height: '2.5rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'white',
+              cursor: 'pointer',
+              zIndex: 10,
+              transition: 'background 0.2s'
+            }}
+            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+          >
+            <X size={20} />
+          </button>
+
+          {/* Left arrow */}
+          {images.length > 1 && (
+            <button
+              onClick={goToPrev}
+              style={{
+                position: 'absolute',
+                left: '1.5rem',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                background: 'rgba(255,255,255,0.1)',
+                border: 'none',
+                borderRadius: '50%',
+                width: '2.5rem',
+                height: '2.5rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'white',
+                cursor: 'pointer',
+                zIndex: 10,
+                transition: 'background 0.2s'
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+            >
+              <ChevronLeft size={24} />
+            </button>
+          )}
+
+          {/* Right arrow */}
+          {images.length > 1 && (
+            <button
+              onClick={goToNext}
+              style={{
+                position: 'absolute',
+                right: '1.5rem',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                background: 'rgba(255,255,255,0.1)',
+                border: 'none',
+                borderRadius: '50%',
+                width: '2.5rem',
+                height: '2.5rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'white',
+                cursor: 'pointer',
+                zIndex: 10,
+                transition: 'background 0.2s'
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+            >
+              <ChevronRight size={24} />
+            </button>
+          )}
+
+          {/* Image */}
+          <div onClick={e => e.stopPropagation()} style={{ maxWidth: '90vw', maxHeight: '85vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <img
+              src={`/storage/rental_images/${images[lightboxIndex]}`}
+              alt={`Property ${lightboxIndex + 1}`}
+              style={{
+                maxWidth: '100%',
+                maxHeight: '85vh',
+                objectFit: 'contain',
+                borderRadius: '0.5rem',
+                boxShadow: '0 20px 60px rgba(0,0,0,0.5)'
+              }}
+            />
+          </div>
+
+          {/* Counter */}
+          {images.length > 1 && (
+            <div style={{
+              position: 'absolute',
+              bottom: '1.5rem',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              color: 'white',
+              fontSize: '0.85rem',
+              fontWeight: '600',
+              background: 'rgba(0,0,0,0.5)',
+              padding: '0.3rem 0.8rem',
+              borderRadius: '999px'
+            }}>
+              {lightboxIndex + 1} / {images.length}
+            </div>
+          )}
+
+          {/* Title */}
+          <div style={{
+            position: 'absolute',
+            bottom: '1.5rem',
+            left: '1.5rem',
+            color: 'white',
+            fontSize: '0.85rem',
+            fontWeight: '600',
+            textShadow: '0 1px 4px rgba(0,0,0,0.6)',
+            maxWidth: '50vw',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap'
+          }}>
+            {rental.title}
+          </div>
+        </div>
+      )}
     </>
   );
 };

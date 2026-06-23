@@ -5,6 +5,7 @@ namespace App\Http\Controllers\SuperAdmin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\PropertyType;
+use Illuminate\Support\Str;
 
 class PropertyTypeController extends Controller
 {
@@ -27,7 +28,7 @@ class PropertyTypeController extends Controller
             'description' => 'nullable|string',
             'is_active' => 'boolean',
             ]);
-        $data['property_type_id'] = PropertyType::generateUUID();
+        $data['property_type_id'] = Str::uuid();
         PropertyType::create($data);
         return back()->with('success', 'Property type added');
     }

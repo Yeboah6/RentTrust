@@ -109,9 +109,9 @@ const normalise = (a) => ({
     phone:          a.phone          ?? a.phone_number    ?? '',
     status_key:     (a.status        ?? 'pending').toLowerCase(),
     company:         a.company           ?? '',
-    location:       a.location       ?? a.city            ?? a.area              ?? '',
+    location:       a.location        ?? '',
     bio:            a.bio            ?? a.about           ?? '',
-    listings_count: a.listings_count ?? a.total_listings  ?? 0,
+    // listings_count: a.listings_count ?? a.listings  ?? 0,
     active_listings:a.active_listings ?? 0,
     sold_count:     a.sold_count     ?? a.properties_sold ?? 0,
     rating:         a.rating         ?? a.average_rating  ?? null,
@@ -328,8 +328,9 @@ const ListingRow = ({ listing: l }) => {
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
-const AgentShow = ({ agent: rawAgent }) => {
+const AgentShow = ({ agent: rawAgent}) => {
     const agent   = normalise(rawAgent ?? {});
+    const rawListings = agent?.listings ?? [];
     const stCfg   = STATUS_CFG[agent.status_key] ?? STATUS_CFG.inactive;
     const hue     = avatarHue(agent.name);
 
@@ -498,7 +499,7 @@ const AgentShow = ({ agent: rawAgent }) => {
                             {/* Stats strip */}
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', borderBottom: '1px solid hsl(220 15% 93%)' }}>
                                 {[
-                                    { label: 'Listings',    value: agent.listings_count ?? 0,          accent: 'hsl(220 25% 15%)', isRating: false },
+                                    { label: 'Listings',    value: (rawListings || []).length,          accent: 'hsl(220 25% 15%)', isRating: false },
                                     { label: 'Active',      value: agent.active_listings ?? 0,         accent: 'hsl(152 55% 33%)', isRating: false },
                                     { label: 'Sold/Rented', value: agent.sold_count ?? 0,              accent: 'hsl(214 80% 44%)', isRating: false },
                                     { label: 'Rating',      value: agent.rating ? agent.rating : null, accent: 'hsl(40 80% 40%)',  isRating: true },
@@ -559,7 +560,7 @@ const AgentShow = ({ agent: rawAgent }) => {
 
                         {/* Recent listings */}
                         <Card>
-                            <CardHead title="Listings" sub={`Showing all ${agent.listings_count} listing${agent.listings_count !== 1 ? 's' : ''}`} />
+                            <CardHead title="Listings" sub={`Showing all ${rawListings.length} listing${rawListings.length !== 1 ? 's' : ''}`} />
                             {agent.listings?.length > 0 ? (
                                 <>
                                     {/* Image gallery for first few listings */}
@@ -591,12 +592,12 @@ const AgentShow = ({ agent: rawAgent }) => {
                                     )}
 
                                     {/* Listing details */}
-                                    {agent.listings.map(l => <ListingRow key={l.id} listing={l} />)}
-                                    {agent.listings_count > agent.listings.length && (
+                                    {rawListings.map(l => <ListingRow key={l.id} listing={l} />)}
+                                    {rawListings.length > rawListings.length && (
                                         <div style={{ padding: '0.75rem 1.125rem', textAlign: 'center' }}>
                                             <Link href={`/super-admin/listings?agent=${agent._id}`}
                                                 style={{ fontSize: '0.78rem', fontWeight: '600', color: 'hsl(214 80% 44%)', textDecoration: 'none' }}>
-                                                View all {agent.listings_count} listings →
+                                                View all {rawListings.length} listings →
                                             </Link>
                                         </div>
                                     )}

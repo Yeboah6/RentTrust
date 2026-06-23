@@ -253,7 +253,7 @@ const ReviewCard = ({ review, properties, onViewProperty, onDelete }) => {
                     borderRadius: '0.375rem',
                 }}>
                     <Ico d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" size="0.7rem" />
-                    Property #{review.rental_id || 'Unknown'}
+                    Property #{review.rental_id}
                     {review.review_type && (
                         <span style={{ 
                             padding: '0.1rem 0.35rem', borderRadius: 999,
@@ -365,23 +365,26 @@ const ReviewCard = ({ review, properties, onViewProperty, onDelete }) => {
                 backgroundColor: 'hsl(220 15% 98.5%)',
                 display: 'flex', gap: '0.4rem', flexWrap: 'wrap',
             }}>
-                <button
-                    onClick={() => {
-                        const property = properties?.find(p => p.id === review.rental_id);
-                        if (property) onViewProperty?.(property);
-                    }}
-                    style={{
-                        display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
-                        padding: '0.35rem 0.7rem', borderRadius: '0.4rem',
-                        border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white',
-                        color: 'hsl(174 62% 30%)', fontSize: '0.7rem', fontWeight: 700,
-                        cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.12s',
-                    }}
-                    onMouseEnter={e => { e.currentTarget.style.borderColor = 'hsl(174 62% 40%)'; e.currentTarget.style.backgroundColor = 'hsl(174 40% 97%)'; }}
-                    onMouseLeave={e => { e.currentTarget.style.borderColor = 'hsl(220 15% 88%)'; e.currentTarget.style.backgroundColor = 'white'; }}
-                >
-                    {Icons.eye} View Property
-                </button>
+                {review.review_type === 'rent' && (
+                    <button
+                        onClick={() => {
+                            const property = properties?.find(p => p.id === review.rental_id);
+                            if (property) onViewProperty?.(property);
+                        }}
+                        style={{
+                            display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
+                            padding: '0.35rem 0.7rem', borderRadius: '0.4rem',
+                            border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white',
+                            color: 'hsl(174 62% 30%)', fontSize: '0.7rem', fontWeight: 700,
+                            cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.12s',
+                        }}
+                        onMouseEnter={e => { e.currentTarget.style.borderColor = 'hsl(174 62% 40%)'; e.currentTarget.style.backgroundColor = 'hsl(174 40% 97%)'; }}
+                        onMouseLeave={e => { e.currentTarget.style.borderColor = 'hsl(220 15% 88%)'; e.currentTarget.style.backgroundColor = 'white'; }}
+                    >
+                        {Icons.eye} View Property
+                    </button>
+                )}
+                
                 <button
                     onClick={() => {
                         if (confirm('Delete this review? This cannot be undone.')) {
@@ -410,8 +413,18 @@ const ReviewCard = ({ review, properties, onViewProperty, onDelete }) => {
 const ReviewsTab = ({ reviews = [], properties = [], onViewProperty, showToast }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [ratingFilter, setRatingFilter] = useState('all');
+    const [typeFilter, setTypeFilter] = useState('all'); // new: app/rent filter
     const [currentPage, setCurrentPage] = useState(1);
     
+    // Get unique review types and their counts
+    const { reviewTypes, typeCounts } = useMemo(() => {
+        const types = [...new Set(reviews.map(r => r.review_type).filter(Boolean))];
+        const counts = {};
+        types.forEach(t => { counts[t] = reviews.filter(r => r.review_type === t).length; });
+        counts['all'] = reviews.length;
+        return { reviewTypes: types, typeCounts: counts };
+    }, [reviews]);
+
     const filteredReviews = useMemo(() => {
         return reviews.filter(review => {
             const q = searchTerm.toLowerCase();
@@ -424,9 +437,10 @@ const ReviewsTab = ({ reviews = [], properties = [], onViewProperty, showToast }
             ].filter(Boolean).some(value => value?.toString().toLowerCase().includes(q));
             
             const matchesRating = ratingFilter === 'all' || String(review.overall_rating) === ratingFilter;
-            return matchesSearch && matchesRating;
+            const matchesType = typeFilter === 'all' || review.review_type === typeFilter;
+            return matchesSearch && matchesRating && matchesType;
         });
-    }, [reviews, searchTerm, ratingFilter]);
+    }, [reviews, searchTerm, ratingFilter, typeFilter]);
 
     const handleSearchChange = (e) => {
         setSearchTerm(e.target.value);
@@ -435,6 +449,11 @@ const ReviewsTab = ({ reviews = [], properties = [], onViewProperty, showToast }
 
     const handleRatingFilterChange = (e) => {
         setRatingFilter(e.target.value);
+        setCurrentPage(1);
+    };
+
+    const handleTypeFilterChange = (e) => {
+        setTypeFilter(e.target.value);
         setCurrentPage(1);
     };
 
@@ -481,7 +500,7 @@ const ReviewsTab = ({ reviews = [], properties = [], onViewProperty, showToast }
                     </span>
                 </div>
 
-                {/* Rating summary pills */}
+                {/* Rating summary pills + review type counts */}
                 {total > 0 && (
                     <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', alignItems: 'center' }}>
                         <span style={{ 
@@ -493,6 +512,20 @@ const ReviewsTab = ({ reviews = [], properties = [], onViewProperty, showToast }
                         }}>
                             {Icons.star} {avgRating} avg
                         </span>
+                        {/* Review type counts */}
+                        {reviewTypes.map(type => (
+                            typeCounts[type] > 0 && (
+                                <span key={type} style={{ 
+                                    display: 'inline-flex', alignItems: 'center', gap: '0.2rem',
+                                    padding: '0.2rem 0.5rem', borderRadius: 999,
+                                    fontSize: '0.65rem', fontWeight: 700,
+                                    backgroundColor: 'hsl(174 40% 93%)', color: 'hsl(174 62% 32%)',
+                                    border: '1px solid hsl(174 40% 85%)',
+                                }}>
+                                    {type.charAt(0).toUpperCase() + type.slice(1)} {typeCounts[type]}
+                                </span>
+                            )
+                        ))}
                         {[5, 4, 3, 2, 1].map(rating => 
                             ratingCounts[rating] > 0 && (
                                 <span key={rating} style={{ 
@@ -539,6 +572,27 @@ const ReviewsTab = ({ reviews = [], properties = [], onViewProperty, showToast }
                         onBlur={e => e.currentTarget.style.borderColor = 'hsl(220 15% 88%)'}
                     />
                 </div>
+                <select
+                    value={typeFilter}
+                    onChange={handleTypeFilterChange}
+                    style={{
+                        padding: '0.65rem 1rem', borderRadius: '0.625rem',
+                        border: '1px solid hsl(220 15% 88%)',
+                        backgroundColor: 'white',
+                        fontSize: '0.8rem', color: 'hsl(220 25% 15%)',
+                        fontFamily: 'inherit', minWidth: '130px',
+                        outline: 'none', cursor: 'pointer',
+                    }}
+                    onFocus={e => e.currentTarget.style.borderColor = 'hsl(38 92% 50%)'}
+                    onBlur={e => e.currentTarget.style.borderColor = 'hsl(220 15% 88%)'}
+                >
+                    <option value="all">All Types</option>
+                    {reviewTypes.map(type => (
+                        <option key={type} value={type}>
+                            {type.charAt(0).toUpperCase() + type.slice(1)} ({typeCounts[type]})
+                        </option>
+                    ))}
+                </select>
                 <select
                     value={ratingFilter}
                     onChange={handleRatingFilterChange}
@@ -621,10 +675,10 @@ const ReviewsTab = ({ reviews = [], properties = [], onViewProperty, showToast }
                         fontSize: '0.95rem', fontWeight: 800, 
                         color: 'hsl(220 25% 15%)', margin: '0 0 0.35rem' 
                     }}>
-                        {searchTerm || ratingFilter !== 'all' ? 'No Reviews Found' : 'No Reviews Yet'}
+                        {searchTerm || ratingFilter !== 'all' || typeFilter !== 'all' ? 'No Reviews Found' : 'No Reviews Yet'}
                     </h3>
                     <p style={{ color: 'hsl(220 15% 52%)', fontSize: '0.82rem', margin: 0 }}>
-                        {searchTerm || ratingFilter !== 'all'
+                        {searchTerm || ratingFilter !== 'all' || typeFilter !== 'all'
                             ? 'No reviews match your search criteria. Try different filters.'
                             : 'There are no reviews on the platform yet.'}
                     </p>

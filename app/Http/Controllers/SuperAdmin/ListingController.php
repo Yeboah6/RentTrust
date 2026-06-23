@@ -799,14 +799,24 @@ class ListingController extends Controller
                 'featured_at' => $featuredAt,
             ]);
     
+            // ---- EMAIL SENDING (simplified) ------------------------------------------
             $agentEmail = $request->input('agentEmail') ?: $listing->agent_email;
             $emailSent  = false;
     
             if (filter_var($agentEmail, FILTER_VALIDATE_EMAIL)) {
                 try {
-                    Mail::to($agentEmail)->send(new ListingUpdatedMail($listing->fresh()));
+                    Mail::raw(
+                        "Hello,\n\n" .
+                        "Your listing \"{$listing->title}\" has been updated by an administrator.\n\n" .
+                        "If you did not expect this change, please contact support immediately.\n\n" .
+                        "Thank you.\n",
+                        function ($message) use ($agentEmail, $listing) {
+                            $message->to($agentEmail)
+                                    ->subject('Your Listing Has Been Updated');
+                        }
+                    );
                     $emailSent = true;
-            
+
                     Log::info('Agent notification email sent', [
                         'listing_id'  => $listing->id,
                         'agent_email' => $agentEmail,
@@ -1081,6 +1091,7 @@ class ListingController extends Controller
             'rent_min'         => $listing->rent_min,
             'rent_max'         => $listing->rent_max,
             'advance_duration' => $listing->advance_duration,
+            // Rabbit@KEKStudios2026
             'currency'         => $listing->currency ?? 'GH₵',
             'status'           => $listing->status,
             'city'             => $cityValue,                 // ← matched to select option

@@ -9,6 +9,7 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental, locations = [
   const locationsData = locations.length ? locations : pageLocations;
   const propertyTypesData = propertyTypes.length ? propertyTypes : pagePropertyTypes;
   const amenitiesData = amenities.length ? amenities : pageAmenities;
+  const isAdmin = userRole === 'admin';
 
   // Use form for data management
   const { data, setData, processing, errors, reset } = useForm({
@@ -26,19 +27,21 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental, locations = [
     bedrooms: '',
     bathrooms: '',
     amenities: [],
-    newImages: [], // New images to upload
-    existingImages: [], // Existing images to keep
-    removedImages: [], // Existing images to remove
+    newImages: [], 
+    existingImages: [], 
+    removedImages: [],
     description: '',
     agentName: agentData?.fullName || '',
     agentPhone: agentData?.phone || '',
-    agentEmail: agentData?.email || ''
+    agentEmail: agentData?.email || '',
+    // 'status': ''
   });
 
   const [newImages, setNewImages] = useState([]);
   const [existingImages, setExistingImages] = useState([]);
   const [currentStep, setCurrentStep] = useState(1);
   const [toast, setToast] = useState(null);
+  const [availability, setAvailability] = useState('active');
 
   // Extract names from DB objects
   const cityNames = locationsData?.map(l => l?.name) || [];
@@ -135,7 +138,7 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental, locations = [
         agentName: rental.agent_name || agentData?.fullName || '',
         agentPhone: rental.agent_phone || agentData?.phone || '',
         agentEmail: rental.agent_email || agentData?.email || '',
-        status: rental.status || 'active'
+        status: rental.status || ''
       });
     }
   }, [rental]);
@@ -282,7 +285,16 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental, locations = [
     formData.append('agentName', data.agentName);
     formData.append('agentPhone', data.agentPhone);
     formData.append('agentEmail', data.agentEmail);
-    formData.append('status', data.status);
+    // formData.append('status', data.status);
+
+    if (isAdmin) {
+      formData.append('status', data.status);
+      formData.append('is_sold', data.status === 'sold' ? '1' : '0');
+    } else {
+      formData.append('is_sold', availability !== 'active' ? '1' : '0');
+    }
+
+    
 
     // Add amenities as JSON string
     formData.append('amenities', JSON.stringify(data.amenities));
@@ -305,7 +317,7 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental, locations = [
     
     // Submit using FormData with axios (includes _method for PUT spoofing)
     // Use admin endpoint if user is admin, otherwise use standard endpoint
-    const baseUrl = userRole === 'admin' ? '/admin/rent' : (data.purpose === 'rent' ? '/rent' : '/sale');
+    const baseUrl = userRole === 'admin' ? '/admin/rent' : '/rent';
     const url = `${baseUrl}/${data.id}`;
     axios.post(url, formData, {
       headers: {
@@ -316,7 +328,7 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental, locations = [
       showToast("Listing Updated", "Your rental listing has been updated successfully.", "success");
       setTimeout(() => {
         if (setShowEditListingModal) setShowEditListingModal(false);
-        // window.location.reload(); // Reload to see updates
+        window.location.reload();
       }, 1500);
     })
     .catch((error) => {
@@ -350,8 +362,6 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental, locations = [
     { number: 3, title: 'Contact Information', icon: FileText },
     { number: 4, title: 'Review & Submit', icon: CheckCircle2 }
   ];
-
-  // console.log(data.status);
 
   const allImages = [...existingImages, ...newImages];
 
@@ -1115,6 +1125,62 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental, locations = [
                               </p>
                             )}
                           </div>
+
+                          <div>
+                      <label style={{ 
+                        fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                        fontWeight: '500',
+                        color: 'hsl(200 25% 15%)',
+                        display: 'block', 
+                        marginBottom: 'clamp(0.375rem, 1.5vw, 0.5rem)' 
+                      }}>
+                        Advance Duration *
+                      </label>
+                      <div style={{ position: 'relative' }}>
+                        <Calendar style={{ 
+                          position: 'absolute',
+                          left: 'clamp(0.75rem, 3vw, 1rem)',
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          height: 'clamp(1rem, 3vw, 1.25rem)',
+                          width: 'clamp(1rem, 3vw, 1.25rem)',
+                          color: 'hsl(200 15% 45%)'
+                        }} />
+                        <select
+                          value={data.advanceDuration}
+                          onChange={(e) => setData('advanceDuration', e.target.value)}
+                          style={{
+                            width: '100%',
+                            paddingLeft: 'clamp(2.25rem, 8vw, 2.75rem)',
+                            paddingRight: 'clamp(0.75rem, 3vw, 1rem)',
+                            paddingTop: 'clamp(0.625rem, 2vw, 0.75rem)',
+                            paddingBottom: 'clamp(0.625rem, 2vw, 0.75rem)',
+                            border: '1px solid hsl(40 20% 88%)',
+                            borderRadius: 'clamp(0.375rem, 2vw, 0.5rem)',
+                            fontSize: 'clamp(0.875rem, 2vw, 0.875rem)',
+                            fontFamily: 'inherit',
+                            backgroundColor: 'white',
+                            appearance: 'none',
+                            transition: 'all 0.2s'
+                          }}
+                          onFocus={(e) => {
+                            e.target.style.borderColor = 'hsl(174 62% 32%)';
+                            e.target.style.boxShadow = '0 0 0 2px hsl(174 62% 32% / 0.2)';
+                          }}
+                          onBlur={(e) => {
+                            e.target.style.borderColor = 'hsl(40 20% 88%)';
+                            e.target.style.boxShadow = 'none';
+                          }}
+                        >
+                          <option value="1">1 Month</option>
+                          <option value="2">2 Months</option>
+                          <option value="3">3 Months</option>
+                          <option value="4">4 Months</option>
+                          <option value="5">5 Months</option>
+                        </select>
+                      </div>
+                    </div>
+
                         </>
                       ) : (
                         <div>
@@ -1182,61 +1248,6 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental, locations = [
                           )}
                         </div>
                       )}
-                    </div>
-
-                    <div>
-                      <label style={{ 
-                        fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', 
-                        fontWeight: '500',
-                        color: 'hsl(200 25% 15%)',
-                        display: 'block', 
-                        marginBottom: 'clamp(0.375rem, 1.5vw, 0.5rem)' 
-                      }}>
-                        Advance Duration *
-                      </label>
-                      <div style={{ position: 'relative' }}>
-                        <Calendar style={{ 
-                          position: 'absolute',
-                          left: 'clamp(0.75rem, 3vw, 1rem)',
-                          top: '50%',
-                          transform: 'translateY(-50%)',
-                          height: 'clamp(1rem, 3vw, 1.25rem)',
-                          width: 'clamp(1rem, 3vw, 1.25rem)',
-                          color: 'hsl(200 15% 45%)'
-                        }} />
-                        <select
-                          value={data.advanceDuration}
-                          onChange={(e) => setData('advanceDuration', e.target.value)}
-                          style={{
-                            width: '100%',
-                            paddingLeft: 'clamp(2.25rem, 8vw, 2.75rem)',
-                            paddingRight: 'clamp(0.75rem, 3vw, 1rem)',
-                            paddingTop: 'clamp(0.625rem, 2vw, 0.75rem)',
-                            paddingBottom: 'clamp(0.625rem, 2vw, 0.75rem)',
-                            border: '1px solid hsl(40 20% 88%)',
-                            borderRadius: 'clamp(0.375rem, 2vw, 0.5rem)',
-                            fontSize: 'clamp(0.875rem, 2vw, 0.875rem)',
-                            fontFamily: 'inherit',
-                            backgroundColor: 'white',
-                            appearance: 'none',
-                            transition: 'all 0.2s'
-                          }}
-                          onFocus={(e) => {
-                            e.target.style.borderColor = 'hsl(174 62% 32%)';
-                            e.target.style.boxShadow = '0 0 0 2px hsl(174 62% 32% / 0.2)';
-                          }}
-                          onBlur={(e) => {
-                            e.target.style.borderColor = 'hsl(40 20% 88%)';
-                            e.target.style.boxShadow = 'none';
-                          }}
-                        >
-                          <option value="1">1 Year</option>
-                          <option value="2">2 Years</option>
-                          <option value="3">3 Years</option>
-                          <option value="4">4 Years</option>
-                          <option value="5">5 Years</option>
-                        </select>
-                      </div>
                     </div>
 
                     <div className="form-grid" style={{
@@ -1759,61 +1770,80 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental, locations = [
                       )}
                     </div>
 
+                    {isAdmin ? (
+                    /* Admin: full status control */
                     <div>
-                      <label style={{ 
-                        fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', 
-                        fontWeight: '500',
-                        color: 'hsl(200 25% 15%)',
-                        display: 'block', 
-                        marginBottom: 'clamp(0.375rem, 1.5vw, 0.5rem)' 
-                      }}>
-                        Status
-                      </label>
-                      <select
-                        value={data.status}
-                        onChange={(e) => setData('status', e.target.value)}
-                        style={{
-                          width: '100%',
-                          padding: 'clamp(0.625rem, 2vw, 0.75rem) clamp(0.75rem, 3vw, 1rem)',
-                          border: `1px solid ${errors.status ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)'}`,
-                          borderRadius: 'clamp(0.375rem, 2vw, 0.5rem)',
-                          fontSize: 'clamp(0.875rem, 2vw, 0.875rem)',
-                          fontFamily: 'inherit',
-                          backgroundColor: 'white',
-                          appearance: 'none',
-                          transition: 'all 0.2s'
-                        }}
-                        onFocus={(e) => {
-                          e.target.style.borderColor = 'hsl(174 62% 32%)';
-                          e.target.style.boxShadow = '0 0 0 2px hsl(174 62% 32% / 0.2)';
-                        }}
-                        onBlur={(e) => {
-                          e.target.style.borderColor = errors.status ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)';
-                          e.target.style.boxShadow = 'none';
-                        }}
-                      >
-                        <option value="active">Active</option>
-                        {/* <option value="inactive">Inactive</option> */}
-                        <option value="rented">Rented</option>
-                        <option value="sold">Sold</option>
-                      </select>
-                      {errors.status && (
-                        <p style={{ 
-                          fontSize: 'clamp(0.75rem, 2vw, 0.75rem)', 
-                          marginTop: 'clamp(0.25rem, 1vw, 0.375rem)', 
-                          color: 'hsl(0 72% 51%)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 'clamp(0.25rem, 1vw, 0.375rem)'
-                        }}>
-                          <AlertCircle style={{ 
-                            height: 'clamp(0.75rem, 2vw, 0.875rem)', 
-                            width: 'clamp(0.75rem, 2vw, 0.875rem)' 
-                          }} /> 
-                          {errors.status}
-                        </p>
-                      )}
+                        <label style={{ fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', fontWeight: '500', color: 'hsl(200 25% 15%)', display: 'block', marginBottom: 'clamp(0.375rem, 1.5vw, 0.5rem)' }}>
+                            Status
+                        </label>
+                        <select
+                            value={data.status}
+                            onChange={(e) => setData('status', e.target.value)}
+                            style={{
+                                width: '100%',
+                                padding: 'clamp(0.625rem, 2vw, 0.75rem) clamp(0.75rem, 3vw, 1rem)',
+                                border: `1px solid ${errors.status ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)'}`,
+                                borderRadius: 'clamp(0.375rem, 2vw, 0.5rem)',
+                                fontSize: 'clamp(0.875rem, 2vw, 0.875rem)',
+                                fontFamily: 'inherit',
+                                backgroundColor: 'white',
+                                appearance: 'none',
+                                transition: 'all 0.2s'
+                            }}
+                            onFocus={(e) => {
+                                e.target.style.borderColor = 'hsl(174 62% 32%)';
+                                e.target.style.boxShadow = '0 0 0 2px hsl(174 62% 32% / 0.2)';
+                            }}
+                            onBlur={(e) => {
+                                e.target.style.borderColor = errors.status ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)';
+                                e.target.style.boxShadow = 'none';
+                            }}
+                        >
+                            <option value="">Select status</option>
+                            <option value="approved">Active</option>
+                            <option value="pending">Pending</option>
+                            <option value="rejected">Rejected</option>
+                            <option value="rented">Rented</option>
+                            <option value="sold">Sold</option>
+                            <option value="inactive">Inactive</option>
+                        </select>
+                        {errors.status && (
+                            <p style={{ fontSize: 'clamp(0.75rem, 2vw, 0.75rem)', marginTop: 'clamp(0.25rem, 1vw, 0.375rem)', color: 'hsl(0 72% 51%)', display: 'flex', alignItems: 'center', gap: 'clamp(0.25rem, 1vw, 0.375rem)' }}>
+                                <AlertCircle style={{ height: 'clamp(0.75rem, 2vw, 0.875rem)', width: 'clamp(0.75rem, 2vw, 0.875rem)' }} /> 
+                                {errors.status}
+                            </p>
+                        )}
                     </div>
+                ) : (
+                    /* Agent: availability toggle (doesn't change status) */
+                    <div>
+                        <label style={{ fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', fontWeight: '500', color: 'hsl(200 25% 15%)', display: 'block', marginBottom: 'clamp(0.375rem, 1.5vw, 0.5rem)' }}>
+                            Availability
+                        </label>
+                        <select
+                            value={availability}
+                            onChange={(e) => setAvailability(e.target.value)}
+                            style={{
+                                width: '100%',
+                                padding: 'clamp(0.625rem, 2vw, 0.75rem) clamp(0.75rem, 3vw, 1rem)',
+                                border: '1px solid hsl(40 20% 88%)',
+                                borderRadius: 'clamp(0.375rem, 2vw, 0.5rem)',
+                                fontSize: 'clamp(0.875rem, 2vw, 0.875rem)',
+                                fontFamily: 'inherit',
+                                backgroundColor: 'white',
+                                appearance: 'none',
+                                transition: 'all 0.2s'
+                            }}
+                        >
+                            <option>Pending</option>
+                            {data.purpose === 'sale' && <option value="sold">Sold</option>}
+                            {data.purpose === 'rent' && <option value="rented">Rented</option>}
+                        </select>
+                        <p style={{ fontSize: '0.75rem', color: 'hsl(200 15% 45%)', marginTop: '0.375rem' }}>
+                            Mark the listing as no longer available. The approval status will not change.
+                        </p>
+                    </div>
+                )}
                   </div>
                 )}
 
@@ -1937,7 +1967,32 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental, locations = [
                           Pricing & Features
                         </h3>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(0.375rem, 1.5vw, 0.5rem)' }}>
-                          <div style={{ 
+                         {rental.purpose === 'sale' ? (
+                        <div style={{ 
+                          display: 'flex', 
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          flexWrap: 'wrap',
+                          gap: '0.5rem'
+                        }}>
+                          <span style={{ 
+                              fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                              color: 'hsl(200 15% 45%)' 
+                            }}>
+                            Sale Price
+                          </span>
+                            <span style={{ 
+                              fontSize: 'clamp(0.875rem, 2.5vw, 1rem)', 
+                              fontWeight: '600',
+                              color: 'hsl(174 62% 32%)',
+                              textAlign: 'right'
+                            }}>
+                            GH₵{Number(rental.sale_price || 0).toLocaleString()}
+                          </span>
+                        </div>
+                      ) : (
+                        <>
+                        <div style={{ 
                             display: 'flex', 
                             justifyContent: 'space-between',
                             alignItems: 'center',
@@ -1960,6 +2015,7 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental, locations = [
                               GH₵{data.rentMax ? Number(data.rentMax).toLocaleString() : '0'}
                             </span>
                           </div>
+
                           <div style={{ 
                             display: 'flex', 
                             justifyContent: 'space-between',
@@ -1979,7 +2035,31 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental, locations = [
                               fontWeight: '500',
                               textAlign: 'right'
                             }}>
-                              {data.advanceDuration} {data.advanceDuration === '1' ? 'Year' : 'Years'}
+                              {data.advanceDuration} {data.advanceDuration === '1' ? 'Month' : 'Months'}
+                            </span>
+                          </div>
+                          </>
+                      )}
+                          <div style={{ 
+                            display: 'flex', 
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            flexWrap: 'wrap',
+                            gap: '0.5rem'
+                          }}>
+                            <span style={{ 
+                              fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                              color: 'hsl(200 15% 45%)' 
+                            }}>
+                              Bedrooms:
+                            </span>
+                            <span style={{ 
+                              fontSize: 'clamp(0.875rem, 2.5vw, 0.875rem)', 
+                              color: 'hsl(200 25% 15%)',
+                              fontWeight: '500',
+                              textAlign: 'right'
+                            }}>
+                              {data.bedrooms || '0'}
                             </span>
                           </div>
                           <div style={{ 
@@ -2015,7 +2095,7 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental, locations = [
                               fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', 
                               color: 'hsl(200 15% 45%)' 
                             }}>
-                              Bathrooms:
+                              Description:
                             </span>
                             <span style={{ 
                               fontSize: 'clamp(0.875rem, 2.5vw, 0.875rem)', 
@@ -2023,7 +2103,7 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental, locations = [
                               fontWeight: '500',
                               textAlign: 'right'
                             }}>
-                              {data.bathrooms || '0'}
+                              {data.description}
                             </span>
                           </div>
                           {data.amenities.length > 0 && (
@@ -2142,6 +2222,22 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental, locations = [
                               {data.agentEmail}
                             </span>
                           </div>
+                        </div>
+                      </div>
+
+                      <div style={{ padding: 'clamp(1rem, 3vw, 1.25rem)', borderRadius: 'clamp(0.5rem, 2vw, 0.75rem)', backgroundColor: 'hsl(40 30% 94%)' }}>
+                        <h3 style={{ color: 'hsl(200 25% 15%)', fontSize: 'clamp(0.875rem, 2.5vw, 1rem)', fontWeight: '600', marginBottom: 'clamp(0.5rem, 2vw, 0.75rem)' }}>
+                            {isAdmin ? 'Status Update' : 'Availability'}
+                        </h3>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(0.375rem, 1.5vw, 0.5rem)' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+                                <span style={{ fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', color: 'hsl(200 15% 45%)' }}>
+                                    {isAdmin ? 'Status:' : 'Availability:'}
+                                </span>
+                                <span style={{ fontSize: 'clamp(0.875rem, 2.5vw, 0.875rem)', color: 'hsl(200 25% 15%)', fontWeight: '500', textAlign: 'right', textTransform: 'capitalize' }}>
+                                    {isAdmin ? data.status : availability}
+                                </span>
+                            </div>
                         </div>
                       </div>
 

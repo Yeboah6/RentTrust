@@ -5,6 +5,7 @@ namespace App\Http\Controllers\SuperAdmin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Location;
+use Illuminate\Support\Str;
 
 class LocationController extends Controller
 {
@@ -27,7 +28,7 @@ class LocationController extends Controller
             'slug' => 'nullable|string',
             'is_active' => 'boolean'
         ]);
-        $location['location_id'] = Location::generateUUID();
+        $location['location_id'] = Str::uuid();
         Location::create($location);
         return redirect()->back()->with('success', 'Location added');
     }

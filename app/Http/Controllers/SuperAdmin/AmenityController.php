@@ -5,6 +5,7 @@ namespace App\Http\Controllers\SuperAdmin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Amenity;
+use Illuminate\Support\Str;
 
 class AmenityController extends Controller
 {
@@ -27,7 +28,7 @@ class AmenityController extends Controller
             'description' => 'nullable|string',
             'is_active' => 'boolean'
         ]);
-        $data['amenity_id'] = Amenity::generateUUID();
+        $data['amenity_id'] = Str::uuid();
         Amenity::create($data);
         return back()->with('success', 'Amenity added');
     }
