@@ -163,11 +163,70 @@ const fmtPrice = (property) => {
     };
 };
 
+const getFeatureState = (property) => {
+    const isFeatured = toBool(property.is_featured);
+    const isQueued = toBool(property.is_featured_queued);
+    const timesFeatured = property.times_featured ?? 0;
+    const maxFeatured = property.max_times_featured ?? 3; // matches backend constant
+    const featuredAt = property.featured_at;
+    const featuredEndsAt = property.featured_ends_at; // could be computed if backend sends featured_at
+    const now = new Date();
+
+    // If featured and still active (within 48h)
+    if (isFeatured && featuredAt) {
+        const endDate = featuredEndsAt 
+            ? new Date(featuredEndsAt) 
+            : new Date(new Date(featuredAt).getTime() + 48 * 60 * 60 * 1000);
+        if (now < endDate) {
+            const hoursLeft = Math.max(0, Math.ceil((endDate - now) / (1000 * 60 * 60)));
+            return {
+                canRequest: false,
+                label: `Featured (${hoursLeft}h left)`,
+                disabled: true,
+                tooltip: `Listing is featured for another ${hoursLeft} hours`,
+                icon: Icons.clock,
+            };
+        }
+    }
+
+    // If in queue
+    if (isQueued) {
+        return {
+            canRequest: false,
+            label: `In Queue #${property.featured_queue_position ?? '?'}`,
+            disabled: true,
+            tooltip: 'Your listing is waiting to be featured',
+            icon: Icons.clock,
+        };
+    }
+
+    // If max featured count reached
+    if (timesFeatured >= maxFeatured) {
+        return {
+            canRequest: false,
+            label: 'Max Featured',
+            disabled: true,
+            tooltip: `Already featured ${maxFeatured} times`,
+            icon: Icons.sparkles,
+        };
+    }
+
+    // Default: can request
+    return {
+        canRequest: true,
+        label: 'Request Feature',
+        disabled: false,
+        tooltip: 'Get more visibility! Featured listings appear at the top for 48 hours.',
+        icon: Icons.sparkles,
+    };
+};
+
 // ─── Listing Card ─────────────────────────────────────────────────────────────
-const ListingCard = ({ property, onView, onEdit, onVerify, getVerificationButtonText, isVerificationButtonDisabled }) => {
+const ListingCard = ({ property, onView, onEdit, onVerify, getVerificationButtonText, isVerificationButtonDisabled, onFeatureRequest }) => {
     const price = fmtPrice(property);
     const isFeatured = toBool(property.is_featured);
     const isSold = toBool(property.is_sold);
+    const featureState = getFeatureState(property);
 
     console.log(isSold)
 
@@ -241,6 +300,27 @@ const ListingCard = ({ property, onView, onEdit, onVerify, getVerificationButton
                 <button onClick={() => onEdit(property)} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', padding: '0.35rem 0.7rem', borderRadius: '0.4rem', border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white', color: 'hsl(220 25% 35%)', fontSize: '0.7rem', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
                     {Icons.edit} Edit
                 </button>
+                {/* Feature request button */}
+                <button
+                    onClick={() => featureState.canRequest && onFeatureRequest?.(property)}
+                    disabled={featureState.disabled}
+                    title={featureState.tooltip}
+                    style={{
+                        display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
+                        padding: '0.35rem 0.7rem', borderRadius: '0.4rem',
+                        border: `1px solid ${featureState.canRequest ? 'hsl(38 92% 50%)' : 'hsl(220 15% 88%)'}`,
+                        backgroundColor: featureState.canRequest ? 'hsl(38 92% 97%)' : 'hsl(220 15% 96%)',
+                        color: featureState.canRequest ? 'hsl(38 92% 40%)' : 'hsl(220 15% 55%)',
+                        fontSize: '0.7rem', fontWeight: 700,
+                        cursor: featureState.canRequest ? 'pointer' : 'default',
+                        fontFamily: 'inherit',
+                        opacity: featureState.disabled ? 0.7 : 1,
+                        transition: 'all 0.12s',
+                    }}
+                >
+                    {featureState.icon}
+                    {featureState.label}
+                </button>
                 <button onClick={() => !isVerificationButtonDisabled(property.effective_listing_status, property.verification_status) && onVerify(property)} 
                     style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', padding: '0.35rem 0.7rem', borderRadius: '0.4rem', border: '1px solid hsl(38 92% 70%)', backgroundColor: 'white', color: 'hsl(38 92% 40%)', fontSize: '0.7rem', fontWeight: 700, cursor: isVerificationButtonDisabled(property.effective_listing_status, property.verification_status) ? 'default' : 'pointer', fontFamily: 'inherit', opacity: isVerificationButtonDisabled(property.effective_listing_status, property.verification_status) ? 0.5 : 1, marginLeft: 'auto' }}>
                     {Icons.verify} {getVerificationButtonText(property.effective_listing_status, property.verification_status)}
@@ -257,6 +337,7 @@ const ListingsTab = ({
     onView, 
     onEdit, 
     onVerify,
+    onFeatureRequest,
     getVerificationButtonText,
     isVerificationButtonDisabled,
 }) => {
@@ -431,7 +512,16 @@ const ListingsTab = ({
                     )}
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.875rem' }}>
                         {paginatedRentals.map(property => (
-                            <ListingCard key={property.id} property={property} onView={onView} onEdit={onEdit} onVerify={onVerify} getVerificationButtonText={getVerificationButtonText} isVerificationButtonDisabled={isVerificationButtonDisabled} />
+                            <ListingCard 
+                                key={property.id} 
+                                property={property} 
+                                onView={onView} 
+                                onEdit={onEdit} 
+                                onVerify={onVerify}
+                                onFeatureRequest={onFeatureRequest}   // NEW
+                                getVerificationButtonText={getVerificationButtonText} 
+                                isVerificationButtonDisabled={isVerificationButtonDisabled} 
+                            />
                         ))}
                     </div>
                 </div>
@@ -452,7 +542,16 @@ const ListingsTab = ({
                     )}
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.875rem' }}>
                         {paginatedSales.map(property => (
-                            <ListingCard key={property.id} property={property} onView={onView} onEdit={onEdit} onVerify={onVerify} getVerificationButtonText={getVerificationButtonText} isVerificationButtonDisabled={isVerificationButtonDisabled} />
+                            <ListingCard 
+                                key={property.id} 
+                                property={property} 
+                                onView={onView} 
+                                onEdit={onEdit} 
+                                onVerify={onVerify}
+                                onFeatureRequest={onFeatureRequest}   // NEW
+                                getVerificationButtonText={getVerificationButtonText} 
+                                isVerificationButtonDisabled={isVerificationButtonDisabled} 
+                            />
                         ))}
                     </div>
                 </div>

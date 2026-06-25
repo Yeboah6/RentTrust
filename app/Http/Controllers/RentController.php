@@ -747,31 +747,55 @@ class RentController extends Controller
         ]);
 
         // Notify the agent about the new inquiry
-        try {
-            $agent   = $rent->agent;
-            $tenant  = Auth::user();
-            $typeLabel = ucfirst($data['type']);
+        $emailSent = false;
+        $agent = $rent->agent;          // may be null if no agent assigned
+        $tenant = Auth::user();
+        $typeLabel = ucfirst($data['type']);
 
-            Mail::raw(
-                "Hello {$agent->name},\n\n" .
-                "You have received a new inquiry on your listing: {$rent->title}.\n\n" .
-                "── Inquiry Details ──────────────────────\n" .
-                "  Type    : {$typeLabel}\n" .
-                "  From    : {$tenant->name} ({$tenant->email})\n" .
-                "  Message : {$data['message']}\n" .
-                "─────────────────────────────────────────\n\n" .
-                "Log in to your dashboard to respond to this inquiry.\n\n" .
-                "Thank you.\n",
-                function ($message) use ($agent, $rent, $typeLabel) {
-                    $message->to($agent->email, $agent->name)
-                        ->subject("New {$typeLabel} Inquiry on \"{$rent->title}\"");
-                }
-            );
-        } catch (\Throwable $e) {
-            Log::warning('Failed to send inquiry notification email', [
-                'error'      => $e->getMessage(),
+        if ($agent && filter_var($agent->email, FILTER_VALIDATE_EMAIL)) {
+            $dashboardUrl = url('/agent-dashboard/');   // adjust to your actual route
+
+            try {
+                Mail::raw(
+                    "Hello {$agent->name},\n\n" .
+                    "You have received a new {$typeLabel} inquiry on your listing \"{$rent->title}\".\n\n" .
+                    "── Details ──────────────────────────\n" .
+                    "  Type    : {$typeLabel}\n" .
+                    "  From    : {$tenant->name}\n" .
+                    "  Email   : {$tenant->email}\n".
+                    "  Number  : {$tenant->phone}\n" .
+                    "  Message : {$data['message']}\n" .
+                    "──────────────────────────────────────\n\n" .
+                    "You can view and respond to this inquiry from your dashboard:\n" .
+                    "{$dashboardUrl}\n\n" .
+                    "Thank you.\n",
+                    function ($message) use ($agent, $rent, $typeLabel) {
+                        $message->to($agent->email, $agent->name)
+                                ->subject("New {$typeLabel} Inquiry on \"{$rent->title}\"");
+                    }
+                );
+
+                $emailSent = true;
+
+                Log::info('Inquiry notification email sent', [
+                    'rental_id'  => $rent->id,
+                    'inquiry_id' => $inquiry->listing_inquiry_id,
+                    'agent_email' => $agent->email,
+                ]);
+
+            } catch (\Throwable $e) {
+                Log::warning('Failed to send inquiry notification email', [
+                    'error'       => $e->getMessage(),
+                    'rental_id'   => $rent->id,
+                    'inquiry_id'  => $inquiry->listing_inquiry_id,
+                    'agent_email' => $agent->email ?? 'missing',
+                ]);
+            }
+        } else {
+            Log::info('Inquiry notification email skipped – no valid agent email', [
                 'rental_id'  => $rent->id,
                 'inquiry_id' => $inquiry->listing_inquiry_id,
+                'has_agent'  => (bool) $agent,
             ]);
         }
 

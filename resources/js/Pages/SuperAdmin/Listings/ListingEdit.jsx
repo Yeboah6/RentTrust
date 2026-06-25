@@ -372,6 +372,19 @@ const ListingEdit = ({ listing, agents = [], property_types = [], amenities = []
     const [toast,      setToast]      = useState(null);
     const toastTimer = useRef(null);
 
+    const handleAgentChange = (agentId) => {
+        set('agent_id', agentId);
+        if (agentId) {
+            const agent = agents.find(a => a.id == agentId);   // match numeric id
+            if (agent) {
+                set('agentName',  agent.name  ?? '');
+                set('agentPhone', agent.phone ?? '');
+                set('agentEmail', agent.email ?? '');
+            }
+        }
+        // if agentId is empty (unassigned), do nothing – keep whatever is already in the fields
+    };
+
     const showToast = (msg, type = 'success') => {
         clearTimeout(toastTimer.current);
         setToast({ msg, type });
@@ -615,7 +628,7 @@ const ListingEdit = ({ listing, agents = [], property_types = [], amenities = []
 
                                         {agents.length > 0 && (
                                             <FField label="Assigned Agent" error={errors.agent_id}>
-                                                <FSelect value={form.agent_id} onChange={e => set('agent_id', e.target.value)} hasError={!!errors.agent_id}>
+                                                <FSelect value={form.agent_id} onChange={e => handleAgentChange(e.target.value)} hasError={!!errors.agent_id}>
                                                     <option value="">Unassigned</option>
                                                     {agents.map(a => <option key={a.id} value={a.id}>{a.name}{a.agency ? ` — ${a.agency}` : ''}</option>)}
                                                 </FSelect>

@@ -478,7 +478,7 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, verif
 
             {/* Tabs */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '0.5rem', backgroundColor: 'hsl(40 30% 94%)', padding: '0.25rem', borderRadius: '0.5rem', marginBottom: '2rem' }}>
-              {['overview', 'agents', 'listings', 'verifications', 'reports', 'reviews', 'inquiries-views', 'subscriptions', 'analytics'].map(tab => (
+              {['overview', 'agents', 'listings', 'verifications', 'reports', 'reviews', 'inquiries', 'subscriptions', 'analytics'].map(tab => (
                 <button key={tab} onClick={() => setActiveTab(tab)} style={{ padding: '0.5rem 1rem', border: 'none', borderRadius: '0.375rem', backgroundColor: activeTab === tab ? 'white' : 'transparent', color: activeTab === tab ? 'hsl(200 25% 15%)' : 'hsl(200 15% 45%)', fontWeight: '500', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', transition: 'all 0.2s', boxShadow: activeTab === tab ? '0 1px 2px 0 hsl(200 25% 15% / 0.05)' : 'none', textTransform: 'capitalize' }}>
                   {tab === 'overview' && <BarChart style={{ height: '1rem', width: '1rem' }} />}
                   {tab === 'agents' && <Shield style={{ height: '1rem', width: '1rem' }} />}
@@ -486,7 +486,7 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, verif
                   {tab === 'verifications' && <ShieldCheck style={{ height: '1rem', width: '1rem' }} />}
                   {tab === 'reports' && <AlertCircle style={{ height: '1rem', width: '1rem' }} />}
                   {tab === 'reviews' && <MessageSquare style={{ height: '1rem', width: '1rem' }} />}
-                  {tab === 'inquiries-views' && <Eye style={{ height: '1rem', width: '1rem' }} />}
+                  {tab === 'inquiries' && <Eye style={{ height: '1rem', width: '1rem' }} />}
                   {/* {tab === 'views' && <Eye style={{ height: '1rem', width: '1rem' }} />} */}
                   {tab === 'subscriptions' && <Gift style={{ height: '1rem', width: '1rem' }} />}
                   {tab === 'analytics' && <BarChart style={{ height: '1rem', width: '1rem' }} />}
@@ -615,7 +615,7 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, verif
             )}
 
             {/* ── INQUIRIES TAB ──────────────────────────────────────────────────── */}
-            {activeTab === 'inquiries-views' && (
+            {activeTab === 'inquiries' && (
                 <InquiriesViewsTab
                     inquiries={inquiries}
                     views={views}
