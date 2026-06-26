@@ -163,16 +163,16 @@ const fmtPrice = (property) => {
     };
 };
 
+// ─── Feature state logic ──────────────────────────────────────────────────────
 const getFeatureState = (property) => {
     const isFeatured = toBool(property.is_featured);
     const isQueued = toBool(property.is_featured_queued);
     const timesFeatured = property.times_featured ?? 0;
-    const maxFeatured = property.max_times_featured ?? 3; // matches backend constant
+    const maxFeatured = property.max_times_featured ?? 3;
     const featuredAt = property.featured_at;
-    const featuredEndsAt = property.featured_ends_at; // could be computed if backend sends featured_at
+    const featuredEndsAt = property.featured_ends_at;
     const now = new Date();
 
-    // If featured and still active (within 48h)
     if (isFeatured && featuredAt) {
         const endDate = featuredEndsAt 
             ? new Date(featuredEndsAt) 
@@ -189,7 +189,6 @@ const getFeatureState = (property) => {
         }
     }
 
-    // If in queue
     if (isQueued) {
         return {
             canRequest: false,
@@ -200,7 +199,6 @@ const getFeatureState = (property) => {
         };
     }
 
-    // If max featured count reached
     if (timesFeatured >= maxFeatured) {
         return {
             canRequest: false,
@@ -211,7 +209,6 @@ const getFeatureState = (property) => {
         };
     }
 
-    // Default: can request
     return {
         canRequest: true,
         label: 'Request Feature',
@@ -221,116 +218,235 @@ const getFeatureState = (property) => {
     };
 };
 
+// ─── Feature Confirmation Modal ───────────────────────────────────────────────
+const FeatureConfirmModal = ({ property, onClose, onConfirm, loading }) => {
+    if (!property) return null;
+
+    const featureEnds = new Date(Date.now() + 48 * 60 * 60 * 1000);
+    const slotsInfo = "If slots are full, your listing will be queued and featured when a slot opens.";
+
+    return (
+        <div onClick={onClose} style={{
+            position: 'fixed', inset: 0, zIndex: 100,
+            backgroundColor: 'hsla(222, 28%, 8%, 0.65)', backdropFilter: 'blur(5px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center'
+        }}>
+            <div onClick={e => e.stopPropagation()} style={{
+                width: '100%', maxWidth: '420px', margin: '1rem',
+                backgroundColor: 'white', borderRadius: '1rem', overflow: 'hidden',
+                boxShadow: '0 20px 60px hsla(220, 28%, 6%, 0.3)',
+                animation: 'leModalIn 0.2s ease'
+            }}>
+                {/* Header */}
+                <div style={{
+                    padding: '1.25rem 1.5rem', borderBottom: '1px solid hsl(220 15% 90%)',
+                    display: 'flex', alignItems: 'center', gap: '0.75rem'
+                }}>
+                    <span style={{ color: 'hsl(38 92% 45%)', fontSize: '1.5rem' }}>⭐</span>
+                    <div>
+                        <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 800, color: 'hsl(220 25% 15%)' }}>
+                            Request Featured Listing
+                        </h3>
+                        <p style={{ margin: '0.1rem 0 0', fontSize: '0.78rem', color: 'hsl(220 15% 45%)' }}>
+                            for {property.title}
+                        </p>
+                    </div>
+                </div>
+
+                {/* Body */}
+                <div style={{ padding: '1.25rem 1.5rem' }}>
+                    <div style={{
+                        display: 'flex', flexDirection: 'column', gap: '0.75rem',
+                        fontSize: '0.82rem', color: 'hsl(220 15% 35%)', lineHeight: 1.6
+                    }}>
+                        <p style={{ margin: 0 }}>
+                            Featured listings are highlighted in search results and the featured section.
+                            They stay at the top for <strong>48 hours</strong> and receive more visibility.
+                        </p>
+                        <div style={{
+                            backgroundColor: 'hsl(38 92% 50% / 0.08)',
+                            border: '1px solid hsl(38 92% 50% / 0.2)',
+                            padding: '0.75rem', borderRadius: '0.5rem',
+                            display: 'flex', alignItems: 'flex-start', gap: '0.5rem'
+                        }}>
+                            <span style={{ marginTop: '0.15rem' }}>ℹ️</span>
+                            <span>{slotsInfo}</span>
+                        </div>
+                        <p style={{ margin: 0, fontSize: '0.75rem', color: 'hsl(220 15% 50%)' }}>
+                            Feature period: now → {featureEnds.toLocaleString()}
+                        </p>
+                    </div>
+                </div>
+
+                {/* Footer */}
+                <div style={{
+                    padding: '1rem 1.5rem', borderTop: '1px solid hsl(220 15% 90%)',
+                    display: 'flex', gap: '0.5rem', justifyContent: 'flex-end'
+                }}>
+                    <button onClick={onClose} disabled={loading}
+                        style={{
+                            padding: '0.5rem 1rem', borderRadius: '0.5rem',
+                            border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white',
+                            color: 'hsl(220 25% 30%)', fontSize: '0.8rem', fontWeight: 600,
+                            cursor: loading ? 'default' : 'pointer', fontFamily: 'inherit'
+                        }}>
+                        Cancel
+                    </button>
+                    <button onClick={onConfirm} disabled={loading}
+                        style={{
+                            padding: '0.5rem 1rem', borderRadius: '0.5rem',
+                            border: 'none', backgroundColor: loading ? 'hsl(220 25% 55%)' : 'hsl(38 92% 45%)',
+                            color: 'white', fontSize: '0.8rem', fontWeight: 700,
+                            cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
+                            display: 'flex', alignItems: 'center', gap: '0.35rem'
+                        }}>
+                        {loading ? (
+                            <><span style={{ display: 'inline-block', width: '0.9rem', height: '0.9rem', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: 'white', borderRadius: '50%', animation: 'spin 0.6s linear infinite' }} /> Requesting…</>
+                        ) : (
+                            <>⭐ Confirm Request</>
+                        )}
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 // ─── Listing Card ─────────────────────────────────────────────────────────────
 const ListingCard = ({ property, onView, onEdit, onVerify, getVerificationButtonText, isVerificationButtonDisabled, onFeatureRequest }) => {
     const price = fmtPrice(property);
     const isFeatured = toBool(property.is_featured);
     const isSold = toBool(property.is_sold);
     const featureState = getFeatureState(property);
+    const [featureModal, setFeatureModal] = useState(null);
+    const [requesting, setRequesting] = useState(false);
 
-    console.log(isSold)
+    const handleConfirmFeature = async () => {
+        if (!featureModal) return;
+        setRequesting(true);
+        try {
+            await onFeatureRequest?.(featureModal);
+        } finally {
+            setRequesting(false);
+            setFeatureModal(null);
+        }
+    };
 
     return (
-        <div style={{
-            backgroundColor: 'white',
-            border: isFeatured ? '1px solid hsl(38 92% 50% / 0.4)' : '1px solid hsl(220 15% 91%)',
-            borderRadius: '0.875rem',
-            overflow: 'hidden',
-            boxShadow: isFeatured 
-                ? '0 2px 12px hsl(38 92% 50% / 0.1), 0 1px 3px hsl(220 20% 15% / 0.04)' 
-                : '0 1px 3px hsl(220 20% 15% / 0.04)',
-            display: 'flex', flexDirection: 'column',
-            transition: 'box-shadow 0.15s, border-color 0.15s',
-        }}
-            onMouseEnter={e => e.currentTarget.style.boxShadow = isFeatured 
-                ? '0 4px 20px hsl(38 92% 50% / 0.18), 0 4px 14px hsl(220 20% 15% / 0.08)' 
-                : '0 4px 14px hsl(220 20% 15% / 0.08)'}
-            onMouseLeave={e => e.currentTarget.style.boxShadow = isFeatured 
-                ? '0 2px 12px hsl(38 92% 50% / 0.1), 0 1px 3px hsl(220 20% 15% / 0.04)' 
-                : '0 1px 3px hsl(220 20% 15% / 0.04)'}
-        >
-            {/* Status strip */}
-            <div style={{ 
-                height: 3, 
-                background: isFeatured 
-                    ? 'linear-gradient(90deg, hsl(38 92% 50%), hsl(28 90% 45%))' 
-                    : property.effective_listing_status === 'approved' 
-                        ? 'hsl(152 60% 40%)' 
-                        : property.effective_listing_status === 'pending' 
-                            ? 'hsl(38 92% 50%)' 
-                            : 'hsl(220 15% 60%)',
-                opacity: isFeatured ? 1 : 0.7,
-            }} />
+        <>
+            <div style={{
+                backgroundColor: 'white',
+                border: isFeatured ? '1px solid hsl(38 92% 50% / 0.4)' : '1px solid hsl(220 15% 91%)',
+                borderRadius: '0.875rem',
+                overflow: 'hidden',
+                boxShadow: isFeatured 
+                    ? '0 2px 12px hsl(38 92% 50% / 0.1), 0 1px 3px hsl(220 20% 15% / 0.04)' 
+                    : '0 1px 3px hsl(220 20% 15% / 0.04)',
+                display: 'flex', flexDirection: 'column',
+                transition: 'box-shadow 0.15s, border-color 0.15s',
+            }}
+                onMouseEnter={e => e.currentTarget.style.boxShadow = isFeatured 
+                    ? '0 4px 20px hsl(38 92% 50% / 0.18), 0 4px 14px hsl(220 20% 15% / 0.08)' 
+                    : '0 4px 14px hsl(220 20% 15% / 0.08)'}
+                onMouseLeave={e => e.currentTarget.style.boxShadow = isFeatured 
+                    ? '0 2px 12px hsl(38 92% 50% / 0.1), 0 1px 3px hsl(220 20% 15% / 0.04)' 
+                    : '0 1px 3px hsl(220 20% 15% / 0.04)'}
+            >
+                {/* Status strip */}
+                <div style={{ 
+                    height: 3, 
+                    background: isFeatured 
+                        ? 'linear-gradient(90deg, hsl(38 92% 50%), hsl(28 90% 45%))' 
+                        : property.effective_listing_status === 'approved' 
+                            ? 'hsl(152 60% 40%)' 
+                            : property.effective_listing_status === 'pending' 
+                                ? 'hsl(38 92% 50%)' 
+                                : 'hsl(220 15% 60%)',
+                    opacity: isFeatured ? 1 : 0.7,
+                }} />
 
-            <div style={{ padding: '1rem', flex: 1, display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: '0.5rem' }}>
-                    <div style={{ minWidth: 0, flex: 1 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem', flexWrap: 'wrap' }}>
-                            <h3 style={{ 
-                                margin: 0, fontSize: '0.85rem', fontWeight: 700, 
-                                color: 'hsl(220 25% 12%)', letterSpacing: '-0.01em',
-                                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                            }}>
-                                {property.title || 'Untitled Property'}
-                            </h3>
-                            <StatusBadge status={property.effective_listing_status} /> {isFeatured && <FeaturedBadge />} {isSold && <SoldBadge />}
+                <div style={{ padding: '1rem', flex: 1, display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: '0.5rem' }}>
+                        <div style={{ minWidth: 0, flex: 1 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem', flexWrap: 'wrap' }}>
+                                <h3 style={{ 
+                                    margin: 0, fontSize: '0.85rem', fontWeight: 700, 
+                                    color: 'hsl(220 25% 12%)', letterSpacing: '-0.01em',
+                                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                                }}>
+                                    {property.title || 'Untitled Property'}
+                                </h3>
+                                <StatusBadge status={property.effective_listing_status} /> {isFeatured && <FeaturedBadge />} {isSold && <SoldBadge />}
+                            </div>
+                            <p style={{ margin: '0 0 0.35rem', fontSize: '0.7rem', color: 'hsl(220 15% 50%)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                {Icons.mapPin} {property.address}, {property.city}
+                            </p>
                         </div>
-                        <p style={{ margin: '0 0 0.35rem', fontSize: '0.7rem', color: 'hsl(220 15% 50%)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                            {Icons.mapPin} {property.address}, {property.city}
-                        </p>
+                    </div>
+
+                    <div style={{
+                        padding: '0.65rem 0.75rem',
+                        backgroundColor: isFeatured ? 'hsl(38 92% 50% / 0.04)' : 'hsl(220 15% 97%)',
+                        borderRadius: '0.5rem',
+                        border: isFeatured ? '1px solid hsl(38 92% 50% / 0.15)' : '1px solid hsl(220 15% 93%)',
+                        display: 'flex', alignItems: 'baseline', gap: '0.25rem',
+                    }}>
+                        <span style={{ fontSize: '1rem', fontWeight: 800, color: price.color }}>{price.text}</span>
+                        {price.sub && <span style={{ fontSize: '0.68rem', color: 'hsl(220 15% 50%)', fontWeight: 600 }}>{price.sub}</span>}
                     </div>
                 </div>
 
-                <div style={{
-                    padding: '0.65rem 0.75rem',
-                    backgroundColor: isFeatured ? 'hsl(38 92% 50% / 0.04)' : 'hsl(220 15% 97%)',
-                    borderRadius: '0.5rem',
-                    border: isFeatured ? '1px solid hsl(38 92% 50% / 0.15)' : '1px solid hsl(220 15% 93%)',
-                    display: 'flex', alignItems: 'baseline', gap: '0.25rem',
-                }}>
-                    <span style={{ fontSize: '1rem', fontWeight: 800, color: price.color }}>{price.text}</span>
-                    {price.sub && <span style={{ fontSize: '0.68rem', color: 'hsl(220 15% 50%)', fontWeight: 600 }}>{price.sub}</span>}
+                <div style={{ borderTop: '1px solid hsl(220 15% 93%)', padding: '0.6rem 1rem', backgroundColor: 'hsl(220 15% 98.5%)', display: 'flex', gap: '0.4rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                    <button onClick={() => onView(property)} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', padding: '0.35rem 0.7rem', borderRadius: '0.4rem', border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white', color: 'hsl(174 62% 30%)', fontSize: '0.7rem', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+                        {Icons.eye} View
+                    </button>
+                    <button onClick={() => onEdit(property)} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', padding: '0.35rem 0.7rem', borderRadius: '0.4rem', border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white', color: 'hsl(220 25% 35%)', fontSize: '0.7rem', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+                        {Icons.edit} Edit
+                    </button>
+
+                    {/* Feature request button – opens modal */}
+                    <button
+                        onClick={() => featureState.canRequest && setFeatureModal(property)}
+                        disabled={!featureState.canRequest}
+                        title={featureState.tooltip}
+                        style={{
+                            display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
+                            padding: '0.35rem 0.7rem', borderRadius: '0.4rem',
+                            border: `1px solid ${featureState.canRequest ? 'hsl(38 92% 50%)' : 'hsl(220 15% 88%)'}`,
+                            backgroundColor: featureState.canRequest ? 'hsl(38 92% 97%)' : 'hsl(220 15% 96%)',
+                            color: featureState.canRequest ? 'hsl(38 92% 40%)' : 'hsl(220 15% 55%)',
+                            fontSize: '0.7rem', fontWeight: 700,
+                            cursor: featureState.canRequest ? 'pointer' : 'default',
+                            fontFamily: 'inherit',
+                            opacity: featureState.disabled ? 0.7 : 1,
+                            transition: 'all 0.12s',
+                        }}
+                    >
+                        {featureState.icon}
+                        {featureState.label}
+                    </button>
+
+                    <button onClick={() => !isVerificationButtonDisabled(property.effective_listing_status, property.verification_status) && onVerify(property)} 
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', padding: '0.35rem 0.7rem', borderRadius: '0.4rem', border: '1px solid hsl(38 92% 70%)', backgroundColor: 'white', color: 'hsl(38 92% 40%)', fontSize: '0.7rem', fontWeight: 700, cursor: isVerificationButtonDisabled(property.effective_listing_status, property.verification_status) ? 'default' : 'pointer', fontFamily: 'inherit', opacity: isVerificationButtonDisabled(property.effective_listing_status, property.verification_status) ? 0.5 : 1, marginLeft: 'auto' }}>
+                        {Icons.verify} {getVerificationButtonText(property.effective_listing_status, property.verification_status)}
+                    </button>
                 </div>
             </div>
 
-            <div style={{ borderTop: '1px solid hsl(220 15% 93%)', padding: '0.6rem 1rem', backgroundColor: 'hsl(220 15% 98.5%)', display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
-                <button onClick={() => onView(property)} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', padding: '0.35rem 0.7rem', borderRadius: '0.4rem', border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white', color: 'hsl(174 62% 30%)', fontSize: '0.7rem', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
-                    {Icons.eye} View
-                </button>
-                <button onClick={() => onEdit(property)} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', padding: '0.35rem 0.7rem', borderRadius: '0.4rem', border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white', color: 'hsl(220 25% 35%)', fontSize: '0.7rem', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
-                    {Icons.edit} Edit
-                </button>
-                {/* Feature request button */}
-                <button
-                    onClick={() => featureState.canRequest && onFeatureRequest?.(property)}
-                    disabled={featureState.disabled}
-                    title={featureState.tooltip}
-                    style={{
-                        display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
-                        padding: '0.35rem 0.7rem', borderRadius: '0.4rem',
-                        border: `1px solid ${featureState.canRequest ? 'hsl(38 92% 50%)' : 'hsl(220 15% 88%)'}`,
-                        backgroundColor: featureState.canRequest ? 'hsl(38 92% 97%)' : 'hsl(220 15% 96%)',
-                        color: featureState.canRequest ? 'hsl(38 92% 40%)' : 'hsl(220 15% 55%)',
-                        fontSize: '0.7rem', fontWeight: 700,
-                        cursor: featureState.canRequest ? 'pointer' : 'default',
-                        fontFamily: 'inherit',
-                        opacity: featureState.disabled ? 0.7 : 1,
-                        transition: 'all 0.12s',
-                    }}
-                >
-                    {featureState.icon}
-                    {featureState.label}
-                </button>
-                <button onClick={() => !isVerificationButtonDisabled(property.effective_listing_status, property.verification_status) && onVerify(property)} 
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', padding: '0.35rem 0.7rem', borderRadius: '0.4rem', border: '1px solid hsl(38 92% 70%)', backgroundColor: 'white', color: 'hsl(38 92% 40%)', fontSize: '0.7rem', fontWeight: 700, cursor: isVerificationButtonDisabled(property.effective_listing_status, property.verification_status) ? 'default' : 'pointer', fontFamily: 'inherit', opacity: isVerificationButtonDisabled(property.effective_listing_status, property.verification_status) ? 0.5 : 1, marginLeft: 'auto' }}>
-                    {Icons.verify} {getVerificationButtonText(property.effective_listing_status, property.verification_status)}
-                </button>
-            </div>
-        </div>
+            {/* Render confirmation modal */}
+            {featureModal && (
+                <FeatureConfirmModal
+                    property={featureModal}
+                    onClose={() => setFeatureModal(null)}
+                    onConfirm={handleConfirmFeature}
+                    loading={requesting}
+                />
+            )}
+        </>
     );
 };
 
-// ─── Listings Tab Module ──────────────────────────────────────────────────────
+// ─── Main Listings Tab ────────────────────────────────────────────────────────
 const ListingsTab = ({ 
     properties = [], 
     onAddListing,
@@ -346,7 +462,6 @@ const ListingsTab = ({
     const [featuredFilter, setFeaturedFilter] = useState('all');
     const [currentPage, setCurrentPage] = useState(1);
 
-    // Filter properties based on search term and status
     const filteredProperties = useMemo(() => {
         return properties.filter(property => {
             const matchesSearch = !searchTerm.trim() || (
@@ -364,11 +479,9 @@ const ListingsTab = ({
     const rentals = filteredProperties.filter(p => p.purpose !== 'sale');
     const sales = filteredProperties.filter(p => p.purpose === 'sale');
 
-    // Paginate rentals
     const rentalTotalPages = Math.ceil(rentals.length / ITEMS_PER_PAGE);
     const paginatedRentals = rentals.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
     
-    // Paginate sales
     const salesTotalPages = Math.ceil(sales.length / ITEMS_PER_PAGE);
     const paginatedSales = sales.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
     
@@ -469,7 +582,6 @@ const ListingsTab = ({
                     <option value="unverified">Unverified</option>
                 </select>
 
-                {/* Featured filter (NEW) */}
                 <select
                     value={featuredFilter}
                     onChange={handleFeaturedChange}
@@ -518,7 +630,7 @@ const ListingsTab = ({
                                 onView={onView} 
                                 onEdit={onEdit} 
                                 onVerify={onVerify}
-                                onFeatureRequest={onFeatureRequest}   // NEW
+                                onFeatureRequest={onFeatureRequest}
                                 getVerificationButtonText={getVerificationButtonText} 
                                 isVerificationButtonDisabled={isVerificationButtonDisabled} 
                             />
@@ -548,7 +660,7 @@ const ListingsTab = ({
                                 onView={onView} 
                                 onEdit={onEdit} 
                                 onVerify={onVerify}
-                                onFeatureRequest={onFeatureRequest}   // NEW
+                                onFeatureRequest={onFeatureRequest}
                                 getVerificationButtonText={getVerificationButtonText} 
                                 isVerificationButtonDisabled={isVerificationButtonDisabled} 
                             />
@@ -581,6 +693,17 @@ const ListingsTab = ({
                     </p>
                 </div>
             ) : null}
+
+            {/* Animations */}
+            <style>{`
+                @keyframes leModalIn {
+                    from { opacity: 0; transform: scale(0.95) translateY(5px); }
+                    to { opacity: 1; transform: scale(1) translateY(0); }
+                }
+                @keyframes spin {
+                    to { transform: rotate(360deg); }
+                }
+            `}</style>
         </div>
     );
 };

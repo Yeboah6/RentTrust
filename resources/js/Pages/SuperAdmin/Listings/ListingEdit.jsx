@@ -796,7 +796,7 @@ const ListingEdit = ({ listing, agents = [], property_types = [], amenities = []
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                                         <SectionLabel>Visibility & Trust</SectionLabel>
                                         {/* FIX: is_featured restored — was commented out but Toggle referenced it */}
-                                        <Toggle value={form.is_featured} onChange={v => set('is_featured', v)} label="Featured Listing" sub="Highlighted in search and featured sections" />
+                                        {/* <Toggle value={form.is_featured} onChange={v => set('is_featured', v)} label="Featured Listing" sub="Highlighted in search and featured sections" /> */}
                                         <Toggle value={form.is_verified} onChange={v => set('is_verified', v)} label="Verified Listing" sub="Shows the verified badge on the listing" />
                                     </div>
 
