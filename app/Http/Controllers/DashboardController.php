@@ -65,6 +65,8 @@ class DashboardController extends Controller
         $plans = app(\App\Http\Controllers\CheckoutController::class)->plansForModal();
         $sub  = $agentData->subscription()->with('plan')->first();
 
+        $verification = VerificationRequest::where('user_id', $agentData->id)->get();
+
         $locations = Location::all();
         $propertyTypes = PropertyType::all();
         $amenities = Amenity::all();
@@ -83,6 +85,7 @@ class DashboardController extends Controller
             'plans' => $plans,
             'limitStatus' => $limitStatus,
             'locations' => $locations,
+            'verification' => $verification,
             'propertyTypes' => $propertyTypes,
             'amenities' => $amenities,
             'open_plan_modal' => is_null($agentData->package)
@@ -228,7 +231,7 @@ class DashboardController extends Controller
         $inquiries = ListingInquiry::with('rental:id,title,address,city,status,purpose', 'user:id,name,email,phone')
             ->latest()
             ->get();
-        $verifications = VerificationRequest::with(['rental', 'agent'])->orderBy('created_at', 'desc')->get();
+        $verifications = VerificationRequest::with(['rental', 'agent:id,name,email,phone', 'reviewer:id,name'])->orderBy('created_at', 'desc')->get();
 
         $locations = Location::all();
         $propertyTypes = PropertyType::all();

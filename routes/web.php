@@ -8,6 +8,9 @@ use App\Http\Controllers\RentalSearchController;
 use App\Http\Controllers\SaleSearchController;
 use App\Http\Controllers\AgentController;
 
+use App\Models\Rental;
+use App\Models\VerificationRequest;
+
 use App\Http\Controllers\Admin\AgentsController;
 use App\Http\Controllers\Admin\ListingController;
 use App\Http\Controllers\Admin\ReviewResponseController;
@@ -15,6 +18,7 @@ use App\Http\Controllers\Admin\ReviewResponseController;
 use App\Http\Controllers\Agent\ResponseController;
 
 use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\Agent\ListingFeatureController;
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
@@ -120,16 +124,12 @@ Route::middleware(['auth', 'verified', 'throttle:60,1', 'role:agent'])->group(fu
     // Verification request routes for agents
     Route::post('/verification-requests', [VerificationsController::class, 'store'])
         ->name('verification.store');
-    Route::delete('/api/verification-requests/{id}', [VerificationsController::class, 'destroy'])
-        ->name('verification.destroy');
-    Route::get('/api/verification-requests', [VerificationsController::class, 'index'])
-        ->name('agent.verification.index');
-    Route::get('/verification-requests/{verificationRequest}', [VerificationsController::class, 'show'])
-        ->name('agent.verification.show');
-    Route::get('/api/rentals/{rentalId}/verification-requests', [VerificationsController::class, 'getRentalRequests'])
-        ->name('rental.verification.requests');
+
+    Route::get('/verification-status/{id}', [VerificationsController::class, 'verificationStatus']);
+// http://127.0.0.1:8000/rentals/8/verification-status 
     
-    Route::post('/api/listings/{rent}/feature', [RentController::class, 'featureListing'])->name('listings.feature');
+    // Route::post('/api/listings/{rent}/feature', [RentController::class, 'featureListing'])->name('listings.feature');
+    // Route::post('/listings/{listing}/request-feature', [ListingFeatureController::class, 'requestFeature'])->name('listings.request-feature');
 });
 
 Route::get('/agent/dashboard', [DashboardController::class, 'freeTier'])->middleware(['auth','role:agent','throttle:60,1'])->name('free.agent.dashboard');

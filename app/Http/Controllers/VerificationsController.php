@@ -15,284 +15,194 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\JsonResponse;
+use Inertia\Inertia;
 
 class VerificationsController extends Controller
 {
     public function store(Request $request)
     {
         Log::info('Verification request received', [
-            'user_id' => Auth::id(),
-            'rental_id' => $request->rental_id,
-            'request_type' => $request->request_type
+            'user_id'     => Auth::id(),
+            'rental_id'   => $request->rental_id,
+            'request_type'=> $request->request_type
         ]);
-
-        // Validation
+    
+        // ---------- Validation ----------
         $validator = Validator::make($request->all(), [
             'rental_id' => ['required', function ($attribute, $value, $fail) {
                 if (!Rental::where('rental_id', $value)->orWhere('id', $value)->exists()) {
                     $fail('The selected rental property does not exist');
                 }
             }],
-            'request_type' => 'required|in:initial_verification,re_verification',
-            'additional_notes' => 'nullable|string|max:1000',
-            'agent_id' => 'required|exists:users,id',
-            'agent_name' => 'required|string|max:255',
-
-            // File validations - all now optional but at least one required
-            'proof_docs' => 'nullable|array',
-            'proof_docs.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:10240',
+            'request_type'      => 'required|in:initial_verification,re_verification',
+            'additional_notes'  => 'nullable|string|max:1000',
+            'agent_id'          => 'required|exists:users,id',
+            'agent_name'        => 'required|string|max:255',
+            'proof_docs'        => 'nullable|array',
+            'proof_docs.*'      => 'file|mimes:pdf,jpg,jpeg,png,doc,docx|max:10240',
             'ownership_documents' => 'nullable|array',
-            'ownership_documents.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:10240',
+            'ownership_documents.*' => 'file|mimes:pdf,jpg,jpeg,png,doc,docx|max:10240',
             'license_documents' => 'nullable|array',
-            'license_documents.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:10240',
-            'utility_bills' => 'nullable|array',
-            'utility_bills.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:10240',
-        ], [
-            'rental_id.required' => 'Please select a rental property',
-            'rental_id.exists' => 'The selected rental property does not exist',
-            'agent_id.required' => 'Agent ID is required',
-            'agent_id.exists' => 'The selected agent does not exist',
-            'proof_docs.*.max' => 'Each proof document must not exceed 10MB',
-            'ownership_documents.*.max' => 'Each property photo must not exceed 10MB',
-            'license_documents.*.max' => 'Each license document must not exceed 10MB',
-            'utility_bills.*.max' => 'Each utility bill must not exceed 10MB',
+            'license_documents.*' => 'file|mimes:pdf,jpg,jpeg,png,doc,docx|max:10240',
+            'utility_bills'     => 'nullable|array',
+            'utility_bills.*'   => 'file|mimes:pdf,jpg,jpeg,png,doc,docx|max:10240',
         ]);
-
-        // Custom validation: ensure at least one document is uploaded
+    
+        // At least one document required
         $validator->after(function ($validator) use ($request) {
-            $hasProofDocs = $request->hasFile('proof_docs') && count($request->file('proof_docs', [])) > 0;
-            $hasOwnershipDocs = $request->hasFile('ownership_documents') && count($request->file('ownership_documents', [])) > 0;
-            $hasLicenseDocs = $request->hasFile('license_documents') && count($request->file('license_documents', [])) > 0;
-            $hasUtilityBills = $request->hasFile('utility_bills') && count($request->file('utility_bills', [])) > 0;
-
-            if (!$hasProofDocs && !$hasOwnershipDocs && !$hasLicenseDocs && !$hasUtilityBills) {
-                $validator->errors()->add('documents', 'Please upload at least one document to verify your listing');
+            $hasFile = false;
+            foreach (['proof_docs', 'ownership_documents', 'license_documents', 'utility_bills'] as $field) {
+                if ($request->hasFile($field) && count($request->file($field, [])) > 0) {
+                    $hasFile = true;
+                    break;
+                }
+            }
+            if (!$hasFile) {
+                $validator->errors()->add('documents', 'Please upload at least one document');
             }
         });
-
+    
         if ($validator->fails()) {
-            return redirect()->back()
-                ->withErrors($validator)
-                ->withInput();
+            return redirect()->back()->withErrors($validator)->withInput();
         }
-
+    
+        // ---------- Authorisation ----------
+        $rental = Rental::where('rental_id', $request->rental_id)->orWhere('id', $request->rental_id)->firstOrFail();
+        $agent  = User::findOrFail($request->agent_id);
+    
+        $isOwner = $rental->user_id == Auth::id();
+        $isAgent = Auth::id() == $request->agent_id;
+        $isAdmin = Auth::user() && Auth::user()->role === 'super_admin';
+    
+        if (!$isOwner && !$isAgent && !$isAdmin) {
+            return redirect()->back()->with('error', 'You do not have permission to verify this property');
+        }
+    
+        // Duplicate pending request
+        if (VerificationRequest::where('rental_id', $rental->id)->where('status', 'pending')->exists()) {
+            return redirect()->back()->with('error', 'A verification request is already pending for this property');
+        }
+    
+        // Already verified with initial_verification
+        if ($rental->is_verified && $request->request_type === 'initial_verification') {
+            return redirect()->back()->with('error', 'This property is already verified. Use re-verification for updates');
+        }
+    
+        // ---------- File upload ----------
+        DB::beginTransaction();
+        $uploadedPaths = [];
+    
         try {
-            DB::beginTransaction();
-
-            // Check if rental exists
-            $rental = Rental::where('rental_id', $request->rental_id)
-                ->orWhere('id', $request->rental_id)
-                ->firstOrFail();
-
-            // Verify agent exists
-            $agent = User::findOrFail($request->agent_id);
-
-            // Check if user is authorized (owner or assigned agent)
-            $isOwner = $rental->user_id == Auth::id();
-            $isAgent = Auth::id() == $request->agent_id;
-            $isAdmin = Auth::user() && Auth::user()->role === 'super_admin';
-
-            if (!$isOwner && !$isAgent && !$isAdmin) {
-                DB::rollBack();
-                return redirect()->back()
-                    ->with('error', 'You do not have permission to verify this property');
-            }
-
-            // Check for existing pending request
-            $existingRequest = VerificationRequest::where('rental_id', $rental->id)
-                ->where('status', 'pending')
-                ->first();
-
-            if ($existingRequest) {
-                DB::rollBack();
-                return redirect()->back()
-                    ->with('error', 'A verification request for this property is already pending review');
-            }
-
-            // Check if rental is already verified
-            if ($rental->is_verified && $request->request_type === 'initial_verification') {
-                DB::rollBack();
-                return redirect()->back()
-                    ->with('error', 'This property is already verified. Use re-verification for updates');
-            }
-
-            // Process and store uploaded files
-            $uploadedFiles = [
-                'proof_documents' => $this->handleFileUploads($request, 'proof_docs', 'verification_docs/proof'),
-                'ownership_documents' => $this->handleFileUploads($request, 'ownership_documents', 'verification_docs/property_photos'),
-                'license_documents' => $this->handleFileUploads($request, 'license_documents', 'verification_docs/licenses'),
-                'utility_bills' => $this->handleFileUploads($request, 'utility_bills', 'verification_docs/utility_bills'),
+            $fileData = [
+                'proof_documents'     => [],
+                'ownership_documents' => [],
+                'license_documents'   => [],
+                'utility_bills'      => []
             ];
-
-            // Count total documents
-            $totalDocuments = array_sum(array_map('count', $uploadedFiles));
-
-            if ($totalDocuments === 0) {
-                DB::rollBack();
-                return redirect()->back()
-                    ->with('error', 'Please upload at least one document');
+    
+            $fieldMap = [
+                'proof_docs'           => 'proof_documents',
+                'ownership_documents'  => 'ownership_documents',
+                'license_documents'    => 'license_documents',
+                'utility_bills'       => 'utility_bills'
+            ];
+    
+            foreach ($fieldMap as $inputName => $dbColumn) {
+                if ($request->hasFile($inputName)) {
+                    foreach ($request->file($inputName) as $file) {
+                        $filename = time() . '_' . uniqid() . '_' . preg_replace('/[^A-Za-z0-9\.]/', '_', $file->getClientOriginalName());
+                        $path = $file->storeAs("verification_docs/{$dbColumn}", $filename, 'public');
+                        $fileData[$dbColumn][] = [
+                            'filename'      => $filename,
+                            'original_name' => $file->getClientOriginalName(),
+                            'path'          => $path,
+                            'url'           => Storage::disk('public')->url($path),
+                            'size'          => $file->getSize(),
+                            'mime_type'     => $file->getMimeType(),
+                            'uploaded_at'   => now()->toDateTimeString()
+                        ];
+                        $uploadedPaths[] = $path;
+                    }
+                }
             }
-
-            // Create verification request
+    
+            if (array_sum(array_map('count', $fileData)) === 0) {
+                DB::rollBack();
+                return redirect()->back()->with('error', 'Please upload at least one document');
+            }
+    
+            // ---------- Store verification request (status = pending) ----------
             $verificationRequest = VerificationRequest::create([
                 'verification_request_id' => VerificationRequest::generateUUID(),
-                'rental_id' => $rental->id,
-                'agent_id' => $request->agent_id,
-                'agent_name' => $request->agent_name,
-                'request_type' => $request->request_type,
-                'status' => 'pending',
-                'proof_documents' => json_encode($uploadedFiles['proof_documents']),
-                'ownership_documents' => json_encode($uploadedFiles['ownership_documents']),
-                'license_documents' => json_encode($uploadedFiles['license_documents']),
-                'utility_bills' => json_encode($uploadedFiles['utility_bills']),
-                'additional_notes' => $request->additional_notes,
-                'submitted_at' => now(),
-                'user_id' => Auth::id(),
+                'rental_id'               => $rental->id,
+                'agent_id'                => $request->agent_id,
+                'agent_name'              => $request->agent_name,
+                'request_type'            => $request->request_type,
+                'status'                  => 'pending',
+                'proof_documents'         => json_encode($fileData['proof_documents']),
+                'ownership_documents'     => json_encode($fileData['ownership_documents']),
+                'license_documents'       => json_encode($fileData['license_documents']),
+                'utility_bills'           => json_encode($fileData['utility_bills']),
+                'additional_notes'        => $request->additional_notes,
+                'submitted_at'            => now(),
+                'user_id'                 => Auth::id(),
             ]);
-
-            // Auto-approve for trusted agents (3+ successful verifications)
-            $successfulVerifications = VerificationRequest::where('agent_id', $request->agent_id)
-                ->where('status', 'approved')
-                ->count();
-
-            if ($successfulVerifications >= 3) {
-                // Auto-approve the request
-                $verificationRequest->update([
-                    'status' => 'approved',
-                    'admin_notes' => 'Auto-approved: Trusted agent with proven verification history',
-                    'reviewed_at' => now(),
-                    'reviewed_by' => 1, // System user ID
-                ]);
-
-                // Update rental to verified status
-                $rental->update([
-                    'verification_status' => 'verified',
-                    'is_verified' => true,
-                    'verified_at' => now(),
-                    'status' => 'approved',
-                    'verification_rejected_at' => null,
-                    'verification_rejection_reason' => null
-                ]);
-
-                // Audit log for auto-approval
-                AdminAuditLog::record('verification', "Listing verification auto-approved: {$rental->title}", [
-                    'affected_user' => $rental->user->name ?? 'Unknown',
-                    'affected_id' => $rental->id,
-                    'notes' => "Auto-approved for trusted agent {$request->agent_name} with {$successfulVerifications} previous successful verifications",
-                    'properties' => ['status' => 'auto_approved', 'listing_id' => $rental->id, 'verification_request_id' => $verificationRequest->verification_request_id],
-                ]);
-
-                Log::info('Verification auto-approved for trusted agent', [
-                    'rental_id' => $rental->rental_id,
-                    'agent_id' => $request->agent_id,
-                    'successful_verifications' => $successfulVerifications,
-                    'verification_request_id' => $verificationRequest->verification_request_id
-                ]);
-            } else {
-                // Update rental status to indicate verification is pending
-                $rental->update([
-                    'verification_status' => 'pending',
-                    'verification_requested_at' => now(),
-                    'verification_rejected_at' => null,
-                    'verification_rejection_reason' => null
-                ]);
-            }
-
+    
+            // ---------- Update rental status to pending ----------
+            $rental->update([
+                'status'           => 'pending',
+                // 'verification_requested_at'     => now(),
+                'verification_rejected_at'      => null,
+                'verification_rejection_reason' => null
+            ]);
+    
             DB::commit();
-
-            Log::info('Verification request created successfully', [
+    
+            Log::info('Verification request stored', [
                 'request_id' => $verificationRequest->verification_request_id,
-                'rental_id' => $rental->rental_id,
-                'agent_id' => $request->agent_id,
-                'request_type' => $request->request_type,
-                'total_documents' => $totalDocuments,
+                'rental_id'  => $rental->rental_id,
                 'submitted_by' => Auth::id()
             ]);
-
-            // Return appropriate success message
-            $successMessage = $verificationRequest->status === 'approved'
-                ? 'Verification request auto-approved! Your listing is now verified and published.'
-                : 'Verification request submitted successfully! It will be reviewed soon.';
-
-            return redirect()->back()
-                ->with('success', $successMessage);
-
+    
+            return redirect()->back()->with('success', 'Verification request submitted successfully! It will be reviewed soon.');
+    
         } catch (\Exception $e) {
             DB::rollBack();
-
-            // Clean up uploaded files when the request fails after file storage
-            if (!empty($uploadedFiles ?? [])) {
-                $this->cleanupUploadedFiles($uploadedFiles);
+    
+            // Clean up any stored files
+            foreach ($uploadedPaths as $path) {
+                if (Storage::disk('public')->exists($path)) {
+                    Storage::disk('public')->delete($path);
+                }
             }
-
-            Log::error('Verification request submission failed', [
+    
+            Log::error('Verification request failed', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
                 'rental_id' => $request->rental_id
             ]);
-
-            return redirect()->back()
-                ->with('error', 'Failed to submit verification request. Please try again.');
+    
+            return redirect()->back()->with('error', 'Failed to submit verification request. Please try again.');
         }
     }
 
-    private function handleFileUploads(Request $request, $fieldName, $storagePath)
+    public function verificationStatus(Rental $id): JsonResponse
     {
-        $uploadedFiles = [];
-
-        if ($request->hasFile($fieldName)) {
-            foreach ($request->file($fieldName) as $file) {
-                try {
-                    // Generate unique filename
-                    $filename = time() . '_' . uniqid() . '_' . preg_replace('/[^A-Za-z0-9\.]/', '_', $file->getClientOriginalName());
-
-                    // Store file
-                    $path = $file->storeAs($storagePath, $filename, 'public');
-
-                    if ($path) {
-                        $uploadedFiles[] = [
-                            'filename' => $filename,
-                            'original_name' => $file->getClientOriginalName(),
-                            'path' => $path,
-                            'url' => Storage::disk('public')->url($path),
-                            'size' => $file->getSize(),
-                            'mime_type' => $file->getMimeType(),
-                            'uploaded_at' => now()->toDateTimeString()
-                        ];
-                    }
-                } catch (\Exception $e) {
-                    Log::error('File upload failed', [
-                        'field' => $fieldName,
-                        'filename' => $file->getClientOriginalName(),
-                        'error' => $e->getMessage()
-                    ]);
-                    // Continue with other files
-                }
-            }
+        if (!$id) {
+            return response()->json(['status' => 'none'], 404);
         }
 
-        return $uploadedFiles;
+        $verification = VerificationRequest::withoutGlobalScopes()
+            ->where('rental_id', $id)          // or $id->id depending on your parameter name
+            ->whereIn('status', ['pending', 'approved'])
+            ->latest()
+            ->first();
+
+        return response()->json([
+            'status' => $verification
+        ]);
     }
 
-    private function cleanupUploadedFiles(array $uploadedFiles): void
-    {
-        foreach ($uploadedFiles as $category => $files) {
-            if (!is_array($files)) continue;
-
-            foreach ($files as $file) {
-                if (isset($file['path']) && Storage::disk('public')->exists($file['path'])) {
-                    try {
-                        Storage::disk('public')->delete($file['path']);
-                    } catch (\Exception $e) {
-                        Log::warning('Failed to delete orphaned verification upload', [
-                            'path' => $file['path'],
-                            'error' => $e->getMessage()
-                        ]);
-                    }
-                }
-            }
-        }
-    }
 
     // Super Admin Verification
     public function index(Request $request)

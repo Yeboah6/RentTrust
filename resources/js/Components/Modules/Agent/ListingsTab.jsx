@@ -405,7 +405,7 @@ const ListingCard = ({ property, onView, onEdit, onVerify, getVerificationButton
                     </button>
 
                     {/* Feature request button – opens modal */}
-                    <button
+                    {/* <button
                         onClick={() => featureState.canRequest && setFeatureModal(property)}
                         disabled={!featureState.canRequest}
                         title={featureState.tooltip}
@@ -424,7 +424,7 @@ const ListingCard = ({ property, onView, onEdit, onVerify, getVerificationButton
                     >
                         {featureState.icon}
                         {featureState.label}
-                    </button>
+                    </button> */}
 
                     <button onClick={() => !isVerificationButtonDisabled(property.effective_listing_status, property.verification_status) && onVerify(property)} 
                         style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', padding: '0.35rem 0.7rem', borderRadius: '0.4rem', border: '1px solid hsl(38 92% 70%)', backgroundColor: 'white', color: 'hsl(38 92% 40%)', fontSize: '0.7rem', fontWeight: 700, cursor: isVerificationButtonDisabled(property.effective_listing_status, property.verification_status) ? 'default' : 'pointer', fontFamily: 'inherit', opacity: isVerificationButtonDisabled(property.effective_listing_status, property.verification_status) ? 0.5 : 1, marginLeft: 'auto' }}>
@@ -511,6 +511,14 @@ const ListingsTab = ({
     };
 
     const hasFilters = searchTerm.trim() !== '' || statusFilter !== 'all' || featuredFilter !== 'all';
+
+    const getVerificationStatusForRental = (rentalId) => {
+      if (!verification) return 'none';
+      const relevant = verification
+        .filter(v => v.rental_id === rentalId && (v.status === 'pending' || v.status === 'approved'))
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      return relevant.length > 0 ? relevant[0].status : 'none';
+    };
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Support\Str;
 use App\Models\Review;
 use App\Models\User;
+use App\Models\VerificationRequest;
 use App\Traits\GeneratesUUIDs;
 
 class Rental extends Model
@@ -64,8 +65,13 @@ class Rental extends Model
         'advance_duration' => 'integer',
         'is_verified' => 'boolean',
         'is_featured' => 'boolean',
+        'is_featured_queued'  => 'boolean',
         'featured_at' => 'datetime',
         'featured_expires_at' => 'datetime',
+        'queued_at'           => 'datetime',
+        'last_featured_at'    => 'datetime',
+        'times_featured'      => 'integer',
+        'featured_queue_position' => 'integer',
         'is_boosted' => 'boolean',
         'boost_expires_at' => 'datetime',
         'featured_priority' => 'integer',
@@ -75,6 +81,8 @@ class Rental extends Model
         'verified_at' => 'datetime',
         'verification_rejected_at' => 'datetime',
     ];
+
+    // protected $appends = ['verification_request_status'];
 
     public function user()
     {
@@ -110,6 +118,16 @@ class Rental extends Model
     {
         return $this->hasMany(VerificationRequest::class);
     }
+
+    // public function getVerificationRequestStatusAttribute()
+    // {
+    //     $latest = $this->verificationRequests()
+    //         ->whereIn('status', ['pending', 'approved'])
+    //         ->orderByDesc('created_at')
+    //         ->first();
+
+    //     return $latest ? $latest->status : 'none';
+    // }
 
     protected static function booted()
     {

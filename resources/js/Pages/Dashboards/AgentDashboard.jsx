@@ -90,7 +90,7 @@ const Users = ({ style }) => (
   </svg>
 );
 
-const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views = [], limitStatus, locations, propertyTypes, amenities }) => {
+const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views = [], limitStatus, locations, propertyTypes, amenities, verification }) => {
   const { billing, plans } = usePage().props;
 
   const [activeTab, setActiveTab] = useState("overview");
@@ -200,8 +200,7 @@ const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views
       created_at: review.created_at || new Date().toISOString()
     }))
     : [];
-// proxy.js:1
-//  Uncaught Error: Attempting to use a disconnected port object
+
   const properties = rentals && rentals.length > 0
     ? rentals.map(rental => ({
       id: rental.id,
@@ -470,6 +469,7 @@ const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views
                           setSelectedRentalForVerification(property);
                           setShowVerificationModal(true);
                       }}
+                      verificationData={verification}
                       getVerificationButtonText={getVerificationButtonText}
                       isVerificationButtonDisabled={isVerificationButtonDisabled}
                   />
@@ -572,7 +572,7 @@ const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views
         )}
 
         {/* Verification Modal */}
-        <VerificationRequestModal isOpen={showVerificationModal} onClose={() => setShowVerificationModal(false)} agentData={agentData} selectedRental={selectedRentalForVerification} />
+        <VerificationRequestModal isOpen={showVerificationModal} onClose={() => setShowVerificationModal(false)} agentData={agentData} selectedRental={selectedRentalForVerification} verificationData={verification} />
 
         {/* View Rental Modal */}
         {showViewModal && selectedRental && (

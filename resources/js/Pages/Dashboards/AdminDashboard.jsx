@@ -487,7 +487,6 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, verif
                   {tab === 'reports' && <AlertCircle style={{ height: '1rem', width: '1rem' }} />}
                   {tab === 'reviews' && <MessageSquare style={{ height: '1rem', width: '1rem' }} />}
                   {tab === 'inquiries' && <Eye style={{ height: '1rem', width: '1rem' }} />}
-                  {/* {tab === 'views' && <Eye style={{ height: '1rem', width: '1rem' }} />} */}
                   {tab === 'subscriptions' && <Gift style={{ height: '1rem', width: '1rem' }} />}
                   {tab === 'analytics' && <BarChart style={{ height: '1rem', width: '1rem' }} />}
                   {tab}
