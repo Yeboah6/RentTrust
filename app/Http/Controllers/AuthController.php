@@ -86,13 +86,13 @@ class AuthController extends Controller
     private function redirectByRole(User $user): RedirectResponse
     {
         // ── Unverified (admin invited but not yet set up) ──────────────────────
-        if ($user->status === 'unverified') {
-            Auth::logout();
+        // if ($user->status === 'unverified') {
+        //     Auth::logout();
 
-            throw ValidationException::withMessages([
-                'email' => 'Your account setup is incomplete. Please check your email for the setup link.',
-            ]);
-        }
+        //     throw ValidationException::withMessages([
+        //         'email' => 'Your account setup is incomplete. Please check your email for the setup link.',
+        //     ]);
+        // }
 
         // ── Super admin ────────────────────────────────────────────────────────
         if ($user->role === 'super_admin' && $user->package === 'super_admin') {

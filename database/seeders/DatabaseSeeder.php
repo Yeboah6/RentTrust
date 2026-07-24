@@ -19,6 +19,9 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             PlanSeeder::class,
+            AmenitiesSeeder::class,
+            LocationSeeder::class,
+            PropertySeeder::class,
         ]);
 
         User::create([

@@ -1,5 +1,5 @@
-import Header from '../Components/Layouts/Header';
-import Footer from '../Components/Layouts/Footer';
+import Header from '../../Components/Layouts/Header';
+import Footer from '../../Components/Layouts/Footer';
 import { Link } from '@inertiajs/react';
 
 const MosaicHero = ({ badge, title, highlight, sub }) => (

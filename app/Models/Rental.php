@@ -45,7 +45,9 @@ class Rental extends Model
         'boost_expires_at',
         'featured_priority',
         'is_sold',
+        'is_rented',
         'sold_at',
+        'rented_at',
         'verification_status',
         'verification_requested_at',
         'verified_at',
@@ -76,13 +78,13 @@ class Rental extends Model
         'boost_expires_at' => 'datetime',
         'featured_priority' => 'integer',
         'is_sold' => 'boolean',
+        'is_rented' => 'boolean',
         'sold_at' => 'datetime',
+        'rented_at' => 'datetime',
         'verification_requested_at' => 'datetime',
         'verified_at' => 'datetime',
         'verification_rejected_at' => 'datetime',
     ];
-
-    // protected $appends = ['verification_request_status'];
 
     public function user()
     {
@@ -118,16 +120,6 @@ class Rental extends Model
     {
         return $this->hasMany(VerificationRequest::class);
     }
-
-    // public function getVerificationRequestStatusAttribute()
-    // {
-    //     $latest = $this->verificationRequests()
-    //         ->whereIn('status', ['pending', 'approved'])
-    //         ->orderByDesc('created_at')
-    //         ->first();
-
-    //     return $latest ? $latest->status : 'none';
-    // }
 
     protected static function booted()
     {

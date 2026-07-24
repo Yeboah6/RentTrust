@@ -52,12 +52,12 @@ Route::resource('rent', RentController::class)
 Route::get('/', [RentController::class, 'index'])->name('home');
 
 Route::get('/about', [RentController::class, 'about'])->name('about');
-Route::get('/guide', function () { return inertia('Guide'); })->name('guide.page');
-Route::get('/safety', function () { return inertia('Safety'); })->name('safety.page');
-Route::get('/faq', function () { return inertia('Faq'); })->name('faq.page');
-Route::get('/terms', function () { return inertia('Terms'); })->name('terms.page');
-Route::get('/privacy', function () { return inertia('Privacy'); })->name('privacy.page');
-Route::get('/report', function () { return inertia('Report'); })->name('report.page');
+Route::get('/guide', function () { return inertia('ResourcePages/Guide'); })->name('guide.page');
+Route::get('/safety', function () { return inertia('ResourcePages/Safety'); })->name('safety.page');
+Route::get('/faq', function () { return inertia('ResourcePages/Faq'); })->name('faq.page');
+Route::get('/terms', function () { return inertia('Legal/Terms'); })->name('terms.page');
+Route::get('/privacy', function () { return inertia('Legal/Privacy'); })->name('privacy.page');
+Route::get('/report', function () { return inertia('Legal/Report'); })->name('report.page');
 
 // ── Rental Search Routes ──────────────────────────────────────────────────────
 Route::prefix('rent')->group(function () {

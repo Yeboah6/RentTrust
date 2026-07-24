@@ -34,28 +34,31 @@ return new class extends Migration
             $table->enum('status', ['pending', 'approved', 'rejected', 'active', 'inactive', 'rented', 'sold'])->default('pending');
             $table->boolean('is_verified')->default(false);
             $table->boolean('is_featured')->default(false);
-            $table->enum('purpose', ['rent', 'sale'])->default('rent')->after('property_type');
-            $table->decimal('sale_price', 15, 2)->nullable()->after('rent_max');
+            $table->enum('purpose', ['rent', 'sale'])->default('rent');
+            $table->decimal('sale_price', 15, 2)->nullable();
 
-            $table->boolean('is_featured_queued')->default(false)->after('is_featured');
-            $table->integer('featured_queue_position')->nullable()->after('featured_priority');
-            $table->timestamp('queued_at')->nullable()->after('featured_at');
-            $table->integer('times_featured')->default(0)->after('queued_at');
-            $table->timestamp('last_featured_at')->nullable()->after('times_featured');
+            $table->boolean('is_featured_queued')->default(false);
+            $table->integer('featured_queue_position')->nullable();
+            $table->timestamp('queued_at')->nullable();
+            $table->integer('times_featured')->default(0);
+            $table->timestamp('last_featured_at')->nullable();
 
-            $table->timestamp('featured_at')->nullable()->after('is_featured');
-            $table->timestamp('featured_expires_at')->nullable()->after('featured_at');
-            $table->integer('featured_priority')->default(0)->after('boost_expires_at');
+            $table->timestamp('featured_at')->nullable();
+            $table->timestamp('featured_expires_at');
+            $table->integer('featured_priority')->default(0);
             
             // Track when sale was completed
-            $table->boolean('is_sold')->default(false)->after('is_featured');
-            $table->timestamp('sold_at')->nullable()->after('is_sold');
+            $table->boolean('is_sold')->default(false);
+            $table->boolean('is_rented')->default(false);
+            $table->timestamp('sold_at')->nullable();
+            $table->timestamp('rented_at')->nullable();
             $table->timestamps();
 
             $table->index(['city', 'area']);
             $table->index(['rent_min', 'rent_max']);
             $table->index('purpose');
             $table->index('is_sold');
+            $table->index('is_rented');
             $table->index('status');
         });
     }

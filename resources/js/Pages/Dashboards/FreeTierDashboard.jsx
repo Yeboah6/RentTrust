@@ -7,7 +7,7 @@ import EditRentals from "@/Components/Modules/EditRentals";
 import ViewRentals from "@/Components/Modules/ViewRental";
 import PricingModal from "@/Components/Modules/PricingModal";
 
-// Icon components
+// Icon components (unchanged)
 const Home = ({ style }) => (
   <svg style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
@@ -146,14 +146,10 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
     }))
     : [];
 
-    // Uncaught ReferenceError: route is not defined
-    // at FailureState (CheckoutPage.jsx:252:30)
-
-  const calculateAverageRating = () => {
-    if (!formattedReviews || formattedReviews.length === 0);
-    const sum = formattedReviews.reduce((acc, review) => acc + (review.overall_rating || 0), 0);
-    return (sum / formattedReviews.length).toFixed(1);
-  };
+    const total = formattedReviews.length;
+    const calculateAverageRating = total > 0 
+        ? (formattedReviews.reduce((sum, r) => sum + (Number(r.overall_rating) || 0), 0) / total).toFixed(1) 
+        : '0.0';
 
   const getStatusBadge = (status) => {
     if (status === "approved") {
@@ -250,47 +246,144 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
           font-weight: 600;
         }
 
+        /* ---------- Mobile-first responsive grids ---------- */
         .listing-grid {
-           grid-template-columns: 1fr !important;
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: clamp(0.75rem, 2vw, 1rem);
         }
 
-        @media (max-width: 768px) {
-          .profile-header-container {
-            flex-direction: column !important;
-            align-items: flex-start !important;
-          }
-          .tabs-grid {
-            grid-template-columns: 1fr !important;
+        .stats-grid {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: clamp(0.75rem, 3vw, 1.25rem);
+        }
+
+        .tabs-grid {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: clamp(0.25rem, 1vw, 0.5rem);
+          background-color: hsl(40 30% 94%);
+          padding: clamp(0.25rem, 1vw, 0.25rem);
+          border-radius: clamp(0.375rem, 2vw, 0.5rem);
+          margin-bottom: clamp(1.5rem, 4vw, 2rem);
+        }
+
+        .review-grid {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: clamp(0.75rem, 2vw, 1rem);
+        }
+
+        /* ---------- Tablet (≥640px) ---------- */
+        @media (min-width: 640px) {
+          .listing-grid {
+            grid-template-columns: repeat(2, 1fr);
           }
           .stats-grid {
-            grid-template-columns: repeat(3, 1fr) !important;
+            grid-template-columns: repeat(3, 1fr);
           }
+          .review-grid {
+            grid-template-columns: repeat(2, 1fr);
+          }
+        }
 
+        /* ---------- Desktop (≥1024px) ---------- */
+        @media (min-width: 1024px) {
           .listing-grid {
-            grid-template-columns: repeat(3, 1fr) !important;
+            grid-template-columns: repeat(3, 1fr);
           }
-          .review-grid { grid-template-columns: 1fr !important; }
+          .stats-grid {
+            grid-template-columns: repeat(4, 1fr);
+          }
+          .tabs-grid {
+            grid-template-columns: repeat(3, 1fr);
+          }
+          .review-grid {
+            grid-template-columns: repeat(3, 1fr);
+          }
+        }
+
+        /* ---------- Profile header ---------- */
+        .profile-header-container {
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: space-between;
+          align-items: flex-start;
+          gap: clamp(1rem, 3vw, 1.5rem);
+        }
+
+        @media (max-width: 640px) {
+          .profile-header-container {
+            flex-direction: column;
+            align-items: flex-start;
+          }
+        }
+
+        /* ---------- Modals ---------- */
+        .modal-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background-color: rgba(0, 0, 0, 0.5);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 50;
+          padding: clamp(0.5rem, 2vw, 1rem);
+        }
+
+        .modal-content {
+          background-color: white;
+          border-radius: clamp(0.75rem, 2vw, 1rem);
+          max-height: 90vh;
+          overflow: auto;
+          width: 100%;
+          position: relative;
+          max-width: 95%; /* mobile first */
+        }
+
+        @media (min-width: 640px) {
+          .modal-content {
+            max-width: 90%;
+          }
         }
 
         @media (min-width: 1024px) {
-          .listing-grid {
-            grid-template-columns: repeat(3, 1fr) !important;
+          .modal-content {
+            max-width: 60%;
           }
         }
 
-        @media (min-width: 769px) {
-          .tabs-grid {
-            grid-template-columns: repeat(3, 1fr) !important;
-          }
-          .stats-grid {
-            grid-template-columns: repeat(4, 1fr) !important;
-          }
-          .review-grid { grid-template-columns: repeat(3, 1fr) !important; }
-        }
-
+        /* ---------- Touch targets ---------- */
         .action-button {
           min-height: 44px;
           -webkit-tap-highlight-color: transparent;
+        }
+
+        /* ---------- Additional tweaks ---------- */
+        .upgrade-cta {
+          border-radius: 0.875rem;
+          overflow: hidden;
+          background: linear-gradient(135deg, hsl(174 62% 32%) 0%, hsl(174 55% 22%) 100%);
+          padding: clamp(1.25rem, 4vw, 2rem);
+        }
+
+        .upgrade-cta-inner {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          flex-wrap: wrap;
+          gap: 1.25rem;
+        }
+
+        @media (max-width: 480px) {
+          .upgrade-cta-inner {
+            flex-direction: column;
+            align-items: stretch;
+          }
         }
       `}</style>
 
@@ -302,13 +395,7 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
             
             {/* Profile Header */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginBottom: 'clamp(1.5rem, 4vw, 2rem)' }}>
-              <div className="profile-header-container" style={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                justifyContent: 'space-between',
-                alignItems: 'flex-start',
-                gap: 'clamp(1rem, 3vw, 1.5rem)'
-              }}>
+              <div className="profile-header-container">
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: 'clamp(1rem, 3vw, 1.5rem)', flex: 1 }}>
                   <div style={{
                     width: 'clamp(3rem, 12vw, 4.5rem)',
@@ -357,7 +444,7 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.25rem, 1vw, 0.375rem)', color: 'hsl(200 15% 45%)' }}>
                         <Star style={{ height: 'clamp(0.875rem, 2.5vw, 1rem)', width: 'clamp(0.875rem, 2.5vw, 1rem)' }} />
-                        {calculateAverageRating()} ({reviews.length} reviews)
+                        {calculateAverageRating} ({reviews.length} reviews)
                       </div>
                     </div>
                   </div>
@@ -377,7 +464,8 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
                   whiteSpace: 'nowrap',
                   height: 'fit-content',
                   border: 'none',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  minHeight: '44px'
                 }}>
                   <Zap style={{ height: '1rem', width: '1rem' }} />
                   Upgrade to Pro
@@ -418,7 +506,8 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
                     textDecoration: 'none',
                     flexShrink: 0,
                     border: 'none',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    minHeight: '44px'
                   }}>
                     <Zap style={{ width: '0.75rem', height: '0.75rem' }} />
                     Upgrade Now
@@ -459,7 +548,8 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
                     textDecoration: 'none',
                     flexShrink: 0,
                     border: 'none',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    minHeight: '44px'
                   }}>
                     Unlock Leads
                   </button>
@@ -469,14 +559,7 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
 
             {/* Tabs */}
             <div>
-              <div className="tabs-grid" style={{
-                display: 'grid',
-                gap: 'clamp(0.25rem, 1vw, 0.5rem)',
-                backgroundColor: 'hsl(40 30% 94%)',
-                padding: 'clamp(0.25rem, 1vw, 0.25rem)',
-                borderRadius: 'clamp(0.375rem, 2vw, 0.5rem)',
-                marginBottom: 'clamp(1.5rem, 4vw, 2rem)'
-              }}>
+              <div className="tabs-grid">
                 {['overview', 'listings', 'reviews'].map((tab) => (
                   <button
                     key={tab}
@@ -514,10 +597,7 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(1.5rem, 3vw, 2rem)' }}> 
                   
                   {/* Stats Grid */}
-                  <div className="stats-grid" style={{
-                    display: 'grid',
-                    gap: 'clamp(0.75rem, 3vw, 1.25rem)'
-                  }}>
+                  <div className="stats-grid">
                     <div style={{
                       backgroundColor: 'white',
                       border: '1px solid hsl(40 20% 88%)',
@@ -631,13 +711,8 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
                   </div>
 
                   {/* Upgrade CTA */}
-                  <div style={{
-                    borderRadius: '0.875rem',
-                    overflow: 'hidden',
-                    background: 'linear-gradient(135deg, hsl(174 62% 32%) 0%, hsl(174 55% 22%) 100%)',
-                    padding: 'clamp(1.25rem, 4vw, 2rem)',
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1.25rem' }}>
+                  <div className="upgrade-cta">
+                    <div className="upgrade-cta-inner">
                       <div>
                         <h3 style={{ margin: '0 0 0.375rem', color: 'white', fontWeight: '700', fontSize: 'clamp(1.125rem, 3vw, 1.375rem)' }}>
                           🚀 Grow Faster with Pro
@@ -668,7 +743,8 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
                         flexShrink: 0,
                         whiteSpace: 'nowrap',
                         border: 'none',
-                        cursor: 'pointer'
+                        cursor: 'pointer',
+                        minHeight: '44px'
                       }}>
                         <Zap style={{ width: '1rem', height: '1rem' }} />
                         Upgrade to Pro
@@ -678,7 +754,7 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
                 </div>
               )}
 
-              {/* Other tabs would render here - keeping them simple for now */}
+              {/* Listings Tab */}
               {activeTab === 'listings' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(1rem, 3vw, 1.5rem)' }}>
                   <div style={{
@@ -730,7 +806,7 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
                       }}>
                         🏠 Rental Listings ({properties.filter(p => p.purpose === 'rent').length})
                       </h3>
-                      <div className="listing-grid" style={{ display: 'grid', gap: 'clamp(0.75rem, 2vw, 1rem)' }}>
+                      <div className="listing-grid">
                         {properties.filter(p => p.purpose === 'rent').map((property) => (
                           <div key={property.id} style={{
                             backgroundColor: 'white',
@@ -770,7 +846,7 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
                                   color: 'hsl(174 62% 32%)',
                                   fontWeight: '500'
                                 }}>
-                                  GH₵{Math.round(property.rent_min).toLocaleString()} – GH₵{Math.round(property.rent_max).toLocaleString()} / yr
+                                  GH₵{Math.round(property.rent_min).toLocaleString()} – GH₵{Math.round(property.rent_max).toLocaleString()} / month
                                 </p>
                               </div>
                               {getStatusBadge(property.listing_status)}
@@ -830,7 +906,7 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
                       }}>
                         🏷️ Sale Listings ({properties.filter(p => p.purpose === 'sale').length})
                       </h3>
-                      <div className="listing-grid" style={{ display: 'grid', gap: 'clamp(0.75rem, 2vw, 1rem)' }}>
+                      <div className="listing-grid">
                         {properties.filter(p => p.purpose === 'sale').map((property) => (
                           <div key={property.id} style={{
                             backgroundColor: 'white',
@@ -940,11 +1016,12 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
                 </div>
               )}
 
+              {/* Reviews Tab */}
               {activeTab === 'reviews' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(1rem, 3vw, 1.5rem)' }}>
                   <h2 style={{ color: 'hsl(200 25% 15%)', fontSize: 'clamp(1rem, 3vw, 1.125rem)', fontWeight: '600' }}>Tenant Reviews ({formattedReviews.length})</h2>
                   {formattedReviews.length > 0 ? (
-                    <div className="review-grid" style={{ display: 'grid', gap: 'clamp(0.75rem, 2vw, 1rem)' }}>
+                    <div className="review-grid">
                       {formattedReviews.map((review) => (
                         <div key={review.id} style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.5rem, 2vw, 0.75rem)', padding: 'clamp(0.75rem, 2vw, 1rem)' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 'clamp(0.75rem, 2vw, 1rem)', flexDirection: 'column', gap: 'clamp(0.5rem, 2vw, 0.75rem)' }}>
@@ -990,29 +1067,10 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
         <Footer />
         <PricingModal isOpen={showPricingModal} onClose={() => setShowPricingModal(false)} plans={plans} />
 
+        {/* Add Listing Modal */}
         {showAddListingModal && (
-          <div style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 50,
-            padding: 'clamp(0.5rem, 2vw, 1rem)'
-          }}>
-            <div className="modal-content" style={{
-              backgroundColor: 'white',
-              borderRadius: 'clamp(0.75rem, 2vw, 1rem)',
-              maxHeight: '90vh',
-              overflow: 'auto',
-              maxWidth: 'clamp(90%, 95vw, 60%)',
-              width: '100%',
-              position: 'relative'
-            }}>
+          <div className="modal-overlay">
+            <div className="modal-content">
               <button
                 onClick={() => setShowAddListingModal(false)}
                 className="action-button"
@@ -1039,8 +1097,8 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
 
         {/* Edit Listing Modal */}
         {showEditListingModal && selectedRental && (
-          <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: 'clamp(0.5rem, 2vw, 1rem)' }}>
-            <div className="modal-content" style={{ backgroundColor: 'white', borderRadius: 'clamp(0.75rem, 2vw, 1rem)', maxHeight: '90vh', overflow: 'auto', maxWidth: 'clamp(90%, 95vw, 60%)', width: '100%', position: 'relative' }}>
+          <div className="modal-overlay">
+            <div className="modal-content">
               <button onClick={() => { setShowEditListingModal(false); setSelectedRental(null); }} className="action-button" style={{ position: 'sticky', top: 0, right: 0, padding: 'clamp(0.75rem, 2vw, 1rem)', border: 'none', background: 'transparent', fontSize: 'clamp(1.25rem, 4vw, 1.5rem)', cursor: 'pointer', color: 'hsl(200 15% 45%)', float: 'right', zIndex: 10 }}>✕</button>
               <EditRentals agentData={agentData} setShowEditListingModal={setShowEditListingModal} rental={selectedRental} locations={locations} propertyTypes={propertyTypes} amenities={amenities} />
             </div>
@@ -1049,28 +1107,8 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
 
         {/* View Rental Modal */}
         {showViewModal && selectedRental && (
-          <div style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 50,
-            padding: 'clamp(0.5rem, 2vw, 1rem)'
-          }}>
-            <div className="modal-content" style={{
-              backgroundColor: 'white',
-              borderRadius: 'clamp(0.75rem, 2vw, 1rem)',
-              maxHeight: '90vh',
-              overflow: 'auto',
-              maxWidth: 'clamp(90%, 95vw, 60%)',
-              width: '100%',
-              position: 'relative'
-            }}>
+          <div className="modal-overlay">
+            <div className="modal-content">
               <button
                 onClick={() => setShowViewModal(false)}
                 className="action-button"

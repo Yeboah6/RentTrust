@@ -772,11 +772,11 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData, locations
                               fontSize: 'clamp(0.875rem, 2.5vw, 1rem)'
                             }}
                           >
-                            <option value="1">1 Month</option>
-                            <option value="2">2 Months</option>
-                            <option value="3">3 Months</option>
-                            <option value="4">4 Months</option>
-                            <option value="5">5 Months</option>
+                            <option value="1">1 year</option>
+                            <option value="2">2 years</option>
+                            <option value="3">3 years</option>
+                            <option value="4">4 years</option>
+                            <option value="5">5 years</option>
                           </select>
                         </div>
                       </div>
@@ -790,12 +790,13 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData, locations
                         Sale Price (GH₵) *
                       </label>
                       <div className="relative">
-                        <DollarSign className="absolute top-1/2 -translate-y-1/2" style={{ 
+                        {/* <DollarSign className="absolute top-1/2 -translate-y-1/2" style={{ 
                           left: 'clamp(0.625rem, 2vw, 0.75rem)',
                           height: 'clamp(1.125rem, 3vw, 1.25rem)',
                           width: 'clamp(1.125rem, 3vw, 1.25rem)',
                           color: 'hsl(200 15% 45%)'
-                        }} />
+                        }} /> */}
+                        
                         <input
                           type="number"
                           value={data.salePrice}

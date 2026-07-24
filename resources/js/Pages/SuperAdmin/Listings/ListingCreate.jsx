@@ -766,14 +766,14 @@ const ListingCreate = ({ agents = [], property_types = [], amenities: amenityLis
                                                 />
                                             </FField>
                                         </div>
-                                        <FField label="Advance Duration (months)" hint="How many months rent is required upfront" error={visibleErrors.advanceDuration}>
+                                        <FField label="Advance Duration (years)" hint="How many years rent is required upfront" error={visibleErrors.advanceDuration}>
                                             <FSelect
                                                 value={data.advanceDuration}
                                                 onChange={e => handleChange('advanceDuration', e.target.value)}
                                                 onBlur={() => handleBlur('advanceDuration')}
                                             >
                                                 <option value="">Select…</option>
-                                                {[1,2,3,4,5].map(n => <option key={n} value={n}>{n} month{n > 1 ? 's' : ''}</option>)}
+                                                {[1,2,3,4,5].map(n => <option key={n} value={n}>{n} year{n > 1 ? 's' : ''}</option>)}
                                             </FSelect>
                                         </FField>
                                     </>

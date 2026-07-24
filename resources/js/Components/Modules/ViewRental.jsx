@@ -114,23 +114,41 @@ const ViewRentals = ({ rental, setShowViewModal }) => {
           }
         }
 
-        /* Extra small devices */
-        @media (max-width: 480px) {
+        /* Extra small devices (≤400px) */
+        @media (max-width: 400px) {
           .modal-content {
-            max-height: 90vh !important;
-            borderRadius: 0.5rem !important;
+            max-height: 92vh !important;
+            margin: 0.25rem !important;
+            border-radius: 0.5rem !important;
           }
 
           .section-padding {
-            padding: clamp(0.75rem, 3vw, 1rem) !important;
+            padding: clamp(0.5rem, 2vw, 0.75rem) !important;
           }
 
           .text-xl {
-            font-size: 1.125rem !important;
+            font-size: 1rem !important;
           }
 
           .text-2xl {
-            font-size: 1.5rem !important;
+            font-size: 1.25rem !important;
+          }
+
+          .modal-header {
+            padding: 0.75rem !important;
+          }
+
+          .modal-body {
+            padding: 0.75rem !important;
+          }
+
+          .details-grid {
+            gap: 0.5rem !important;
+          }
+
+          .amenities-container span {
+            padding: 0.25rem 0.5rem !important;
+            font-size: 0.75rem !important;
           }
         }
 
@@ -267,7 +285,12 @@ const ViewRentals = ({ rental, setShowViewModal }) => {
                 backgroundColor: 'transparent',
                 border: 'none',
                 cursor: 'pointer',
-                flexShrink: 0
+                flexShrink: 0,
+                minHeight: '44px',
+                minWidth: '44px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
               }}
             >
               <X style={{ 
@@ -279,7 +302,7 @@ const ViewRentals = ({ rental, setShowViewModal }) => {
           </div>
 
           {/* Content */}
-          <div style={{ 
+          <div className="modal-body" style={{ 
             padding: 'clamp(1rem, 3vw, 1.5rem)',
             display: 'flex',
             flexDirection: 'column',
@@ -789,7 +812,8 @@ const ViewRentals = ({ rental, setShowViewModal }) => {
                   fontWeight: '600',
                   fontSize: 'clamp(0.875rem, 2vw, 0.875rem)',
                   cursor: 'pointer',
-                  transition: 'all 0.2s'
+                  transition: 'all 0.2s',
+                  minHeight: '44px'
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.backgroundColor = 'hsl(40 30% 96%)';
@@ -813,7 +837,11 @@ const ViewRentals = ({ rental, setShowViewModal }) => {
                     fontSize: 'clamp(0.875rem, 2vw, 0.875rem)',
                     textDecoration: 'none',
                     textAlign: 'center',
-                    transition: 'all 0.2s'
+                    transition: 'all 0.2s',
+                    minHeight: '44px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.backgroundColor = 'hsl(174 50% 25%)';
@@ -918,7 +946,7 @@ const ViewRentals = ({ rental, setShowViewModal }) => {
             alignItems: 'center',
             justifyContent: 'center',
             backdropFilter: 'blur(8px)',
-            padding: '2rem'
+            padding: 'clamp(0.75rem, 2vw, 1.5rem)'
           }}
         >
           {/* Close button */}
@@ -926,20 +954,23 @@ const ViewRentals = ({ rental, setShowViewModal }) => {
             onClick={closeLightbox}
             style={{
               position: 'absolute',
-              top: '1.5rem',
-              right: '1.5rem',
+              top: 'clamp(1rem, 3vw, 1.5rem)',
+              right: 'clamp(1rem, 3vw, 1.5rem)',
               background: 'rgba(255,255,255,0.1)',
               border: 'none',
               borderRadius: '50%',
-              width: '2.5rem',
-              height: '2.5rem',
+              width: '2.75rem',
+              height: '2.75rem',
+              minWidth: '44px',
+              minHeight: '44px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               color: 'white',
               cursor: 'pointer',
               zIndex: 10,
-              transition: 'background 0.2s'
+              transition: 'background 0.2s',
+              touchAction: 'manipulation'
             }}
             onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
             onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
@@ -953,21 +984,24 @@ const ViewRentals = ({ rental, setShowViewModal }) => {
               onClick={goToPrev}
               style={{
                 position: 'absolute',
-                left: '1.5rem',
+                left: 'clamp(0.75rem, 2vw, 1.5rem)',
                 top: '50%',
                 transform: 'translateY(-50%)',
                 background: 'rgba(255,255,255,0.1)',
                 border: 'none',
                 borderRadius: '50%',
-                width: '2.5rem',
-                height: '2.5rem',
+                width: '2.75rem',
+                height: '2.75rem',
+                minWidth: '44px',
+                minHeight: '44px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 color: 'white',
                 cursor: 'pointer',
                 zIndex: 10,
-                transition: 'background 0.2s'
+                transition: 'background 0.2s',
+                touchAction: 'manipulation'
               }}
               onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
               onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
@@ -982,21 +1016,24 @@ const ViewRentals = ({ rental, setShowViewModal }) => {
               onClick={goToNext}
               style={{
                 position: 'absolute',
-                right: '1.5rem',
+                right: 'clamp(0.75rem, 2vw, 1.5rem)',
                 top: '50%',
                 transform: 'translateY(-50%)',
                 background: 'rgba(255,255,255,0.1)',
                 border: 'none',
                 borderRadius: '50%',
-                width: '2.5rem',
-                height: '2.5rem',
+                width: '2.75rem',
+                height: '2.75rem',
+                minWidth: '44px',
+                minHeight: '44px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 color: 'white',
                 cursor: 'pointer',
                 zIndex: 10,
-                transition: 'background 0.2s'
+                transition: 'background 0.2s',
+                touchAction: 'manipulation'
               }}
               onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
               onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
@@ -1024,11 +1061,11 @@ const ViewRentals = ({ rental, setShowViewModal }) => {
           {images.length > 1 && (
             <div style={{
               position: 'absolute',
-              bottom: '1.5rem',
+              bottom: 'clamp(1rem, 3vw, 1.5rem)',
               left: '50%',
               transform: 'translateX(-50%)',
               color: 'white',
-              fontSize: '0.85rem',
+              fontSize: 'clamp(0.75rem, 2vw, 0.85rem)',
               fontWeight: '600',
               background: 'rgba(0,0,0,0.5)',
               padding: '0.3rem 0.8rem',
@@ -1041,10 +1078,10 @@ const ViewRentals = ({ rental, setShowViewModal }) => {
           {/* Title */}
           <div style={{
             position: 'absolute',
-            bottom: '1.5rem',
-            left: '1.5rem',
+            bottom: 'clamp(1rem, 3vw, 1.5rem)',
+            left: 'clamp(1rem, 3vw, 1.5rem)',
             color: 'white',
-            fontSize: '0.85rem',
+            fontSize: 'clamp(0.75rem, 2vw, 0.85rem)',
             fontWeight: '600',
             textShadow: '0 1px 4px rgba(0,0,0,0.6)',
             maxWidth: '50vw',

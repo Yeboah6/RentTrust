@@ -148,7 +148,7 @@ const Header = () => {
               }}
             >
               <img
-                src="/rent-trust.png"
+                src="/images/rent-trust.png"
                 alt="RentTrustGh Logo"
                 style={{ width: '100%', height: '100%', display: 'block' }}
               />

@@ -44,9 +44,8 @@ const Footer = () => {
               >
                 <div 
                   className="flex h-13 w-13 items-center justify-center rounded-lg"
-                  // style={{ backgroundColor: '#1f847a' }}
                 >
-                  <span className="text-base font-bold text-white"><img src='/rent-trust.png' alt="Logo" /></span>
+                  <span className="text-base font-bold text-white"><img src='/images/rent-trust.png' alt="Logo" /></span>
                 </div>
                 <span className="text-lg font-bold tracking-tight" style={{ color: '#1d2930' }}>
                   RentTrustGh

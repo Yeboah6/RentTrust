@@ -108,87 +108,151 @@ const ReviewsSection = ({ reviews, reports, appReviews }) => {
           font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
         }
         
-        /* Mobile touch optimization */
-        @media (max-width: 768px) {
-          .tab-button {
-            min-height: 44px;
-            -webkit-tap-highlight-color: transparent;
-            font-size: clamp(0.75rem, 2vw, 0.875rem) !important;
+        /* ── Mobile-first touch optimisation ── */
+        .tab-button {
+          min-height: 44px;
+          -webkit-tap-highlight-color: transparent;
+          touch-action: manipulation;
+          flex-shrink: 0;
+        }
+        
+        .action-button {
+          min-height: 44px;
+          touch-action: manipulation;
+        }
+
+        /* ── Tabs container: horizontal scroll on small screens ── */
+        .tabs-container {
+          display: flex;
+          overflow-x: auto;
+          overflow-y: hidden;
+          -webkit-overflow-scrolling: touch;
+          scrollbar-width: none; /* Firefox */
+          gap: 0.25rem;
+          border-bottom: 2px solid hsl(40 20% 88%);
+          background-color: hsl(40 30% 96%);
+          padding: 0.25rem 0.5rem;
+        }
+        .tabs-container::-webkit-scrollbar {
+          display: none; /* Chrome/Safari */
+        }
+
+        .tabs-container .tab-button {
+          flex: 0 0 auto;
+          padding: clamp(0.5rem, 2vw, 0.75rem) clamp(0.75rem, 2vw, 1.25rem);
+          border: none;
+          background: transparent;
+          border-bottom: 2px solid transparent;
+          margin-bottom: -2px;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          gap: clamp(0.25rem, 1vw, 0.5rem);
+          font-weight: 500;
+          color: hsl(200 15% 45%);
+          transition: all 0.2s;
+          white-space: nowrap;
+          font-size: clamp(0.75rem, 2vw, 0.875rem);
+        }
+        .tabs-container .tab-button.active {
+          font-weight: 600;
+          color: hsl(174 62% 32%);
+          border-bottom-color: hsl(174 62% 32%);
+          background: white;
+        }
+        .tabs-container .tab-button:active {
+          transform: scale(0.96);
+        }
+
+        /* ── Check items grid ── */
+        .check-items-grid {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: clamp(0.375rem, 1.5vw, 0.5rem);
+          font-size: clamp(0.75rem, 2vw, 0.875rem);
+        }
+        @media (min-width: 400px) {
+          .check-items-grid {
+            grid-template-columns: repeat(2, 1fr);
           }
-          
-          .tab-icon {
-            height: clamp(1rem, 3vw, 1.25rem) !important;
-            width: clamp(1rem, 3vw, 1.25rem) !important;
+        }
+        @media (min-width: 640px) {
+          .check-items-grid {
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
           }
-          
+        }
+
+        /* ── Review items ── */
+        .review-item {
+          display: flex;
+          gap: clamp(0.75rem, 2vw, 1rem);
+        }
+        @media (max-width: 480px) {
           .review-item {
             flex-direction: column;
-            gap: 0.75rem !important;
-          }
-          
-          .check-items-grid {
-            grid-template-columns: 1fr !important;
-          }
-          
-          .modal-content {
-            max-width: 95% !important;
-            margin: 0.5rem;
-            max-height: 85vh;
-          }
-          
-          .count-badge {
-            font-size: 0.6875rem !important;
-            padding: 0.125rem 0.375rem !important;
+            gap: 0.75rem;
           }
         }
-        
-        /* Extra small devices */
-        @media (max-width: 480px) {
+
+        /* ── Modal ── */
+        .modal-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0,0,0,0.5);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 50;
+          padding: clamp(0.5rem, 2vw, 1rem);
+        }
+        .modal-content {
+          background: white;
+          border-radius: clamp(0.75rem, 2vw, 1rem);
+          max-height: 90vh;
+          overflow: auto;
+          width: 100%;
+          max-width: 95%;
+          position: relative;
+        }
+        @media (min-width: 640px) {
+          .modal-content {
+            max-width: 90%;
+          }
+        }
+        @media (min-width: 1024px) {
+          .modal-content {
+            max-width: 60%;
+          }
+        }
+
+        /* ── Very small screens ── */
+        @media (max-width: 400px) {
+          .review-item {
+            gap: 0.5rem;
+          }
+          .check-items-grid {
+            gap: 0.25rem;
+          }
           .tabs-container {
-            flex-direction: column;
-            border-bottom: none !important;
+            padding: 0.25rem 0.25rem;
           }
-          
           .tab-button {
-            border-bottom: 1px solid hsl(40 20% 88%);
-            justify-content: flex-start !important;
-            padding-left: 1rem !important;
+            font-size: 0.7rem !important;
+            padding: 0.4rem 0.6rem !important;
           }
-          
-          .header-section {
-            flex-direction: column;
-            align-items: flex-start !important;
-            gap: 1rem !important;
+          .count-badge {
+            font-size: 0.6rem !important;
+            padding: 0.1rem 0.3rem !important;
           }
         }
-        
-        /* Prevent zoom on input focus for iOS */
+
+        /* ── Prevent zoom on input focus (iOS) ── */
         @media (max-width: 768px) {
-          input[type="text"],
-          input[type="email"],
-          textarea {
+          input, textarea {
             font-size: 16px !important;
-          }
-        }
-        
-        /* Landscape mobile */
-        @media (max-height: 600px) and (orientation: landscape) {
-          .modal-content {
-            max-height: 75vh;
-          }
-        }
-        
-        /* Tablet */
-        @media (min-width: 481px) and (max-width: 768px) {
-          .check-items-grid {
-            grid-template-columns: repeat(2, 1fr) !important;
-          }
-        }
-        
-        /* Desktop */
-        @media (min-width: 769px) {
-          .check-items-grid {
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) !important;
           }
         }
       `}</style>
@@ -210,58 +274,30 @@ const ReviewsSection = ({ reviews, reports, appReviews }) => {
             borderRadius: 'clamp(0.5rem, 2vw, 0.75rem)', 
             overflow: 'hidden' 
           }}>
-            {/* Tabs Navigation */}
-            <div className="tabs-container" style={{
-              display: 'flex',
-              borderBottom: '2px solid hsl(40 20% 88%)',
-              backgroundColor: 'hsl(40 30% 96%)',
-              flexDirection: 'row'
-            }}>
+            {/* Tabs Navigation - horizontal scrollable */}
+            <div className="tabs-container">
               {tabs.map((tab) => {
                 const Icon = tab.icon;
+                const isActive = activeTab === tab.id;
                 return (
                   <button
                     key={tab.id}
-                    className="tab-button"
+                    className={`tab-button ${isActive ? 'active' : ''}`}
                     onClick={() => setActiveTab(tab.id)}
-                    style={{
-                      flex: 1,
-                      padding: 'clamp(0.75rem, 2vw, 1rem)',
-                      border: 'none',
-                      backgroundColor: activeTab === tab.id ? 'white' : 'transparent',
-                      borderBottom: activeTab === tab.id ? '2px solid hsl(174 62% 32%)' : '2px solid transparent',
-                      marginBottom: '-2px',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: 'clamp(0.25rem, 1vw, 0.5rem)',
-                      fontWeight: activeTab === tab.id ? '600' : '500',
-                      color: activeTab === tab.id ? 'hsl(174 62% 32%)' : 'hsl(200 15% 45%)',
-                      transition: 'all 0.2s',
-                      whiteSpace: 'nowrap',
-                      touchAction: 'manipulation'
-                    }}
                     onMouseEnter={(e) => {
-                      if (activeTab !== tab.id) {
-                        e.currentTarget.style.backgroundColor = 'hsl(40 30% 94%)';
-                      }
+                      if (!isActive) e.currentTarget.style.backgroundColor = 'hsl(40 30% 94%)';
                     }}
                     onMouseLeave={(e) => {
-                      if (activeTab !== tab.id) {
-                        e.currentTarget.style.backgroundColor = 'transparent';
-                      }
+                      if (!isActive) e.currentTarget.style.backgroundColor = 'transparent';
                     }}
                   >
                     <Icon className="tab-icon" style={{ 
                       height: 'clamp(1rem, 3vw, 1.25rem)', 
                       width: 'clamp(1rem, 3vw, 1.25rem)' 
                     }} />
-                    <span style={{
-                      fontSize: 'clamp(0.75rem, 2vw, 0.875rem)'
-                    }}>{tab.label}</span>
+                    <span>{tab.label}</span>
                     <span className="count-badge" style={{
-                      backgroundColor: activeTab === tab.id ? 'hsl(174 62% 32%)' : 'hsl(200 15% 45%)',
+                      backgroundColor: isActive ? 'hsl(174 62% 32%)' : 'hsl(200 15% 45%)',
                       color: 'white',
                       padding: 'clamp(0.125rem, 1vw, 0.125rem) clamp(0.375rem, 2vw, 0.5rem)',
                       borderRadius: '9999px',
@@ -276,12 +312,12 @@ const ReviewsSection = ({ reviews, reports, appReviews }) => {
             </div>
 
             {/* Header */}
-            <div className="header-section" style={{
+            <div style={{
               padding: 'clamp(1rem, 3vw, 1.5rem)',
               borderBottom: '1px solid hsl(40 20% 88%)',
               display: 'flex',
               justifyContent: 'space-between',
-              alignItems: 'start',
+              alignItems: 'flex-start',
               flexWrap: 'wrap',
               gap: 'clamp(0.5rem, 2vw, 1rem)'
             }}>
@@ -308,7 +344,8 @@ const ReviewsSection = ({ reviews, reports, appReviews }) => {
               </div>
               {activeTab === "app" && (
                 <button
-                onClick={() => {
+                  className="action-button"
+                  onClick={() => {
                     if (!auth?.agent && !auth?.super && !auth?.tenant) {
                       window.location.href = '/sign-up';
                     } else {
@@ -325,8 +362,8 @@ const ReviewsSection = ({ reviews, reports, appReviews }) => {
                     cursor: 'pointer',
                     fontSize: 'clamp(0.75rem, 2vw, 0.875rem)',
                     whiteSpace: 'nowrap',
-                    touchAction: 'manipulation',
-                    minHeight: '44px'
+                    minHeight: '44px',
+                    touchAction: 'manipulation'
                   }}
                   onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
                   onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
@@ -346,8 +383,6 @@ const ReviewsSection = ({ reviews, reports, appReviews }) => {
                   {reviews.map((review, reviewIndex) => (
                     <div key={review.id}>
                       <div className="review-item" style={{ 
-                        display: 'flex', 
-                        gap: 'clamp(0.75rem, 2vw, 1rem)', 
                         marginBottom: reviewIndex < reviews.length - 1 ? 'clamp(1rem, 3vw, 1.5rem)' : 0 
                       }}>
                         <div style={{
@@ -363,7 +398,7 @@ const ReviewsSection = ({ reviews, reports, appReviews }) => {
                           fontWeight: '600',
                           flexShrink: 0
                         }}>
-                          {review.full_name ?  <User size={20} /> : 'T'}
+                          {review.full_name ? <User size={20} /> : 'T'}
                         </div>
 
                         <div style={{ flex: 1, minWidth: 0 }}>
@@ -398,12 +433,7 @@ const ReviewsSection = ({ reviews, reports, appReviews }) => {
                             })}
                           </p>
 
-                          <div className="check-items-grid" style={{
-                            display: 'grid',
-                            gap: 'clamp(0.375rem, 1.5vw, 0.5rem)',
-                            marginBottom: 'clamp(0.5rem, 2vw, 0.75rem)',
-                            fontSize: 'clamp(0.75rem, 2vw, 0.875rem)'
-                          }}>
+                          <div className="check-items-grid">
                             {reviewCheckItems.map((item) => {
                               const value = review[item.key];
                               if (value === null) return null;
@@ -438,6 +468,7 @@ const ReviewsSection = ({ reviews, reports, appReviews }) => {
                             <p style={{ 
                               color: 'hsl(200 15% 45%)', 
                               lineHeight: '1.6', 
+                              marginTop: 'clamp(0.5rem, 2vw, 0.75rem)',
                               marginBottom: 'clamp(0.5rem, 2vw, 0.75rem)',
                               fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)'
                             }}>
@@ -564,8 +595,6 @@ const ReviewsSection = ({ reviews, reports, appReviews }) => {
                   {appReviews.map((review, reviewIndex) => (
                     <div key={review.id}>
                       <div className="review-item" style={{ 
-                        display: 'flex', 
-                        gap: 'clamp(0.75rem, 2vw, 1rem)', 
                         marginBottom: reviewIndex < appReviews.length - 1 ? 'clamp(1rem, 3vw, 1.5rem)' : 0 
                       }}>
                         <div style={{
@@ -581,7 +610,7 @@ const ReviewsSection = ({ reviews, reports, appReviews }) => {
                           fontWeight: '600',
                           flexShrink: 0
                         }}>
-                          {review.full_name ?  <User size={20} /> : "T"}
+                          {review.full_name ? <User size={20} /> : "T"}
                         </div>
 
                         <div style={{ flex: 1, minWidth: 0 }}>
@@ -644,28 +673,8 @@ const ReviewsSection = ({ reviews, reports, appReviews }) => {
       
       {/* App Review Modal */}
       {activeTab === "app" && showReviewForm && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 50,
-          padding: 'clamp(0.5rem, 2vw, 1rem)'
-        }}>
-          <div className="modal-content" style={{
-            backgroundColor: 'white',
-            borderRadius: 'clamp(0.75rem, 2vw, 1rem)',
-            maxHeight: '90vh',
-            overflow: 'auto',
-            maxWidth: 'clamp(90%, 95vw, 60%)',
-            width: '100%',
-            position: 'relative'
-          }}>
+        <div className="modal-overlay" onClick={() => setShowReviewForm(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
             <AppReview setShowReviewForm={setShowReviewForm} auth={auth} />
           </div>
         </div>

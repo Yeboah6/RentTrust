@@ -2,19 +2,6 @@ import React, { useState } from 'react';
 import { Link } from "@inertiajs/react";
 import { ArrowRight, MapPin, Shield, Sparkles, BedDouble, Bath, Home } from 'lucide-react';
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-/**
- * Normalise whatever `images` arrives as into a plain JS array of strings.
- *
- * Inertia/Laravel may send:
- *   - a JS array already          → use as-is
- *   - a JSON string               → parse it
- *   - a plain object {0:…, 1:…}  → Object.values()
- *   - null / undefined            → []
- */
 const parseImages = (images) => {
   try {
     if (!images) return [];
@@ -42,10 +29,6 @@ const resolveImageSrc = (value) => {
   return `/storage/rental_images/${value}`;
 };
 
-/**
- * Coerce a value that may arrive as 1/0/true/false/"1"/"0" to a boolean.
- * MySQL tinyint columns come over Inertia as integers, not booleans.
- */
 const toBool = (v) => v === true || v === 1 || v === '1';
 
 const formatPrice = (price) => {

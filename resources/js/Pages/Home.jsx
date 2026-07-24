@@ -10,6 +10,37 @@ import { Head } from '@inertiajs/react';
 
 const Home = ({ featuredRentals, featuredSales, rentalAreas, saleAreas, totalListings, totalAreas, totalVerifiedAgents, users }) => {
   return (
+    <>
+    <Head>
+                <title>
+                    {listing.bedrooms} Bedroom {listing.property_type} for {listing.purpose} in {listing.area} | RentTrustGh
+                </title>
+
+                <meta
+                    name="description"
+                    content={listing.meta_description}
+                />
+
+                <meta
+                    property="og:title"
+                    content={listing.title}
+                />
+
+                <meta
+                    property="og:description"
+                    content={listing.meta_description}
+                />
+
+                <meta
+                    property="og:image"
+                    content={listing.cover_image}
+                />
+
+                <link
+                    rel="canonical"
+                    href={`https://renttrustgh.com/${listing.purpose}/${listing.area_slug}/${listing.slug}`}
+                />
+            </Head>
     <div className="min-h-screen flex flex-col">
       <Header />
 
@@ -24,6 +55,7 @@ const Home = ({ featuredRentals, featuredSales, rentalAreas, saleAreas, totalLis
 
       <Footer />
     </div>
+    </>
   );
 };
 
