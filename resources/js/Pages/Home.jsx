@@ -12,14 +12,21 @@ const Home = ({ featuredRentals, featuredSales, rentalAreas, saleAreas, totalLis
   return (
     <>
     <Head>
-                <title>
-                    {listing.bedrooms} Bedroom {listing.property_type} for {listing.purpose} in {listing.area} | RentTrustGh
-                </title>
+        <title>
+            RentTrustGh | Find Your Perfect Home for Rent or Sale in Ghana
+        </title>
 
-                <meta
-                    name="description"
-                    content={listing.meta_description}
-                />
+        <meta
+            name="description"
+            content="Find verified houses, apartments, offices, shops, and land for rent or sale across Ghana. Browse trusted listings from landlords and agents on RentTrustGh."
+        />
+
+        <meta
+            name="keywords"
+            content="RentTrustGh, Ghana property, apartments for rent, houses for rent, houses for sale, real estate Ghana, Accra apartments, Tema rentals, Kumasi houses"
+        />
+    </Head>
+            {/* <Head>
 
                 <meta
                     property="og:title"
@@ -40,8 +47,8 @@ const Home = ({ featuredRentals, featuredSales, rentalAreas, saleAreas, totalLis
                     rel="canonical"
                     href={`https://renttrustgh.com/${listing.purpose}/${listing.area_slug}/${listing.slug}`}
                 />
-            </Head>
-    <div className="min-h-screen flex flex-col">
+            </Head> */}
+    <div className="min-h-screen flex flex-col"> 
       <Header />
 
       <main className="flex-1">

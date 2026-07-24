@@ -75,11 +75,11 @@
     >
 
     {{-- Favicon --}}
-    <link rel="icon" href="{{ asset('rent-trust.png') }}" sizes="32x32">
-    <link rel="apple-touch-icon" href="{{ asset('rent-trust.png') }}">
+    <link rel="icon" href="{{ asset('/images/rent-trust.png') }}" sizes="32x32">
+    <link rel="apple-touch-icon" href="{{ asset('/images/rent-trust.png') }}">
 
     {{-- Manifest --}}
-    <link rel="manifest" href="{{ asset('site.webmanifest') }}">
+    {{-- <link rel="manifest" href="{{ asset('site.webmanifest') }}"> --}}
 
     {{-- Preconnect --}}
     <link rel="preconnect" href="https://fonts.googleapis.com">

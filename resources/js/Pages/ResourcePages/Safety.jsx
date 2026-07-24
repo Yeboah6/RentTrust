@@ -1,6 +1,6 @@
 import Header from '../../Components/Layouts/Header';
 import Footer from '../../Components/Layouts/Footer';
-import { Link } from '@inertiajs/react';
+import { Link, Head } from '@inertiajs/react';
 
 const MosaicHero = ({ badge, title, highlight, sub }) => (
     <div style={{ position:'relative', overflow:'hidden', minHeight:'360px', display:'flex', alignItems:'center' }}>
@@ -75,6 +75,155 @@ export default function SafetyPage() {
 
     return (
         <>
+        <Head>
+    {/* Primary SEO */}
+    <title>Rental Safety Tips | Avoid Rental Scams in Ghana | RentTrustGh</title>
+
+    <meta
+        name="description"
+        content="Stay safe when renting property in Ghana. Learn how to identify rental scams, verify agents, inspect properties, protect your payments, and sign secure tenancy agreements with RentTrustGh."
+    />
+
+    <meta
+        name="keywords"
+        content="rental safety Ghana, avoid rental scams Ghana, tenant safety Ghana, property scam Ghana, safe renting Ghana, verified property listings Ghana, RentTrustGh"
+    />
+
+    <meta name="robots" content="index,follow" />
+
+    {/* Canonical */}
+    <link
+        rel="canonical"
+        href="https://renttrustgh.com/safety"
+    />
+
+    {/* Open Graph */}
+    <meta property="og:type" content="article" />
+    <meta property="og:site_name" content="RentTrustGh" />
+    <meta property="og:locale" content="en_GH" />
+
+    <meta
+        property="og:title"
+        content="Rental Safety Tips | RentTrustGh"
+    />
+
+    <meta
+        property="og:description"
+        content="Protect yourself from rental scams in Ghana with practical safety tips for tenants."
+    />
+
+    <meta
+        property="og:url"
+        content="https://renttrustgh.com/safety"
+    />
+
+    <meta
+        property="og:image"
+        content="https://renttrustgh.com/images/seo/safety-og.jpg"
+    />
+
+    {/* Twitter */}
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <meta
+        name="twitter:title"
+        content="Rental Safety Tips | RentTrustGh"
+    />
+
+    <meta
+        name="twitter:description"
+        content="Learn how to rent safely, avoid scams, verify agents, and protect your money when renting property in Ghana."
+    />
+
+    <meta
+        name="twitter:image"
+        content="https://renttrustgh.com/images/seo/safety-og.jpg"
+    />
+
+    {/* Article Schema */}
+    <script type="application/ld+json">
+        {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Article",
+            headline: "Rental Safety Tips | Avoid Rental Scams in Ghana",
+            description:
+                "A practical safety guide for tenants in Ghana covering rental scams, property verification, payments, tenancy agreements, and safe renting practices.",
+            image: "https://renttrustgh.com/images/seo/safety-og.jpg",
+            author: {
+                "@type": "Organization",
+                name: "RentTrustGh"
+            },
+            publisher: {
+                "@type": "Organization",
+                name: "RentTrustGh",
+                logo: {
+                    "@type": "ImageObject",
+                    url: "https://renttrustgh.com/images/rent-trust.png"
+                }
+            },
+            mainEntityOfPage: {
+                "@type": "WebPage",
+                "@id": "https://renttrustgh.com/safety"
+            }
+        })}
+    </script>
+
+    {/* FAQ Schema */}
+    <script type="application/ld+json">
+        {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            mainEntity: [
+                {
+                    "@type": "Question",
+                    name: "What is a reasonable rent advance in Ghana?",
+                    acceptedAnswer: {
+                        "@type": "Answer",
+                        text: "Rent advance varies by property and agreement, but tenants should always understand the payment terms and ensure they are documented before paying."
+                    }
+                },
+                {
+                    "@type": "Question",
+                    name: "Can I bring a lawyer before signing a tenancy agreement?",
+                    acceptedAnswer: {
+                        "@type": "Answer",
+                        text: "Yes. You have every right to seek legal advice before signing a tenancy agreement."
+                    }
+                },
+                {
+                    "@type": "Question",
+                    name: "What if a landlord refuses to issue a receipt?",
+                    acceptedAnswer: {
+                        "@type": "Answer",
+                        text: "Do not make payment without receiving a proper receipt. Always request documentation for every transaction."
+                    }
+                }
+            ]
+        })}
+    </script>
+
+    {/* Breadcrumb Schema */}
+    <script type="application/ld+json">
+        {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            itemListElement: [
+                {
+                    "@type": "ListItem",
+                    position: 1,
+                    name: "Home",
+                    item: "https://renttrustgh.com"
+                },
+                {
+                    "@type": "ListItem",
+                    position: 2,
+                    name: "Safety Tips",
+                    item: "https://renttrustgh.com/safety"
+                }
+            ]
+        })}
+    </script>
+</Head>
             <style>{BASE_STYLE}</style>
             <div style={{ minHeight:'100vh', display:'flex', flexDirection:'column', backgroundColor:'hsl(40 33% 98%)' }}>
                 <Header />

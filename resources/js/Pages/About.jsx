@@ -1,4 +1,4 @@
-import { Link } from '@inertiajs/react';
+import { Link, Head } from '@inertiajs/react';
 import Header from '../Components/Layouts/Header';
 import Footer from '../Components/Layouts/Footer';
 
@@ -76,6 +76,118 @@ export default function AboutPage({ totalListings = 0, totalVerifiedAgents = 0, 
 
     return (
         <>
+
+<Head>
+    {/* Primary SEO */}
+    <title>About RentTrustGh | Our Mission to Build Trust in Ghana's Property Market</title>
+
+    <meta
+        name="description"
+        content="Learn about RentTrustGh, Ghana's trusted property marketplace. Discover our mission to eliminate rental scams through verified listings, transparent reviews, and trusted agents."
+    />
+
+    <meta
+        name="keywords"
+        content="About RentTrustGh, RentTrustGh mission, Ghana real estate, verified property listings Ghana, trusted rental platform, property marketplace Ghana"
+    />
+
+    <meta name="robots" content="index,follow" />
+
+    {/* Canonical */}
+    <link
+        rel="canonical"
+        href="https://renttrustgh.com/about"
+    />
+
+    {/* Open Graph */}
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="RentTrustGh" />
+    <meta property="og:locale" content="en_GH" />
+
+    <meta
+        property="og:title"
+        content="About RentTrustGh | Building Trust in Ghana's Property Market"
+    />
+
+    <meta
+        property="og:description"
+        content="We're helping tenants, landlords, and agents build trust through verified property listings, transparent reviews, and reliable housing information."
+    />
+
+    <meta
+        property="og:url"
+        content="https://renttrustgh.com/about"
+    />
+
+    <meta
+        property="og:image"
+        content="/images/seo/about-og.jpg"
+    />
+
+    {/* Twitter */}
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <meta
+        name="twitter:title"
+        content="About RentTrustGh | Ghana's Trusted Property Marketplace"
+    />
+
+    <meta
+        name="twitter:description"
+        content="Learn how RentTrustGh is making renting and buying property safer across Ghana."
+    />
+
+    <meta
+        name="twitter:image"
+        content="/images/seo/about-og.jpg"
+    />
+
+    {/* JSON-LD */}
+    <script type="application/ld+json">
+        {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "AboutPage",
+            name: "About RentTrustGh",
+            url: "https://renttrustgh.com/about",
+            description:
+                "Learn about RentTrustGh and our mission to make renting and buying property safer across Ghana.",
+            mainEntity: {
+                "@type": "Organization",
+                name: "RentTrustGh",
+                url: "https://renttrustgh.com",
+                logo: "https://renttrustgh.com/images/rent-trust.png",
+                description:
+                    "RentTrustGh is Ghana's trusted property marketplace connecting tenants, landlords, agents, and property buyers through verified listings and transparent reviews.",
+                foundingLocation: {
+                    "@type": "Country",
+                    name: "Ghana"
+                }
+            }
+        })}
+    </script>
+
+    {/* Breadcrumb Schema */}
+    <script type="application/ld+json">
+        {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            itemListElement: [
+                {
+                    "@type": "ListItem",
+                    position: 1,
+                    name: "Home",
+                    item: "https://renttrustgh.com"
+                },
+                {
+                    "@type": "ListItem",
+                    position: 2,
+                    name: "About",
+                    item: "https://renttrustgh.com/about"
+                }
+            ]
+        })}
+    </script>
+</Head>
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap');
 
