@@ -79,7 +79,7 @@
     <link rel="apple-touch-icon" href="{{ asset('rent-trust.png') }}">
 
     {{-- Manifest --}}
-    <link rel="manifest" href="{{ asset('site.webmanifest') }}">
+    {{-- <link rel="manifest" href="{{ asset('site.webmanifest') }}"> --}}
 
     {{-- Preconnect --}}
     <link rel="preconnect" href="https://fonts.googleapis.com">
