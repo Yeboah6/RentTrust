@@ -10,7 +10,6 @@ export function useRefresh(only) {
 
         const opts = { onFinish: () => setRefreshing(false) };
 
-        // only accept a non-empty array — ignore anything else
         if (Array.isArray(only) && only.length) {
             opts.only = only;
         }

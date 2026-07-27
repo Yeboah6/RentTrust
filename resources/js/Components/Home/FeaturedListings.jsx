@@ -17,12 +17,6 @@ const parseImages = (images) => {
   }
 };
 
-/**
- * Resolve a single image filename/path/URL into a usable <img> src.
- * - Absolute URL  → pass through
- * - Starts with / → pass through (already root-relative)
- * - Bare filename → prefix storage path
- */
 const resolveImageSrc = (value) => {
   if (!value) return null;
   if (/^https?:\/\//i.test(value) || value.startsWith('/')) return value;
@@ -49,7 +43,7 @@ const PropertyCard = ({
   rent_min,
   rent_max,
   sale_price,
-  purpose,           // 'rent' | 'sale' — passed explicitly by ListingGrid
+  purpose,
   advance_duration,
   agent_name,
   status,

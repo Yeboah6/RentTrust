@@ -1,6 +1,6 @@
 import Header from '../../Components/Layouts/Header';
 import Footer from '../../Components/Layouts/Footer';
-import { Link } from '@inertiajs/react';
+import { Link, Head } from '@inertiajs/react';
 
 const MosaicHero = ({ badge, title, highlight, sub }) => (
     <div style={{ position:'relative', overflow:'hidden', minHeight:'360px', display:'flex', alignItems:'center' }}>
@@ -65,6 +65,110 @@ export default function FaqPage() {
 
     return (
         <>
+        <Head>
+            <title>Frequently Asked Questions (FAQ) | RentTrustGh</title>
+            
+            {/* Primary Meta */}
+            <meta
+                name="description"
+                content="Find answers to frequently asked questions about renting, verified property listings, landlords, agents, tenant safety, and RentTrustGh's services across Ghana."
+            />
+        
+            <meta
+                name="keywords"
+                content="RentTrustGh FAQ, Ghana property FAQ, rental questions Ghana, tenant questions, landlord questions, verified property listings, Ghana real estate help, rental safety Ghana"
+            />
+        
+            <meta name="robots" content="index,follow,max-image-preview:large" />
+            
+            {/* Canonical */}
+            <link rel="canonical" href={window.location.href} />
+            
+            {/* Open Graph */}
+            <meta property="og:type" content="website" />
+            <meta property="og:site_name" content="RentTrustGh" />
+            <meta property="og:locale" content="en_GH" />
+            
+            <meta
+                property="og:title"
+                content="Frequently Asked Questions | RentTrustGh"
+            />
+        
+            <meta
+                property="og:description"
+                content="Get answers to common questions about renting safely, verified listings, landlords, agents, and RentTrustGh."
+            />
+        
+            <meta property="og:url" content={window.location.href} />
+            
+            <meta
+                property="og:image"
+                content="/images/seo/faq-og.jpg"
+            />
+        
+            {/* Twitter */}
+            <meta name="twitter:card" content="summary_large_image" />
+            
+            <meta
+                name="twitter:title"
+                content="Frequently Asked Questions | RentTrustGh"
+            />
+        
+            <meta
+                name="twitter:description"
+                content="Learn how RentTrustGh helps tenants find verified properties and rent safely across Ghana."
+            />
+        
+            <meta
+                name="twitter:image"
+                content="/images/seo/faq-og.jpg"
+            />
+        
+            {/* Structured Data */}
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{
+                    __html: JSON.stringify({
+                        "@context": "https://schema.org",
+                        "@type": "FAQPage",
+                        "mainEntity": [
+                            {
+                                "@type": "Question",
+                                "name": "How do I know a listing is verified?",
+                                "acceptedAnswer": {
+                                    "@type": "Answer",
+                                    "text": "Verified listings on RentTrustGh are reviewed for accuracy and identity before they are published."
+                                }
+                            },
+                            {
+                                "@type": "Question",
+                                "name": "What if I suspect a fake listing?",
+                                "acceptedAnswer": {
+                                    "@type": "Answer",
+                                    "text": "Use the Report button on the listing page. Our team investigates every report and removes listings that violate our policies."
+                                }
+                            },
+                            {
+                                "@type": "Question",
+                                "name": "Can I pay rent through RentTrustGh?",
+                                "acceptedAnswer": {
+                                    "@type": "Answer",
+                                    "text": "No. RentTrustGh is a property marketplace. Always inspect a property and obtain a receipt before making any payment."
+                                }
+                            },
+                            {
+                                "@type": "Question",
+                                "name": "How long does property verification take?",
+                                "acceptedAnswer": {
+                                    "@type": "Answer",
+                                    "text": "Most listings are verified within one to two business days after all required documents have been submitted."
+                                }
+                            }
+                        ]
+                    })
+                }}
+            />
+        </Head>
             <style>{BASE_STYLE}</style>
             <div style={{ minHeight:'100vh', display:'flex', flexDirection:'column', backgroundColor:'hsl(40 33% 98%)' }}>
                 <Header />

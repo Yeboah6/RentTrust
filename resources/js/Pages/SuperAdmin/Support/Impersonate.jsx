@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, router } from '@inertiajs/react';
+import { Link, router, Head } from '@inertiajs/react';
 import SuperAdminLayout from '@/Layouts/SuperAdminLayout';
 
 // ── Icons ─────────────────────────────────────────────────────────────────────
@@ -316,6 +316,9 @@ const Impersonate = ({ users = [] }) => {
 
     return (
         <>
+        <Head>
+            <title>RentTrustGh</title>
+        </Head>
             {selected && (
                 <ConfirmModal
                     user={selected}

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, usePage } from '@inertiajs/react';
+import { Link, usePage, Head } from '@inertiajs/react';
 import Header from '../Components/Layouts/Header';
 import Footer from '../Components/Layouts/Footer';
 
@@ -107,6 +107,117 @@ export default function ContactPage() {
 
     return (
         <>
+<Head>
+    {/* Primary SEO */}
+    <title>Contact RentTrustGh | Get in Touch with Our Team</title>
+
+    <meta
+        name="description"
+        content="Contact RentTrustGh for support, property inquiries, partnerships, feedback, or general questions. We're here to help you rent, buy, or list property across Ghana."
+    />
+
+    <meta
+        name="keywords"
+        content="Contact RentTrustGh, RentTrustGh support, property support Ghana, real estate contact Ghana, rental assistance Ghana, contact property marketplace"
+    />
+
+    <meta name="robots" content="index,follow" />
+
+    {/* Canonical */}
+    <link
+        rel="canonical"
+        href="https://renttrustgh.com/contact"
+    />
+
+    {/* Open Graph */}
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="RentTrustGh" />
+    <meta property="og:locale" content="en_GH" />
+
+    <meta
+        property="og:title"
+        content="Contact RentTrustGh | We're Here to Help"
+    />
+
+    <meta
+        property="og:description"
+        content="Need assistance with renting, buying, selling, or listing a property? Contact the RentTrustGh team today."
+    />
+
+    <meta
+        property="og:url"
+        content="https://renttrustgh.com/contact"
+    />
+
+    <meta
+        property="og:image"
+        content="https://renttrustgh.com/images/seo/contact-og.jpg"
+    />
+
+    {/* Twitter */}
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <meta
+        name="twitter:title"
+        content="Contact RentTrustGh | Ghana's Trusted Property Marketplace"
+    />
+
+    <meta
+        name="twitter:description"
+        content="Reach out to RentTrustGh for customer support, partnerships, or property-related inquiries."
+    />
+
+    <meta
+        name="twitter:image"
+        content="https://renttrustgh.com/images/seo/contact-og.jpg"
+    />
+
+    {/* Contact Page Schema */}
+    <script type="application/ld+json">
+        {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "ContactPage",
+            name: "Contact RentTrustGh",
+            url: "https://renttrustgh.com/contact",
+            description:
+                "Contact RentTrustGh for support, partnerships, and property inquiries.",
+            mainEntity: {
+                "@type": "Organization",
+                name: "RentTrustGh",
+                url: "https://renttrustgh.com",
+                logo: "https://renttrustgh.com/images/rent-trust.png",
+                contactPoint: {
+                    "@type": "ContactPoint",
+                    contactType: "Customer Support",
+                    availableLanguage: ["English"],
+                    areaServed: "GH"
+                }
+            }
+        })}
+    </script>
+
+    {/* Breadcrumb Schema */}
+    <script type="application/ld+json">
+        {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            itemListElement: [
+                {
+                    "@type": "ListItem",
+                    position: 1,
+                    name: "Home",
+                    item: "https://renttrustgh.com"
+                },
+                {
+                    "@type": "ListItem",
+                    position: 2,
+                    name: "Contact",
+                    item: "https://renttrustgh.com/contact"
+                }
+            ]
+        })}
+    </script>
+</Head>
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap');
 

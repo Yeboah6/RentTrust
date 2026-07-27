@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Link, router } from '@inertiajs/react';
+import { Link, router, Head } from '@inertiajs/react';
 import axios from 'axios';
 import SuperAdminLayout from '@/Layouts/SuperAdminLayout';
 
@@ -518,6 +518,9 @@ const ListingEdit = ({ listing, agents = [], property_types = [], amenities = []
 
     return (
         <>
+        <Head>
+            <title>RentTrustGh</title>
+        </Head>
             <Toast toast={toast} />
             {confirmAct && (
                 <ConfirmModal action={confirmAct} title={l.title ?? 'this listing'}

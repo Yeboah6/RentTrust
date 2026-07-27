@@ -10,7 +10,7 @@ export default function SEO({
     type = 'website',
     siteName = 'RentTrustGh',
     locale = 'en_GH',
-    // twitter = '@RentTrustGh',
+    twitter = '@RentTrustGh',
     noIndex = false,
     additionalMeta = [],
 }) {
@@ -32,7 +32,7 @@ export default function SEO({
             <meta name="twitter:site" content={twitter} />
             <meta name="twitter:title" content={title} />
             <meta name="twitter:description" content={description} />
-            {/* {image ? <meta name="twitter:image" content={image} /> : null} */}
+            {image ? <meta name="twitter:image" content={image} /> : null}
             {noIndex ? <meta name="robots" content="noindex,nofollow" /> : null}
             {additionalMeta.map(({ name, content, property, key }) => (
                 <meta

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useForm, usePage, router } from "@inertiajs/react";
+import { Link, useForm, usePage, router, Head } from "@inertiajs/react";
 import Header from "@/Components/Layouts/Header";
 import Footer from "@/Components/Layouts/Footer";
 import AddRentalPage from "@/Components/Modules/AddRentals";
@@ -237,6 +237,9 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
 
   return (
     <>
+    <Head>
+      <title>RentTrustGh</title>
+    </Head>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         * {

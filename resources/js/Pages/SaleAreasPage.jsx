@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Head } from '@inertiajs/react';
 import { Search, MapPin, Home, TrendingUp, TrendingDown, ChevronRight } from 'lucide-react';
 import Header from "../Components/Layouts/Header";
 import Footer from "../Components/Layouts/Footer";
@@ -118,6 +119,135 @@ const SaleAreasPage = ({ areas: areasByCity }) => {
 
   return (
     <>
+        <Head>
+          <title>Browse Property Sale Areas in Ghana | RentTrustGh</title>
+
+          {/* Primary Meta */}
+          <meta
+              name="description"
+              content="Explore the best areas to buy property in Ghana. Compare average property prices, available homes, land, apartments, and commercial properties across Accra, Tema, Kumasi, Tamale, Takoradi, Cape Coast, Ho, Sunyani, and more."
+          />
+
+          <meta
+              name="keywords"
+              content="property areas Ghana, houses for sale Ghana, neighborhoods Ghana, buy property Ghana, Accra property areas, Kumasi property, Tema property, land for sale Ghana, average property prices Ghana, RentTrustGh sale areas"
+          />
+
+          <meta
+              name="robots"
+              content="index,follow,max-image-preview:large"
+          />
+
+          <meta
+              name="googlebot"
+              content="index,follow"
+          />
+
+          {/* Canonical */}
+          <link
+              rel="canonical"
+              href="https://renttrustgh.com/buy/areas"
+          />
+
+          {/* Open Graph */}
+          <meta property="og:type" content="website" />
+          <meta property="og:site_name" content="RentTrustGh" />
+          <meta property="og:locale" content="en_GH" />
+
+          <meta
+              property="og:title"
+              content="Browse Property Sale Areas in Ghana | RentTrustGh"
+          />
+
+          <meta
+              property="og:description"
+              content="Compare neighborhoods, average property prices, and available homes for sale across Ghana."
+          />
+
+          <meta
+              property="og:url"
+              content="https://renttrustgh.com/buy/areas"
+          />
+
+          <meta
+              property="og:image"
+              content="https://renttrustgh.com/images/seo/sale-areas-og.jpg"
+          />
+
+          {/* Twitter */}
+          <meta
+              name="twitter:card"
+              content="summary_large_image"
+          />
+
+          <meta
+              name="twitter:title"
+              content="Browse Property Sale Areas in Ghana | RentTrustGh"
+          />
+
+          <meta
+              name="twitter:description"
+              content="Discover the best neighborhoods to buy property in Ghana and compare average prices by area."
+          />
+
+          <meta
+              name="twitter:image"
+              content="https://renttrustgh.com/images/seo/sale-areas-og.jpg"
+          />
+
+          {/* Structured Data */}
+          <script
+              type="application/ld+json"
+              dangerouslySetInnerHTML={{
+                  __html: JSON.stringify({
+                      "@context": "https://schema.org",
+                      "@type": "CollectionPage",
+                      "name": "Property Sale Areas in Ghana",
+                      "url": "https://renttrustgh.com/buy/areas",
+                      "description": "Browse neighborhoods, compare average property prices, and discover homes and land for sale across Ghana.",
+                      "isPartOf": {
+                          "@type": "WebSite",
+                          "name": "RentTrustGh",
+                          "url": "https://renttrustgh.com"
+                      },
+                      "publisher": {
+                          "@type": "Organization",
+                          "name": "RentTrustGh",
+                          "url": "https://renttrustgh.com",
+                          "logo": {
+                              "@type": "ImageObject",
+                              "url": "https://renttrustgh.com/images/rent-trust.png"
+                          }
+                      }
+                  })
+              }}
+          />
+
+          {/* Breadcrumb Schema */}
+          <script
+              type="application/ld+json"
+              dangerouslySetInnerHTML={{
+                  __html: JSON.stringify({
+                      "@context": "https://schema.org",
+                      "@type": "BreadcrumbList",
+                      "itemListElement": [
+                          {
+                              "@type": "ListItem",
+                              "position": 1,
+                              "name": "Home",
+                              "item": "https://renttrustgh.com"
+                          },
+                          {
+                              "@type": "ListItem",
+                              "position": 2,
+                              "name": "Property Sale Areas",
+                              "item": "https://renttrustgh.com/buy/areas"
+                          }
+                      ]
+                  })
+              }}
+          />
+      </Head>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         

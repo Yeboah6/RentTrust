@@ -1,5 +1,5 @@
 import React, { useState, useRef, useMemo, useEffect } from 'react';
-import { Link, router, usePage } from '@inertiajs/react';
+import { Link, router, usePage, Head } from '@inertiajs/react';
 import SuperAdminLayout from '@/Layouts/SuperAdminLayout';
 import { useRefresh } from '@/Hooks/useRefresh';
 
@@ -212,7 +212,6 @@ const Toast = ({ toast }) => {
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 const PaymentsIndex = ({ payments: raw = [] }) => {
-    // const initial = raw.map(normalise);
     const { payments: rawPayments = [] } = usePage().props;
     const initial = useMemo(() => rawPayments.map(normalise), [rawPayments]);
 
@@ -370,6 +369,9 @@ const PaymentsIndex = ({ payments: raw = [] }) => {
 
     return (
         <>
+        <Head>
+            <title>RentTrustGh</title>
+        </Head>
             <Toast toast={toast} />
             {refundTarget && (
                 <RefundModal payment={refundTarget} onConfirm={handleRefund} onClose={() => setRefundTarget(null)} processing={refunding} />

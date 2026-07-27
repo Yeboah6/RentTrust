@@ -1,6 +1,6 @@
 import Header from '../../Components/Layouts/Header';
 import Footer from '../../Components/Layouts/Footer';
-import { Link } from '@inertiajs/react';
+import { Link, Head } from '@inertiajs/react';
 
 // ── Shared mosaic hero ────────────────────────────────────────────────────────
 const MosaicHero = ({ badge, title, highlight, sub, tint = 'hsl(174 62% 22%)' }) => (
@@ -136,6 +136,155 @@ export default function GuidePage() {
 
     return (
         <>
+        <Head>
+            {/* Primary SEO */}
+            <title>Renting Guide | How to Rent Safely in Ghana | RentTrustGh</title>
+
+            <meta
+                name="description"
+                content="Learn how to rent safely in Ghana with RentTrustGh's practical guide. Discover how to verify listings, inspect properties, avoid rental scams, negotiate rent, and sign secure tenancy agreements."
+            />
+
+            <meta
+                name="keywords"
+                content="renting guide Ghana, how to rent a house in Ghana, apartment rental tips Ghana, avoid rental scams Ghana, tenant guide Ghana, RentTrustGh"
+            />
+
+            <meta name="robots" content="index,follow" />
+
+            {/* Canonical */}
+            <link
+                rel="canonical"
+                href="https://renttrustgh.com/guide"
+            />
+
+            {/* Open Graph */}
+            <meta property="og:type" content="article" />
+            <meta property="og:site_name" content="RentTrustGh" />
+            <meta property="og:locale" content="en_GH" />
+
+            <meta
+                property="og:title"
+                content="Renting Guide | Rent Safely in Ghana"
+            />
+
+            <meta
+                property="og:description"
+                content="A step-by-step guide to finding, verifying, inspecting, and renting property safely anywhere in Ghana."
+            />
+
+            <meta
+                property="og:url"
+                content="https://renttrustgh.com/guide"
+            />
+
+            <meta
+                property="og:image"
+                content="https://renttrustgh.com/images/seo/guide-og.jpg"
+            />
+
+            {/* Twitter */}
+            <meta name="twitter:card" content="summary_large_image" />
+
+            <meta
+                name="twitter:title"
+                content="Renting Guide | RentTrustGh"
+            />
+
+            <meta
+                name="twitter:description"
+                content="Everything you need to know before renting a house or apartment in Ghana."
+            />
+
+            <meta
+                name="twitter:image"
+                content="https://renttrustgh.com/images/seo/guide-og.jpg"
+            />
+
+            {/* Guide Article Schema */}
+            <script type="application/ld+json">
+                {JSON.stringify({
+                    "@context": "https://schema.org",
+                    "@type": "Article",
+                    headline: "Renting Guide | How to Rent Safely in Ghana",
+                    description:
+                        "A practical guide that helps tenants find, verify, inspect, and rent property safely across Ghana.",
+                    image: "https://renttrustgh.com/images/seo/guide-og.jpg",
+                    author: {
+                        "@type": "Organization",
+                        name: "RentTrustGh"
+                    },
+                    publisher: {
+                        "@type": "Organization",
+                        name: "RentTrustGh",
+                        logo: {
+                            "@type": "ImageObject",
+                            url: "https://renttrustgh.com/images/rent-trust.jpg"
+                        }
+                    },
+                    mainEntityOfPage: {
+                        "@type": "WebPage",
+                        "@id": "https://renttrustgh.com/guide"
+                    }
+                })}
+            </script>
+            
+            {/* FAQ Schema */}
+            <script type="application/ld+json">
+                {JSON.stringify({
+                    "@context": "https://schema.org",
+                    "@type": "FAQPage",
+                    mainEntity: [
+                        {
+                            "@type": "Question",
+                            name: "How do I verify an agent?",
+                            acceptedAnswer: {
+                                "@type": "Answer",
+                                text: "Check for the verified badge on their RentTrustGh profile and review their ratings before making any payment."
+                            }
+                        },
+                        {
+                            "@type": "Question",
+                            name: "What rent advance is normal in Ghana?",
+                            acceptedAnswer: {
+                                "@type": "Answer",
+                                text: "Advance rent varies depending on the property and agreement, but you should always understand the terms before signing a tenancy agreement."
+                            }
+                        },
+                        {
+                            "@type": "Question",
+                            name: "Should I inspect a property before paying?",
+                            acceptedAnswer: {
+                                "@type": "Answer",
+                                text: "Yes. Always inspect the property, confirm the landlord or agent's authority, and avoid paying before verifying the property."
+                            }
+                        }
+                    ]
+                })}
+            </script>
+            
+            {/* Breadcrumb Schema */}
+            <script type="application/ld+json">
+                {JSON.stringify({
+                    "@context": "https://schema.org",
+                    "@type": "BreadcrumbList",
+                    itemListElement: [
+                        {
+                            "@type": "ListItem",
+                            position: 1,
+                            name: "Home",
+                            item: "https://renttrustgh.com"
+                        },
+                        {
+                            "@type": "ListItem",
+                            position: 2,
+                            name: "Renting Guide",
+                            item: "https://renttrustgh.com/guide"
+                        }
+                    ]
+                })}
+            </script>
+        </Head>
             <style>{BASE_STYLE}</style>
             <div style={{ minHeight:'100vh', display:'flex', flexDirection:'column', backgroundColor:'hsl(40 33% 98%)' }}>
                 <Header />

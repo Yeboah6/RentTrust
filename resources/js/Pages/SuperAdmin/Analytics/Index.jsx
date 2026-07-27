@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { usePage } from "@inertiajs/react";
+import { usePage, Head } from "@inertiajs/react";
 import SuperAdminLayout from '@/Layouts/SuperAdminLayout';
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
@@ -272,8 +272,6 @@ export default function AnalyticsDashboard() {
   // ── Range change → Inertia reload ──────────────────────────────────────────
   const handleRangeChange = (r) => {
     setRange(r);
-    // Use Inertia router to reload the page with the new range param
-    // keeping existing scroll position and preserving state
     window.location.href = `?range=${r}`;
   };
 
@@ -348,6 +346,10 @@ export default function AnalyticsDashboard() {
   };
 
   return (
+    <>
+    <Head>
+        <title>RentTrustGh</title>
+    </Head>
     <div style={s.page}>
       <div style={s.inner}>
 
@@ -498,6 +500,7 @@ export default function AnalyticsDashboard() {
 
       </div>
     </div>
+    </>
   );
 }
 

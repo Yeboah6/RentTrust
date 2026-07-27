@@ -1,6 +1,6 @@
 import Header from '../../Components/Layouts/Header';
 import Footer from '../../Components/Layouts/Footer';
-import { Link } from '@inertiajs/react';
+import { Link, Head } from '@inertiajs/react';
 
 const MosaicHero = ({ badge, title, highlight, sub }) => (
     <div style={{ position:'relative', overflow:'hidden', minHeight:'360px', display:'flex', alignItems:'center' }}>
@@ -66,6 +66,105 @@ export default function ReportPage() {
 
     return (
         <>
+        <Head>
+            <title>Report Suspicious Listings & Fraud | RentTrustGh</title>
+
+            {/* Primary Meta */}
+            <meta
+                name="description"
+                content="Report fake property listings, fraudulent agents, misleading advertisements, scams, and unsafe rental experiences on RentTrustGh. Help us keep Ghana's property marketplace safe."
+            />
+
+            <meta
+                name="keywords"
+                content="Report property scam Ghana, fake property listings, report landlord Ghana, report agent Ghana, rental fraud Ghana, report suspicious listing, RentTrustGh report, Ghana property safety"
+            />
+
+            <meta
+                name="robots"
+                content="index,follow,max-image-preview:large"
+            />
+
+            {/* Canonical */}
+            <link rel="canonical" href={window.location.href} />
+
+            {/* Open Graph */}
+            <meta property="og:type" content="website" />
+            <meta property="og:site_name" content="RentTrustGh" />
+            <meta property="og:locale" content="en_GH" />
+
+            <meta
+                property="og:title"
+                content="Report Suspicious Listings | RentTrustGh"
+            />
+
+            <meta
+                property="og:description"
+                content="Help protect Ghana's property community by reporting fake listings, fraudulent agents, misleading information, or unsafe rental experiences."
+            />
+
+            <meta
+                property="og:url"
+                content={window.location.href}
+            />
+
+            <meta
+                property="og:image"
+                content="/images/seo/report-og.jpg"
+            />
+
+            {/* Twitter */}
+            <meta
+                name="twitter:card"
+                content="summary_large_image"
+            />
+
+            <meta
+                name="twitter:title"
+                content="Report Suspicious Listings | RentTrustGh"
+            />
+
+            <meta
+                name="twitter:description"
+                content="Report fake listings, scams, and unsafe rental experiences to help make RentTrustGh safer for everyone."
+            />
+
+            <meta
+                name="twitter:image"
+                content="/images/seo/report-og.jpg"
+            />
+
+            {/* Structured Data */}
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{
+                    __html: JSON.stringify({
+                        "@context": "https://schema.org",
+                        "@type": "WebPage",
+                        "name": "Report Suspicious Listings",
+                        "description": "Report fake property listings, fraudulent agents, scams, and unsafe rental experiences on RentTrustGh.",
+                        "url": window.location.href,
+                        "isPartOf": {
+                            "@type": "WebSite",
+                            "name": "RentTrustGh",
+                            "url": "https://renttrustgh.com"
+                        },
+                        "publisher": {
+                            "@type": "Organization",
+                            "name": "RentTrustGh",
+                            "logo": {
+                                "@type": "ImageObject",
+                                "url": "https://renttrustgh.com/images/rent-trust.jpg"
+                            }
+                        },
+                        "about": {
+                            "@type": "Thing",
+                            "name": "Property Fraud Reporting"
+                        }
+                    })
+                }}
+            />
+        </Head>
             <style>{BASE_STYLE}</style>
             <div style={{ minHeight:'100vh', display:'flex', flexDirection:'column', backgroundColor:'hsl(40 33% 98%)' }}>
                 <Header />

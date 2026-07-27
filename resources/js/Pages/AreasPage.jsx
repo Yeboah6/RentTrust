@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Head } from '@inertiajs/react';
 import { Search, MapPin, Home, TrendingUp, TrendingDown, ChevronRight } from 'lucide-react';
 import Header from "../Components/Layouts/Header";
 import Footer from "../Components/Layouts/Footer";
@@ -124,6 +125,135 @@ const AreasPage = ({ areas: areasByCity }) => {
 
   return (
     <>
+        <Head>
+          <title>Browse Rental Areas & Neighborhoods in Ghana | RentTrustGh</title>
+
+          {/* Primary Meta */}
+          <meta
+              name="description"
+              content="Explore rental areas and neighborhoods across Ghana. Compare average rents, available listings, and property trends in Accra, Tema, Kumasi, Tamale, Takoradi, Cape Coast, Ho, Sunyani, and more."
+          />
+
+          <meta
+              name="keywords"
+              content="areas in Ghana, rental areas Ghana, neighborhoods Ghana, Accra neighborhoods, Kumasi rental areas, Tema property, average rent Ghana, property locations Ghana, RentTrustGh areas"
+          />
+
+          <meta
+              name="robots"
+              content="index,follow,max-image-preview:large"
+          />
+
+          <meta
+              name="googlebot"
+              content="index,follow"
+          />
+
+          {/* Canonical */}
+          <link
+              rel="canonical"
+              href="https://renttrustgh.com/rent/areas"
+          />
+
+          {/* Open Graph */}
+          <meta property="og:type" content="website" />
+          <meta property="og:site_name" content="RentTrustGh" />
+          <meta property="og:locale" content="en_GH" />
+
+          <meta
+              property="og:title"
+              content="Browse Rental Areas & Neighborhoods in Ghana | RentTrustGh"
+          />
+
+          <meta
+              property="og:description"
+              content="Compare neighborhoods, average rent prices, listing availability, and property trends across Ghana."
+          />
+
+          <meta
+              property="og:url"
+              content="https://renttrustgh.com/rent/areas"
+          />
+
+          <meta
+              property="og:image"
+              content="https://renttrustgh.com/images/seo/areas-og.jpg"
+          />
+
+          {/* Twitter */}
+          <meta
+              name="twitter:card"
+              content="summary_large_image"
+          />
+
+          <meta
+              name="twitter:title"
+              content="Browse Rental Areas & Neighborhoods in Ghana | RentTrustGh"
+          />
+
+          <meta
+              name="twitter:description"
+              content="Explore Ghana's rental neighborhoods, compare average rents, and discover available properties by area."
+          />
+
+          <meta
+              name="twitter:image"
+              content="https://renttrustgh.com/images/seo/areas-og.jpg"
+          />
+
+          {/* Structured Data */}
+          <script
+              type="application/ld+json"
+              dangerouslySetInnerHTML={{
+                  __html: JSON.stringify({
+                      "@context": "https://schema.org",
+                      "@type": "CollectionPage",
+                      "name": "Rental Areas in Ghana",
+                      "url": "https://renttrustgh.com/rent/areas",
+                      "description": "Browse rental neighborhoods, compare average rents, and discover available properties across Ghana.",
+                      "isPartOf": {
+                          "@type": "WebSite",
+                          "name": "RentTrustGh",
+                          "url": "https://renttrustgh.com"
+                      },
+                      "publisher": {
+                          "@type": "Organization",
+                          "name": "RentTrustGh",
+                          "url": "https://renttrustgh.com",
+                          "logo": {
+                              "@type": "ImageObject",
+                              "url": "https://renttrustgh.com/images/rent-trust.png"
+                          }
+                      }
+                  })
+              }}
+          />
+
+          {/* Breadcrumb Schema */}
+          <script
+              type="application/ld+json"
+              dangerouslySetInnerHTML={{
+                  __html: JSON.stringify({
+                      "@context": "https://schema.org",
+                      "@type": "BreadcrumbList",
+                      "itemListElement": [
+                          {
+                              "@type": "ListItem",
+                              "position": 1,
+                              "name": "Home",
+                              "item": "https://renttrustgh.com"
+                          },
+                          {
+                              "@type": "ListItem",
+                              "position": 2,
+                              "name": "Rental Areas",
+                              "item": "https://renttrustgh.com/rent/areas"
+                          }
+                      ]
+                  })
+              }}
+          />
+      </Head>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, usePage, router } from "@inertiajs/react";
+import { Link, usePage, router, Head } from "@inertiajs/react";
 import Header from "../Components/Layouts/Header";
 import Footer from "../Components/Layouts/Footer";
 
@@ -430,6 +430,130 @@ const Pricing = () => {
 
   return (
     <>
+<Head>
+    {/* Primary SEO */}
+    <title>Pricing Plans | RentTrustGh Subscription Plans</title>
+
+    <meta
+        name="description"
+        content="Explore RentTrustGh pricing plans designed for tenants, landlords, agents, and property professionals. Compare Free, Pro, and Elite plans and choose the one that fits your needs."
+    />
+
+    <meta
+        name="keywords"
+        content="RentTrustGh pricing, property platform pricing Ghana, landlord subscription, real estate agent plans, rental platform Ghana, property listing plans"
+    />
+
+    <meta name="robots" content="index,follow" />
+
+    {/* Canonical */}
+    <link
+        rel="canonical"
+        href="https://renttrustgh.com/pricing"
+    />
+
+    {/* Open Graph */}
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="RentTrustGh" />
+    <meta property="og:locale" content="en_GH" />
+
+    <meta
+        property="og:title"
+        content="RentTrustGh Pricing Plans | Find the Right Plan"
+    />
+
+    <meta
+        property="og:description"
+        content="Compare RentTrustGh's Free, Pro, and Elite plans for property owners, agents, and tenants."
+    />
+
+    <meta
+        property="og:url"
+        content="https://renttrustgh.com/pricing"
+    />
+
+    <meta
+        property="og:image"
+        content="https://renttrustgh.com/images/seo/pricing-og.jpg"
+    />
+
+    {/* Twitter */}
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <meta
+        name="twitter:title"
+        content="RentTrustGh Pricing Plans"
+    />
+
+    <meta
+        name="twitter:description"
+        content="Choose the subscription plan that matches your property needs on RentTrustGh."
+    />
+
+    <meta
+        name="twitter:image"
+        content="https://renttrustgh.com/images/seo/pricing-og.jpg"
+    />
+
+    {/* Pricing Page Schema */}
+    <script type="application/ld+json">
+        {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebPage",
+            name: "RentTrustGh Pricing Plans",
+            url: "https://renttrustgh.com/pricing",
+            description:
+                "Compare RentTrustGh subscription plans for tenants, landlords, agents, and property professionals in Ghana.",
+            mainEntity: {
+                "@type": "OfferCatalog",
+                name: "RentTrustGh Subscription Plans",
+                itemListElement: [
+                    {
+                        "@type": "Offer",
+                        name: "Free Plan",
+                        description:
+                            "Basic access to RentTrustGh features for individuals."
+                    },
+                    {
+                        "@type": "Offer",
+                        name: "Pro Plan",
+                        description:
+                            "Advanced features for active landlords and agents."
+                    },
+                    {
+                        "@type": "Offer",
+                        name: "Elite Plan",
+                        description:
+                            "Premium features with maximum visibility and verification tools."
+                    }
+                ]
+            }
+        })}
+    </script>
+
+    {/* Breadcrumb Schema */}
+    <script type="application/ld+json">
+        {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            itemListElement: [
+                {
+                    "@type": "ListItem",
+                    position: 1,
+                    name: "Home",
+                    item: "https://renttrustgh.com"
+                },
+                {
+                    "@type": "ListItem",
+                    position: 2,
+                    name: "Pricing",
+                    item: "https://renttrustgh.com/pricing"
+                }
+            ]
+        })}
+    </script>
+</Head>
+
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         

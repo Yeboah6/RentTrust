@@ -88,7 +88,6 @@ const AreaCard = ({ area, type = 'rent' }) => {
 };
 
 const PopularAreas = ({ rentalAreas: rentalAreasByCity, saleAreas: saleAreasByCity }) => {
-  // Flatten rental areas and add city name, then sort by listingCount and get top 6
   const flattenedRentalAreas = rentalAreasByCity ? 
     Object.entries(rentalAreasByCity).flatMap(([city, cityAreas]) => 
       Object.values(cityAreas).map(area => ({
@@ -100,7 +99,6 @@ const PopularAreas = ({ rentalAreas: rentalAreasByCity, saleAreas: saleAreasByCi
     .slice(0, 6)
   : [];
 
-  // Flatten sale areas and add city name, then sort by listingCount and get top 6
   const flattenedSaleAreas = saleAreasByCity ? 
     Object.entries(saleAreasByCity).flatMap(([city, cityAreas]) => 
       Object.values(cityAreas).map(area => ({

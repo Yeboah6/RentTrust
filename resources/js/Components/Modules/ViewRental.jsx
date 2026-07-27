@@ -5,13 +5,13 @@ import { usePage } from '@inertiajs/react';
 const ViewRentals = ({ rental, setShowViewModal }) => {
   const { auth } = usePage().props;
   const [lightboxIndex, setLightboxIndex] = useState(null);
-  
+
   // Parse amenities if they're stored as JSON string
   let parsedAmenities = [];
   try {
     if (rental.amenities) {
-      parsedAmenities = typeof rental.amenities === 'string' 
-        ? JSON.parse(rental.amenities) 
+      parsedAmenities = typeof rental.amenities === 'string'
+        ? JSON.parse(rental.amenities)
         : rental.amenities;
     }
   } catch (e) {
@@ -25,7 +25,7 @@ const ViewRentals = ({ rental, setShowViewModal }) => {
   // Keyboard navigation for lightbox
   useEffect(() => {
     if (lightboxIndex === null) return;
-    
+
     const handleKey = (e) => {
       if (e.key === 'Escape') {
         setLightboxIndex(null);
@@ -35,19 +35,19 @@ const ViewRentals = ({ rental, setShowViewModal }) => {
         setLightboxIndex(prev => (prev === images.length - 1 ? 0 : prev + 1));
       }
     };
-    
+
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
   }, [lightboxIndex, images.length]);
 
   const openLightbox = (index) => setLightboxIndex(index);
   const closeLightbox = () => setLightboxIndex(null);
-  
+
   const goToPrev = (e) => {
     e.stopPropagation();
     setLightboxIndex(prev => (prev === 0 ? images.length - 1 : prev - 1));
   };
-  
+
   const goToNext = (e) => {
     e.stopPropagation();
     setLightboxIndex(prev => (prev === images.length - 1 ? 0 : prev + 1));
@@ -199,10 +199,10 @@ const ViewRentals = ({ rental, setShowViewModal }) => {
       `}</style>
 
       {/* Modal Overlay */}
-      <div 
+      <div
         className="modal-overlay"
         onClick={() => setShowViewModal && setShowViewModal(false)}
-        style={{ 
+        style={{
           position: 'fixed',
           top: 0,
           left: 0,
@@ -217,7 +217,7 @@ const ViewRentals = ({ rental, setShowViewModal }) => {
           animation: 'fadeIn 0.2s ease-out'
         }}
       >
-        <div 
+        <div
           className="modal-content"
           onClick={(e) => e.stopPropagation()}
           style={{
@@ -243,14 +243,14 @@ const ViewRentals = ({ rental, setShowViewModal }) => {
             zIndex: 10
           }}>
             <div>
-              <h2 style={{ 
-                  color: 'hsl(200 25% 15%)',
-                  fontSize: 'clamp(1.25rem, 4vw, 1.5rem)',
-                  fontWeight: '700',
-                  lineHeight: '1.2',
-                  marginBottom: 'clamp(0.25rem, 1vw, 0.5rem)'
-                }}>
-                  {rental.title}
+              <h2 style={{
+                color: 'hsl(200 25% 15%)',
+                fontSize: 'clamp(1.25rem, 4vw, 1.5rem)',
+                fontWeight: '700',
+                lineHeight: '1.2',
+                marginBottom: 'clamp(0.25rem, 1vw, 0.5rem)'
+              }}>
+                {rental.title}
               </h2>
               <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.5rem, 2vw, 0.75rem)', flexWrap: 'wrap' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.25rem, 1vw, 0.375rem)' }}>
@@ -293,16 +293,16 @@ const ViewRentals = ({ rental, setShowViewModal }) => {
                 justifyContent: 'center'
               }}
             >
-              <X style={{ 
-                height: 'clamp(1.25rem, 4vw, 1.5rem)', 
-                width: 'clamp(1.25rem, 4vw, 1.5rem)', 
-                color: 'hsl(200 15% 45%)' 
+              <X style={{
+                height: 'clamp(1.25rem, 4vw, 1.5rem)',
+                width: 'clamp(1.25rem, 4vw, 1.5rem)',
+                color: 'hsl(200 15% 45%)'
               }} />
             </button>
           </div>
 
           {/* Content */}
-          <div className="modal-body" style={{ 
+          <div className="modal-body" style={{
             padding: 'clamp(1rem, 3vw, 1.5rem)',
             display: 'flex',
             flexDirection: 'column',
@@ -311,7 +311,7 @@ const ViewRentals = ({ rental, setShowViewModal }) => {
             {/* Images Gallery */}
             {images.length > 0 && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(0.75rem, 2vw, 1rem)' }}>
-                <h3 style={{ 
+                <h3 style={{
                   color: 'hsl(200 25% 15%)',
                   fontSize: 'clamp(1rem, 3vw, 1.125rem)',
                   fontWeight: '600'
@@ -323,8 +323,8 @@ const ViewRentals = ({ rental, setShowViewModal }) => {
                   gap: 'clamp(0.5rem, 2vw, 0.75rem)'
                 }}>
                   {images.map((image, index) => (
-                    <div 
-                      key={index} 
+                    <div
+                      key={index}
                       onClick={() => openLightbox(index)}
                       style={{
                         aspectRatio: '1 / 1',
@@ -334,9 +334,9 @@ const ViewRentals = ({ rental, setShowViewModal }) => {
                         cursor: 'pointer'
                       }}
                     >
-                      <img 
-                        src={`/storage/rental_images/${image}`} 
-                        alt={`Property ${index + 1}`} 
+                      <img
+                        src={`/storage/rental_images/${image}`}
+                        alt={`Property ${index + 1}`}
                         style={{
                           width: '100%',
                           height: '100%',
@@ -358,18 +358,18 @@ const ViewRentals = ({ rental, setShowViewModal }) => {
               borderRadius: 'clamp(0.5rem, 2vw, 0.75rem)',
               padding: 'clamp(1rem, 3vw, 1.25rem)'
             }}>
-              <div style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: 'clamp(0.5rem, 2vw, 0.75rem)', 
-                marginBottom: 'clamp(0.75rem, 2vw, 1rem)' 
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 'clamp(0.5rem, 2vw, 0.75rem)',
+                marginBottom: 'clamp(0.75rem, 2vw, 1rem)'
               }}>
-                <Home style={{ 
-                  height: 'clamp(1rem, 3vw, 1.25rem)', 
-                  width: 'clamp(1rem, 3vw, 1.25rem)', 
-                  color: 'hsl(174 62% 32%)' 
+                <Home style={{
+                  height: 'clamp(1rem, 3vw, 1.25rem)',
+                  width: 'clamp(1rem, 3vw, 1.25rem)',
+                  color: 'hsl(174 62% 32%)'
                 }} />
-                <h3 style={{ 
+                <h3 style={{
                   color: 'hsl(200 25% 15%)',
                   fontSize: 'clamp(1rem, 3vw, 1.125rem)',
                   fontWeight: '600'
@@ -377,15 +377,15 @@ const ViewRentals = ({ rental, setShowViewModal }) => {
                   Property Details
                 </h3>
               </div>
-              
+
               <div className="details-grid" style={{
                 display: 'grid',
                 gap: 'clamp(0.75rem, 2vw, 1rem)'
               }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(0.5rem, 2vw, 0.75rem)' }}>
                   <div>
-                    <span style={{ 
-                      fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                    <span style={{
+                      fontSize: 'clamp(0.75rem, 2vw, 0.875rem)',
                       fontWeight: '500',
                       color: 'hsl(200 15% 45%)',
                       display: 'block',
@@ -393,18 +393,18 @@ const ViewRentals = ({ rental, setShowViewModal }) => {
                     }}>
                       Property Type
                     </span>
-                    <span style={{ 
-                      fontSize: 'clamp(0.875rem, 2.5vw, 1rem)', 
+                    <span style={{
+                      fontSize: 'clamp(0.875rem, 2.5vw, 1rem)',
                       color: 'hsl(200 25% 15%)',
                       textTransform: 'capitalize'
                     }}>
                       {rental.property_type}
                     </span>
                   </div>
-                  
+
                   <div>
-                    <span style={{ 
-                      fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                    <span style={{
+                      fontSize: 'clamp(0.75rem, 2vw, 0.875rem)',
                       fontWeight: '500',
                       color: 'hsl(200 15% 45%)',
                       display: 'block',
@@ -412,9 +412,9 @@ const ViewRentals = ({ rental, setShowViewModal }) => {
                     }}>
                       Location
                     </span>
-                    <span style={{ 
-                      fontSize: 'clamp(0.875rem, 2.5vw, 1rem)', 
-                      color: 'hsl(200 25% 15%)' 
+                    <span style={{
+                      fontSize: 'clamp(0.875rem, 2.5vw, 1rem)',
+                      color: 'hsl(200 25% 15%)'
                     }}>
                       {rental.area}, {rental.city}
                     </span>
@@ -422,8 +422,8 @@ const ViewRentals = ({ rental, setShowViewModal }) => {
 
                   {rental.address && (
                     <div>
-                      <span style={{ 
-                        fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                      <span style={{
+                        fontSize: 'clamp(0.75rem, 2vw, 0.875rem)',
                         fontWeight: '500',
                         color: 'hsl(200 15% 45%)',
                         display: 'block',
@@ -431,9 +431,9 @@ const ViewRentals = ({ rental, setShowViewModal }) => {
                       }}>
                         Full Address
                       </span>
-                      <span style={{ 
-                        fontSize: 'clamp(0.875rem, 2.5vw, 1rem)', 
-                        color: 'hsl(200 25% 15%)' 
+                      <span style={{
+                        fontSize: 'clamp(0.875rem, 2.5vw, 1rem)',
+                        color: 'hsl(200 25% 15%)'
                       }}>
                         {rental.address}
                       </span>
@@ -443,24 +443,24 @@ const ViewRentals = ({ rental, setShowViewModal }) => {
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(0.75rem, 2vw, 1rem)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.5rem, 2vw, 0.75rem)' }}>
-                    <Bed style={{ 
-                      height: 'clamp(1rem, 3vw, 1.25rem)', 
-                      width: 'clamp(1rem, 3vw, 1.25rem)', 
-                      color: 'hsl(174 62% 32%)' 
+                    <Bed style={{
+                      height: 'clamp(1rem, 3vw, 1.25rem)',
+                      width: 'clamp(1rem, 3vw, 1.25rem)',
+                      color: 'hsl(174 62% 32%)'
                     }} />
                     <div>
-                      <span style={{ 
-                        fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                      <span style={{
+                        fontSize: 'clamp(0.75rem, 2vw, 0.875rem)',
                         fontWeight: '500',
                         color: 'hsl(200 15% 45%)',
                         display: 'block'
                       }}>
                         Bedrooms
                       </span>
-                      <span style={{ 
-                        fontSize: 'clamp(0.875rem, 2.5vw, 1rem)', 
+                      <span style={{
+                        fontSize: 'clamp(0.875rem, 2.5vw, 1rem)',
                         fontWeight: '600',
-                        color: 'hsl(200 25% 15%)' 
+                        color: 'hsl(200 25% 15%)'
                       }}>
                         {rental.bedrooms}
                       </span>
@@ -468,24 +468,24 @@ const ViewRentals = ({ rental, setShowViewModal }) => {
                   </div>
 
                   <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.5rem, 2vw, 0.75rem)' }}>
-                    <Bath style={{ 
-                      height: 'clamp(1rem, 3vw, 1.25rem)', 
-                      width: 'clamp(1rem, 3vw, 1.25rem)', 
-                      color: 'hsl(174 62% 32%)' 
+                    <Bath style={{
+                      height: 'clamp(1rem, 3vw, 1.25rem)',
+                      width: 'clamp(1rem, 3vw, 1.25rem)',
+                      color: 'hsl(174 62% 32%)'
                     }} />
                     <div>
-                      <span style={{ 
-                        fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                      <span style={{
+                        fontSize: 'clamp(0.75rem, 2vw, 0.875rem)',
                         fontWeight: '500',
                         color: 'hsl(200 15% 45%)',
                         display: 'block'
                       }}>
                         Bathrooms
                       </span>
-                      <span style={{ 
-                        fontSize: 'clamp(0.875rem, 2.5vw, 1rem)', 
+                      <span style={{
+                        fontSize: 'clamp(0.875rem, 2.5vw, 1rem)',
                         fontWeight: '600',
-                        color: 'hsl(200 25% 15%)' 
+                        color: 'hsl(200 25% 15%)'
                       }}>
                         {rental.bathrooms || '0'}
                       </span>
@@ -533,7 +533,7 @@ const ViewRentals = ({ rental, setShowViewModal }) => {
                   {rental.purpose === 'sale' ? '🏷️ For Sale' : '🏠 For Rent'}
                 </span>
               </div>
-              
+
               {rental.purpose === 'sale' ? (
                 <div>
                   <span style={{
@@ -608,18 +608,18 @@ const ViewRentals = ({ rental, setShowViewModal }) => {
                 borderRadius: 'clamp(0.5rem, 2vw, 0.75rem)',
                 padding: 'clamp(1rem, 3vw, 1.25rem)'
               }}>
-                <div style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: 'clamp(0.5rem, 2vw, 0.75rem)', 
-                  marginBottom: 'clamp(0.75rem, 2vw, 1rem)' 
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 'clamp(0.5rem, 2vw, 0.75rem)',
+                  marginBottom: 'clamp(0.75rem, 2vw, 1rem)'
                 }}>
-                  <CheckCircle2 style={{ 
-                    height: 'clamp(1rem, 3vw, 1.25rem)', 
-                    width: 'clamp(1rem, 3vw, 1.25rem)', 
-                    color: 'hsl(174 62% 32%)' 
+                  <CheckCircle2 style={{
+                    height: 'clamp(1rem, 3vw, 1.25rem)',
+                    width: 'clamp(1rem, 3vw, 1.25rem)',
+                    color: 'hsl(174 62% 32%)'
                   }} />
-                  <h3 style={{ 
+                  <h3 style={{
                     color: 'hsl(200 25% 15%)',
                     fontSize: 'clamp(1rem, 3vw, 1.125rem)',
                     fontWeight: '600'
@@ -633,9 +633,9 @@ const ViewRentals = ({ rental, setShowViewModal }) => {
                   gap: 'clamp(0.375rem, 1.5vw, 0.5rem)'
                 }}>
                   {parsedAmenities.map((amenity, index) => (
-                    <span 
+                    <span
                       key={index}
-                      style={{ 
+                      style={{
                         padding: 'clamp(0.375rem, 1.5vw, 0.5rem) clamp(0.75rem, 2vw, 1rem)',
                         borderRadius: 'clamp(0.375rem, 2vw, 0.5rem)',
                         fontSize: 'clamp(0.75rem, 2vw, 0.875rem)',
@@ -659,7 +659,7 @@ const ViewRentals = ({ rental, setShowViewModal }) => {
                 borderRadius: 'clamp(0.5rem, 2vw, 0.75rem)',
                 padding: 'clamp(1rem, 3vw, 1.25rem)'
               }}>
-                <h3 style={{ 
+                <h3 style={{
                   color: 'hsl(200 25% 15%)',
                   fontSize: 'clamp(1rem, 3vw, 1.125rem)',
                   fontWeight: '600',
@@ -667,7 +667,7 @@ const ViewRentals = ({ rental, setShowViewModal }) => {
                 }}>
                   Description
                 </h3>
-                <p style={{ 
+                <p style={{
                   fontSize: 'clamp(0.875rem, 2vw, 1rem)',
                   lineHeight: '1.6',
                   color: 'hsl(200 15% 45%)',
@@ -685,18 +685,18 @@ const ViewRentals = ({ rental, setShowViewModal }) => {
               borderRadius: 'clamp(0.5rem, 2vw, 0.75rem)',
               padding: 'clamp(1rem, 3vw, 1.25rem)'
             }}>
-              <div style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: 'clamp(0.5rem, 2vw, 0.75rem)', 
-                marginBottom: 'clamp(0.75rem, 2vw, 1rem)' 
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 'clamp(0.5rem, 2vw, 0.75rem)',
+                marginBottom: 'clamp(0.75rem, 2vw, 1rem)'
               }}>
-                <User style={{ 
-                  height: 'clamp(1rem, 3vw, 1.25rem)', 
-                  width: 'clamp(1rem, 3vw, 1.25rem)', 
-                  color: 'hsl(152 60% 40%)' 
+                <User style={{
+                  height: 'clamp(1rem, 3vw, 1.25rem)',
+                  width: 'clamp(1rem, 3vw, 1.25rem)',
+                  color: 'hsl(152 60% 40%)'
                 }} />
-                <h3 style={{ 
+                <h3 style={{
                   color: 'hsl(200 25% 15%)',
                   fontSize: 'clamp(1rem, 3vw, 1.125rem)',
                   fontWeight: '600'
@@ -704,27 +704,27 @@ const ViewRentals = ({ rental, setShowViewModal }) => {
                   Contact Agent
                 </h3>
               </div>
-              
+
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(0.75rem, 2vw, 1rem)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.75rem, 2vw, 1rem)' }}>
-                  <User style={{ 
-                    height: 'clamp(1rem, 3vw, 1.25rem)', 
-                    width: 'clamp(1rem, 3vw, 1.25rem)', 
-                    color: 'hsl(200 15% 45%)' 
+                  <User style={{
+                    height: 'clamp(1rem, 3vw, 1.25rem)',
+                    width: 'clamp(1rem, 3vw, 1.25rem)',
+                    color: 'hsl(200 15% 45%)'
                   }} />
                   <div>
-                    <span style={{ 
-                      fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                    <span style={{
+                      fontSize: 'clamp(0.75rem, 2vw, 0.875rem)',
                       fontWeight: '500',
                       color: 'hsl(200 15% 45%)',
                       display: 'block'
                     }}>
                       Agent Name
                     </span>
-                    <span style={{ 
-                      fontSize: 'clamp(0.875rem, 2.5vw, 1rem)', 
+                    <span style={{
+                      fontSize: 'clamp(0.875rem, 2.5vw, 1rem)',
                       fontWeight: '600',
-                      color: 'hsl(200 25% 15%)' 
+                      color: 'hsl(200 25% 15%)'
                     }}>
                       {rental.agent_name || rental.agentName}
                     </span>
@@ -732,24 +732,24 @@ const ViewRentals = ({ rental, setShowViewModal }) => {
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.75rem, 2vw, 1rem)' }}>
-                  <Phone style={{ 
-                    height: 'clamp(1rem, 3vw, 1.25rem)', 
-                    width: 'clamp(1rem, 3vw, 1.25rem)', 
-                    color: 'hsl(200 15% 45%)' 
+                  <Phone style={{
+                    height: 'clamp(1rem, 3vw, 1.25rem)',
+                    width: 'clamp(1rem, 3vw, 1.25rem)',
+                    color: 'hsl(200 15% 45%)'
                   }} />
                   <div>
-                    <span style={{ 
-                      fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                    <span style={{
+                      fontSize: 'clamp(0.75rem, 2vw, 0.875rem)',
                       fontWeight: '500',
                       color: 'hsl(200 15% 45%)',
                       display: 'block'
                     }}>
                       Phone Number
                     </span>
-                    <a 
+                    <a
                       href={`tel:${rental.agent_phone || rental.agentPhone}`}
-                      style={{ 
-                        fontSize: 'clamp(0.875rem, 2.5vw, 1rem)', 
+                      style={{
+                        fontSize: 'clamp(0.875rem, 2.5vw, 1rem)',
                         fontWeight: '600',
                         color: 'hsl(174 62% 32%)',
                         textDecoration: 'none'
@@ -761,24 +761,24 @@ const ViewRentals = ({ rental, setShowViewModal }) => {
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.75rem, 2vw, 1rem)' }}>
-                  <Mail style={{ 
-                    height: 'clamp(1rem, 3vw, 1.25rem)', 
-                    width: 'clamp(1rem, 3vw, 1.25rem)', 
-                    color: 'hsl(200 15% 45%)' 
+                  <Mail style={{
+                    height: 'clamp(1rem, 3vw, 1.25rem)',
+                    width: 'clamp(1rem, 3vw, 1.25rem)',
+                    color: 'hsl(200 15% 45%)'
                   }} />
                   <div>
-                    <span style={{ 
-                      fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', 
+                    <span style={{
+                      fontSize: 'clamp(0.75rem, 2vw, 0.875rem)',
                       fontWeight: '500',
                       color: 'hsl(200 15% 45%)',
                       display: 'block'
                     }}>
                       Email Address
                     </span>
-                    <a 
+                    <a
                       href={`mailto:${rental.agent_email || rental.agentEmail}`}
-                      style={{ 
-                        fontSize: 'clamp(0.875rem, 2.5vw, 1rem)', 
+                      style={{
+                        fontSize: 'clamp(0.875rem, 2.5vw, 1rem)',
                         fontWeight: '600',
                         color: 'hsl(174 62% 32%)',
                         textDecoration: 'none'
@@ -792,8 +792,8 @@ const ViewRentals = ({ rental, setShowViewModal }) => {
             </div>
 
             {/* Footer Actions */}
-            <div style={{ 
-              display: 'flex', 
+            <div style={{
+              display: 'flex',
               gap: 'clamp(0.75rem, 2vw, 1rem)',
               paddingTop: 'clamp(0.75rem, 2vw, 1rem)',
               borderTop: '1px solid hsl(40 20% 88%)',
@@ -857,76 +857,76 @@ const ViewRentals = ({ rental, setShowViewModal }) => {
 
             {/* Featured Listing Info (admin only) */}
             {auth?.super && rental.is_featured && (
-                <div className="section-padding" style={{
-                    backgroundColor: 'hsl(38 92% 50% / 0.06)',
-                    border: '2px solid hsl(38 92% 50% / 0.25)',
-                    borderRadius: 'clamp(0.5rem, 2vw, 0.75rem)',
-                    padding: 'clamp(1rem, 3vw, 1.25rem)'
+              <div className="section-padding" style={{
+                backgroundColor: 'hsl(38 92% 50% / 0.06)',
+                border: '2px solid hsl(38 92% 50% / 0.25)',
+                borderRadius: 'clamp(0.5rem, 2vw, 0.75rem)',
+                padding: 'clamp(1rem, 3vw, 1.25rem)'
+              }}>
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: 'clamp(0.5rem, 2vw, 0.75rem)',
+                  marginBottom: 'clamp(0.75rem, 2vw, 1rem)'
                 }}>
-                    <div style={{ 
-                        display: 'flex', alignItems: 'center', gap: 'clamp(0.5rem, 2vw, 0.75rem)',
-                        marginBottom: 'clamp(0.75rem, 2vw, 1rem)' 
-                    }}>
-                        {/* small star icon */}
-                        <svg style={{ width:'1rem',height:'1rem',color:'hsl(38 92% 50%)' }} fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                        <h3 style={{ color:'hsl(38 92% 40%)', fontSize:'clamp(1rem,3vw,1.125rem)', fontWeight:'600' }}>
-                            Featured Listing
-                        </h3>
-                    </div>
-                  
-                    <div style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                        gap: '0.6rem',
-                        fontSize: '0.8rem',
-                        color: 'hsl(200 25% 15%)'
-                    }}>
-                        {rental.featured_at && (
-                            <div>
-                                <span style={{ fontWeight:'500', color:'hsl(200 15% 45%)', display:'block' }}>Featured Since</span>
-                                <span>{new Date(rental.featured_at).toLocaleDateString()}</span>
-                            </div>
-                        )}
-                        {rental.featured_expires_at && (
-                            <div>
-                                <span style={{ fontWeight:'500', color:'hsl(200 15% 45%)', display:'block' }}>Expires</span>
-                                <span>{new Date(rental.featured_expires_at).toLocaleDateString()}</span>
-                            </div>
-                        )}
-                        <div>
-                            <span style={{ fontWeight:'500', color:'hsl(200 15% 45%)', display:'block' }}>Priority</span>
-                            <span>{rental.featured_priority ?? 0}</span>
-                        </div>
-                        <div>
-                            <span style={{ fontWeight:'500', color:'hsl(200 15% 45%)', display:'block' }}>Times Featured</span>
-                            <span>{rental.times_featured ?? 0}</span>
-                        </div>
-                        {rental.is_featured_queued && (
-                            <div>
-                                <span style={{ fontWeight:'500', color:'hsl(200 15% 45%)', display:'block' }}>Queued</span>
-                                <span style={{ color:'hsl(38 92% 40%)' }}>Yes</span>
-                            </div>
-                        )}
-                        {rental.featured_queue_position && (
-                            <div>
-                                <span style={{ fontWeight:'500', color:'hsl(200 15% 45%)', display:'block' }}>Queue Position</span>
-                                <span>{rental.featured_queue_position}</span>
-                            </div>
-                        )}
-                        {rental.queued_at && (
-                            <div>
-                                <span style={{ fontWeight:'500', color:'hsl(200 15% 45%)', display:'block' }}>Queued At</span>
-                                <span>{new Date(rental.queued_at).toLocaleDateString()}</span>
-                            </div>
-                        )}
-                        {rental.last_featured_at && (
-                            <div>
-                                <span style={{ fontWeight:'500', color:'hsl(200 15% 45%)', display:'block' }}>Last Featured</span>
-                                <span>{new Date(rental.last_featured_at).toLocaleDateString()}</span>
-                            </div>
-                        )}
-                    </div>
+                  {/* small star icon */}
+                  <svg style={{ width: '1rem', height: '1rem', color: 'hsl(38 92% 50%)' }} fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>
+                  <h3 style={{ color: 'hsl(38 92% 40%)', fontSize: 'clamp(1rem,3vw,1.125rem)', fontWeight: '600' }}>
+                    Featured Listing
+                  </h3>
                 </div>
+
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                  gap: '0.6rem',
+                  fontSize: '0.8rem',
+                  color: 'hsl(200 25% 15%)'
+                }}>
+                  {rental.featured_at && (
+                    <div>
+                      <span style={{ fontWeight: '500', color: 'hsl(200 15% 45%)', display: 'block' }}>Featured Since</span>
+                      <span>{new Date(rental.featured_at).toLocaleDateString()}</span>
+                    </div>
+                  )}
+                  {rental.featured_expires_at && (
+                    <div>
+                      <span style={{ fontWeight: '500', color: 'hsl(200 15% 45%)', display: 'block' }}>Expires</span>
+                      <span>{new Date(rental.featured_expires_at).toLocaleDateString()}</span>
+                    </div>
+                  )}
+                  <div>
+                    <span style={{ fontWeight: '500', color: 'hsl(200 15% 45%)', display: 'block' }}>Priority</span>
+                    <span>{rental.featured_priority ?? 0}</span>
+                  </div>
+                  <div>
+                    <span style={{ fontWeight: '500', color: 'hsl(200 15% 45%)', display: 'block' }}>Times Featured</span>
+                    <span>{rental.times_featured ?? 0}</span>
+                  </div>
+                  {rental.is_featured_queued && (
+                    <div>
+                      <span style={{ fontWeight: '500', color: 'hsl(200 15% 45%)', display: 'block' }}>Queued</span>
+                      <span style={{ color: 'hsl(38 92% 40%)' }}>Yes</span>
+                    </div>
+                  )}
+                  {rental.featured_queue_position && (
+                    <div>
+                      <span style={{ fontWeight: '500', color: 'hsl(200 15% 45%)', display: 'block' }}>Queue Position</span>
+                      <span>{rental.featured_queue_position}</span>
+                    </div>
+                  )}
+                  {rental.queued_at && (
+                    <div>
+                      <span style={{ fontWeight: '500', color: 'hsl(200 15% 45%)', display: 'block' }}>Queued At</span>
+                      <span>{new Date(rental.queued_at).toLocaleDateString()}</span>
+                    </div>
+                  )}
+                  {rental.last_featured_at && (
+                    <div>
+                      <span style={{ fontWeight: '500', color: 'hsl(200 15% 45%)', display: 'block' }}>Last Featured</span>
+                      <span>{new Date(rental.last_featured_at).toLocaleDateString()}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
             )}
           </div>
         </div>

@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { useForm, Link } from "@inertiajs/react";
-// import SuspendedModal from "@/Components/Modules/SuspendAccountMessage";
+import { useForm, Link, Head } from "@inertiajs/react";
 
 // ── Icons ────────────────────────────────────────────────────────────────────
 const Eye = ({ style }) => (
@@ -119,9 +118,6 @@ const AuthPage = ({ isLogin: initialLogin = true }) => {
     password_confirmation: '',
   });
 
-  // const { errors } = usePage().props;
-  // const { errors: pageErrors } = usePage().props;
-
   const toggleMode = () => {
     setIsLogin((v) => !v);
     reset();
@@ -131,7 +127,6 @@ const AuthPage = ({ isLogin: initialLogin = true }) => {
   };
 
   // ── Email handler ───────────────────────────────────────────────────────────
-  // Replace the fetch in handleEmailChange with this:
 const handleEmailChange = (val) => {
   setData('email', val);
   clearTimeout(window._emailTimer);
@@ -146,7 +141,6 @@ const handleEmailChange = (val) => {
   setEmailStatus('checking');
   window._emailTimer = setTimeout(async () => {
     try {
-      // Use the shared prop for CSRF token
       const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
       
       const res = await fetch(`/check-email?email=${encodeURIComponent(val)}`, {
@@ -199,6 +193,106 @@ const handleEmailChange = (val) => {
 
   return (
     <>
+        <Head>
+          <title>Sign In or Create an Account | RentTrustGh</title>
+
+          {/* Primary Meta */}
+          <meta
+              name="description"
+              content="Sign in to your RentTrustGh account or create a new account to find verified rental properties, buy homes, save favourites, leave reviews, and connect with trusted landlords and agents in Ghana."
+          />
+
+          {/* Prevent indexing */}
+          <meta
+              name="robots"
+              content="noindex,nofollow"
+          />
+
+          <meta
+              name="googlebot"
+              content="noindex,nofollow"
+          />
+
+          {/* Canonical */}
+          <link
+              rel="canonical"
+              href="https://renttrustgh.com/sign-up"
+          />
+
+          {/* Open Graph */}
+          <meta property="og:type" content="website" />
+          <meta property="og:site_name" content="RentTrustGh" />
+          <meta property="og:locale" content="en_GH" />
+
+          <meta
+              property="og:title"
+              content="Sign In or Create an Account | RentTrustGh"
+          />
+
+          <meta
+              property="og:description"
+              content="Access your RentTrustGh account or create one to manage listings, save properties, and connect with trusted landlords and agents."
+          />
+
+          <meta
+              property="og:url"
+              content="https://renttrustgh.com/sign-up"
+          />
+
+          <meta
+              property="og:image"
+              content="https://renttrustgh.com/images/rent-trust.jpg"
+          />
+
+          {/* Twitter */}
+          <meta
+              name="twitter:card"
+              content="summary_large_image"
+          />
+
+          <meta
+              name="twitter:title"
+              content="Sign In or Create an Account | RentTrustGh"
+          />
+
+          <meta
+              name="twitter:description"
+              content="Access your RentTrustGh account or create one to manage your property journey."
+          />
+
+          <meta
+              name="twitter:image"
+              content="https://renttrustgh.com/images/rent-trust.jpg"
+          />
+
+          {/* Structured Data */}
+          <script
+              type="application/ld+json"
+              dangerouslySetInnerHTML={{
+                  __html: JSON.stringify({
+                      "@context": "https://schema.org",
+                      "@type": "WebPage",
+                      "name": "Login & Registration",
+                      "url": "https://renttrustgh.com/sign-up",
+                      "description": "User authentication page for RentTrustGh.",
+                      "isPartOf": {
+                          "@type": "WebSite",
+                          "name": "RentTrustGh",
+                          "url": "https://renttrustgh.com"
+                      },
+                      "publisher": {
+                          "@type": "Organization",
+                          "name": "RentTrustGh",
+                          "url": "https://renttrustgh.com",
+                          "logo": {
+                              "@type": "ImageObject",
+                              "url": "https://renttrustgh.com/images/rent-trust.jpg"
+                          }
+                      }
+                  })
+              }}
+          />
+      </Head>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
         * { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
@@ -264,6 +358,9 @@ const handleEmailChange = (val) => {
 
             {/* Header */}
             <div style={{ padding: '3rem 2rem 1.5rem', textAlign: 'center' }}>
+              <div style={{ width: '30%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}>
+                <img src="/images/rent-trust.png" alt="RentTrustGh" />
+              </div>
               <h1 style={{ color: COLOR.text, fontSize: 'clamp(1.5rem, 5vw, 2rem)', fontWeight: 700, marginBottom: '0.5rem', lineHeight: 1.2 }}>
                 {isLogin ? 'Welcome back' : 'Create account'}
               </h1>

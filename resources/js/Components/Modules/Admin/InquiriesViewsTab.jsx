@@ -272,8 +272,6 @@ const ViewCard = ({ property, onViewDetails }) => {
     const priceColor = property.purpose === 'rent' ? 'hsl(174 55% 28%)' : 'hsl(36 75% 30%)';
     const viewsCount = Number(property.views) || 0;
     const isFeatured = toBool(property.is_featured);
-
-    console.log(isFeatured);
     
     return (
         <div style={{

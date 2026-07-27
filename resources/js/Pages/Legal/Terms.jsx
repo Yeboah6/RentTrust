@@ -1,6 +1,6 @@
 import Header from '../../Components/Layouts/Header';
 import Footer from '../../Components/Layouts/Footer';
-import { Link } from '@inertiajs/react';
+import { Link, Head } from '@inertiajs/react';
 
 const MosaicHero = ({ badge, title, highlight, sub }) => (
     <div style={{ position:'relative', overflow:'hidden', minHeight:'360px', display:'flex', alignItems:'center' }}>
@@ -70,6 +70,98 @@ export default function TermsPage() {
 
     return (
         <>
+        <Head>
+            <title>Terms & Conditions | RentTrustGh</title>
+
+            {/* Primary Meta */}
+            <meta
+                name="description"
+                content="Read the Terms and Conditions governing the use of RentTrustGh. Learn about your rights, responsibilities, user accounts, property listings, payments, and platform policies."
+            />
+
+            <meta
+                name="keywords"
+                content="RentTrustGh terms, Terms and Conditions, Ghana property marketplace, rental platform policies, landlord terms, tenant terms, user agreement, Ghana real estate"
+            />
+
+            <meta
+                name="robots"
+                content="index,follow,max-image-preview:large"
+            />
+
+            {/* Canonical */}
+            <link rel="canonical" href={window.location.href} />
+
+            {/* Open Graph */}
+            <meta property="og:type" content="website" />
+            <meta property="og:site_name" content="RentTrustGh" />
+            <meta property="og:locale" content="en_GH" />
+
+            <meta
+                property="og:title"
+                content="Terms & Conditions | RentTrustGh"
+            />
+
+            <meta
+                property="og:description"
+                content="Review the terms governing the use of RentTrustGh, including listings, accounts, subscriptions, payments, and platform policies."
+            />
+
+            <meta property="og:url" content={window.location.href} />
+
+            <meta
+                property="og:image"
+                content="/images/seo/terms-og.jpg"
+            />
+
+            {/* Twitter */}
+            <meta
+                name="twitter:card"
+                content="summary_large_image"
+            />
+
+            <meta
+                name="twitter:title"
+                content="Terms & Conditions | RentTrustGh"
+            />
+
+            <meta
+                name="twitter:description"
+                content="Understand the Terms & Conditions for using RentTrustGh and its property marketplace services."
+            />
+
+            <meta
+                name="twitter:image"
+                content="/images/seo/terms-og.jpg"
+            />
+
+            {/* Structured Data */}
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{
+                    __html: JSON.stringify({
+                        "@context": "https://schema.org",
+                        "@type": "WebPage",
+                        "name": "Terms & Conditions",
+                        "description": "Terms and Conditions governing the use of RentTrustGh.",
+                        "url": window.location.href,
+                        "isPartOf": {
+                            "@type": "WebSite",
+                            "name": "RentTrustGh",
+                            "url": "https://renttrustgh.com"
+                        },
+                        "publisher": {
+                            "@type": "Organization",
+                            "name": "RentTrustGh",
+                            "logo": {
+                                "@type": "ImageObject",
+                                "url": "https://renttrustgh.com/images/rent-trust.jpg"
+                            }
+                        }
+                    })
+                }}
+            />
+        </Head>
             <style>{BASE_STYLE}</style>
             <div style={{ minHeight:'100vh', display:'flex', flexDirection:'column', backgroundColor:'hsl(40 33% 98%)' }}>
                 <Header />

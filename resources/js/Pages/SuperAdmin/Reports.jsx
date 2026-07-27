@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { router } from '@inertiajs/react';
+import { router, Head } from '@inertiajs/react';
 import SuperAdminLayout from '@/Layouts/SuperAdminLayout';
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
@@ -213,6 +213,9 @@ const Reports = ({ analytics, filters }) => {
 
     return (
         <>
+        <Head>
+            <title>RentTrustGh</title>
+        </Head>
             <div>
                 {/* ── Page header ── */}
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', marginBottom: '1.75rem' }}>

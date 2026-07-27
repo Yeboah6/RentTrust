@@ -204,12 +204,10 @@ const PricingModal = ({ isOpen, onClose, plans = [] }) => {
     if (onClose) onClose();
 
     if (plan.is_free) {
-      // Free plan: POST directly to agent select-plan
       router.post('/agent/select-plan', { package: 'free' });
       return;
     }
 
-    // Paid plan: navigate to checkout — controller resolves by slug
     router.visit(`/checkout/${plan.slug}`);
   };
 

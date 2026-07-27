@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Link, router } from '@inertiajs/react';
+import { Link, router, Head } from '@inertiajs/react';
 import SuperAdminLayout from '@/Layouts/SuperAdminLayout';
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
@@ -284,6 +284,9 @@ const PaymentShow = ({ payment, refunds = [], total_refunded = 0, refundable = 0
 
     return (
         <>
+        <Head>
+            <title>RentTrustGh</title>
+        </Head>
             <Toast toast={toast} />
 
             {showRefund && (

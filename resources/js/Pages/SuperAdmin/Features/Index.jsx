@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { router } from '@inertiajs/react';
+import { router, Head } from '@inertiajs/react';
 import SuperAdminLayout from '@/Layouts/SuperAdminLayout';
 
 // ── Icons ─────────────────────────────────────────────────────────────────────
@@ -308,6 +308,11 @@ const FeaturesIndex = ({ flags = {} }) => {
     });
 
     return (
+        <>
+            <Head>
+            <title>RentTrustGh</title>
+        </Head>
+        
         <div>
             {/* Header */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
@@ -398,6 +403,7 @@ const FeaturesIndex = ({ flags = {} }) => {
                 </div>
             )}
         </div>
+        </>
     );
 };
 

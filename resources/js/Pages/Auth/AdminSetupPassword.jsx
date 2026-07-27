@@ -1,4 +1,4 @@
-import { useForm } from '@inertiajs/react';
+import { useForm, Head } from '@inertiajs/react';
 import { useState } from 'react';
 
 // ── Icons ─────────────────────────────────────────────────────────────────────
@@ -193,6 +193,9 @@ const AdminSetup = ({ token, name, email }) => {
 
     return (
         <>
+        <Head>
+            <title>RentTrustGh | Ghana's Trusted Property Marketplace</title>
+        </Head>
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@400;500;600;700&display=swap');
                 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from '@inertiajs/react';
+import { Link, Head } from '@inertiajs/react';
 import SuperAdminLayout from '@/Layouts/SuperAdminLayout';
 import CreatePlan from './CreatePlan';
 import PlanEdit from './PlanEdit';
@@ -214,6 +214,10 @@ const PlansIndex = ({ plans = [] }) => {
     const [editingPlan, setEditingPlan] = useState(null);
 
     return (
+        <>
+        <Head>
+            <title>RentTrustGh</title>
+        </Head>
         <div>
             {/* Page header */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.75rem' }}>
@@ -311,6 +315,7 @@ const PlansIndex = ({ plans = [] }) => {
             </div>
         )}
     </div>
+    </>
     );
 };
 

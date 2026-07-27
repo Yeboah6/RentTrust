@@ -1,5 +1,5 @@
 import React from 'react';
-import { usePage, Link } from '@inertiajs/react';
+import { usePage, Link, Head } from '@inertiajs/react';
 import SuperAdminLayout from '@/Layouts/SuperAdminLayout';
 import AdminKpiCard from '@/Components/Modules/AdminKpiCard';
 
@@ -232,6 +232,10 @@ const Dashboard = ({ platform, saas }) => {
     ];
 
     return (
+        <>
+        <Head>
+            <title>RentTrustGh</title>
+        </Head>
         <div>
             {/* Admin Profile Card */}
             <div className="bg-white rounded-lg shadow-sm p-6 mb-8 border border-gray-200">
@@ -298,6 +302,7 @@ const Dashboard = ({ platform, saas }) => {
                 ))}
             </div>
         </div>
+        </>
     );
 };
 

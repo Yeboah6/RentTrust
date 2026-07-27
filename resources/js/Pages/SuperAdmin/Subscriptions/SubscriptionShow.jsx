@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Link, router } from '@inertiajs/react';
+import { Link, router, Head } from '@inertiajs/react';
 import SuperAdminLayout from '@/Layouts/SuperAdminLayout';
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
@@ -308,6 +308,9 @@ const SubscriptionShow = ({ subscription: sub, audit_logs = [], plans = [] }) =>
 
     return (
         <>
+        <Head>
+            <title>RentTrustGh</title>
+        </Head>
             <Toast toast={toast} />
 
             {/* ── Confirm modals (cancel / suspend / free month) ── */}

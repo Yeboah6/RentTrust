@@ -53,7 +53,7 @@
 
     <meta
         property="og:image"
-        content="{{ asset('images/seo/og-image.jpg') }}"
+        content="{{ asset('images/rent-trust.jpg') }}"
     >
 
     {{-- Twitter --}}
@@ -71,12 +71,12 @@
 
     <meta
         name="twitter:image"
-        content="{{ asset('images/seo/og-image.jpg') }}"
+        content="{{ asset('images/rent-trust.jpg') }}"
     >
 
     {{-- Favicon --}}
-    <link rel="icon" href="{{ asset('rent-trust.png') }}" sizes="32x32">
-    <link rel="apple-touch-icon" href="{{ asset('rent-trust.png') }}">
+    <link rel="icon" href="{{ asset('images/rent-trust.png') }}" sizes="32x32">
+    <link rel="apple-touch-icon" href="{{ asset('images/rent-trust.png') }}">
 
     {{-- Manifest --}}
     {{-- <link rel="manifest" href="{{ asset('site.webmanifest') }}"> --}}
@@ -84,18 +84,6 @@
     {{-- Preconnect --}}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-
-    {{-- Organization JSON-LD --}}
-    {{-- <script type="application/ld+json">
-    {
-      "@context":"https://schema.org",
-      "@type":"Organization",
-      "name":"RentTrustGh",
-      "url":"{{ config('app.url') }}",
-      "logo":"{{ asset('/images/rent-trust.png') }}",
-      "sameAs":[]
-    }
-    </script> --}}
 
     @viteReactRefresh
     @vite('resources/css/app.css')
@@ -106,8 +94,6 @@
 </head>
 
 <body class="antialiased bg-gray-50 text-gray-900">
-
     @inertia
-
 </body>
 </html>

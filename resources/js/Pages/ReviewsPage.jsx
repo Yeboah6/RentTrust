@@ -3,7 +3,7 @@ import Header from '../Components/Layouts/Header';
 import Footer from '../Components/Layouts/Footer';
 import AppReview from '../Components/Modules/AppReview';
 import { User } from 'lucide-react';
-import { usePage } from '@inertiajs/react';
+import { usePage, Head } from '@inertiajs/react';
 
 // Icons
 const MessageSquare = ({ style }) => (
@@ -102,6 +102,135 @@ const ReviewsSection = ({ reviews, reports, appReviews }) => {
 
   return (
     <>
+        <Head>
+          <title>Reviews & Property Reports | RentTrustGh</title>
+
+          {/* Primary Meta */}
+          <meta
+              name="description"
+              content="Read genuine tenant reviews, landlord reviews, property reports, and app reviews on RentTrustGh. Make informed rental decisions using trusted community feedback across Ghana."
+          />
+
+          <meta
+              name="keywords"
+              content="RentTrustGh reviews, tenant reviews Ghana, landlord reviews Ghana, property reviews Ghana, rental reviews Ghana, property reports Ghana, agent reviews Ghana, app reviews RentTrustGh"
+          />
+
+          <meta
+              name="robots"
+              content="index,follow,max-image-preview:large"
+          />
+
+          <meta
+              name="googlebot"
+              content="index,follow"
+          />
+
+          {/* Canonical */}
+          <link
+              rel="canonical"
+              href="https://renttrustgh.com/reviews"
+          />
+
+          {/* Open Graph */}
+          <meta property="og:type" content="website" />
+          <meta property="og:site_name" content="RentTrustGh" />
+          <meta property="og:locale" content="en_GH" />
+
+          <meta
+              property="og:title"
+              content="Reviews & Property Reports | RentTrustGh"
+          />
+
+          <meta
+              property="og:description"
+              content="Browse verified tenant reviews, landlord feedback, property reports, and platform reviews to make confident rental decisions."
+          />
+
+          <meta
+              property="og:url"
+              content="https://renttrustgh.com/reviews"
+          />
+
+          <meta
+              property="og:image"
+              content="https://renttrustgh.com/images/seo/reviews-og.jpg"
+          />
+
+          {/* Twitter */}
+          <meta
+              name="twitter:card"
+              content="summary_large_image"
+          />
+
+          <meta
+              name="twitter:title"
+              content="Reviews & Property Reports | RentTrustGh"
+          />
+
+          <meta
+              name="twitter:description"
+              content="Explore trusted tenant reviews, landlord ratings, property reports, and app reviews on RentTrustGh."
+          />
+
+          <meta
+              name="twitter:image"
+              content="https://renttrustgh.com/images/seo/reviews-og.jpg"
+          />
+
+          {/* Structured Data */}
+          <script
+              type="application/ld+json"
+              dangerouslySetInnerHTML={{
+                  __html: JSON.stringify({
+                      "@context": "https://schema.org",
+                      "@type": "CollectionPage",
+                      "name": "Reviews & Property Reports",
+                      "url": "https://renttrustgh.com/reviews",
+                      "description": "Browse tenant reviews, landlord reviews, property reports, and platform reviews on RentTrustGh.",
+                      "isPartOf": {
+                          "@type": "WebSite",
+                          "name": "RentTrustGh",
+                          "url": "https://renttrustgh.com"
+                      },
+                      "publisher": {
+                          "@type": "Organization",
+                          "name": "RentTrustGh",
+                          "url": "https://renttrustgh.com",
+                          "logo": {
+                              "@type": "ImageObject",
+                              "url": "https://renttrustgh.com/images/rent-trust.png"
+                          }
+                      }
+                  })
+              }}
+          />
+
+          {/* Breadcrumb Schema */}
+          <script
+              type="application/ld+json"
+              dangerouslySetInnerHTML={{
+                  __html: JSON.stringify({
+                      "@context": "https://schema.org",
+                      "@type": "BreadcrumbList",
+                      "itemListElement": [
+                          {
+                              "@type": "ListItem",
+                              "position": 1,
+                              "name": "Home",
+                              "item": "https://renttrustgh.com"
+                          },
+                          {
+                              "@type": "ListItem",
+                              "position": 2,
+                              "name": "Reviews",
+                              "item": "https://renttrustgh.com/reviews"
+                          }
+                      ]
+                  })
+              }}
+          />
+      </Head>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         * {

@@ -72,8 +72,6 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental, locations = [
 
   useEffect(() => {
     if (rental) {
-      // console.log('Rental data received:', rental);
-      
       // Parse amenities
       let parsedAmenities = [];
       try {
@@ -89,7 +87,6 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental, locations = [
 
       // Parse and set existing images
       const imagesArray = parseImages(rental.images);
-      // console.log('Parsed images array:', imagesArray);
       
       const existingImagesList = imagesArray.map((img, index) => {
         // Handle different image formats
@@ -142,8 +139,6 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental, locations = [
       });
     }
   }, [rental]);
-
-  // console.log('EditRentals received rental prop:', rental.property_type);
 
   const handleAmenityToggle = (amenity) => {
     const updatedAmenities = data.amenities.includes(amenity)

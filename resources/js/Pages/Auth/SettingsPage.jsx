@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Shield, Bell, Lock, User, Mail, Globe, Save, Eye, EyeOff, Check } from "lucide-react";
 import Header from "../../Components/Layouts/Header";
 import Footer from "../../Components/Layouts/Footer";
-import { usePage, useForm, router } from "@inertiajs/react";
+import { usePage, useForm, router, Head } from "@inertiajs/react";
 
 const AdminSettingsPage = () => {
   const [activeTab, setActiveTab] = useState("profile");
@@ -124,6 +124,9 @@ const AdminSettingsPage = () => {
 
   return (
     <>
+    <Head>
+      <title>RentTrustGh | Ghana's Trusted Property Marketplace</title>
+    </Head>
       {/* Toast Notification */}
       {toast && (
         <div className="toast-notification" style={{

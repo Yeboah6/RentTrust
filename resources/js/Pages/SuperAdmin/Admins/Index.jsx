@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Link, router, useForm, usePage } from '@inertiajs/react';
+import { Link, router, useForm, usePage, Head } from '@inertiajs/react';
 import SuperAdminLayout from '@/Layouts/SuperAdminLayout';
 import AdminEdit from './AdminEdit';
 import { useRefresh } from '@/Hooks/useRefresh';
@@ -521,6 +521,9 @@ const AdminsIndex = ({ admins: initial = [] }) => {
 
     return (
         <>
+        <Head>
+            <title>RentTrustGh</title>
+        </Head>
             <Toast toast={toast} />
             {showAdd    && <AddAdminModal onClose={() => setShowAdd(false)} onSuccess={() => { showToast('Admin account created.'); router.reload({ only: ['admins'] }); }} />}
             {deleteTarget && <DeleteModal admin={deleteTarget} onConfirm={confirmDelete} onClose={() => setDeleteTarget(null)} processing={deleting} />}

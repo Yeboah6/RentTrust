@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Link } from "@inertiajs/react";
+import { Link, Head } from "@inertiajs/react";
 import Header from "../Components/Layouts/Header";
 import Footer from "../Components/Layouts/Footer";
 import { ChevronLeft, ChevronRight, BedDouble, Bath, Search as SearchIcon } from "lucide-react";
@@ -588,12 +588,10 @@ const RentalListingsPage = ({ listings: initialListingsData = {} }) => {
   };
 
   const loadMoreListings = async () => {
-    // Prevent duplicate requests
     if (isLoading || !hasMore) return;
     
     setIsLoading(true);
     try {
-      // Use cursor-based pagination with last_id
       const url = lastId 
         ? `/rent/api/more?last_id=${lastId}`
         : `/rent/api/more`;
@@ -606,18 +604,9 @@ const RentalListingsPage = ({ listings: initialListingsData = {} }) => {
       
       const data = await response.json();
       
-      // Debug logging (remove in production)
-      console.log('Loaded listings:', {
-        count: data.listings?.length,
-        has_more: data.has_more,
-        last_id: data.last_id,
-        current_total: listings.length
-      });
-      
       if (data.listings && Array.isArray(data.listings) && data.listings.length > 0) {
         const formattedNewListings = formatListings(data.listings);
         
-        // Check for duplicates (development only)
         const existingIds = new Set(listings.map(l => l.id));
         const duplicates = formattedNewListings.filter(l => existingIds.has(l.id));
         
@@ -675,6 +664,136 @@ const RentalListingsPage = ({ listings: initialListingsData = {} }) => {
 
   return (
     <>
+        <Head>
+          <title>Houses & Apartments for Rent in Ghana | RentTrustGh</title>
+
+          {/* Primary Meta */}
+          <meta
+              name="description"
+              content="Browse verified houses, apartments, offices, shops, and other properties for rent across Ghana. Compare prices, locations, amenities, reviews, and trusted agents on RentTrustGh."
+          />
+
+          <meta
+              name="keywords"
+              content="houses for rent Ghana, apartments for rent Ghana, property for rent Ghana, Accra rentals, Tema apartments, Kumasi houses for rent, offices for rent Ghana, shops for rent Ghana, verified rental listings Ghana"
+          />
+
+          <meta
+              name="robots"
+              content="index,follow,max-image-preview:large"
+          />
+
+          <meta
+              name="googlebot"
+              content="index,follow"
+          />
+
+          {/* Canonical */}
+          <link
+              rel="canonical"
+              href="https://renttrustgh.com/rent"
+          />
+
+          {/* Open Graph */}
+          <meta property="og:type" content="website" />
+          <meta property="og:site_name" content="RentTrustGh" />
+          <meta property="og:locale" content="en_GH" />
+
+          <meta
+              property="og:title"
+              content="Houses & Apartments for Rent in Ghana | RentTrustGh"
+          />
+
+          <meta
+              property="og:description"
+              content="Find verified rental properties across Ghana. Browse houses, apartments, offices, shops, prices, locations, and trusted agents."
+          />
+
+          <meta
+              property="og:url"
+              content="https://renttrustgh.com/rent"
+          />
+
+          <meta
+              property="og:image"
+              content="https://renttrustgh.com/images/seo/rentals-og.jpg"
+          />
+
+          {/* Twitter */}
+          <meta
+              name="twitter:card"
+              content="summary_large_image"
+          />
+
+          <meta
+              name="twitter:title"
+              content="Houses & Apartments for Rent in Ghana | RentTrustGh"
+          />
+
+          <meta
+              name="twitter:description"
+              content="Browse trusted houses, apartments, offices, shops, and other verified rental listings across Ghana."
+          />
+
+          <meta
+              name="twitter:image"
+              content="https://renttrustgh.com/images/seo/rentals-og.jpg"
+          />
+
+          {/* Rental Listings Collection Schema */}
+          <script
+              type="application/ld+json"
+              dangerouslySetInnerHTML={{
+                  __html: JSON.stringify({
+                      "@context": "https://schema.org",
+                      "@type": "CollectionPage",
+                      name: "Properties for Rent in Ghana",
+                      url: "https://renttrustgh.com/rent",
+                      description:
+                          "Browse verified houses, apartments, offices, shops, and other properties available for rent across Ghana.",
+                      isPartOf: {
+                          "@type": "WebSite",
+                          name: "RentTrustGh",
+                          url: "https://renttrustgh.com"
+                      },
+                      publisher: {
+                          "@type": "Organization",
+                          name: "RentTrustGh",
+                          url: "https://renttrustgh.com",
+                          logo: {
+                              "@type": "ImageObject",
+                              url: "https://renttrustgh.com/images/rent-trust.png"
+                          }
+                      }
+                  })
+              }}
+          />
+
+          {/* Breadcrumb Schema */}
+          <script
+              type="application/ld+json"
+              dangerouslySetInnerHTML={{
+                  __html: JSON.stringify({
+                      "@context": "https://schema.org",
+                      "@type": "BreadcrumbList",
+                      itemListElement: [
+                          {
+                              "@type": "ListItem",
+                              position: 1,
+                              name: "Home",
+                              item: "https://renttrustgh.com"
+                          },
+                          {
+                              "@type": "ListItem",
+                              position: 2,
+                              name: "Properties for Rent",
+                              item: "https://renttrustgh.com/rent"
+                          }
+                      ]
+                  })
+              }}
+          />
+      </Head>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         

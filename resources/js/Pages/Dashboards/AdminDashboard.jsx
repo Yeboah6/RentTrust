@@ -1,7 +1,7 @@
 import { useState } from "react";
 import Header from "@/Components/Layouts/Header";
 import Footer from "@/Components/Layouts/Footer";
-import { Link, router, usePage } from "@inertiajs/react";
+import { Link, router, usePage, Head } from "@inertiajs/react";
 import AdminOverview from "@/Components/Modules/Admin/AdminOverview";
 import AddRentalPage from "@/Components/Modules/AddRentals";
 import VerifyAgentDialog from '@/Components/Modules/Admin/VerifyAgent';
@@ -432,6 +432,9 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, verif
 
   return (
     <>
+    <Head>
+      <title>RentTrustGh</title>
+    </Head>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         * { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; box-sizing: border-box; }

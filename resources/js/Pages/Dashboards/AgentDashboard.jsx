@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useForm, router, usePage } from "@inertiajs/react";
+import { Link, useForm, router, usePage, Head } from "@inertiajs/react";
 import Header from "@/Components/Layouts/Header";
 import Footer from "@/Components/Layouts/Footer";
 import AddRentalPage from "@/Components/Modules/AddRentals";
@@ -322,6 +322,9 @@ const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views
 
   return (
     <>
+    <Head>
+      <title>RentTrustGh</title>
+    </Head>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         * { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }

@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Link, router, useForm } from '@inertiajs/react';
+import { Link, router, useForm, Head } from '@inertiajs/react';
 import SuperAdminLayout from '@/Layouts/SuperAdminLayout';
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
@@ -266,6 +266,9 @@ const AgentEdit = ({ agent: a }) => {
 
     return (
         <>
+        <Head>
+            <title>RentTrustGh</title>
+        </Head>
             <Toast toast={toast} />
             {confirmAct && (
                 <ConfirmModal

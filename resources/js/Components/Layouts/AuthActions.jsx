@@ -2,7 +2,6 @@ import React from 'react';
 import { Link } from "@inertiajs/react";
 import { User, LayoutDashboard, LogOut } from 'lucide-react';
 
-// renders buttons for authenticated / unauthenticated users in desktop nav
 export function AuthDesktop({
   isAnyUserLoggedIn,
   isAgentLoggedIn,
@@ -11,8 +10,8 @@ export function AuthDesktop({
   isSuperAdminLoggedIn,
   agentData,
   tenantData,
-  adminData,
-  superAdminData,
+  // adminData,
+  // superAdminData,
   handleLogout,
   isOnBuyPage,
   isOnRentPage,
@@ -469,8 +468,8 @@ export function AuthMobile({
   isSuperAdminLoggedIn,
   agentData,
   tenantData,
-  adminData,
-  superAdminData,
+  // adminData,
+  // superAdminData,
   handleLogout,
   handleMobileLinkClick,
   activeLink,

@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Link, router } from '@inertiajs/react';
+import { Link, router, Head } from '@inertiajs/react';
 import SuperAdminLayout from '@/Layouts/SuperAdminLayout';
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
@@ -353,6 +353,9 @@ const SubscriptionsIndex = ({ subscriptions: raw = [] }) => {
 
     return (
         <>
+        <Head>
+            <title>RentTrustGh</title>
+        </Head>
             <Toast toast={toast} />
             {actionTarget && (
                 <ActionModal sub={actionTarget.sub} actionType={actionTarget.type} onConfirm={confirmAction} onClose={() => setActionTarget(null)} processing={processing} />

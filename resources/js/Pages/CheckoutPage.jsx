@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, usePage, router } from "@inertiajs/react";
+import { Link, usePage, router, Head } from "@inertiajs/react";
 import Header from "../Components/Layouts/Header";
 import Footer from "../Components/Layouts/Footer";
 
@@ -58,12 +58,6 @@ const ProviderBadge = ({ provider }) => {
 };
 
 // ─── Order Summary ────────────────────────────────────────────────────────────
-/**
- * Receives `plan` from CheckoutController::show() which includes:
- *   id, name, slug, price, features[], description,
- *   listing_limit, boost_limit, lead_limit,
- *   verified_badge, priority_ranking, analytics_access
- */
 const OrderSummary = ({ plan, provider }) => {
   const planColor = {
     free:     "hsl(200 15% 45%)",
@@ -71,7 +65,6 @@ const OrderSummary = ({ plan, provider }) => {
     pro:      "hsl(38 92% 45%)",
   }[plan.slug] ?? "hsl(174 62% 32%)";
 
-  // Use the pre-built features list from the controller — matches PricingModal exactly
   const features = plan.features ?? [];
 
   return (
@@ -290,8 +283,6 @@ const CheckoutPage = ({ plan, allPlans = [] }) => {
           );
           setPaymentState("failure");
         },
-        // For paid plans: controller calls Inertia::location() → full browser redirect to gateway.
-        // onSuccess only fires for free plans (redirect to dashboard).
         onSuccess: () => {},
       }
     );
@@ -307,7 +298,7 @@ const CheckoutPage = ({ plan, allPlans = [] }) => {
 
   // Plan selector for switching plans
   const PlansComparison = ({ plans, current }) => {
-    const filteredPlans = plans.filter(p => !p.is_free); // Only show paid plans in checkout
+    const filteredPlans = plans.filter(p => !p.is_free);
 
     return (
       <div className="overflow-hidden border rounded-xl bg-white" style={{ borderColor: "hsl(40 20% 88%)", boxShadow: "0 2px 8px -2px hsl(200 25% 15% / 0.1), 0 1px 3px -1px hsl(200 25% 15% / 0.06)" }}>
@@ -366,6 +357,10 @@ const CheckoutPage = ({ plan, allPlans = [] }) => {
 
   return (
     <>
+      <Head>
+          <title>RentTrustGh</title>
+      </Head>
+      
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         * { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }

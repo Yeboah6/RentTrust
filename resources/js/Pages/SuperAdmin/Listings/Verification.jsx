@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { router, Link, usePage } from "@inertiajs/react";
+import { router, Link, usePage, Head } from "@inertiajs/react";
 import SuperAdminLayout from "@/Layouts/SuperAdminLayout";
 
 // ─── Shared styles injected once ─────────────────────────────────────────────
@@ -886,6 +886,9 @@ export default function ListingsVerification({ listings, metrics, filter: initia
 
   return (
     <>
+    <Head>
+      <title>RentTrustGh</title>
+    </Head>
       <style>{GLOBAL_CSS}</style>
 
       <div className="lv-wrap">

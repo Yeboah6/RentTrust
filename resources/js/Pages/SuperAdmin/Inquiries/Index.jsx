@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { router } from '@inertiajs/react';
+import { router, Head } from '@inertiajs/react';
 import SuperAdminLayout from '@/Layouts/SuperAdminLayout';
 
 // ─── Design tokens (matches Reports / Analytics pages) ───────────────────────
@@ -351,6 +351,9 @@ const InquiriesIndex = ({ inquiries, summary, filters, cities, agents }) => {
 
     return (
         <>
+        <Head>
+            <title>RentTrustGh</title>
+        </Head>
             {/* ── Page header ───────────────────────────────────────────── */}
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', marginBottom: '1.75rem', flexWrap: 'wrap' }}>
                 <div>

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useMemo } from 'react';
-import { Link, router, usePage } from '@inertiajs/react';
+import { Link, router, usePage, Head } from '@inertiajs/react';
 import SuperAdminLayout from '@/Layouts/SuperAdminLayout';
 import { useRefresh } from '@/Hooks/useRefresh';
 
@@ -588,6 +588,9 @@ const AgentsIndex = ({ agents: rawAgents = [], listings_count }) => {
 
     return (
         <>
+        <Head>
+            <title>RentTrustGh</title>
+        </Head>
             <Toast toast={toast} />
             {modal && (
                 <ActionModal

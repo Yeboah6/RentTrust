@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Link } from "@inertiajs/react";
+import { Link, Head } from "@inertiajs/react";
 import Header from "../Components/Layouts/Header";
 import Footer from "../Components/Layouts/Footer";
 import { ChevronLeft, ChevronRight, BedDouble, Bath, Search as SearchIcon, MapPin as MapPinIcon, ChevronDown } from "lucide-react";
@@ -570,6 +570,136 @@ const SaleListingsPage = ({ listings: initialListingsData = {}, filters = {} }) 
 
   return (
     <>
+        <Head>
+          <title>Houses & Property for Sale in Ghana | RentTrustGh</title>
+
+          {/* Primary Meta */}
+          <meta
+              name="description"
+              content="Browse verified houses, apartments, land, offices, shops, and commercial properties for sale across Ghana. Compare prices, locations, amenities, and trusted agents on RentTrustGh."
+          />
+
+          <meta
+              name="keywords"
+              content="houses for sale Ghana, property for sale Ghana, apartments for sale Ghana, land for sale Ghana, commercial property Ghana, offices for sale Ghana, real estate Ghana, Accra houses for sale, Kumasi property, Tema property"
+          />
+
+          <meta
+              name="robots"
+              content="index,follow,max-image-preview:large"
+          />
+
+          <meta
+              name="googlebot"
+              content="index,follow"
+          />
+
+          {/* Canonical */}
+          <link
+              rel="canonical"
+              href="https://renttrustgh.com/buy"
+          />
+
+          {/* Open Graph */}
+          <meta property="og:type" content="website" />
+          <meta property="og:site_name" content="RentTrustGh" />
+          <meta property="og:locale" content="en_GH" />
+
+          <meta
+              property="og:title"
+              content="Houses & Property for Sale in Ghana | RentTrustGh"
+          />
+
+          <meta
+              property="og:description"
+              content="Discover verified houses, apartments, land, offices, and commercial properties for sale throughout Ghana."
+          />
+
+          <meta
+              property="og:url"
+              content="https://renttrustgh.com/buy"
+          />
+
+          <meta
+              property="og:image"
+              content="https://renttrustgh.com/images/seo/buy-properties-og.jpg"
+          />
+
+          {/* Twitter */}
+          <meta
+              name="twitter:card"
+              content="summary_large_image"
+          />
+
+          <meta
+              name="twitter:title"
+              content="Houses & Property for Sale in Ghana | RentTrustGh"
+          />
+
+          <meta
+              name="twitter:description"
+              content="Browse verified houses, apartments, land, offices, and commercial property listings for sale across Ghana."
+          />
+
+          <meta
+              name="twitter:image"
+              content="https://renttrustgh.com/images/seo/buy-properties-og.jpg"
+          />
+
+          {/* Structured Data */}
+          <script
+              type="application/ld+json"
+              dangerouslySetInnerHTML={{
+                  __html: JSON.stringify({
+                      "@context": "https://schema.org",
+                      "@type": "CollectionPage",
+                      "name": "Properties for Sale in Ghana",
+                      "url": "https://renttrustgh.com/buy",
+                      "description":
+                          "Browse verified houses, apartments, land, offices, shops, and commercial properties available for sale across Ghana.",
+                      "isPartOf": {
+                          "@type": "WebSite",
+                          "name": "RentTrustGh",
+                          "url": "https://renttrustgh.com"
+                      },
+                      "publisher": {
+                          "@type": "Organization",
+                          "name": "RentTrustGh",
+                          "url": "https://renttrustgh.com",
+                          "logo": {
+                              "@type": "ImageObject",
+                              "url": "https://renttrustgh.com/images/rent-trust.png"
+                          }
+                      }
+                  })
+              }}
+          />
+
+          {/* Breadcrumb Schema */}
+          <script
+              type="application/ld+json"
+              dangerouslySetInnerHTML={{
+                  __html: JSON.stringify({
+                      "@context": "https://schema.org",
+                      "@type": "BreadcrumbList",
+                      "itemListElement": [
+                          {
+                              "@type": "ListItem",
+                              "position": 1,
+                              "name": "Home",
+                              "item": "https://renttrustgh.com"
+                          },
+                          {
+                              "@type": "ListItem",
+                              "position": 2,
+                              "name": "Properties for Sale",
+                              "item": "https://renttrustgh.com/buy"
+                          }
+                      ]
+                  })
+              }}
+          />
+      </Head>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         

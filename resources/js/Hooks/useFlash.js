@@ -11,7 +11,6 @@ export function useFlash(callback) {
     const prev = useRef(null);
 
     useEffect(() => {
-        // Only fire when flash actually changes (Inertia re-renders on every visit)
         const key = JSON.stringify(flash);
         if (key !== prev.current && (flash.success || flash.error)) {
             prev.current = key;

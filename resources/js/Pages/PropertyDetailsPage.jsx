@@ -170,8 +170,6 @@ export default function PropertyDetailsPage({ rental, reviews, seo, agent }) {
         setTimeout(() => setToast(null), 4000);
     };
 
-    console.log(agent);
-
     const authRedirect = (fn) => {
         if (!auth?.agent && !auth?.super && !auth?.tenant) {
             window.location.href = '/sign-up';

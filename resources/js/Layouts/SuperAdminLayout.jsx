@@ -205,7 +205,6 @@ const SectionLabel = ({ label, collapsed }) => {
 
 // ── Layout ────────────────────────────────────────────────────────────────────
 
-// ↓ Adjust this to match your actual <Header /> height in pixels
 const HEADER_HEIGHT = 64;
 
 const SuperAdminLayout = ({ children }) => {
@@ -234,10 +233,6 @@ const SuperAdminLayout = ({ children }) => {
                 .sa-main::-webkit-scrollbar-thumb:hover { background: hsl(220 15% 60%); }
             `}</style>
 
-            {/*
-                Root container fills the viewport exactly.
-                overflow:hidden stops any outer scroll.
-            */}
             <div style={{
                 height: '100vh',
                 display: 'flex',
@@ -283,7 +278,7 @@ const SuperAdminLayout = ({ children }) => {
                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                                 }}>
                                     <img
-                                        src="/rent-trust.png"
+                                        src="/images/rent-trust.png"
                                         alt="RentTrustGh Logo"
                                         style={{ width: '100%', height: '100%', display: 'block' }}
                                       />
@@ -318,7 +313,7 @@ const SuperAdminLayout = ({ children }) => {
 
                         <nav className="sa-nav" style={{
                             flex: 1,
-                            minHeight: 0,        // ← critical: without this flex child won't shrink
+                            minHeight: 0,     
                             overflowY: 'auto',
                             overflowX: 'hidden',
                             padding: '0.5rem',

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, MapPin, Shield } from 'lucide-react';
+// import { Search, MapPin, Shield } from 'lucide-react';
 
 const PropertyMosaic = () => (
   <div style={{

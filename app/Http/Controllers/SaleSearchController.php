@@ -228,7 +228,7 @@ class SaleSearchController extends Controller
             'reviews' => $reviews,
             'price_label' => 'Sale Price',
             'days_on_market' => $rental->getDaysOnMarket(),
-            'seo' => app(SeoService::class)->propertyMeta($rental),
+            'seo' => app(SeoService::class)->areaMeta(Str::slug($rental->first()->area), 'sale'),
         ]);
     }
 
@@ -307,7 +307,7 @@ class SaleSearchController extends Controller
             'reviews' => $reviews,
             'price_label' => 'Sale Price',
             'days_on_market' => $rent->getDaysOnMarket(),
-            'seo' => app(SeoService::class)->propertyMeta($rent),
+            'seo' => app(SeoService::class)->areaMeta(Str::slug($rent->first()->area), 'sale'),
         ]);
     }
 

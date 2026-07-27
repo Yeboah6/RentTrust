@@ -54,7 +54,6 @@ const RefundModal = ({ transaction, onClose, onRefund }) => {
       return;
     }
     setProcessing(true);
-    // Small delay for UX, then call parent handler which hits the real API
     setTimeout(() => {
       onRefund(transaction.id);
       setProcessing(false);

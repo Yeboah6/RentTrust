@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { router, usePage } from '@inertiajs/react';
+import { router, usePage, Head } from '@inertiajs/react';
 import SuperAdminLayout from '@/Layouts/SuperAdminLayout';
 import { useRefresh } from '@/Hooks/useRefresh';
 
@@ -494,6 +494,9 @@ const TypesIndex = ({}) => {
 
     return (
         <>
+        <Head>
+            <title>RentTrustGh</title>
+        </Head>
             <Toast toast={toast} />
 
             {modal && (

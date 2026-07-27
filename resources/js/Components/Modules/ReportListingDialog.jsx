@@ -14,9 +14,6 @@ const ReportListingDialog = ({ setShowAddListingModal, rental, auth }) => {
   });
 
   const [toast, setToast] = useState(null);
-
-  // Get auth from page props (agent/tenant/super)
-  // const { auth } = usePage().props;
   const userFullName = auth?.agent?.name || auth?.tenant?.name || auth?.super?.name || "";
 
   useEffect(() => {

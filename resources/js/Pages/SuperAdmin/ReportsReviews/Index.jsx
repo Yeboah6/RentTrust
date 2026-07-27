@@ -1,5 +1,5 @@
 import React, { useState, useRef, useMemo } from 'react';
-import { Link, router } from '@inertiajs/react';
+import { Link, router, Head } from '@inertiajs/react';
 import SuperAdminLayout from '@/Layouts/SuperAdminLayout';
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
@@ -653,6 +653,9 @@ const handleAction = (action, itemId, payload) => {
 
     return (
         <>
+        <Head>
+            <title>RentTrustGh</title>
+        </Head>
             <Toast toast={toast} />
             {drawer && (
                 <DetailDrawer

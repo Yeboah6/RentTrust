@@ -11,8 +11,23 @@ import { Head } from '@inertiajs/react';
 const Home = ({ featuredRentals, featuredSales, rentalAreas, saleAreas, totalListings, totalAreas, totalVerifiedAgents, users }) => {
   return (
     <>
+    <Head>
+        <title>
+            RentTrustGh | Find Your Perfect Home for Rent or Sale in Ghana
+        </title>
+
+        <meta
+            name="description"
+            content="Find verified houses, apartments, offices, shops, and land for rent or sale across Ghana. Browse trusted listings from landlords and agents on RentTrustGh."
+        />
+
+        <meta
+            name="keywords"
+            content="RentTrustGh, Ghana property, apartments for rent, houses for rent, houses for sale, real estate Ghana, Accra apartments, Tema rentals, Kumasi houses"
+        />
+    </Head>
     
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col"> 
       <Header />
 
       <main className="flex-1">

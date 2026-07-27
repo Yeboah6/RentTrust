@@ -1,6 +1,6 @@
 import Header from '../../Components/Layouts/Header';
 import Footer from '../../Components/Layouts/Footer';
-import { Link } from '@inertiajs/react';
+import { Link, Head } from '@inertiajs/react';
 
 const MosaicHero = ({ badge, title, highlight, sub }) => (
     <div style={{ position:'relative', overflow:'hidden', minHeight:'360px', display:'flex', alignItems:'center' }}>
@@ -70,6 +70,145 @@ export default function PrivacyPage() {
 
     return (
         <>
+        <Head>
+            <title>Privacy Policy | How RentTrustGh Protects Your Data</title>
+            
+            {/* Primary Meta */}
+            <meta
+                name="description"
+                content="Read the RentTrustGh Privacy Policy to understand what information we collect, how we use it, how we protect your data, and the privacy rights available to users in Ghana."
+            />
+        
+            <meta
+                name="keywords"
+                content="RentTrustGh privacy policy, data protection Ghana, property platform privacy, tenant data privacy, landlord data privacy, personal information Ghana, RentTrustGh data security"
+            />
+        
+            <meta
+                name="robots"
+                content="index,follow,max-image-preview:large"
+            />
+        
+            <meta
+                name="googlebot"
+                content="index,follow"
+            />
+        
+            {/* Canonical */}
+            <link
+                rel="canonical"
+                href="https://renttrustgh.com/privacy"
+            />
+        
+            {/* Open Graph */}
+            <meta property="og:type" content="website" />
+            <meta property="og:site_name" content="RentTrustGh" />
+            <meta property="og:locale" content="en_GH" />
+            
+            <meta
+                property="og:title"
+                content="Privacy Policy | RentTrustGh"
+            />
+        
+            <meta
+                property="og:description"
+                content="Learn how RentTrustGh collects, uses, stores, and protects personal information while providing property marketplace services across Ghana."
+            />
+        
+            <meta
+                property="og:url"
+                content="https://renttrustgh.com/privacy"
+            />
+        
+            <meta
+                property="og:image"
+                content="https://renttrustgh.com/images/seo/privacy-og.jpg"
+            />
+        
+            {/* Twitter */}
+            <meta
+                name="twitter:card"
+                content="summary_large_image"
+            />
+        
+            <meta
+                name="twitter:title"
+                content="Privacy Policy | RentTrustGh"
+            />
+        
+            <meta
+                name="twitter:description"
+                content="Understand how RentTrustGh handles personal information and protects the privacy of tenants, agents, landlords, and visitors."
+            />
+        
+            <meta
+                name="twitter:image"
+                content="https://renttrustgh.com/images/seo/privacy-og.jpg"
+            />
+        
+            {/* Privacy Policy Schema */}
+            <script type="application/ld+json">
+                {JSON.stringify({
+                    "@context": "https://schema.org",
+                    "@type": "WebPage",
+                    name: "RentTrustGh Privacy Policy",
+                    url: "https://renttrustgh.com/privacy",
+                    description:
+                        "The RentTrustGh Privacy Policy explains how personal information is collected, used, shared, stored, and protected.",
+                    dateModified: "2026-04-01",
+                    isPartOf: {
+                        "@type": "WebSite",
+                        name: "RentTrustGh",
+                        url: "https://renttrustgh.com"
+                    },
+                    publisher: {
+                        "@type": "Organization",
+                        name: "RentTrustGh",
+                        url: "https://renttrustgh.com",
+                        logo: {
+                            "@type": "ImageObject",
+                            url: "https://renttrustgh.com/images/rent-trust.png"
+                        }
+                    },
+                    about: [
+                        {
+                            "@type": "Thing",
+                            name: "Privacy"
+                        },
+                        {
+                            "@type": "Thing",
+                            name: "Personal Data Protection"
+                        },
+                        {
+                            "@type": "Thing",
+                            name: "User Data Security"
+                        }
+                    ]
+                })}
+            </script>
+            
+            {/* Breadcrumb Schema */}
+            <script type="application/ld+json">
+                {JSON.stringify({
+                    "@context": "https://schema.org",
+                    "@type": "BreadcrumbList",
+                    itemListElement: [
+                        {
+                            "@type": "ListItem",
+                            position: 1,
+                            name: "Home",
+                            item: "https://renttrustgh.com"
+                        },
+                        {
+                            "@type": "ListItem",
+                            position: 2,
+                            name: "Privacy Policy",
+                            item: "https://renttrustgh.com/privacy"
+                        }
+                    ]
+                })}
+            </script>
+        </Head>
             <style>{BASE_STYLE}</style>
             <div style={{ minHeight:'100vh', display:'flex', flexDirection:'column', backgroundColor:'hsl(40 33% 98%)' }}>
                 <Header />

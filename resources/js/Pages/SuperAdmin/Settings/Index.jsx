@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { router } from '@inertiajs/react';
+import { router, Head } from '@inertiajs/react';
 import SuperAdminLayout from '@/Layouts/SuperAdminLayout';
 
 // ── Icons ─────────────────────────────────────────────────────────────────────
@@ -282,15 +282,12 @@ const SectionPanel = ({ section, data, onChange, onSave, saving, saved }) => {
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 const SettingsIndex = ({ settings = {} }) => {
-    // Build initial state: group by known sections, rest goes to 'general'
     const sectionKeys = SECTIONS.map(s => s.key);
 
     const initialData = () => {
-        // If settings is already grouped by section keys, use as-is
         const isGrouped = sectionKeys.some(k => settings[k] !== undefined && typeof settings[k] === 'object');
         if (isGrouped) return { ...settings };
 
-        // Otherwise group settings by their defined sections
         const grouped = {};
         sectionKeys.forEach(section => {
             grouped[section] = {};
@@ -341,12 +338,14 @@ const SettingsIndex = ({ settings = {} }) => {
         }
     };
 
-    // Determine which sections have data
     const activeSections = SECTIONS.filter(s => data[s.key] && Object.keys(data[s.key]).length > 0);
-    // Also show 'general' as fallback if nothing is grouped
     const displaySections = activeSections.length > 0 ? activeSections : [SECTIONS[0]];
 
     return (
+        <>
+        <Head>
+            <title>RentTrustGh</title>
+        </Head>
         <div>
             {/* Header */}
             <div style={{ marginBottom: '1.75rem' }}>
@@ -396,6 +395,7 @@ const SettingsIndex = ({ settings = {} }) => {
                 ))}
             </div>
         </div>
+        </>
     );
 };
 

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useForm } from '@inertiajs/react';
+import { useForm, Head } from '@inertiajs/react';
 import Header from '../Components/Layouts/Header';
 import Footer from '../Components/Layouts/Footer';
 
@@ -179,6 +179,135 @@ const BecomeAgentPage = () => {
 
   return (
     <>
+        <Head>
+          <title>Become a Verified Agent or Landlord | RentTrustGh</title>
+
+          {/* Primary Meta */}
+          <meta
+              name="description"
+              content="Register as a verified real estate agent or landlord on RentTrustGh. List your properties, build your reputation, respond to tenant reviews, and connect with thousands of renters across Ghana."
+          />
+
+          <meta
+              name="keywords"
+              content="Become an agent Ghana, landlord registration Ghana, register as estate agent Ghana, verified real estate agent Ghana, RentTrustGh agent, property agent Ghana, landlord account Ghana, list property Ghana"
+          />
+
+          <meta
+              name="robots"
+              content="index,follow,max-image-preview:large"
+          />
+
+          <meta
+              name="googlebot"
+              content="index,follow"
+          />
+
+          {/* Canonical */}
+          <link
+              rel="canonical"
+              href="https://renttrustgh.com/become-agent"
+          />
+
+          {/* Open Graph */}
+          <meta property="og:type" content="website" />
+          <meta property="og:site_name" content="RentTrustGh" />
+          <meta property="og:locale" content="en_GH" />
+
+          <meta
+              property="og:title"
+              content="Become a Verified Agent or Landlord | RentTrustGh"
+          />
+
+          <meta
+              property="og:description"
+              content="Join RentTrustGh as a verified real estate agent or landlord. Manage listings, earn trust, and connect with more tenants."
+          />
+
+          <meta
+              property="og:url"
+              content="https://renttrustgh.com/become-agent"
+          />
+
+          <meta
+              property="og:image"
+              content="https://renttrustgh.com/images/rent-trust.jpg"
+          />
+
+          {/* Twitter */}
+          <meta
+              name="twitter:card"
+              content="summary_large_image"
+          />
+
+          <meta
+              name="twitter:title"
+              content="Become a Verified Agent or Landlord | RentTrustGh"
+          />
+
+          <meta
+              name="twitter:description"
+              content="Create your RentTrustGh agent account, list properties, build trust, and reach more tenants across Ghana."
+          />
+
+          <meta
+              name="twitter:image"
+              content="https://renttrustgh.com/images/rent-trust.jpg"
+          />
+
+          {/* Structured Data */}
+          <script
+              type="application/ld+json"
+              dangerouslySetInnerHTML={{
+                  __html: JSON.stringify({
+                      "@context": "https://schema.org",
+                      "@type": "WebPage",
+                      "name": "Become a Verified Agent or Landlord",
+                      "url": "https://renttrustgh.com/become-agent",
+                      "description": "Register as a verified landlord or real estate agent on RentTrustGh.",
+                      "isPartOf": {
+                          "@type": "WebSite",
+                          "name": "RentTrustGh",
+                          "url": "https://renttrustgh.com"
+                      },
+                      "publisher": {
+                          "@type": "Organization",
+                          "name": "RentTrustGh",
+                          "url": "https://renttrustgh.com",
+                          "logo": {
+                              "@type": "ImageObject",
+                              "url": "https://renttrustgh.com/images/rent-trust.jpg"
+                          }
+                      }
+                  })
+              }}
+          />
+
+          {/* Breadcrumb Schema */}
+          <script
+              type="application/ld+json"
+              dangerouslySetInnerHTML={{
+                  __html: JSON.stringify({
+                      "@context": "https://schema.org",
+                      "@type": "BreadcrumbList",
+                      "itemListElement": [
+                          {
+                              "@type": "ListItem",
+                              "position": 1,
+                              "name": "Home",
+                              "item": "https://renttrustgh.com"
+                          },
+                          {
+                              "@type": "ListItem",
+                              "position": 2,
+                              "name": "Become an Agent",
+                              "item": "https://renttrustgh.com/become-agent"
+                          }
+                      ]
+                  })
+              }}
+          />
+      </Head>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         * { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
@@ -198,8 +327,8 @@ const BecomeAgentPage = () => {
 
               {/* Header */}
               <div style={{ padding: 'clamp(1.5rem, 4vw, 2rem)', textAlign: 'center', borderBottom: `1px solid ${C.border}` }}>
-                <div style={{ width: '3rem', height: '3rem', borderRadius: '50%', background: C.tealLight, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}>
-                  <Shield style={{ height: '1.5rem', width: '1.5rem', color: C.teal }} />
+                <div style={{ width: '30%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}>
+                  <img src="/images/rent-trust.png" alt="RentTrustGh" />
                 </div>
                 <h1 style={{ color: C.text, fontSize: 'clamp(1.25rem, 4vw, 1.5rem)', fontWeight: 700, marginBottom: '0.5rem' }}>
                   Register as Agent/Landlord

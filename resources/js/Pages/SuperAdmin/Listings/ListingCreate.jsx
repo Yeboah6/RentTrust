@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback } from 'react';
-import { Link, useForm } from '@inertiajs/react';
+import { Link, useForm, Head } from '@inertiajs/react';
 import SuperAdminLayout from '@/Layouts/SuperAdminLayout';
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
@@ -495,24 +495,18 @@ const ListingCreate = ({ agents = [], property_types = [], amenities: amenityLis
     });
 
     // ── Client-side validation state ──────────────────────────────────────────
-    // touched: which fields the user has interacted with (for on-blur feedback)
     const [touched, setTouched]       = useState({});
-    // clientErrors: full validation result (updated live)
     const [clientErrors, setClientErrors] = useState({});
-    // submitAttempted: after first submit, show all errors even for untouched fields
     const [submitAttempted, setSubmitAttempted] = useState(false);
 
-    // Merge server errors on top (server wins for any key it returns)
     const errors = { ...clientErrors, ...serverErrors };
 
-    // Determine which errors are currently visible
     const visibleErrors = Object.fromEntries(
         Object.entries(errors).filter(([k]) => submitAttempted || touched[k])
     );
 
     const touch = (field) => setTouched(prev => ({ ...prev, [field]: true }));
 
-    // Re-validate whenever data changes, keep clientErrors fresh
     const revalidate = (nextData) => {
         setClientErrors(validate(nextData || data));
     };
@@ -557,6 +551,11 @@ const ListingCreate = ({ agents = [], property_types = [], amenities: amenityLis
     const initials = data.title ? data.title.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase() : null;
 
     return (
+        <>
+        <Head>
+            <title>RentTrustGh</title>
+        </Head>
+        
         <div>
             {/* ── Page header ── */}
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', marginBottom: '1.75rem' }}>
@@ -1029,6 +1028,7 @@ const ListingCreate = ({ agents = [], property_types = [], amenities: amenityLis
                 .img-overlay:hover { opacity: 1 !important; }
             `}</style>
         </div>
+        </>
     );
 };
 

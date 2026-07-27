@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useForm, Link } from "@inertiajs/react";
+import { useForm, Link, Head } from "@inertiajs/react";
 
 // Icon components
 const Mail = ({ className, style }) => (
@@ -58,6 +58,9 @@ const ForgotPasswordPage = () => {
 
   return (
     <>
+    <Head>
+        <title>RentTrustGh | Ghana's Trusted Property Marketplace</title>
+    </Head>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         

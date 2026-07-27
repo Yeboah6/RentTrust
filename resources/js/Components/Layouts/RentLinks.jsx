@@ -38,8 +38,6 @@ export function RentDesktop({ activeLink, setActiveLink, isOnRentPage }) {
   }
 }
 
-// mobile version of the rent links; the caller is expected to provide the
-// click handler that will close the mobile menu
 export function RentMobile({ isOnRentPage, handleMobileLinkClick }) {
   if (isOnRentPage) {
     return (

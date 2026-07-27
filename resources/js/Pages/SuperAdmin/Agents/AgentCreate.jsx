@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useForm } from '@inertiajs/react';
+import { Link, useForm, Head } from '@inertiajs/react';
 import SuperAdminLayout from '@/Layouts/SuperAdminLayout';
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
@@ -268,6 +268,11 @@ const AgentCreate = () => {
         : null;
 
     return (
+        <>
+        <Head>
+            <title>RentTrustGh</title>
+        </Head>
+        
         <div>
             {/* ── Page header ── */}
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', marginBottom: '1.75rem' }}>
@@ -431,6 +436,7 @@ const AgentCreate = () => {
 
             <style>{`@keyframes acSpin { to { transform: rotate(360deg); } }`}</style>
         </div>
+        </>
     );
 };
 

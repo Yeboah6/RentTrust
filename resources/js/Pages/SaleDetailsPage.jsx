@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import Header from '../Components/Layouts/Header';
 import Footer from '../Components/Layouts/Footer';
+import SEO from '../Components/SEO';
+import JsonLd from '../Components/JsonLd';
 import { Link, usePage, useForm } from "@inertiajs/react";
 import { ChevronLeft, ChevronRight, BedDouble, Bath } from 'lucide-react';
 import ReportListingDialog from "../Components/Modules/ReportListingDialog";
@@ -80,8 +82,25 @@ const parseImages = (imagesData) => {
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
-export default function SaleDetailsPage({ rental, reviews, days_on_market }) {
+const buildSaleAreaSchema = (area, city, seo) => ({
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  'name': seo?.title || `${area.name} Properties for Sale`,
+  'description': seo?.description || `Explore homes for sale in ${area.name}, ${city}.`,
+  'url': seo?.canonical || (typeof window !== 'undefined' ? window.location.href : ''),
+  'breadcrumb': {
+    '@type': 'BreadcrumbList',
+    'itemListElement': [
+      { '@type': 'ListItem', 'position': 1, 'name': 'Home', 'item': `${typeof window !== 'undefined' ? window.location.origin : ''}/` },
+      { '@type': 'ListItem', 'position': 2, 'name': 'Buy', 'item': `${typeof window !== 'undefined' ? window.location.origin : ''}/buy` },
+      { '@type': 'ListItem', 'position': 3, 'name': area.name, 'item': seo?.canonical || '' }
+    ]
+  }
+});
+
+export default function SaleDetailsPage({ rental, reviews, days_on_market, seo }) {
     const { auth } = usePage().props;
+    const areaSchema = buildSaleAreaSchema(seo);
 
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [showImageModal,    setShowImageModal]     = useState(false);
@@ -151,6 +170,8 @@ export default function SaleDetailsPage({ rental, reviews, days_on_market }) {
 
     return (
         <>
+        <SEO {...seo} />
+            <JsonLd schema={areaSchema} />
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
                 * { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }

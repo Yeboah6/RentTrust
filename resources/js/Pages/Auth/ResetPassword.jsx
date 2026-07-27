@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Lock, Eye, EyeOff, CheckCircle, AlertCircle } from "lucide-react";
-import { Link, useForm } from "@inertiajs/react";
+import { Link, useForm, Head } from "@inertiajs/react";
 
 const ResetPasswordPage = ({ token, email, userType }) => {
   const [showPassword, setShowPassword] = useState(false);
@@ -52,6 +52,11 @@ const ResetPasswordPage = ({ token, email, userType }) => {
   const passwordStrength = getPasswordStrength(data.password);
 
   return (
+    <>
+    <Head>
+        <title>RentTrustGh | Ghana's Trusted Property Marketplace</title>
+    </Head>
+    
     <div
       style={{
         minHeight: "100vh",
@@ -604,6 +609,7 @@ const ResetPasswordPage = ({ token, email, userType }) => {
         }
       `}</style>
     </div>
+    </>
   );
 };
 

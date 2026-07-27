@@ -1,5 +1,5 @@
 import React, { useState, useRef, useMemo } from 'react';
-import { router } from '@inertiajs/react';
+import { router, Head } from '@inertiajs/react';
 import SuperAdminLayout from '@/Layouts/SuperAdminLayout';
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
@@ -435,6 +435,9 @@ const AuditLog = ({ logs: rawLogs, activity }) => {
 
     return (
         <>
+        <Head>
+            <title>RentTrustGh</title>
+        </Head>
             <Toast toast={toast} />
             <DetailDrawer log={detail} onClose={() => setDetail(null)} />
 
