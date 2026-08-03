@@ -67,6 +67,13 @@ const Money = ({ style }) => (
     </svg>
 );
 
+const XCircle = ({ style }) => (
+    <svg style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <circle cx="12" cy="12" r="9" strokeWidth={2} />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 9l-6 6m0-6l6 6" />
+    </svg>
+);
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const fmt = (n) => `GH₵${Number(n || 0).toLocaleString()}`;
@@ -712,53 +719,6 @@ export default function PropertyDetailsPage({ rental, reviews, seo, agent }) {
                                         </div>
                                     </div>
                                 )}
-
-                                {/* Agent card */}
-                                {/* {agent && (
-                                    <div style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.75rem' }}>
-                                        <div style={{ padding: 'clamp(1rem, 3vw, 1.5rem)', borderBottom: '1px solid hsl(40 20% 88%)' }}>
-                                            <h3 style={{ color: 'hsl(200 25% 15%)', fontSize: 'clamp(1rem, 3vw, 1.125rem)', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                                <User style={{ height: 'clamp(1rem, 3vw, 1.25rem)', width: 'clamp(1rem, 3vw, 1.25rem)' }} />
-                                                Listed by
-                                            </h3>
-                                        </div>
-                                        <div style={{ padding: 'clamp(1rem, 3vw, 1.5rem)', display: 'flex', flexDirection: 'column', gap: 'clamp(0.75rem, 2vw, 1rem)' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.75rem, 2vw, 1rem)' }}>
-                                                <div style={{ width: 'clamp(2.5rem, 8vw, 3rem)', height: 'clamp(2.5rem, 8vw, 3rem)', borderRadius: '50%', backgroundColor: `hsl(${hue(agent.name ?? 'A')} 50% 88%)`, color: `hsl(${hue(agent.name ?? 'A')} 50% 28%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 'clamp(1rem, 3vw, 1.25rem)', fontWeight: '800', flexShrink: 0 }}>
-                                                    {(agent.name ?? 'A').charAt(0).toUpperCase()}
-                                                </div>
-                                                <div style={{ minWidth: 0 }}>
-                                                    <p style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: 'clamp(0.875rem, 2.5vw, 1rem)', fontWeight: '700', color: 'hsl(200 25% 15%)', wordBreak: 'break-word' }}>
-                                                        {agent.name}
-                                                        {agent.verification_status === 'verified' && (
-                                                            <Shield style={{ height: 'clamp(0.875rem, 2.5vw, 1rem)', width: 'clamp(0.875rem, 2.5vw, 1rem)', color: 'hsl(152 60% 40%)', flexShrink: 0 }} />
-                                                        )}
-                                                    </p>
-                                                    <p style={{ fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', color: 'hsl(200 15% 45%)' }}>
-                                                        {agent.company || 'Independent Agent'}
-                                                    </p>
-                                                </div>
-                                            </div>
-
-                                            {agent.average_rating > 0 && (
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                                                    <div style={{ display: 'flex' }}>{renderStars(agent.average_rating)}</div>
-                                                    <span style={{ fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', color: 'hsl(200 15% 45%)' }}>
-                                                        {agent.average_rating?.toFixed(1)} ({agent.total_reviews ?? 0} reviews)
-                                                    </span>
-                                                </div>
-                                            )}
-
-                                            <button
-                                                className="action-button"
-                                                onClick={() => setShowAgent(true)}
-                                                style={{ width: '100%', padding: 'clamp(0.625rem, 2vw, 0.75rem)', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.5rem', backgroundColor: 'white', color: 'hsl(174 62% 32%)', fontWeight: '500', cursor: 'pointer', fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)', touchAction: 'manipulation' }}
-                                            >
-                                                View Profile
-                                            </button>
-                                        </div>
-                                    </div>
-                                )} */}
 
                                 {/* CTA buttons */}
                                 <button

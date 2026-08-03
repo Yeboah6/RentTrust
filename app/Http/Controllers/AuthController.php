@@ -157,6 +157,15 @@ class AuthController extends Controller
     // }
 
     public function settings() {
+
+        // $agent = Auth::user()->agent;
+        
+        // if (!$agent) {
+        //     return redirect()->route('dashboard')->with('error', 'Only agents can access verification.');
+        // }
+
+        // $verification = AgentVerification::where('agent_id', $agent->id)->first();
+
         return inertia('Auth/SettingsPage');
     }
 

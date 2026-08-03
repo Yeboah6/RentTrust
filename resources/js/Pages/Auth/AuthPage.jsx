@@ -522,6 +522,14 @@ const handleEmailChange = (val) => {
                   onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}>
                   {isLogin ? 'Create an account' : 'Sign in instead'}
                 </button>
+                <Link
+                  href={'/become-agent'}
+                  style={{ display: 'block', marginTop: '0.5rem', color: COLOR.teal, fontSize: '0.875rem', fontWeight: 500, textDecoration: 'none' }}
+                  onMouseEnter={(e) => e.currentTarget.style.opacity = '0.7'}
+                  onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+                >
+                  Become an agent
+                </Link>
               </div>
             </div>
           </div>

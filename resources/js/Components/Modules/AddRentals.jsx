@@ -59,7 +59,6 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData, locations
       return true;
     });
 
-    // process the validated files into our preview format and update form
     const newImages = validFiles.map(file => ({
       id: Math.random().toString(36).substr(2, 9),
       name: file.name,
@@ -134,10 +133,6 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData, locations
       return;
     }
 
-    // Convert amenities array to JSON string before sending and strip out fields
-    // that aren't relevant to the chosen purpose.  In particular we don't want
-    // `advanceDuration` to be submitted when the user is creating a sale listing
-    // because the backend now enforces it only for rentals (see controller).
     transform((d) => {
       const payload = {
         ...d,
@@ -152,7 +147,6 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData, locations
       } else {
         // sale
         payload.salePrice = d.salePrice;
-        // make sure rental-specific values are omitted entirely
         delete payload.rentMin;
         delete payload.rentMax;
         delete payload.advanceDuration;
@@ -161,7 +155,6 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData, locations
       return payload;
     });
 
-    // choose endpoint based on whether an admin is submitting the listing
     const endpoint = adminData ? "/admin/rent" : "/rent";
     post(endpoint, {
       forceFormData: true,
@@ -788,13 +781,6 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData, locations
                         Sale Price (GH₵) *
                       </label>
                       <div className="relative">
-                        {/* <DollarSign className="absolute top-1/2 -translate-y-1/2" style={{ 
-                          left: 'clamp(0.625rem, 2vw, 0.75rem)',
-                          height: 'clamp(1.125rem, 3vw, 1.25rem)',
-                          width: 'clamp(1.125rem, 3vw, 1.25rem)',
-                          color: 'hsl(200 15% 45%)'
-                        }} /> */}
-                        
                         <input
                           type="number"
                           value={data.salePrice}

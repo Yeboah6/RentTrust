@@ -33,7 +33,7 @@ use App\Http\Controllers\ContactController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\setupPassword;
 use App\Http\Controllers\AgentSetupController;
-// use Illuminate\Support\Facades\{DB, Log, Hash, Mail};
+use App\Http\Controllers\Agent\AgentVerificationController;
 
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap.index');
 Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
@@ -78,7 +78,6 @@ Route::prefix('buy')->group(function () {
     Route::get('/api/cities', [SaleSearchController::class, 'cities'])->name('buy.cities');
     Route::get('/api/areas', [SaleSearchController::class, 'getAreas'])->name('buy.api.areas');
     Route::get('/{areaSlug}/{propertySlug}', [SaleSearchController::class, 'showProperty'])->name('buy.property.show');
-    // Route::get('/{sale}', [SaleSearchController::class, 'show'])->where(['rent' => '[0-9]+']);
 });
 
 // tracking endpoints
@@ -148,6 +147,12 @@ Route::middleware(['auth','verified'])->group(function () {
 
     Route::get('/payment/callback', [CheckoutController::class, 'callback'])
         ->name('payment.callback');
+
+    Route::post('/settings/verification', [AgentVerificationController::class, 'store'])
+        ->name('verification.store');
+
+    Route::get('/api/verification/status', [AgentVerificationController::class, 'status'])
+        ->name('verification.status');
 });
 
 // ── Admin Routes ──────────────────────────────────────────────────────────────

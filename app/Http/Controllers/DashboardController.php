@@ -12,7 +12,7 @@ use App\Models\Location;
 use App\Models\PropertyType;
 use App\Models\Amenity;
 use App\Models\Report;
-use App\Models\VerificationRequest;
+use App\Models\AgentVerification;
 use App\Models\ListingInquiry;
 use App\Models\ListingView;
 use App\Models\Subscription;
@@ -65,7 +65,7 @@ class DashboardController extends Controller
         $plans = app(\App\Http\Controllers\CheckoutController::class)->plansForModal();
         $sub  = $agentData->subscription()->with('plan')->first();
 
-        $verification = VerificationRequest::where('user_id', $agentData->id)->get();
+        $verification = AgentVerification::where('agent_id', $agentData->id)->get();
 
         $locations = Location::all();
         $propertyTypes = PropertyType::all();

@@ -316,7 +316,7 @@ class RentalSearchController extends Controller
 
         $properties = Rental::where('purpose', 'rent')
             ->where('status', 'approved')
-            ->where('is_sold', false)
+            // ->where('is_sold', false)
             ->where(function ($query) use ($areaName) {
                 $query->whereRaw('LOWER(area) = ?', [strtolower($areaName)])
                       ->orWhereRaw('LOWER(area) LIKE ?', ['%' . strtolower($areaName) . '%']);

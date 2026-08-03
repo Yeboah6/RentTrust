@@ -34,7 +34,7 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental, locations = [
     agentName: agentData?.fullName || '',
     agentPhone: agentData?.phone || '',
     agentEmail: agentData?.email || '',
-    // 'status': ''
+    status: ''
   });
 
   const [newImages, setNewImages] = useState([]);

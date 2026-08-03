@@ -8,6 +8,7 @@ use App\Services\FeatureGateService;
 use App\Services\PaymentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -286,15 +287,24 @@ class CheckoutController extends Controller
         $paidPlans = Plan::active()
             ->where('price', '>', 0)
             ->orderBy('price')
-            ->get(['id', 'price', 'is_popular']);
+            ->get(['id', 'price']);
 
         if ($paidPlans->isEmpty()) return null;
 
-        // Honour an explicit DB flag if present (add `is_popular` boolean to plans table)
-        $explicit = $paidPlans->firstWhere('is_popular', true);
-        if ($explicit) return $explicit->id;
+        // Prefer a plan with a dedicated flag if the column exists, but fall back
+        // gracefully when the current schema does not have it.
+        $hasPopularColumn = Schema::hasColumn('plans', 'is_popular');
+        if ($hasPopularColumn) {
+            $paidPlansWithFlags = Plan::active()
+                ->where('price', '>', 0)
+                ->orderBy('price')
+                ->get(['id', 'price', 'is_popular']);
 
-        // Fall back to the middle-priced plan
+            $explicit = $paidPlansWithFlags->firstWhere('is_popular', true);
+            if ($explicit) return $explicit->id;
+        }
+
+        // Fall back to the middle-priced plan.
         $index = (int) floor(($paidPlans->count() - 1) / 2);
         return $paidPlans->values()[$index]?->id;
     }

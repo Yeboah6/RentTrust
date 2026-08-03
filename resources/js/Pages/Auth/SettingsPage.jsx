@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Shield, Bell, Lock, User, Mail, Globe, Save, Eye, EyeOff, Check } from "lucide-react";
+import { Shield, Bell, Lock, User, Mail, Globe, Save, Eye, EyeOff, Check, Upload, FileText, Clock, XCircle, CheckCircle2 } from "lucide-react";
 import Header from "../../Components/Layouts/Header";
 import Footer from "../../Components/Layouts/Footer";
 import { usePage, useForm, router, Head } from "@inertiajs/react";
@@ -12,9 +12,9 @@ const AdminSettingsPage = () => {
   const [toast, setToast] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
 
-  const { auth } = usePage().props;
+  const { auth, userRole: accountRole, canAccessVerification } = usePage().props;
 
-  const userAgent = !!auth?.agent;
+  const userAgent = canAccessVerification || accountRole === 'agent' || !!auth?.agent;
   const userAdmin = !!auth?.super;
 
   const userFullName = auth?.agent?.name || auth?.super?.name || "";
@@ -26,6 +26,11 @@ const AdminSettingsPage = () => {
   const userCompany = auth?.agent?.company || auth?.super?.company || "";
   const userFee = auth?.agent?.fee || auth?.super?.fee || "";
   const userStatus = auth?.agent?.status || auth?.super?.status || "";
+
+  // Existing verification record, if any (assumes controller passes this under auth.agent.verification)
+  const verification = auth?.agent?.verification || null;
+  const verificationStatus = verification?.status || null; // 'pending' | 'approved' | 'rejected' | null
+  const verificationLocked = verificationStatus === "pending" || verificationStatus === "approved";
 
   // Separate forms for agent and admin
   const agentForm = useForm({
@@ -51,6 +56,16 @@ const AdminSettingsPage = () => {
 
   // Use the appropriate form based on user type
   const { data, setData, errors, put, processing } = userAgent ? agentForm : adminForm;
+
+  // Verification form (matches agent_verifications table)
+  const verificationForm = useForm({
+    agent_name: verification?.agent_name || userFullName,
+    email: verification?.email || userEmail,
+    phone_number: verification?.phone_number || userphone,
+    gov_id: null,
+    license_documents: null,
+    proof_of_address: null,
+  });
 
   // Security settings
   const [securityData, setSecurityData] = useState({
@@ -117,10 +132,56 @@ const AdminSettingsPage = () => {
     });
   };
 
+  const handleSubmitVerification = () => {
+    verificationForm.post("/settings/verification", {
+      forceFormData: true,
+      onSuccess: () => {
+        showToast("Verification submitted", "Your documents have been sent for review");
+      },
+      onError: (errors) => {
+        showToast("Error", "Failed to submit verification. Please check the form.", "error");
+        console.error("Validation errors:", errors);
+      },
+    });
+  };
+
   const tabs = [
     { id: "profile", label: "Profile", icon: User },
+    ...(userAgent ? [{ id: "verification", label: "Verification", icon: Shield }] : []),
     { id: "security", label: "Security", icon: Lock },
   ];
+
+  const statusBadge = (() => {
+    if (!verificationStatus) {
+      return { label: "Not Submitted", bg: '#f3f4f6', color: '#6b7280', Icon: Clock };
+    }
+    if (verificationStatus === "approved") {
+      return { label: "Approved", bg: '#dcfce7', color: '#15803d', Icon: CheckCircle2 };
+    }
+    if (verificationStatus === "rejected") {
+      return { label: "Rejected", bg: '#fee2e2', color: '#b91c1c', Icon: XCircle };
+    }
+    return { label: "Pending Review", bg: '#fef3c7', color: '#92400e', Icon: Clock };
+  })();
+
+  const fieldLabelStyle = {
+    display: 'block',
+    fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)',
+    fontWeight: '500',
+    color: '#374151',
+    marginBottom: '0.5rem'
+  };
+
+  const inputStyle = {
+    width: '100%',
+    padding: 'clamp(0.625rem, 2vw, 0.75rem)',
+    border: '1px solid #d1d5db',
+    borderRadius: '0.375rem',
+    fontSize: 'clamp(0.875rem, 2vw, 1rem)',
+    outline: 'none'
+  };
+
+  const errorTextStyle = { color: '#ef4444', fontSize: '0.75rem', marginTop: '0.25rem' };
 
   return (
     <>
@@ -232,13 +293,7 @@ const AdminSettingsPage = () => {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(1.25rem, 3vw, 1.5rem)' }}>
                     {/* Avatar */}
                     <div>
-                      <label style={{
-                        display: 'block',
-                        fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)',
-                        fontWeight: '500',
-                        color: '#374151',
-                        marginBottom: '0.5rem'
-                      }}>
+                      <label style={fieldLabelStyle}>
                         Profile Picture
                       </label>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -261,206 +316,105 @@ const AdminSettingsPage = () => {
 
                     {/* Name */}
                     <div>
-                      <label style={{
-                        display: 'block',
-                        fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)',
-                        fontWeight: '500',
-                        color: '#374151',
-                        marginBottom: '0.5rem'
-                      }}>
+                      <label style={fieldLabelStyle}>
                         Full Name
                       </label>
                       <input
                         type="text"
                         value={data.name}
                         onChange={(e) => setData('name', e.target.value)}
-                        style={{
-                          width: '100%',
-                          padding: 'clamp(0.625rem, 2vw, 0.75rem)',
-                          border: '1px solid #d1d5db',
-                          borderRadius: '0.375rem',
-                          fontSize: 'clamp(0.875rem, 2vw, 1rem)',
-                          outline: 'none'
-                        }}
+                        style={inputStyle}
                       />
-                      {errors.name && <p style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '0.25rem' }}>{errors.name}</p>}
+                      {errors.name && <p style={errorTextStyle}>{errors.name}</p>}
                     </div>
 
                     {/* Email */}
                     <div>
-                      <label style={{
-                        display: 'block',
-                        fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)',
-                        fontWeight: '500',
-                        color: '#374151',
-                        marginBottom: '0.5rem'
-                      }}>
+                      <label style={fieldLabelStyle}>
                         Email Address
                       </label>
                       <input
                         type="email"
                         value={data.email}
                         onChange={(e) => setData('email', e.target.value)}
-                        style={{
-                          width: '100%',
-                          padding: 'clamp(0.625rem, 2vw, 0.75rem)',
-                          border: '1px solid #d1d5db',
-                          borderRadius: '0.375rem',
-                          fontSize: 'clamp(0.875rem, 2vw, 1rem)',
-                          outline: 'none'
-                        }}
+                        style={inputStyle}
                       />
-                      {errors.email && <p style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '0.25rem' }}>{errors.email}</p>}
+                      {errors.email && <p style={errorTextStyle}>{errors.email}</p>}
                     </div>
 
                     {/* Phone Number */}
                     <div>
-                      <label style={{
-                        display: 'block',
-                        fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)',
-                        fontWeight: '500',
-                        color: '#374151',
-                        marginBottom: '0.5rem'
-                      }}>
+                      <label style={fieldLabelStyle}>
                         Phone Number
                       </label>
                       <input
                         type="tel"
                         value={data.phone}
                         onChange={(e) => setData('phone', e.target.value)}
-                        style={{
-                          width: '100%',
-                          padding: 'clamp(0.625rem, 2vw, 0.75rem)',
-                          border: '1px solid #d1d5db',
-                          borderRadius: '0.375rem',
-                          fontSize: 'clamp(0.875rem, 2vw, 1rem)',
-                          outline: 'none'
-                        }}
+                        style={inputStyle}
                       />
-                      {errors.phone && <p style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '0.25rem' }}>{errors.phone}</p>}
+                      {errors.phone && <p style={errorTextStyle}>{errors.phone}</p>}
                     </div>
 
                     {/* Location */}
                     <div>
-                      <label style={{
-                        display: 'block',
-                        fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)',
-                        fontWeight: '500',
-                        color: '#374151',
-                        marginBottom: '0.5rem'
-                      }}>
+                      <label style={fieldLabelStyle}>
                         Location
                       </label>
                       <input
                         type="tel"
                         value={data.location}
                         onChange={(e) => setData('location', e.target.value)}
-                        style={{
-                          width: '100%',
-                          padding: 'clamp(0.625rem, 2vw, 0.75rem)',
-                          border: '1px solid #d1d5db',
-                          borderRadius: '0.375rem',
-                          fontSize: 'clamp(0.875rem, 2vw, 1rem)',
-                          outline: 'none'
-                        }}
+                        style={inputStyle}
                       />
-                      {errors.location && <p style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '0.25rem' }}>{errors.location}</p>}
+                      {errors.location && <p style={errorTextStyle}>{errors.location}</p>}
                     </div>
 
                     {userAgent && (
                       <>
                         {/* Role */}
                         <div>
-                          <label style={{
-                            display: 'block',
-                            fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)',
-                            fontWeight: '500',
-                            color: '#374151',
-                            marginBottom: '0.5rem'
-                          }}>
+                          <label style={fieldLabelStyle}>
                             Role
                           </label>
                           <input
                             type="text"
                             value={data.role}
                             disabled
-                            style={{
-                              width: '100%',
-                              padding: 'clamp(0.625rem, 2vw, 0.75rem)',
-                              border: '1px solid #d1d5db',
-                              borderRadius: '0.375rem',
-                              fontSize: 'clamp(0.875rem, 2vw, 1rem)',
-                              backgroundColor: '#f9fafb',
-                              color: '#6b7280',
-                              cursor: 'not-allowed'
-                            }}
+                            style={{ ...inputStyle, backgroundColor: '#f9fafb', color: '#6b7280', cursor: 'not-allowed' }}
                           />
                         </div>
 
                         {/* Status */}
                         <div>
-                          <label style={{
-                            display: 'block',
-                            fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)',
-                            fontWeight: '500',
-                            color: '#374151',
-                            marginBottom: '0.5rem'
-                          }}>
+                          <label style={fieldLabelStyle}>
                             Status
                           </label>
                           <input
                             type="text"
                             value={userStatus}
                             disabled
-                            style={{
-                              width: '100%',
-                              padding: 'clamp(0.625rem, 2vw, 0.75rem)',
-                              border: '1px solid #d1d5db',
-                              borderRadius: '0.375rem',
-                              fontSize: 'clamp(0.875rem, 2vw, 1rem)',
-                              backgroundColor: '#f9fafb',
-                              color: '#6b7280',
-                              cursor: 'not-allowed'
-                            }}
+                            style={{ ...inputStyle, backgroundColor: '#f9fafb', color: '#6b7280', cursor: 'not-allowed' }}
                           />
                         </div>
 
                         {/* Company */}
                         <div>
-                          <label style={{
-                            display: 'block',
-                            fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)',
-                            fontWeight: '500',
-                            color: '#374151',
-                            marginBottom: '0.5rem'
-                          }}>
+                          <label style={fieldLabelStyle}>
                             Company
                           </label>
                           <input
                             type="text"
                             value={data.company}
                             onChange={(e) => setData('company', e.target.value)}
-                            style={{
-                              width: '100%',
-                              padding: 'clamp(0.625rem, 2vw, 0.75rem)',
-                              border: '1px solid #d1d5db',
-                              borderRadius: '0.375rem',
-                              fontSize: 'clamp(0.875rem, 2vw, 1rem)',
-                              outline: 'none'
-                            }}
+                            style={inputStyle}
                           />
-                          {errors.company && <p style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '0.25rem' }}>{errors.company}</p>}
+                          {errors.company && <p style={errorTextStyle}>{errors.company}</p>}
                         </div>
 
                         {/* Fee */}
                         <div>
-                          <label style={{
-                            display: 'block',
-                            fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)',
-                            fontWeight: '500',
-                            color: '#374151',
-                            marginBottom: '0.5rem'
-                          }}>
+                          <label style={fieldLabelStyle}>
                             Fee
                           </label>
                           <input
@@ -469,47 +423,25 @@ const AdminSettingsPage = () => {
                             onChange={(e) => setData('fee', e.target.value)}
                             min="0"
                             step="0.01"
-                            style={{
-                              width: '100%',
-                              padding: 'clamp(0.625rem, 2vw, 0.75rem)',
-                              border: '1px solid #d1d5db',
-                              borderRadius: '0.375rem',
-                              fontSize: 'clamp(0.875rem, 2vw, 1rem)',
-                              outline: 'none'
-                            }}
+                            style={inputStyle}
                           />
-                          {errors.fee && <p style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '0.25rem' }}>{errors.fee}</p>}
+                          {errors.fee && <p style={errorTextStyle}>{errors.fee}</p>}
                         </div>
                       </>
                     )}
 
                     {/* Bio */}
                     <div>
-                      <label style={{
-                        display: 'block',
-                        fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)',
-                        fontWeight: '500',
-                        color: '#374151',
-                        marginBottom: '0.5rem'
-                      }}>
+                      <label style={fieldLabelStyle}>
                         Bio
                       </label>
                       <textarea
                         value={data.bio}
                         onChange={(e) => setData('bio', e.target.value)}
                         rows={3}
-                        style={{
-                          width: '100%',
-                          padding: 'clamp(0.625rem, 2vw, 0.75rem)',
-                          border: '1px solid #d1d5db',
-                          borderRadius: '0.375rem',
-                          fontSize: 'clamp(0.875rem, 2vw, 1rem)',
-                          outline: 'none',
-                          resize: 'vertical',
-                          fontFamily: 'inherit'
-                        }}
+                        style={{ ...inputStyle, resize: 'vertical', fontFamily: 'inherit' }}
                       />
-                      {errors.bio && <p style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '0.25rem' }}>{errors.bio}</p>}
+                      {errors.bio && <p style={errorTextStyle}>{errors.bio}</p>}
                     </div>
 
                     {/* Save Button */}
@@ -539,6 +471,219 @@ const AdminSettingsPage = () => {
                 </div>
               )}
 
+              {/* Verification Tab (agents only) */}
+              {activeTab === "verification" && userAgent && (
+                <div>
+                  <h2 style={{
+                    fontSize: 'clamp(1.125rem, 3vw, 1.5rem)',
+                    fontWeight: '600',
+                    color: '#111827',
+                    marginBottom: '0.5rem'
+                  }}>
+                    Agent Verification
+                  </h2>
+                  <p style={{ fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)', color: '#6b7280', marginBottom: '1rem' }}>
+                    Submit your ID and supporting documents to get verified on RentTrustGH
+                  </p>
+
+                  {/* Status Badge */}
+                  <div style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    backgroundColor: statusBadge.bg,
+                    color: statusBadge.color,
+                    padding: '0.5rem 0.875rem',
+                    borderRadius: '9999px',
+                    fontSize: '0.8125rem',
+                    fontWeight: '600',
+                    marginBottom: 'clamp(1.5rem, 3vw, 2rem)'
+                  }}>
+                    <statusBadge.Icon size={16} />
+                    {statusBadge.label}
+                  </div>
+
+                  {/* Rejection notes from reviewer */}
+                  {verificationStatus === "rejected" && verification?.notes && (
+                    <div style={{
+                      backgroundColor: '#fef2f2',
+                      border: '1px solid #fecaca',
+                      borderRadius: '0.5rem',
+                      padding: '1rem',
+                      marginBottom: '1.5rem'
+                    }}>
+                      <p style={{ fontWeight: '600', color: '#991b1b', fontSize: '0.8125rem', marginBottom: '0.25rem' }}>
+                        Reason for rejection
+                      </p>
+                      <p style={{ color: '#991b1b', fontSize: '0.8125rem' }}>{verification.notes}</p>
+                    </div>
+                  )}
+
+                  {/* Reviewed metadata */}
+                  {verification?.reviewed_at && (
+                    <p style={{ color: '#6b7280', fontSize: '0.75rem', marginBottom: '1.5rem' }}>
+                      Reviewed on {new Date(verification.reviewed_at).toLocaleDateString()}
+                      {verification.reviewed_by ? ` by ${verification.reviewed_by}` : ""}
+                    </p>
+                  )}
+
+                  {verificationLocked ? (
+                    <div style={{
+                      backgroundColor: '#f9fafb',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '0.5rem',
+                      padding: '1.25rem'
+                    }}>
+                      <p style={{ color: '#374151', fontSize: '0.875rem' }}>
+                        {verificationStatus === "approved"
+                          ? "You're verified. No further action needed."
+                          : "Your documents are under review. We'll notify you once a decision has been made."}
+                      </p>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(1.25rem, 3vw, 1.5rem)' }}>
+                      {/* Agent Name */}
+                      <div>
+                        <label style={fieldLabelStyle}>Full Name</label>
+                        <input
+                          type="text"
+                          value={verificationForm.data.agent_name}
+                          onChange={(e) => verificationForm.setData('agent_name', e.target.value)}
+                          style={inputStyle}
+                        />
+                        {verificationForm.errors.agent_name && <p style={errorTextStyle}>{verificationForm.errors.agent_name}</p>}
+                      </div>
+
+                      {/* Email */}
+                      <div>
+                        <label style={fieldLabelStyle}>Email Address</label>
+                        <input
+                          type="email"
+                          value={verificationForm.data.email}
+                          onChange={(e) => verificationForm.setData('email', e.target.value)}
+                          style={inputStyle}
+                        />
+                        {verificationForm.errors.email && <p style={errorTextStyle}>{verificationForm.errors.email}</p>}
+                      </div>
+
+                      {/* Phone Number */}
+                      <div>
+                        <label style={fieldLabelStyle}>Phone Number</label>
+                        <input
+                          type="tel"
+                          value={verificationForm.data.phone_number}
+                          onChange={(e) => verificationForm.setData('phone_number', e.target.value)}
+                          style={inputStyle}
+                        />
+                        {verificationForm.errors.phone_number && <p style={errorTextStyle}>{verificationForm.errors.phone_number}</p>}
+                      </div>
+
+                      {/* Government ID */}
+                      <div>
+                        <label style={fieldLabelStyle}>Government ID (required)</label>
+                        <label style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.5rem',
+                          border: '1px dashed #d1d5db',
+                          borderRadius: '0.375rem',
+                          padding: 'clamp(0.75rem, 2vw, 1rem)',
+                          cursor: 'pointer',
+                          color: '#374151',
+                          fontSize: '0.875rem'
+                        }}>
+                          <Upload size={16} />
+                          {verificationForm.data.gov_id?.name || (verification?.gov_id ? "Replace uploaded ID" : "Upload a government-issued ID")}
+                          <input
+                            type="file"
+                            accept="image/*,application/pdf"
+                            onChange={(e) => verificationForm.setData('gov_id', e.target.files[0])}
+                            style={{ display: 'none' }}
+                          />
+                        </label>
+                        {verificationForm.errors.gov_id && <p style={errorTextStyle}>{verificationForm.errors.gov_id}</p>}
+                      </div>
+
+                      {/* License Documents */}
+                      <div>
+                        <label style={fieldLabelStyle}>License Documents (optional)</label>
+                        <label style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.5rem',
+                          border: '1px dashed #d1d5db',
+                          borderRadius: '0.375rem',
+                          padding: 'clamp(0.75rem, 2vw, 1rem)',
+                          cursor: 'pointer',
+                          color: '#374151',
+                          fontSize: '0.875rem'
+                        }}>
+                          <FileText size={16} />
+                          {verificationForm.data.license_documents?.name || (verification?.license_documents ? "Replace uploaded document" : "Upload a license document")}
+                          <input
+                            type="file"
+                            accept="image/*,application/pdf"
+                            onChange={(e) => verificationForm.setData('license_documents', e.target.files[0])}
+                            style={{ display: 'none' }}
+                          />
+                        </label>
+                        {verificationForm.errors.license_documents && <p style={errorTextStyle}>{verificationForm.errors.license_documents}</p>}
+                      </div>
+
+                      {/* Proof of Address */}
+                      <div>
+                        <label style={fieldLabelStyle}>Proof of Address (optional)</label>
+                        <label style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.5rem',
+                          border: '1px dashed #d1d5db',
+                          borderRadius: '0.375rem',
+                          padding: 'clamp(0.75rem, 2vw, 1rem)',
+                          cursor: 'pointer',
+                          color: '#374151',
+                          fontSize: '0.875rem'
+                        }}>
+                          <FileText size={16} />
+                          {verificationForm.data.proof_of_address?.name || (verification?.proof_of_address ? "Replace uploaded document" : "Upload proof of address")}
+                          <input
+                            type="file"
+                            accept="image/*,application/pdf"
+                            onChange={(e) => verificationForm.setData('proof_of_address', e.target.files[0])}
+                            style={{ display: 'none' }}
+                          />
+                        </label>
+                        {verificationForm.errors.proof_of_address && <p style={errorTextStyle}>{verificationForm.errors.proof_of_address}</p>}
+                      </div>
+
+                      {/* Submit Button */}
+                      <button
+                        onClick={handleSubmitVerification}
+                        disabled={verificationForm.processing}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '0.5rem',
+                          padding: 'clamp(0.625rem, 2vw, 0.75rem) clamp(1rem, 3vw, 1.5rem)',
+                          backgroundColor: verificationForm.processing ? '#9ca3af' : '#0f766e',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '0.375rem',
+                          fontWeight: '500',
+                          cursor: verificationForm.processing ? 'not-allowed' : 'pointer',
+                          fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)',
+                          width: '100%'
+                        }}
+                      >
+                        <Shield size={16} />
+                        {verificationForm.processing ? "Submitting..." : verificationStatus === "rejected" ? "Resubmit for Review" : "Submit for Verification"}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {activeTab === "security" && (
                 <div>
                   <h2 style={{
@@ -556,13 +701,7 @@ const AdminSettingsPage = () => {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(1.25rem, 3vw, 1.5rem)' }}>
                     {/* Current Password */}
                     <div>
-                      <label style={{
-                        display: 'block',
-                        fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)',
-                        fontWeight: '500',
-                        color: '#374151',
-                        marginBottom: '0.5rem'
-                      }}>
+                      <label style={fieldLabelStyle}>
                         Current Password
                       </label>
                       <div style={{ position: 'relative' }}>
@@ -570,15 +709,7 @@ const AdminSettingsPage = () => {
                           type={showPassword ? "text" : "password"}
                           value={securityData.currentPassword}
                           onChange={(e) => setSecurityData({ ...securityData, currentPassword: e.target.value })}
-                          style={{
-                            width: '100%',
-                            padding: 'clamp(0.625rem, 2vw, 0.75rem)',
-                            paddingRight: '2.5rem',
-                            border: '1px solid #d1d5db',
-                            borderRadius: '0.375rem',
-                            fontSize: 'clamp(0.875rem, 2vw, 1rem)',
-                            outline: 'none'
-                          }}
+                          style={{ ...inputStyle, paddingRight: '2.5rem' }}
                         />
                         <button
                           type="button"
@@ -602,7 +733,7 @@ const AdminSettingsPage = () => {
                         </button>
                       </div>
                       {securityErrors.currentPassword && (
-                        <p style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '0.25rem' }}>
+                        <p style={errorTextStyle}>
                           {securityErrors.currentPassword}
                         </p>
                       )}
@@ -610,13 +741,7 @@ const AdminSettingsPage = () => {
 
                     {/* New Password */}
                     <div>
-                      <label style={{
-                        display: 'block',
-                        fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)',
-                        fontWeight: '500',
-                        color: '#374151',
-                        marginBottom: '0.5rem'
-                      }}>
+                      <label style={fieldLabelStyle}>
                         New Password
                       </label>
                       <div style={{ position: 'relative' }}>
@@ -624,15 +749,7 @@ const AdminSettingsPage = () => {
                           type={showNewPassword ? "text" : "password"}
                           value={securityData.newPassword}
                           onChange={(e) => setSecurityData({ ...securityData, newPassword: e.target.value })}
-                          style={{
-                            width: '100%',
-                            padding: 'clamp(0.625rem, 2vw, 0.75rem)',
-                            paddingRight: '2.5rem',
-                            border: '1px solid #d1d5db',
-                            borderRadius: '0.375rem',
-                            fontSize: 'clamp(0.875rem, 2vw, 1rem)',
-                            outline: 'none'
-                          }}
+                          style={{ ...inputStyle, paddingRight: '2.5rem' }}
                         />
                         <button
                           type="button"
@@ -656,7 +773,7 @@ const AdminSettingsPage = () => {
                         </button>
                       </div>
                       {securityErrors.newPassword && (
-                        <p style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '0.25rem' }}>
+                        <p style={errorTextStyle}>
                           {securityErrors.newPassword}
                         </p>
                       )}
@@ -664,27 +781,14 @@ const AdminSettingsPage = () => {
 
                     {/* Confirm Password */}
                     <div>
-                      <label style={{
-                        display: 'block',
-                        fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)',
-                        fontWeight: '500',
-                        color: '#374151',
-                        marginBottom: '0.5rem'
-                      }}>
+                      <label style={fieldLabelStyle}>
                         Confirm New Password
                       </label>
                       <input
                         type="password"
                         value={securityData.confirmPassword}
                         onChange={(e) => setSecurityData({ ...securityData, confirmPassword: e.target.value })}
-                        style={{
-                          width: '100%',
-                          padding: 'clamp(0.625rem, 2vw, 0.75rem)',
-                          border: '1px solid #d1d5db',
-                          borderRadius: '0.375rem',
-                          fontSize: 'clamp(0.875rem, 2vw, 1rem)',
-                          outline: 'none'
-                        }}
+                        style={inputStyle}
                       />
                     </div>
 

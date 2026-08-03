@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Link, Head } from "@inertiajs/react";
 import Header from "../Components/Layouts/Header";
 import Footer from "../Components/Layouts/Footer";
-import { ChevronLeft, ChevronRight, BedDouble, Bath, Search as SearchIcon } from "lucide-react";
+import { ChevronLeft, ChevronRight, BedDouble, Bath, Search as SearchIcon, XCircle } from "lucide-react";
 
 const slugifyArea = (value) => {
   return String(value || '')
@@ -250,8 +250,9 @@ const PropertyCard = ({ listing }) => {
               height: '100%',
               objectFit: 'cover',
               objectPosition: 'center',
-              transition: 'transform 0.3s ease-in-out',
-              transform: isHovered ? 'scale(1.05)' : 'scale(1)'
+              transition: 'transform 0.3s ease-in-out, filter 0.3s ease-in-out',
+              transform: isHovered ? 'scale(1.05)' : 'scale(1)',
+              filter: listing.isRented ? 'grayscale(70%)' : 'none'
             }}
           />
         ) : (
@@ -267,6 +268,33 @@ const PropertyCard = ({ listing }) => {
             <div style={{ fontSize: '12px', color: '#666', marginTop: '8px' }}>
               No image available
             </div>
+          </div>
+        )}
+
+        {/* Rented overlay ribbon */}
+        {listing.isRented && (
+          <div style={{
+            position: 'absolute',
+            inset: 0,
+            backgroundColor: 'rgba(10, 9, 8, 0.35)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 5,
+            pointerEvents: 'none'
+          }}>
+            <span style={{
+              backgroundColor: 'rgba(10, 9, 8, 0.85)',
+              color: 'white',
+              fontSize: '0.75rem',
+              fontWeight: '700',
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+              padding: '0.375rem 1rem',
+              borderRadius: '9999px'
+            }}>
+              Rented
+            </span>
           </div>
         )}
 
@@ -386,9 +414,9 @@ const PropertyCard = ({ listing }) => {
       </div>
 
       {/* Card Content Section */}
-      <div className="p-4 property-card-content">
-        {/* Status badge - only show for verified/approved listings */}
-        {(listing.status === "available" || listing.status === "approved" || listing.status === "verified") && (
+      <div className="p-4 property-card-content" style={{ opacity: listing.isRented ? 0.75 : 1 }}>
+        {/* Status badge */}
+        {(listing.isRented || listing.status === "available" || listing.status === "approved" || listing.status === "verified") && (
           <div style={{ marginBottom: '0.75rem' }}>
             <span
               style={{
@@ -399,13 +427,23 @@ const PropertyCard = ({ listing }) => {
                 fontSize: '0.75rem',
                 fontWeight: '500',
                 borderRadius: '9999px',
-                ...(listing.status === "available" || listing.status === "approved" || listing.status === "verified"
-                  ? { backgroundColor: 'hsl(174 62% 32% / 0.1)', color: '#1f847a' }
-                  : { backgroundColor: 'hsl(38 92% 50% / 0.1)', color: 'hsl(38 92% 40%)' })
+                ...(listing.isRented
+                  ? { backgroundColor: 'hsl(0 72% 51% / 0.1)', color: 'hsl(0 65% 45%)' }
+                  : listing.status === "available" || listing.status === "approved" || listing.status === "verified"
+                    ? { backgroundColor: 'hsl(174 62% 32% / 0.1)', color: '#1f847a' }
+                    : { backgroundColor: 'hsl(38 92% 50% / 0.1)', color: 'hsl(38 92% 40%)' })
               }}
             >
-              <CheckCircle2 className="h-3 w-3" />
-              {listing.status === "available" || listing.status === "approved" || listing.status === "verified" ? "Verified" : listing.status}
+              {listing.isRented ? (
+                <XCircle className="h-3 w-3" />
+              ) : (
+                <CheckCircle2 className="h-3 w-3" />
+              )}
+              {listing.isRented
+                ? "Rented"
+                : listing.status === "available" || listing.status === "approved" || listing.status === "verified"
+                  ? "Verified"
+                  : listing.status}
             </span>
           </div>
         )}
@@ -435,10 +473,12 @@ const PropertyCard = ({ listing }) => {
         </div>
 
         <div className="details-section" style={{ marginBottom: '0.75rem' }}>
-          <div className="font-bold" style={{ color: 'hsl(174 62% 32%)', fontSize: '1.25rem' }}>
+          <div className="font-bold" style={{ color: listing.isRented ? 'hsl(200 15% 45%)' : 'hsl(174 62% 32%)', fontSize: '1.25rem', textDecoration: listing.isRented ? 'line-through' : 'none' }}>
             GH₵{listing.rentMin.toLocaleString()} - GH₵{listing.rentMax.toLocaleString()}
           </div>
-          <div style={{ fontSize: '0.75rem', color: 'hsl(200 15% 45%)' }}>per month</div>
+          <div style={{ fontSize: '0.75rem', color: 'hsl(200 15% 45%)' }}>
+            {listing.isRented ? 'no longer available' : 'per month'}
+          </div>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
@@ -586,6 +626,7 @@ const RentalListingsPage = ({ listings: initialListingsData = {} }) => {
       status: listing.status === "verified" ? "available" : listing.status,
       isAgentVerified: listing.status === "verified",
       isVerified: Boolean(listing.status),
+      isRented: Boolean(listing.is_rented),
       // isClaimed: Boolean(listing.is_verified), 
       reviewCount: parseInt(listing.review_count) || 0,
       rating: parseFloat(listing.rating) || 0,

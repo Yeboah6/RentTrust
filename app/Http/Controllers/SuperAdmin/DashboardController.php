@@ -14,7 +14,7 @@ use App\Models\Location;
 use App\Models\Amenity;
 use App\Models\Report;
 use App\Models\Review;
-use App\Models\VerificationRequest;
+use App\Models\AgentVerification;
 
 class DashboardController extends Controller
 {
@@ -43,7 +43,7 @@ class DashboardController extends Controller
         $totalReviews = Review::count();
         $totalAppReviews = Review::where('review_type', 'app')->count();
         $totalRentReviews = Review::where('review_type', 'rent')->count();
-        $totalVerifications = VerificationRequest::all()->count();
+        $totalVerifications = AgentVerification::all()->count();
 
         // SaaS metrics - reuse existing models
         $activeSubs      = User::whereHas('subscription', function ($q) {

@@ -19,7 +19,7 @@ class SaleSearchController extends Controller
     {
         // Initial load: show 8 sale listings
         $listings = Rental::where('purpose', 'sale')
-            ->where('is_sold', false)
+            // ->where('is_sold', false)
             ->latest()
             ->paginate(8);
 
@@ -80,7 +80,7 @@ class SaleSearchController extends Controller
     {
         try {
             $cities = Rental::where('purpose', 'sale')
-                ->where('is_sold', false)
+                // ->where('is_sold', false)
                 ->whereNotNull('city')
                 ->where('city', '<>', '')
                 ->distinct()
@@ -106,7 +106,7 @@ class SaleSearchController extends Controller
     {
         try {
             $areas = Rental::where('purpose', 'sale')
-                ->where('is_sold', false)
+                // ->where('is_sold', false)
                 ->whereNotNull('area')
                 ->where('area', '<>', '')
                 ->distinct()
@@ -132,7 +132,7 @@ class SaleSearchController extends Controller
     {
         try {
             $areas = Rental::where('purpose', 'sale')
-                ->where('is_sold', false)
+                // ->where('is_sold', false)
                 ->select('city', 'area', 'sale_price', 'created_at')
                 ->get()
                 ->groupBy('city')
@@ -177,7 +177,7 @@ class SaleSearchController extends Controller
 
         // Get all sales for this specific area
         $properties = Rental::where('purpose', 'sale')
-            ->where('is_sold', false)
+            // ->where('is_sold', false)
             ->where('city', 'like', $cityName)
             ->where('area', 'like', $areaName)
             ->latest()
@@ -210,10 +210,10 @@ class SaleSearchController extends Controller
     public function showProperty(Request $request, string $areaSlug, string $propertySlug)
     {
         $rental = Rental::where('purpose', 'sale')
-            ->where('is_sold', false)
+            // ->where('is_sold', false)
             ->where('slug', $propertySlug)
             ->firstOrFail();
-    
+
         try {
             $ip = $request->ip();
             if (!ListingView::hasViewInWindow($rental->id, $ip)) {
@@ -229,10 +229,10 @@ class SaleSearchController extends Controller
         } catch (\Exception $e) {
             Log::warning('Failed to track listing view: ' . $e->getMessage());
         }
-    
+
         $rental->load('user');
         $reviews = $rental->reviews()->orderBy('created_at', 'desc')->get();
-    
+
         return inertia('SaleDetailsPage', [
             'rental' => $rental,
             'reviews' => $reviews,
@@ -284,42 +284,42 @@ class SaleSearchController extends Controller
     /**
      * Show individual sale listing
      */
-    // public function show(Request $request, Rental $sale)
-    // {
+    public function show(Request $request, Rental $sale)
+    {
 
-    //     try {
-    //         $ip = $request->ip();
-    //         if (!ListingView::hasViewInWindow($sale->id, $ip)) {
-    //             ListingView::create([
-    //                 'listing_view_id' => ListingView::generateUUID(),
-    //                 'rental_id'  => $sale->id,
-    //                 'user_id'    => Auth::id(),
-    //                 'ip'         => $ip,
-    //                 'user_agent' => $request->userAgent(),
-    //                 'referrer'   => $request->headers->get('referer'),
-    //             ]);
-    //         }
-    //     } catch (\Exception $e) {
-    //         Log::warning('Failed to track listing view: ' . $e->getMessage());
-    //     }
+        try {
+            $ip = $request->ip();
+            if (!ListingView::hasViewInWindow($sale->id, $ip)) {
+                ListingView::create([
+                    'listing_view_id' => ListingView::generateUUID(),
+                    'rental_id'  => $sale->id,
+                    'user_id'    => Auth::id(),
+                    'ip'         => $ip,
+                    'user_agent' => $request->userAgent(),
+                    'referrer'   => $request->headers->get('referer'),
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::warning('Failed to track listing view: ' . $e->getMessage());
+        }
 
-    //     // Track view
-    //     $this->trackView($request, $sale);
+        // Track view
+        $this->trackView($request, $sale);
 
-    //     $sale->load('user');
+        $sale->load('user');
         
-    //     $reviews = $sale->reviews()
-    //         ->orderBy('created_at', 'desc')
-    //         ->get();
+        $reviews = $sale->reviews()
+            ->orderBy('created_at', 'desc')
+            ->get();
 
-    //     return inertia('SaleDetailsPage', [
-    //         'rental' => $sale,
-    //         'reviews' => $reviews,
-    //         'price_label' => 'Sale Price',
-    //         'days_on_market' => $sale->getDaysOnMarket(),
-    //         'seo' => app(SeoService::class)->areaMeta(Str::slug($sale->first()->area), 'sale'),
-    //     ]);
-    // }
+        return inertia('SaleDetailsPage', [
+            'rental' => $sale,
+            'reviews' => $reviews,
+            'price_label' => 'Sale Price',
+            'days_on_market' => $sale->getDaysOnMarket(),
+            'seo' => app(SeoService::class)->areaMeta(Str::slug($sale->first()->area), 'sale'),
+        ]);
+    }
 
     /**
      * Track listing view
