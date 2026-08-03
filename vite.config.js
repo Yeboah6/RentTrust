@@ -20,6 +20,23 @@ export default defineConfig({
             ignored: ['**/storage/framework/views/**'],
         },
     },
+    build: {
+        rollupOptions: {
+            output: {
+                manualChunks(id) {
+                    if (id.includes('node_modules')) {
+                        if (id.includes('react') || id.includes('react-dom')) {
+                            return 'vendor-react';
+                        }
+                        if (id.includes('@inertiajs')) {
+                            return 'vendor-inertia';
+                        }
+                        return 'vendor';
+                    }
+                },
+            },
+        },
+    },
     // server: {
     //    	host: '0.0.0.0', // Listen on all network interfaces
     //      port: 5173,

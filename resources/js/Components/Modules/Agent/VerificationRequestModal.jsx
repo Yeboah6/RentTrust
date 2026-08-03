@@ -373,7 +373,6 @@ const VerificationRequestModal = ({ isOpen, onClose, agentData, selectedRental, 
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes modalFadeIn { from { opacity: 0; transform: translateY(20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
         @keyframes backdropFadeIn { from { opacity: 0; } to { opacity: 1; } }

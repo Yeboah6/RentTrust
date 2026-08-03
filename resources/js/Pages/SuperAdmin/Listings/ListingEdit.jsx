@@ -519,7 +519,7 @@ const ListingEdit = ({ listing, agents = [], property_types = [], amenities = []
     return (
         <>
         <Head>
-            <title>RentTrustGh</title>
+            <title>RentTrustGh | Ghana's Trusted Property Marketplace</title>
         </Head>
             <Toast toast={toast} />
             {confirmAct && (

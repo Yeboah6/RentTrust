@@ -139,7 +139,6 @@ const normalise = (l) => ({
     is_sold:       l.is_sold       ?? false,
     created_at:    l.created_at    ?? '',
     flagged_count: l.flagged_count ?? l.reports_count ?? 0,
-    is_sold:       l.is_sold       ?? false,
     is_rented:     l.is_rented     ?? false,
 });
 
@@ -537,7 +536,7 @@ const ListingsIndex = ({ listings: rawListings = [], metrics: serverMetrics = {}
     return (
         <>
         <Head>
-            <title>RentTrustGh</title>
+            <title>RentTrustGh | Ghana's Trusted Property Marketplace</title>
         </Head>
             <Toast toast={toast} />
             {modal && (

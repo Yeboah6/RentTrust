@@ -358,11 +358,10 @@ const CheckoutPage = ({ plan, allPlans = [] }) => {
   return (
     <>
       <Head>
-          <title>RentTrustGh</title>
+          <title>RentTrustGh | Ghana's Trusted Property Marketplace</title>
       </Head>
       
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         * { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
         h1,h2,h3,h4,h5,h6 { font-weight: 600; }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }

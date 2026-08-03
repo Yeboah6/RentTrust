@@ -344,7 +344,7 @@ const SettingsIndex = ({ settings = {} }) => {
     return (
         <>
         <Head>
-            <title>RentTrustGh</title>
+            <title>RentTrustGh | Ghana's Trusted Property Marketplace</title>
         </Head>
         <div>
             {/* Header */}

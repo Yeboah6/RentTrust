@@ -209,26 +209,36 @@ class SaleSearchController extends Controller
 
     public function showProperty(Request $request, string $areaSlug, string $propertySlug)
     {
-        $areaName = str_replace('-', ' ', $areaSlug);
-
         $rental = Rental::where('purpose', 'sale')
             ->where('is_sold', false)
             ->where('slug', $propertySlug)
-            ->where(function ($query) use ($areaName) {
-                $query->whereRaw('LOWER(area) = ?', [strtolower($areaName)])
-                      ->orWhereRaw('LOWER(area) LIKE ?', ['%' . strtolower($areaName) . '%']);
-            })
             ->firstOrFail();
-
+    
+        try {
+            $ip = $request->ip();
+            if (!ListingView::hasViewInWindow($rental->id, $ip)) {
+                ListingView::create([
+                    'listing_view_id' => ListingView::generateUUID(),
+                    'rental_id'  => $rental->id,
+                    'user_id'    => Auth::id(),
+                    'ip'         => $ip,
+                    'user_agent' => $request->userAgent(),
+                    'referrer'   => $request->headers->get('referer'),
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::warning('Failed to track listing view: ' . $e->getMessage());
+        }
+    
         $rental->load('user');
         $reviews = $rental->reviews()->orderBy('created_at', 'desc')->get();
-
+    
         return inertia('SaleDetailsPage', [
             'rental' => $rental,
             'reviews' => $reviews,
             'price_label' => 'Sale Price',
             'days_on_market' => $rental->getDaysOnMarket(),
-            'seo' => app(SeoService::class)->areaMeta(Str::slug($rental->first()->area), 'sale'),
+            'seo' => app(SeoService::class)->areaMeta(Str::slug($rental->area), 'sale'),
         ]);
     }
 
@@ -274,42 +284,42 @@ class SaleSearchController extends Controller
     /**
      * Show individual sale listing
      */
-    public function show(Request $request, Rental $rent)
-    {
+    // public function show(Request $request, Rental $sale)
+    // {
 
-        try {
-            $ip = $request->ip();
-            if (!ListingView::hasViewInWindow($rent->id, $ip)) {
-                ListingView::create([
-                    'listing_view_id' => ListingView::generateUUID(),
-                    'rental_id'  => $rent->id,
-                    'user_id'    => Auth::id(),
-                    'ip'         => $ip,
-                    'user_agent' => $request->userAgent(),
-                    'referrer'   => $request->headers->get('referer'),
-                ]);
-            }
-        } catch (\Exception $e) {
-            Log::warning('Failed to track listing view: ' . $e->getMessage());
-        }
+    //     try {
+    //         $ip = $request->ip();
+    //         if (!ListingView::hasViewInWindow($sale->id, $ip)) {
+    //             ListingView::create([
+    //                 'listing_view_id' => ListingView::generateUUID(),
+    //                 'rental_id'  => $sale->id,
+    //                 'user_id'    => Auth::id(),
+    //                 'ip'         => $ip,
+    //                 'user_agent' => $request->userAgent(),
+    //                 'referrer'   => $request->headers->get('referer'),
+    //             ]);
+    //         }
+    //     } catch (\Exception $e) {
+    //         Log::warning('Failed to track listing view: ' . $e->getMessage());
+    //     }
 
-        // Track view
-        $this->trackView($request, $rent);
+    //     // Track view
+    //     $this->trackView($request, $sale);
 
-        $rent->load('user');
+    //     $sale->load('user');
         
-        $reviews = $rent->reviews()
-            ->orderBy('created_at', 'desc')
-            ->get();
+    //     $reviews = $sale->reviews()
+    //         ->orderBy('created_at', 'desc')
+    //         ->get();
 
-        return inertia('SaleDetailsPage', [
-            'rental' => $rent,
-            'reviews' => $reviews,
-            'price_label' => 'Sale Price',
-            'days_on_market' => $rent->getDaysOnMarket(),
-            'seo' => app(SeoService::class)->areaMeta(Str::slug($rent->first()->area), 'sale'),
-        ]);
-    }
+    //     return inertia('SaleDetailsPage', [
+    //         'rental' => $sale,
+    //         'reviews' => $reviews,
+    //         'price_label' => 'Sale Price',
+    //         'days_on_market' => $sale->getDaysOnMarket(),
+    //         'seo' => app(SeoService::class)->areaMeta(Str::slug($sale->first()->area), 'sale'),
+    //     ]);
+    // }
 
     /**
      * Track listing view

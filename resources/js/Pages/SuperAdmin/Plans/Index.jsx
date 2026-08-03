@@ -216,7 +216,7 @@ const PlansIndex = ({ plans = [] }) => {
     return (
         <>
         <Head>
-            <title>RentTrustGh</title>
+            <title>RentTrustGh | Ghana's Trusted Property Marketplace</title>
         </Head>
         <div>
             {/* Page header */}

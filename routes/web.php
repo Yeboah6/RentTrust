@@ -42,11 +42,10 @@ Route::get('/blog/{slug}', [BlogController::class, 'show'])->name('blog.show');
 Route::get('/admin-setup/{token}',   [setupPassword::class, 'show'])->name('admin.setup');
 Route::post('/admin-setup/{token}',  [setupPassword::class, 'store'])->name('admin.setup.store');
 
-// Route::post('/admin/setup-password', [setupPassword::class, 'setupPassword'])
-//     ->name('admin.setup-password.store');
 
 Route::resource('rent', RentController::class)
     ->except('index')
+    ->except('show')
     ->where(['rent' => '[a-f0-9\-]{36}|[0-9]+']);
 
 Route::get('/', [RentController::class, 'index'])->name('home');
@@ -79,7 +78,7 @@ Route::prefix('buy')->group(function () {
     Route::get('/api/cities', [SaleSearchController::class, 'cities'])->name('buy.cities');
     Route::get('/api/areas', [SaleSearchController::class, 'getAreas'])->name('buy.api.areas');
     Route::get('/{areaSlug}/{propertySlug}', [SaleSearchController::class, 'showProperty'])->name('buy.property.show');
-    Route::get('/{rent}', [SaleSearchController::class, 'show'])->where(['rent' => '[0-9]+']);
+    // Route::get('/{sale}', [SaleSearchController::class, 'show'])->where(['rent' => '[0-9]+']);
 });
 
 // tracking endpoints
@@ -126,10 +125,6 @@ Route::middleware(['auth', 'verified', 'throttle:60,1', 'role:agent'])->group(fu
         ->name('verification.store');
 
     Route::get('/verification-status/{id}', [VerificationsController::class, 'verificationStatus']);
-// http://127.0.0.1:8000/rentals/8/verification-status 
-    
-    // Route::post('/api/listings/{rent}/feature', [RentController::class, 'featureListing'])->name('listings.feature');
-    // Route::post('/listings/{listing}/request-feature', [ListingFeatureController::class, 'requestFeature'])->name('listings.request-feature');
 });
 
 Route::get('/agent/dashboard', [DashboardController::class, 'freeTier'])->middleware(['auth','role:agent','throttle:60,1'])->name('free.agent.dashboard');
@@ -256,4 +251,5 @@ Route::get('/reset-password/{token}', [PasswordResetController::class, 'showRese
 Route::post('/reset-password', [PasswordResetController::class, 'resetPassword'])
     ->name('password.update');
 
-// Route::get('/suspended', fn() => inertia('Suspended'))->name('suspended')->middleware('auth');
+Route::post('/newsletter/subscribe', [RentController::class, 'subscribe'])
+    ->name('newsletter.subscribe');

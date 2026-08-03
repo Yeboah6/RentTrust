@@ -173,7 +173,6 @@ export default function SaleDetailsPage({ rental, reviews, days_on_market, seo }
         <SEO {...seo} />
             <JsonLd schema={areaSchema} />
             <style>{`
-                @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
                 * { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
                 h1, h2, h3, h4, h5, h6 { font-weight: 600; }
 

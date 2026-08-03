@@ -57,27 +57,20 @@ class AgentController extends Controller
 
         // Send registration confirmation email
         try {
-            Mail::to($agent->email)->send(new AgentRegistration(
+            Mail::to($agent->email)->queue(new AgentRegistration(
                 agentName: $agent->name,
                 agentEmail: $agent->email,
                 agentType: $agent->type ?? 'Agent',
                 dashboardUrl: route('free.agent.dashboard'),
             ));
         } catch (\Exception $e) {
-            // Log error but don't block registration
             \Log::error('Failed to send agent registration email: ' . $e->getMessage());
         }
 
-        // Go straight to the dashboard — PricingModal auto-opens when package is null
-        // No separate SelectPlan page needed.
         return redirect()->route('free.agent.dashboard')
             ->with('show_plan_modal', true);
     }
-
-    /**
-     * Called when agent selects Free from PricingModal.
-     * Paid plans go through CheckoutController instead.
-     */
+    
     public function selectPlan(Request $request)
     {
         $request->validate([

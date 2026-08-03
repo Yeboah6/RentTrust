@@ -352,7 +352,7 @@ const InquiriesIndex = ({ inquiries, summary, filters, cities, agents }) => {
     return (
         <>
         <Head>
-            <title>RentTrustGh</title>
+            <title>RentTrustGh | Ghana's Trusted Property Marketplace</title>
         </Head>
             {/* ── Page header ───────────────────────────────────────────── */}
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', marginBottom: '1.75rem', flexWrap: 'wrap' }}>

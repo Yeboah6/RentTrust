@@ -162,7 +162,7 @@ const StatusBadge = ({ status }) => {
 // ─── Toast ────────────────────────────────────────────────────────────────────
 
 const Toast = ({ toast }) => toast ? (
-    <div style={{ position: 'fixed', top: '1.25rem', right: '1.25rem', zIndex: 110, padding: '0.85rem 1.25rem', borderRadius: '0.75rem', backgroundColor: toast.type === 'error' ? 'hsl(0 65% 50%)' : 'hsl(152 55% 37%)', color: 'white', fontWeight: '600', fontSize: '0.875rem', boxShadow: '0 8px 28px hsl(220 25% 8% / 0.22)', animation: 'adminEditSlideIn 0.2s ease', display: 'flex', alignItems: 'center', gap: '0.5rem', zIndex: 200 }}>
+    <div style={{ position: 'fixed', top: '1.25rem', right: '1.25rem', zIndex: 200, padding: '0.85rem 1.25rem', borderRadius: '0.75rem', backgroundColor: toast.type === 'error' ? 'hsl(0 65% 50%)' : 'hsl(152 55% 37%)', color: 'white', fontWeight: '600', fontSize: '0.875rem', boxShadow: '0 8px 28px hsl(220 25% 8% / 0.22)', animation: 'adminEditSlideIn 0.2s ease', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
         {toast.type === 'error' ? <Icons.x /> : <Icons.check />}
         {toast.msg}
     </div>
@@ -278,7 +278,7 @@ const AdminEdit = ({ admin }) => {
     return (
         <>
         <Head>
-            <title>RentTrustGh</title>
+            <title>RentTrustGh | Ghana's Trusted Property Marketplace</title>
         </Head>
             <Toast toast={toast} />
             {confirmAct && (

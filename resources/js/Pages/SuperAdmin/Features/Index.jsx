@@ -309,8 +309,8 @@ const FeaturesIndex = ({ flags = {} }) => {
 
     return (
         <>
-            <Head>
-            <title>RentTrustGh</title>
+        <Head>
+            <title>RentTrustGh | Ghana's Trusted Property Marketplace</title>
         </Head>
         
         <div>

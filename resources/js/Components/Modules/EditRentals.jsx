@@ -41,7 +41,7 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental, locations = [
   const [existingImages, setExistingImages] = useState([]);
   const [currentStep, setCurrentStep] = useState(1);
   const [toast, setToast] = useState(null);
-  const [availability, setAvailability] = useState('active');
+  const [availability, setAvailability] = useState('pending');
 
   // Extract names from DB objects
   const cityNames = locationsData?.map(l => l?.name) || [];
@@ -112,6 +112,14 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental, locations = [
       });
 
       setExistingImages(existingImagesList);
+
+      if (rental.is_sold) {
+        setAvailability('sold');
+      } else if (rental.is_rented) {
+        setAvailability('rented');
+      } else {
+        setAvailability('pending');
+      }
       
       setData({
         purpose: rental.purpose || 'rent',
@@ -135,6 +143,8 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental, locations = [
         agentName: rental.agent_name || agentData?.fullName || '',
         agentPhone: rental.agent_phone || agentData?.phone || '',
         agentEmail: rental.agent_email || agentData?.email || '',
+        is_sold: rental.is_sold?.toString() || '0',
+        is_rented: rental.is_rented?.toString() || '0',
         status: rental.status || ''
       });
     }
@@ -285,8 +295,10 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental, locations = [
     if (isAdmin) {
       formData.append('status', data.status);
       formData.append('is_sold', data.status === 'sold' ? '1' : '0');
+      formData.append('is_rented', data.status === 'rented' ? '1' : '0');
     } else {
-      formData.append('is_sold', availability !== 'active' ? '1' : '0');
+      formData.append('is_sold', availability === 'sold' ? '1' : '0');
+      formData.append('is_rented', availability === 'rented' ? '1' : '0');
     }
 
     
@@ -309,9 +321,6 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental, locations = [
       formData.append(`newImages[${index}]`, imageObj.file);
     });
 
-    
-    // Submit using FormData with axios (includes _method for PUT spoofing)
-    // Use admin endpoint if user is admin, otherwise use standard endpoint
     const baseUrl = userRole === 'admin' ? '/admin/rent' : '/rent';
     const url = `${baseUrl}/${data.id}`;
     axios.post(url, formData, {
@@ -363,8 +372,6 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental, locations = [
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-        
         * {
           font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
         }

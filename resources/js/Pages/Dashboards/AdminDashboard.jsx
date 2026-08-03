@@ -16,7 +16,6 @@ import InquiriesViewsTab from '@/Components/Modules/Admin/InquiriesViewsTab';
 import AgentsTab from '@/Components/Modules/Admin/AgentsTab';
 import ReportsTab from '@/Components/Modules/Admin/ReportsTab';
 import ReviewsTab from '@/Components/Modules/Admin/ReviewsTab';
-// import ViewsTab from '@/Components/Modules/Admin/ViewsTab';
 import ListingsTab from '@/Components/Modules/Admin/ListingsTab';
 import SubscriptionsTab from '@/Components/Modules/Admin/SubscriptionsTab';
 import AdminAnalyticsTab from '@/Components/Modules/Admin/AdminAnalyticsTab';
@@ -433,10 +432,9 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, verif
   return (
     <>
     <Head>
-      <title>RentTrustGh</title>
+      <title>RentTrustGh | Ghana's Trusted Property Marketplace</title>
     </Head>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         * { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; box-sizing: border-box; }
         body { margin: 0; padding: 0; }
         h1,h2,h3,h4,h5,h6 { font-weight: 600; margin: 0; }

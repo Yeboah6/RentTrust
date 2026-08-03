@@ -14,8 +14,11 @@ return new class extends Migration
         Schema::create('rentals', function (Blueprint $table) {
             $table->id();
             $table->uuid('rental_id')->unique();
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');  
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->unsignedBigInteger('agent_id')->nullable();
+            $table->foreign('agent_id')->references('id')->on('users')->onDelete('set null');
             $table->string('title');
+            $table->string('slug')->unique();
             $table->string('property_type');
             $table->string('city');
             $table->string('area');
@@ -27,7 +30,7 @@ return new class extends Migration
             $table->integer('bathrooms')->default(0);
             $table->json('amenities')->nullable();
             $table->text('description')->nullable();
-            $table->string('images');
+            $table->json('images')->nullable();
             $table->string('agent_name');
             $table->string('agent_phone');
             $table->string('agent_email');
@@ -44,14 +47,16 @@ return new class extends Migration
             $table->timestamp('last_featured_at')->nullable();
 
             $table->timestamp('featured_at')->nullable();
-            $table->timestamp('featured_expires_at');
+            $table->timestamp('featured_expires_at')->nullable();
             $table->integer('featured_priority')->default(0);
-            
+
             // Track when sale was completed
             $table->boolean('is_sold')->default(false);
             $table->boolean('is_rented')->default(false);
             $table->timestamp('sold_at')->nullable();
             $table->timestamp('rented_at')->nullable();
+            $table->timestamp('verification_rejected_at')->nullable();
+            $table->text('verification_rejection_reason')->nullable();
             $table->timestamps();
 
             $table->index(['city', 'area']);

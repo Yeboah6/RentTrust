@@ -19,34 +19,37 @@ return new class extends Migration
                 $table->unsignedBigInteger('rental_id');
                 $table->unsignedBigInteger('user_id');
                 $table->unsignedBigInteger('agent_id');
+                // $table->foreign('agent_id')->references('id')->on('users')->onDelete('set null');
                 $table->string('agent_name');
                 $table->enum('request_type', ['initial_verification', 're_verification'])->default('initial_verification');
                 $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
-                
+
                 // Document storage (JSON)
                 $table->text('proof_documents')->nullable();
                 $table->text('ownership_documents')->nullable();
                 $table->text('license_documents')->nullable();
                 $table->text('utility_bills')->nullable();
-                
+
                 // Additional information
                 $table->text('additional_notes')->nullable();
                 $table->text('admin_notes')->nullable();
                 $table->string('rejection_reason', 500)->nullable();
-                
+
                 // Timestamps
                 $table->timestamp('submitted_at')->nullable();
                 $table->timestamp('reviewed_at')->nullable();
                 $table->unsignedBigInteger('reviewed_by')->nullable();
-                
+                $table->timestamp('verification_rejected_at')->nullable();
+                $table->timestamp('rejected_at')->nullable();
+
                 $table->timestamps();
-                
+
                 // Indexes
                 $table->index('rental_id');
                 $table->index('user_id');
                 $table->index('status');
                 $table->index('created_at');
-                
+
                 // Foreign key constraint
                 $table->foreign('rental_id')->references('id')->on('rentals')->onDelete('cascade');
             });
@@ -83,7 +86,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('verification_requests');
-        
+
         if (Schema::hasTable('rentals')) {
             Schema::table('rentals', function (Blueprint $table) {
                 $columnsToDropIfExists = [
@@ -94,7 +97,7 @@ return new class extends Migration
                     'verification_rejection_reason',
                     'verification_rejected_at'
                 ];
-                
+
                 foreach ($columnsToDropIfExists as $column) {
                     if (Schema::hasColumn('rentals', $column)) {
                         $table->dropColumn($column);

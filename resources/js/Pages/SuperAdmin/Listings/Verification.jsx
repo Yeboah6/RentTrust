@@ -887,7 +887,7 @@ export default function ListingsVerification({ listings, metrics, filter: initia
   return (
     <>
     <Head>
-      <title>RentTrustGh</title>
+      <title>RentTrustGh | Ghana's Trusted Property Marketplace</title>
     </Head>
       <style>{GLOBAL_CSS}</style>
 

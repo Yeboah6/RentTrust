@@ -9,10 +9,14 @@ use App\Models\Plan;
 use App\Models\ListingView;
 use App\Models\ListingInquiry;
 use App\Models\AdminAuditLog;
+use App\Models\NewsletterSubscriber;
 use App\Services\FeaturedListingService;
 use App\Services\Seo\SeoService;
 use Illuminate\Http\Request;
 use App\Services\ListingLimitService;
+use App\Http\Requests\StoreListingRequest;
+use App\Http\Requests\UpdateListingRequest;
+use App\Jobs\NotifySubscribersOfNewListing;
 use Illuminate\Support\Facades\{Auth, DB, Mail, Log, Storage, Validator};
 
 class RentController extends Controller
@@ -100,27 +104,14 @@ class RentController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreListingRequest $request)
     {
-        // Resolve authenticated user across all guards
         $user = Auth::user();
-
-        if (!$user) {
-            return redirect()->back()
-                ->with('error', 'Unauthorized. Please login to create a listing.');
-        }
-
-        // Determine listing purpose (rent or sale)
-        $purpose = $request->input('purpose', 'rent');
-        if (!in_array($purpose, ['rent', 'sale'])) {
-            return redirect()->back()
-                ->with('error', 'Invalid listing purpose.')
-                ->withInput();
-        }
-
-        // Check subscription limits
+        $validated = $request->validated();
+        $purpose = $validated['purpose'];
+ 
         $limitService = new ListingLimitService();
-
+ 
         if ($purpose === 'rent' && !$limitService->canCreateRental($user)) {
             $status = $limitService->getLimitStatus($user);
             $remaining = $status['rentals']['limit'] ?? 0;
@@ -132,7 +123,7 @@ class RentController extends Controller
                 ])
                 ->withInput();
         }
-
+ 
         if ($purpose === 'sale' && !$limitService->canCreateSale($user)) {
             $status = $limitService->getLimitStatus($user);
             $remaining = $status['sales']['limit'] ?? 0;
@@ -144,8 +135,7 @@ class RentController extends Controller
                 ])
                 ->withInput();
         }
-
-        // Decode amenities — frontend sends a JSON string
+ 
         $amenities = $request->amenities;
         if (is_string($amenities)) {
             $decoded = json_decode($amenities, true);
@@ -153,73 +143,8 @@ class RentController extends Controller
         } elseif (!is_array($amenities)) {
             $amenities = [];
         }
-
-        // Build validation rules based on purpose
-        $rules = [
-            'title'           => 'required|string|max:255',
-            'propertyType'    => 'required|string|max:50',
-            'city'            => 'required|string|max:100',
-            'area'            => 'required|string|max:255',
-            'address'         => 'nullable|string|max:500',
-            'bedrooms'        => 'required|integer|min:0',
-            'bathrooms'       => 'nullable|integer|min:0',
-            'description'     => 'nullable|string',
-            'agentName'       => 'required|string|max:255',
-            'agentPhone'      => 'required|string|max:20',
-            'agentEmail'      => 'required|email|max:255',
-            'amenities'       => 'nullable|string',
-            'images.*'        => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
-        ];
-
-        // Purpose-specific validation
-        if ($purpose === 'rent') {
-            $rules['rentMin'] = 'required|numeric|min:0';
-            $rules['rentMax'] = 'required|numeric|min:0|gte:rentMin';
-            $rules['advanceDuration'] = 'required|in:1,2,3,4,5';
-            $rules['salePrice'] = 'prohibited';
-        } else {
-            $rules['salePrice'] = 'required|numeric|min:0';
-            $rules['rentMin'] = 'prohibited';
-            $rules['rentMax'] = 'prohibited';
-            $rules['advanceDuration'] = 'prohibited';
-        }
-
-        // Custom error messages
-        $messages = [
-            'title.required'        => 'Property title is required',
-            'propertyType.required' => 'Property type is required',
-            'city.required'         => 'City is required',
-            'area.required'         => 'Area/Neighborhood is required',
-            'rentMin.required'      => 'Minimum rent is required',
-            'rentMin.numeric'       => 'Minimum rent must be a valid number',
-            'rentMax.required'      => 'Maximum rent is required',
-            'rentMax.numeric'       => 'Maximum rent must be a valid number',
-            'rentMax.gte'           => 'Maximum rent must be greater than or equal to minimum rent',
-            'salePrice.required'    => 'Sale price is required',
-            'salePrice.numeric'     => 'Sale price must be a valid number',
-            'bedrooms.required'     => 'Number of bedrooms is required',
-            'bedrooms.integer'      => 'Bedrooms must be a whole number',
-            'agentName.required'    => 'Your name is required',
-            'agentPhone.required'   => 'Phone number is required',
-            'agentPhone.max'        => 'Phone number is too long',
-            'agentEmail.required'   => 'Email address is required',
-            'agentEmail.email'      => 'Please provide a valid email address',
-            'images.*.image'        => 'Each file must be a valid image',
-            'images.*.mimes'        => 'Images must be in JPEG, PNG, JPG, or GIF format',
-            'images.*.max'          => 'Each image must not exceed 5MB',
-        ];
-
-        // Validate
-        $validator = Validator::make($request->all(), $rules, $messages);
-
-        if ($validator->fails()) {
-            return redirect()->back()
-                ->withErrors($validator)
-                ->withInput();
-        }
-
+ 
         try {
-            // Handle image uploads
             $filePaths = [];
             if ($request->hasFile('images')) {
                 foreach ($request->file('images') as $file) {
@@ -230,8 +155,7 @@ class RentController extends Controller
                     }
                 }
             }
-
-            // Build listing data based on purpose
+ 
             $listingData = [
                 'rental_id'           => Rental::generateUUID(),
                 'user_id'             => $user->id,
@@ -252,7 +176,7 @@ class RentController extends Controller
                 'is_verified'         => false,
                 'images'              => $filePaths,
             ];
-
+ 
             // Add purpose-specific data
             if ($purpose === 'rent') {
                 $listingData['rent_min'] = $request->rentMin;
@@ -265,10 +189,10 @@ class RentController extends Controller
                 $listingData['rent_max'] = null;
                 $listingData['advance_duration']  = null;
             }
-
+ 
             // Create listing
             $rental = Rental::create($listingData);
-
+ 
             if ($user->role === 'admin') {
                 AdminAuditLog::record('listing', 'Listing created', [
                     'affected_user' => $user->name,
@@ -282,14 +206,16 @@ class RentController extends Controller
                     ],
                 ]);
             }
-
+ 
+            NotifySubscribersOfNewListing::dispatch($rental);
+ 
             $typeLabel = $purpose === 'rent' ? 'Rental' : 'Sale';
             return redirect()->back()
                 ->with('success', "{$typeLabel} listing created successfully! It will be reviewed and activated soon.");
-
+ 
         } catch (\Exception $e) {
             Log::error('Failed to create listing: ' . $e->getMessage());
-
+ 
             return redirect()->back()
                 ->with('error', 'Failed to create listing. Please try again.')
                 ->withInput();
@@ -343,7 +269,7 @@ class RentController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Rental $rent)
+    public function update(UpdateListingRequest $request, Rental $rent)
     {
         // Log the incoming request for debugging
         Log::info('Rental update request', [
@@ -353,70 +279,19 @@ class RentController extends Controller
             'removed_images_count' => count($request->input('removedImages', []))
         ]);
 
-        $amenities = $request->amenities;
-        if (is_array($amenities)) {
-            $amenities = json_encode($amenities);
-        }
-
-        $request->merge(['amenities' => $amenities]);
-
-        // Validation rules - conditional based on listing purpose
-        $rules = [
-            'title' => 'required|string|max:255',
-            'propertyType' => 'required|string',
-            'area' => 'required|string|max:255',
-            'city' => 'required|string|max:255',
-            'address' => 'nullable|string',
-            'bedrooms' => 'required|integer|min:0',
-            'bathrooms' => 'nullable|integer|min:0',
-            'description' => 'nullable|string',
-            'agentName' => 'required|string|max:255',
-            'agentPhone' => 'required|string|max:20',
-            'agentEmail' => 'required|email|max:255',
-            'newImages.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120', // 5MB max
-            'existingImages' => 'nullable|array',
-            'existingImages.*' => 'string',
-            'removedImages' => 'nullable|array',
-            'removedImages.*' => 'string',
-            // 'status' => 'nullable|in:rented,sold',
-        ];
-
+        $validated = $request->validated();
         $purpose = $request->input('purpose', $rent->purpose);
-        if ($purpose === 'rent') {
-            $rules['rentMin'] = 'required|numeric|min:0';
-            $rules['rentMax'] = 'required|numeric|min:0|gte:rentMin';
-            $rules['advanceDuration'] = 'required|integer|min:1|max:5';
-            $rules['salePrice'] = 'prohibited';
-        } else {
-            $rules['salePrice'] = 'required|numeric|min:0';
-            $rules['rentMin'] = 'prohibited';
-            $rules['rentMax'] = 'prohibited';
-            $rules['advanceDuration'] = 'prohibited';
-        }
-
-        $validator = Validator::make($request->all(), $rules, [
-            'rentMax.gte' => 'Maximum rent must be greater than or equal to minimum rent',
-            'newImages.*.max' => 'Each image must not exceed 5MB',
-            'newImages.*.mimes' => 'Images must be jpeg, png, jpg, or gif format',
-        ]);
-
-        if ($validator->fails()) {
-            return back()
-                ->withErrors($validator)
-                ->withInput()
-                ->with('error', 'Please correct the errors below.');
-        }
 
         try {
             // Parse existing rental images
             $currentImages = $this->parseImages($rent->images);
-            
+
             // Get images to keep (existing images)
             $existingImages = $request->input('existingImages', []);
-            
+
             // Get images to remove
             $removedImages = $request->input('removedImages', []);
-            
+
             // Delete removed images from storage
             foreach ($removedImages as $imagePath) {
                 if (in_array($imagePath, $currentImages)) {
@@ -425,17 +300,17 @@ class RentController extends Controller
             }
 
             $amenitiesArray = [];
-            if (! empty($amenities)) {
-                $decoded = json_decode($amenities, true);
+            if (! empty($validated['amenities'])) {
+                $decoded = json_decode($validated['amenities'], true);
                 if (is_array($decoded)) {
                     $amenitiesArray = $decoded;
                 }
             }
-            
+
             // Handle new image uploads
             $newImagePaths = [];
             $uploadErrors = [];
-            
+
             if ($request->hasFile('newImages')) {
                 $imageIndex = 0;
                 foreach ($request->file('newImages') as $image) {
@@ -446,19 +321,19 @@ class RentController extends Controller
                             $imageIndex++;
                             continue;
                         }
-                        
+
                         // Generate unique filename
                         $fileName = 'rental_'.time().'_'.uniqid().'.'.$image->getClientOriginalExtension();
-                        
+
                         // Store in public/storage/rental_images
                         $path = $image->storeAs('rental_images', $fileName, 'public');
-                        
+
                         if ($path) {
                             $newImagePaths[] = $fileName; // Store just the filename
                         } else {
                             $uploadErrors[] = "Image " . ($imageIndex + 1) . " could not be saved to storage.";
                         }
-                    } 
+                    }
                     catch (\Exception $e) {
                         $uploadErrors[] = "Image " . ($imageIndex + 1) . " failed: " . $e->getMessage();
                         Log::error('Image upload failed', [
@@ -469,7 +344,7 @@ class RentController extends Controller
                     }
                     $imageIndex++;
                 }
-                
+
                 // If there were upload errors, return early with error message
                 if (!empty($uploadErrors)) {
                     return back()
@@ -478,13 +353,13 @@ class RentController extends Controller
                         ->with('error', 'Some images failed to upload. ' . implode(' ', $uploadErrors));
                 }
             }
-            
+
             // Combine existing and new images
             $finalImages = array_merge($existingImages, $newImagePaths);
-            
+
             // Ensure we don't exceed 6 images
             $finalImages = array_slice($finalImages, 0, 6);
-            
+
             Log::info('Image processing complete', [
                 'rental_id' => $rent->id,
                 'kept_existing' => count($existingImages),
@@ -492,7 +367,7 @@ class RentController extends Controller
                 'deleted' => count($removedImages),
                 'final_total' => count($finalImages)
             ]);
-            
+
             // Update rental data
             $rent->update([
                 'title' => $request->title,
@@ -513,9 +388,10 @@ class RentController extends Controller
                 'images' => $finalImages ?? [],
                 'updated_at' => now(),
                 'status'   => $request->has('status') ? $request->status : $rent->status,
-                'is_sold' => $request->boolean('is_sold'), 
+                'is_sold' => $request->boolean('is_sold'),
+                'is_rented' => $request->boolean('is_rented'),
             ]);
-            
+
             Log::info('Rental updated successfully', [
                 'rental_id' => $rent->id,
                 'title' => $rent->title
@@ -533,18 +409,18 @@ class RentController extends Controller
                     ],
                 ]);
             }
-            
+
             return redirect()
                 ->back()
                 ->with('success', 'Rental listing updated successfully!');
-                
+
         } catch (\Exception $e) {
             Log::error('Rental update failed', [
                 'rental_id' => $rent->id,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
-            
+
             return back()
                 ->withInput()
                 ->with('error', 'Failed to update listing. Please try again.');
@@ -971,5 +847,61 @@ class RentController extends Controller
             ], 400);
         }
     }
+
+    public function subscribe(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email|max:255',
+        ]);
+ 
+        $subscriber = NewsletterSubscriber::where('email', $request->email)->first();
+ 
+        if ($subscriber) {
+            if ($subscriber->unsubscribed_at) {
+                $subscriber->update(['unsubscribed_at' => null]);
+            }
+        } else {
+            $subscriber = NewsletterSubscriber::create(['email' => $request->email]);
+ 
+            Mail::raw(
+                "Thanks for subscribing to RentTrustGh!\n\nYou'll now get an email whenever new verified listings go live.\n\nIf this wasn't you, just ignore this email.",
+                function ($message) use ($request) {
+                    $message->to($request->email)
+                        ->subject('Welcome to RentTrustGh listings updates');
+                }
+            );
+        }
+ 
+        return back();
+    }
+
+    // private function notifySubscribers(Rental $rental): void
+    // {
+    //     try {
+    //         $emails = NewsletterSubscriber::active()->pluck('email');
+ 
+    //         if ($emails->isEmpty()) {
+    //             return;
+    //         }
+ 
+    //         $priceLabel = $rental->purpose === 'rent'
+    //             ? "GHS {$rental->rent_min} - {$rental->rent_max}/month"
+    //             : "GHS {$rental->sale_price}";
+ 
+    //         $body = "New listing on RentTrustGh!\n\n"
+    //             . "{$rental->title}\n"
+    //             . "{$rental->area}, {$rental->city}\n"
+    //             . "{$priceLabel}\n\n"
+    //             . "View it here: " . url('/listings/' . $rental->id);
+ 
+    //         foreach ($emails as $email) {
+    //             Mail::raw($body, function ($message) use ($email) {
+    //                 $message->to($email)->subject('New listing on RentTrustGh');
+    //             });
+    //         }
+    //     } catch (\Exception $e) {
+    //         Log::error('Failed to notify newsletter subscribers: ' . $e->getMessage());
+    //     }
+    // }
 
 }

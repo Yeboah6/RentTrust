@@ -269,7 +269,7 @@ class RentalSearchController extends Controller
         ]);
     }
 
-    public function showProperty(Request $request, string $areaSlug, string $propertySlug)
+    public function showProperty(string $areaSlug, string $propertySlug)
     {
         $areaName = str_replace('-', ' ', $areaSlug);
     

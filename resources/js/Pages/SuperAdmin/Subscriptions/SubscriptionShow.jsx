@@ -309,7 +309,7 @@ const SubscriptionShow = ({ subscription: sub, audit_logs = [], plans = [] }) =>
     return (
         <>
         <Head>
-            <title>RentTrustGh</title>
+            <title>RentTrustGh | Ghana's Trusted Property Marketplace</title>
         </Head>
             <Toast toast={toast} />
 

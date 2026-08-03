@@ -3,7 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Account updated</title>
+  {{-- <title>Account updated</title> --}}
+  <title>RentTrustGh | Ghana's Trusted Property Marketplace</title>
 </head>
 <body style="font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; color: #111; line-height:1.45;">
   <h2 style="margin-bottom:0.25rem;">Hello {{ $adminName }},</h2>

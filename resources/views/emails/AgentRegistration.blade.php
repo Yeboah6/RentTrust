@@ -1,5 +1,8 @@
 <!DOCTYPE html>
 <html>
+    <head>
+        <title>RentTrustGh | Ghana's Trusted Property Marketplace</title>
+    </head>
 <body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
 
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;padding:40px 20px;">
@@ -12,13 +15,6 @@
 <!-- Header -->
 <tr>
     <td style="background:linear-gradient(135deg,#0f766e,#115e59);padding:42px 32px;text-align:center;">
-
-        <img
-            src="{{ asset('rent-trust.png') }}"
-            alt="RentTrustGH"
-            width="72"
-            style="display:block;margin:0 auto 16px;"
-        >
 
         <h1 style="margin:0;color:#ffffff;font-size:28px;font-weight:800;">
             Welcome to RentTrustGH!

@@ -294,7 +294,6 @@ const handleEmailChange = (val) => {
           />
       </Head>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
         * { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
         @media (max-width: 768px) {
           input[type="text"], input[type="email"], input[type="password"], input[type="tel"] { font-size: 16px !important; }

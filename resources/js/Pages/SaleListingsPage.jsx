@@ -30,6 +30,14 @@ const Shield = ({ style }) => (
 const fmt = (n) => `GH₵${Number(n || 0).toLocaleString()}`;
 const hue = (s = '') => [...s].reduce((a, c) => a + c.charCodeAt(0), 0) % 360;
 
+const slugifyArea = (value) => {
+  return String(value || '')
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9\-]/g, '');
+};
+
 const parseImages = (imagesData) => {
   if (!imagesData) return [];
   if (Array.isArray(imagesData)) return imagesData;
@@ -493,6 +501,7 @@ const SaleListingsPage = ({ listings: initialListingsData = {}, filters = {} }) 
   const formatListings = (dbListings) => {
     return dbListings.map(listing => ({
       id: listing.id,
+      slug: listing.slug || null,
       title: listing.title || `${listing.bedrooms} Bedroom ${listing.property_type}`,
       area: listing.area || listing.location || 'Unknown',
       city: listing.city || "Accra",
@@ -701,8 +710,6 @@ const SaleListingsPage = ({ listings: initialListingsData = {}, filters = {} }) 
           />
       </Head>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-        
         * {
           font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
           -webkit-font-smoothing: antialiased;
@@ -858,16 +865,21 @@ const SaleListingsPage = ({ listings: initialListingsData = {}, filters = {} }) 
             {/* Listings Grid */}
             {sortedListings.length > 0 ? (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(clamp(250px, 60vw, 320px), 1fr))', gap: 'clamp(1rem, 3vw, 1.5rem)' }}>
-                {sortedListings.map((listing) => (
-                  <Link 
-                    key={listing.id} 
-                    href={`/buy/${listing.id}`}
-                    className="listing-card"
-                    style={{ textDecoration: 'none', display: 'block' }}
-                  >
-                    <PropertyCard listing={listing} />
-                  </Link>
-                ))}
+                {sortedListings.map((listing) => {
+                  const listingAreaSlug = slugifyArea(listing.area);
+                  const listingSlug = listing.slug || listing.id;
+
+                  return (
+                    <Link
+                      key={listing.id}
+                      href={`/buy/${listingAreaSlug}/${listingSlug}`}
+                      className="listing-card"
+                      style={{ textDecoration: 'none', display: 'block' }}
+                    >
+                      <PropertyCard listing={listing} />
+                    </Link>
+                  );
+                })}
               </div>
             ) : (
               <div style={{ textAlign: 'center', padding: 'clamp(2rem, 5vw, 4rem) 1rem' }}>

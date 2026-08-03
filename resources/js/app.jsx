@@ -2,15 +2,17 @@ import './bootstrap';
 
 import { createInertiaApp } from '@inertiajs/react'
 import { createRoot } from 'react-dom/client'
-// import axios from 'axios';
-// import Layout from '@/Layouts/Layout';
-
-// axios.defaults.withCredentials = true;
 
 createInertiaApp({
-    resolve: name => {
-        const pages = import.meta.glob('./Pages/**/*.jsx', { eager: true })
-        return pages[`./Pages/${name}.jsx`]
+    resolve: async (name) => {
+        const pages = import.meta.glob('./Pages/**/*.jsx', { eager: false })
+        const page = pages[`./Pages/${name}.jsx`]
+
+        if (!page) {
+            return import('./Pages/NotFound.jsx')
+        }
+
+        return page()
     },
     setup({ el, App, props }) {
         createRoot(el).render(<App {...props} />)

@@ -267,7 +267,7 @@ const AgentEdit = ({ agent: a }) => {
     return (
         <>
         <Head>
-            <title>RentTrustGh</title>
+           <title>RentTrustGh | Ghana's Trusted Property Marketplace</title>
         </Head>
             <Toast toast={toast} />
             {confirmAct && (

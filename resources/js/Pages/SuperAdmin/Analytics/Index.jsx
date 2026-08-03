@@ -348,7 +348,7 @@ export default function AnalyticsDashboard() {
   return (
     <>
     <Head>
-        <title>RentTrustGh</title>
+        <title>RentTrustGh | Ghana's Trusted Property Marketplace</title>
     </Head>
     <div style={s.page}>
       <div style={s.inner}>

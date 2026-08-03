@@ -2,6 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
+    <title>RentTrustGh | Ghana's Trusted Property Marketplace</title>
     <style>
         body { font-family: Arial, sans-serif; color: #333; line-height: 1.6; }
         .container { max-width: 600px; margin: 0 auto; padding: 24px; }

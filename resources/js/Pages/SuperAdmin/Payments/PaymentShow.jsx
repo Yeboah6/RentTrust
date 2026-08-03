@@ -285,7 +285,7 @@ const PaymentShow = ({ payment, refunds = [], total_refunded = 0, refundable = 0
     return (
         <>
         <Head>
-            <title>RentTrustGh</title>
+            <title>RentTrustGh | Ghana's Trusted Property Marketplace</title>
         </Head>
             <Toast toast={toast} />
 

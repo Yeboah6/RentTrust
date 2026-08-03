@@ -4,6 +4,14 @@ import Header from "../Components/Layouts/Header";
 import Footer from "../Components/Layouts/Footer";
 import { ChevronLeft, ChevronRight, BedDouble, Bath, Search as SearchIcon } from "lucide-react";
 
+const slugifyArea = (value) => {
+  return String(value || '')
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9\-]/g, '');
+};
+
 // Icon components
 const Search = ({ className, style }) => (
   <svg className={className} style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -564,6 +572,7 @@ const RentalListingsPage = ({ listings: initialListingsData = {} }) => {
   const formatListings = (dbListings) => {
     return dbListings.map(listing => ({
       id: listing.id,
+      slug: listing.slug || null,
       title: listing.title || `${listing.bedrooms} Bedroom ${listing.property_type}`,
       area: listing.area || listing.location,
       city: listing.city || "Accra",
@@ -795,8 +804,6 @@ const RentalListingsPage = ({ listings: initialListingsData = {} }) => {
           />
       </Head>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-        
         * {
           font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
           -webkit-font-smoothing: antialiased;
@@ -930,15 +937,20 @@ const RentalListingsPage = ({ listings: initialListingsData = {} }) => {
 
             {/* Listings Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 gap-6">
-              {sortedListings.map((listing) => (
-                <Link 
-                  key={listing.id} 
-                  href={`/rent/${listing.id}`}
-                  className="block transition-transform hover:scale-[1.02]"
-                >
-                  <PropertyCard listing={listing} />
-                </Link>
-              ))}
+              {sortedListings.map((listing) => {
+                const listingAreaSlug = slugifyArea(listing.area);
+                const listingSlug = listing.slug || listing.id;
+
+                return (
+                  <Link
+                    key={listing.id}
+                    href={`/rent/${listingAreaSlug}/${listingSlug}`}
+                    className="block transition-transform hover:scale-[1.02]"
+                  >
+                    <PropertyCard listing={listing} />
+                  </Link>
+                );
+              })}
             </div>
 
             {sortedListings.length === 0 && (
