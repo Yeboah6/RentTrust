@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Shield, Bell, Lock, User, Mail, Globe, Save, Eye, EyeOff, Check, Upload, FileText, Clock, XCircle, CheckCircle2 } from "lucide-react";
+import { Shield, Bell, Lock, User, Mail, Globe, Save, Eye, EyeOff, Check, Upload, FileText, Clock, XCircle, CheckCircle2, MessageSquare } from "lucide-react";
 import Header from "../../Components/Layouts/Header";
 import Footer from "../../Components/Layouts/Footer";
 import { usePage, useForm, router, Head } from "@inertiajs/react";
@@ -65,6 +65,7 @@ const AdminSettingsPage = () => {
     gov_id: null,
     license_documents: null,
     proof_of_address: null,
+    resubmission_note: "", // Add note field for resubmission
   });
 
   // Security settings
@@ -577,6 +578,39 @@ const AdminSettingsPage = () => {
                         />
                         {verificationForm.errors.phone_number && <p style={errorTextStyle}>{verificationForm.errors.phone_number}</p>}
                       </div>
+
+                      {/* Resubmission Note - shown only when rejected */}
+                      {verificationStatus === "rejected" && (
+                        <div>
+                          <label style={{
+                            ...fieldLabelStyle,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem'
+                          }}>
+                            <MessageSquare size={16} />
+                            Response Note (optional)
+                          </label>
+                          <textarea
+                            value={verificationForm.data.resubmission_note}
+                            onChange={(e) => verificationForm.setData('resubmission_note', e.target.value)}
+                            placeholder="Add a note addressing the rejection reason or explaining your resubmission..."
+                            rows={3}
+                            style={{
+                              ...inputStyle,
+                              resize: 'vertical',
+                              fontFamily: 'inherit',
+                              borderColor: '#d1d5db'
+                            }}
+                          />
+                          {verificationForm.errors.resubmission_note && (
+                            <p style={errorTextStyle}>{verificationForm.errors.resubmission_note}</p>
+                          )}
+                          <p style={{ color: '#6b7280', fontSize: '0.75rem', marginTop: '0.25rem' }}>
+                            This note will be visible to the reviewer when they process your new submission
+                          </p>
+                        </div>
+                      )}
 
                       {/* Government ID */}
                       <div>
