@@ -12,7 +12,7 @@ const AdminSettingsPage = () => {
   const [toast, setToast] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
 
-  const { auth, userRole: accountRole, canAccessVerification } = usePage().props;
+  const { auth, userRole: accountRole, canAccessVerification, verification } = usePage().props;
 
   const userAgent = canAccessVerification || accountRole === 'agent' || !!auth?.agent;
   const userAdmin = !!auth?.super;
@@ -28,7 +28,7 @@ const AdminSettingsPage = () => {
   const userStatus = auth?.agent?.status || auth?.super?.status || "";
 
   // Existing verification record, if any (assumes controller passes this under auth.agent.verification)
-  const verification = auth?.agent?.verification || null;
+  // const verification = auth?.agent?.verification || null;
   const verificationStatus = verification?.status || null; // 'pending' | 'approved' | 'rejected' | null
   const verificationLocked = verificationStatus === "pending" || verificationStatus === "approved";
 
@@ -65,7 +65,8 @@ const AdminSettingsPage = () => {
     gov_id: null,
     license_documents: null,
     proof_of_address: null,
-    resubmission_note: "", // Add note field for resubmission
+    resubmission_note: "", 
+    note: verification?.note || "",
   });
 
   // Security settings
@@ -688,6 +689,17 @@ const AdminSettingsPage = () => {
                           />
                         </label>
                         {verificationForm.errors.proof_of_address && <p style={errorTextStyle}>{verificationForm.errors.proof_of_address}</p>}
+                      </div>
+
+                      <div>
+                        <label style={fieldLabelStyle}>Note / Reason (Optional)</label>
+                        <textarea
+                          value={verificationForm.data.note}
+                          onChange={(e) => verificationForm.setData('note', e.target.value)}
+                          placeholder="Add a note explaining your submission or the reason for this change..."
+                          rows={3}
+                          style={inputStyle}
+                        />
                       </div>
 
                       {/* Submit Button */}

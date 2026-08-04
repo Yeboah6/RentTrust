@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\AdminAuditLog;
 use App\Models\Subscription;
 use App\Models\User;
+use App\Models\AgentVerification;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -156,17 +157,17 @@ class AuthController extends Controller
     //     return response()->json(['taken' => $taken]);
     // }
 
-    public function settings() {
+    public function settings()
+    {
+        $user = Auth::user();
 
-        // $agent = Auth::user()->agent;
-        
-        // if (!$agent) {
-        //     return redirect()->route('dashboard')->with('error', 'Only agents can access verification.');
-        // }
-
-        // $verification = AgentVerification::where('agent_id', $agent->id)->first();
-
-        return inertia('Auth/SettingsPage');
+        return Inertia::render('Auth/SettingsPage', [
+            'userRole' => $user?->role,
+            'canAccessVerification' => $user?->role === 'agent',
+            'verification' => $user?->role === 'agent'
+                ? AgentVerification::where('agent_id', $user->id)->first()
+                : null,
+        ]);
     }
 
     public function updateAgentProfile(Request $request) {

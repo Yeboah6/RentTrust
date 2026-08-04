@@ -72,7 +72,7 @@ const OrderSummary = ({ plan, provider }) => {
       <div style={{ padding: "clamp(1.5rem, 4vw, 2rem)" }}>
 
         {/* Header row */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "clamp(1.25rem, 3vw, 1.75rem)" }}>
+        <div className="checkout-header-row" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "clamp(1.25rem, 3vw, 1.75rem)" }}>
           <h2 className="font-bold tracking-tight" style={{ color: "hsl(200 25% 15%)", fontSize: "clamp(1.25rem, 3vw, 1.5rem)", lineHeight: "1.2", margin: 0 }}>
             Order Summary
           </h2>
@@ -169,7 +169,8 @@ const PaymentProviderSelector = ({ selectedProvider, onProviderChange }) => {
           {providers.map((p) => (
             <label
               key={p.id}
-              style={{ display: "flex", alignItems: "center", padding: "clamp(1rem, 3vw, 1.25rem)", border: selectedProvider === p.id ? `2px solid ${p.color}` : "1px solid hsl(40 20% 88%)", borderRadius: "0.75rem", backgroundColor: selectedProvider === p.id ? p.bg : "white", cursor: "pointer", transition: "all 0.2s ease", gap: "1rem" }}
+              className="provider-label"
+              style={{ display: "flex", alignItems: "center", padding: "clamp(1rem, 3vw, 1.25rem)", border: selectedProvider === p.id ? `2px solid ${p.color}` : "1px solid hsl(40 20% 88%)", borderRadius: "0.75rem", backgroundColor: selectedProvider === p.id ? p.bg : "white", cursor: "pointer", transition: "all 0.2s ease", gap: "1rem", WebkitTapHighlightColor: "transparent" }}
             >
               <input type="radio" name="payment_provider" value={p.id} checked={selectedProvider === p.id} onChange={() => onProviderChange(p.id)}
                 style={{ width: "1.25rem", height: "1.25rem", accentColor: p.color, cursor: "pointer", flexShrink: 0 }} />
@@ -178,7 +179,7 @@ const PaymentProviderSelector = ({ selectedProvider, onProviderChange }) => {
                 <p className="font-semibold" style={{ color: "hsl(200 25% 15%)", fontSize: "clamp(0.9375rem, 2.5vw, 1rem)", marginBottom: "0.125rem" }}>{p.name}</p>
                 <p style={{ color: "hsl(200 15% 45%)", fontSize: "clamp(0.8125rem, 2vw, 0.875rem)", margin: 0 }}>{p.subtitle}</p>
               </div>
-              {selectedProvider === p.id && <CheckCircle2 style={{ height: "1.25rem", width: "1.25rem", color: p.color, flexShrink: 0 }} />}
+              {selectedProvider === p.id && <CheckCircle2 className="provider-check" style={{ height: "1.25rem", width: "1.25rem", color: p.color, flexShrink: 0 }} />}
             </label>
           ))}
         </div>
@@ -307,7 +308,7 @@ const CheckoutPage = ({ plan, allPlans = [] }) => {
             Select Your Plan
           </h2>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1rem" }}>
+          <div className="plans-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1rem" }}>
             {filteredPlans.map((p) => (
               <button
                 key={p.id}
@@ -338,7 +339,7 @@ const CheckoutPage = ({ plan, allPlans = [] }) => {
                     <CheckCircle2 style={{ height: "1rem", width: "1rem", color: "hsl(174 62% 32%)" }} />
                   </div>
                 )}
-                <h3 className="font-semibold" style={{ color: "hsl(200 25% 15%)", fontSize: "clamp(0.9375rem, 2.5vw, 1.0625rem)", marginBottom: "0.5rem" }}>
+                <h3 className="font-semibold" style={{ color: "hsl(200 25% 15%)", fontSize: "clamp(0.9375rem, 2.5vw, 1.0625rem)", marginBottom: "0.5rem", paddingRight: "1.5rem" }}>
                   {p.name}
                 </h3>
                 <p style={{ color: "hsl(38 92% 50%)", fontSize: "clamp(1rem, 2.5vw, 1.25rem)", fontWeight: "700", margin: 0 }}>
@@ -367,6 +368,17 @@ const CheckoutPage = ({ plan, allPlans = [] }) => {
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         @media (max-width: 768px) { button { -webkit-tap-highlight-color: transparent; min-height: 44px; } }
         @media print { header, footer { display: none !important; } }
+
+        @media (max-width: 768px) {
+          .plans-grid { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)) !important; gap: 0.75rem !important; }
+        }
+
+        @media (max-width: 480px) {
+          .checkout-header-row { flex-wrap: wrap; row-gap: 0.5rem; }
+          .plans-grid { grid-template-columns: 1fr !important; }
+          .provider-label { flex-wrap: wrap; row-gap: 0.5rem; }
+          .provider-check { display: none; }
+        }
       `}</style>
 
       <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", backgroundColor: "hsl(40 33% 98%)" }}>
@@ -427,8 +439,8 @@ const CheckoutPage = ({ plan, allPlans = [] }) => {
                       onMouseEnter={e => e.currentTarget.style.backgroundColor = "hsl(174 55% 28%)"}
                       onMouseLeave={e => e.currentTarget.style.backgroundColor = "hsl(174 62% 32%)"}
                     >
-                      <Shield style={{ height: "1.25rem", width: "1.25rem" }} />
-                      Pay GHS {selectedPlan.price.toFixed(2)}/month via {selectedProvider === "paystack" ? "Paystack" : "Flutterwave"}
+                      <Shield style={{ height: "1.25rem", width: "1.25rem", flexShrink: 0 }} />
+                      <span style={{ textAlign: "center" }}>Pay GHS {selectedPlan.price.toFixed(2)}/month via {selectedProvider === "paystack" ? "Paystack" : "Flutterwave"}</span>
                     </button>
 
                     <p style={{ color: "hsl(200 15% 45%)", fontSize: "clamp(0.75rem, 1.8vw, 0.8125rem)", textAlign: "center", marginTop: "1rem", lineHeight: "1.5" }}>
