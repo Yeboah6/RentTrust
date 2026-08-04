@@ -21,6 +21,7 @@ return new class extends Migration
             $table->text('license_documents')->nullable();
             $table->text('proof_of_address')->nullable();
             $table->text('notes')->nullable();
+            $table->text('admin_notes')->nullable();
             $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
             $table->timestamp('submitted_at')->nullable();
             $table->timestamp('reviewed_at')->nullable();

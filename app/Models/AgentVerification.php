@@ -15,6 +15,7 @@ class AgentVerification extends Model
         'license_documents',
         'proof_of_address',
         'notes',
+        'admin_notes',
         'status',
         'submitted_at',
         'reviewed_at',

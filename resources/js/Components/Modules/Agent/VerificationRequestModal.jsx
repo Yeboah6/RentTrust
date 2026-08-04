@@ -27,52 +27,66 @@ const Building = ({ style }) => (
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
   </svg>
 );
-const DocumentText = ({ style }) => (
-  <svg style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-  </svg>
-);
-const UserCheck = ({ style }) => (
-  <svg style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-  </svg>
-);
 const AlertCircle = ({ style }) => (
   <svg style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
   </svg>
 );
 
+// ----- Document buckets: match listing_verifications columns exactly -----
+// (ownership_documents, photos, other_documents are the only file columns on the table)
+const DOCUMENT_SECTIONS = [
+  {
+    key: "ownership_documents",
+    title: "Proof of Ownership / Authorization",
+    description: "Property deed, title, lease agreement, or authorization letter from the owner",
+  },
+  {
+    key: "photos",
+    title: "Property Photos",
+    description: "Clear photos of the property exterior, interior, and address markers",
+  },
+  {
+    key: "other_documents",
+    title: "Other Supporting Documents",
+    description: "Utility bills, business licenses/permits, or anything else that supports the request",
+  },
+];
+
+const AVAILABILITY_OPTIONS = [
+  { value: "available", label: "Available" },
+  { value: "rented", label: "Rented" },
+  { value: "sold", label: "Sold" },
+  { value: "unavailable", label: "Unavailable" },
+];
+
 // ----- Main Component -----
 const VerificationRequestModal = ({ isOpen, onClose, agentData, selectedRental, verificationData }) => {
-  // UI state
   const [uploadProgress, setUploadProgress] = useState({});
   const [toast, setToast] = useState(null);
 
-  // Files selected for display
+  // Files selected for display, keyed exactly like the table's document columns
   const [selectedFiles, setSelectedFiles] = useState({
-    proof_documents: [],
-    property_ownership_docs: [],
-    utility_bills: [],
-    license_documents: [],
+    ownership_documents: [],
+    photos: [],
+    other_documents: [],
   });
 
-  // Verification status computed from verificationData prop
-  const [verificationStatus, setVerificationStatus] = useState(null); // 'pending', 'approved', 'none'
+  // 'pending' | 'approved' | 'none'
+  const [verificationStatus, setVerificationStatus] = useState(null);
 
-  // Inertia form state
-  const { data, setData, post, processing, errors, reset, clearErrors } = useForm({
-    rental_id: selectedRental?.rental_id || selectedRental?.id || "",
-    rental_title: selectedRental?.title || "",
-    request_type: "initial_verification",
-    additional_notes: "",
-    terms_accepted: false,
-    proof_docs: [],
+  // Inertia form state — fields map 1:1 to listing_verifications columns.
+  // user_id / status / submitted_at are set server-side, not sent from the client.
+  const { data, setData, processing, errors, reset, clearErrors } = useForm({
+    listing_id: selectedRental?.id || "",
+    property_title: selectedRental?.title || "",
+    property_address: selectedRental?.address || "",
+    availability_status: "available",
+    notes: "",
+    terms_accepted: false, // client-only guard, not persisted
     ownership_documents: [],
-    utility_bills: [],
-    license_documents: [],
-    agent_id: agentData?.id || "",
-    agent_name: agentData?.fullName || agentData?.name || "",
+    photos: [],
+    other_documents: [],
   });
 
   // ---------- Compute verification status from verificationData ----------
@@ -83,44 +97,34 @@ const VerificationRequestModal = ({ isOpen, onClose, agentData, selectedRental, 
     }
 
     if (verificationData && verificationData.length > 0) {
-      // Filter requests for this rental that are pending or approved,
-      // then take the most recent one.
       const relevant = verificationData
         .filter(
-          v =>
-            v.rental_id === selectedRental.id &&
-            (v.status === 'pending' || v.status === 'approved')
+          (v) =>
+            v.listing_id === selectedRental.id &&
+            (v.status === "pending" || v.status === "approved")
         )
         .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
-      setVerificationStatus(relevant.length > 0 ? relevant[0].status : 'none');
+      setVerificationStatus(relevant.length > 0 ? relevant[0].status : "none");
     } else {
-      setVerificationStatus('none');
+      setVerificationStatus("none");
     }
   }, [isOpen, selectedRental, verificationData]);
 
   // Reset form fields when the modal opens and the user can submit (status = 'none')
   useEffect(() => {
     if (isOpen && selectedRental && verificationStatus === "none") {
-      setData({
-        rental_id: selectedRental.rental_id || selectedRental.id,
-        rental_title: selectedRental.title,
-        request_type: "initial_verification",
-        additional_notes: "",
-        terms_accepted: false,
-        proof_docs: [],
-        ownership_documents: [],
-        utility_bills: [],
-        license_documents: [],
-        agent_id: agentData?.id || "",
-        agent_name: agentData?.fullName || agentData?.name || "",
-      });
-      setSelectedFiles({
-        proof_documents: [],
-        property_ownership_docs: [],
-        utility_bills: [],
-        license_documents: [],
-      });
+      setData("listing_id", selectedRental.id);
+      setData("property_title", selectedRental.title || "");
+      setData("property_address", selectedRental.address || "");
+      setData("availability_status", "available");
+      setData("notes", "");
+      setData("terms_accepted", false);
+      setData("ownership_documents", []);
+      setData("photos", []);
+      setData("other_documents", []);
+
+      setSelectedFiles({ ownership_documents: [], photos: [], other_documents: [] });
       setUploadProgress({});
       clearErrors();
     }
@@ -146,28 +150,15 @@ const VerificationRequestModal = ({ isOpen, onClose, agentData, selectedRental, 
       name: file.name,
       type: file.type,
       size: file.size,
-      progress: 0,
     }));
 
-    // Update display state
     setSelectedFiles((prev) => ({ ...prev, [field]: [...prev[field], ...newFiles] }));
 
-    // Map display keys to form keys
-    const formKeyMap = {
-      proof_documents: "proof_docs",
-      property_ownership_docs: "ownership_documents",
-      utility_bills: "utility_bills",
-      license_documents: "license_documents",
-    };
-    const formKey = formKeyMap[field] || field;
+    const current = data[field] || [];
+    setData(field, [...current, ...files]);
 
-    // Update form data
-    const current = data[formKey] || [];
-    setData(formKey, [...current, ...files]);
+    if (errors[field]) clearErrors(field);
 
-    if (errors[formKey]) clearErrors(formKey);
-
-    // Simulate progress
     newFiles.forEach((fileObj) => simulateUpload(fileObj.id));
   };
 
@@ -186,25 +177,16 @@ const VerificationRequestModal = ({ isOpen, onClose, agentData, selectedRental, 
       [field]: prev[field].filter((_, i) => i !== index),
     }));
 
-    const formKeyMap = {
-      proof_documents: "proof_docs",
-      property_ownership_docs: "ownership_documents",
-      utility_bills: "utility_bills",
-      license_documents: "license_documents",
-    };
-    const formKey = formKeyMap[field] || field;
-
-    const files = [...data[formKey]];
+    const files = [...data[field]];
     files.splice(index, 1);
-    setData(formKey, files);
+    setData(field, files);
   };
 
   const validateForm = () => {
     const totalDocs =
-      (data.proof_docs?.length || 0) +
       (data.ownership_documents?.length || 0) +
-      (data.utility_bills?.length || 0) +
-      (data.license_documents?.length || 0);
+      (data.photos?.length || 0) +
+      (data.other_documents?.length || 0);
 
     if (totalDocs === 0) {
       alert("Please upload at least one document to verify your listing");
@@ -214,8 +196,12 @@ const VerificationRequestModal = ({ isOpen, onClose, agentData, selectedRental, 
       alert("You must accept the terms and conditions");
       return false;
     }
-    if (!data.rental_id) {
-      alert("No rental property selected");
+    if (!data.listing_id) {
+      alert("No property selected");
+      return false;
+    }
+    if (!data.property_address.trim()) {
+      alert("Please provide the property address");
       return false;
     }
     return true;
@@ -225,16 +211,15 @@ const VerificationRequestModal = ({ isOpen, onClose, agentData, selectedRental, 
     if (!validateForm()) return;
 
     const formData = new FormData();
-    formData.append("rental_id", data.rental_id);
-    formData.append("agent_id", data.agent_id);
-    formData.append("agent_name", data.agent_name);
-    formData.append("request_type", data.request_type);
-    formData.append("additional_notes", data.additional_notes ?? "");
+    formData.append("listing_id", data.listing_id);
+    formData.append("property_title", data.property_title);
+    formData.append("property_address", data.property_address);
+    formData.append("availability_status", data.availability_status);
+    formData.append("notes", data.notes ?? "");
 
-    data.proof_docs.forEach((file) => formData.append("proof_docs[]", file));
     data.ownership_documents.forEach((file) => formData.append("ownership_documents[]", file));
-    data.utility_bills.forEach((file) => formData.append("utility_bills[]", file));
-    data.license_documents.forEach((file) => formData.append("license_documents[]", file));
+    data.photos.forEach((file) => formData.append("photos[]", file));
+    data.other_documents.forEach((file) => formData.append("other_documents[]", file));
 
     router.post("/verification-requests", formData, {
       forceFormData: true,
@@ -264,54 +249,16 @@ const VerificationRequestModal = ({ isOpen, onClose, agentData, selectedRental, 
   const handleClose = () => {
     if (processing) return;
     reset();
-    setSelectedFiles({
-      proof_documents: [],
-      property_ownership_docs: [],
-      utility_bills: [],
-      license_documents: [],
-    });
+    setSelectedFiles({ ownership_documents: [], photos: [], other_documents: [] });
     setUploadProgress({});
     clearErrors();
     setToast(null);
     onClose();
   };
 
-  // ----- Document sections for the form -----
-  const documentSections = [
-    {
-      key: "proof_documents",
-      formKey: "proof_docs",
-      title: "Proof of Property Ownership/Authorization",
-      description: "Property deed, title, lease agreement, or authorization letter from owner",
-      required: false,
-    },
-    {
-      key: "property_ownership_docs",
-      formKey: "ownership_documents",
-      title: "Property Photos (Optional)",
-      description: "Clear photos of property exterior, interior, and address",
-      required: false,
-    },
-    {
-      key: "utility_bills",
-      formKey: "utility_bills",
-      title: "Utility Bills (Optional)",
-      description: "Recent utility bills showing property address",
-      required: false,
-    },
-    {
-      key: "license_documents",
-      formKey: "license_documents",
-      title: "License Documents (Optional)",
-      description: "Business license, permit, or any operating license related to the property",
-      required: false,
-    },
-  ];
-
   // ----- Status view (when pending or approved) -----
   const renderStatusView = () => {
     const isPending = verificationStatus === "pending";
-    const isApproved = verificationStatus === "approved";
 
     return (
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "2rem 1.5rem", textAlign: "center", flex: 1 }}>
@@ -338,21 +285,15 @@ const VerificationRequestModal = ({ isOpen, onClose, agentData, selectedRental, 
               Listing Verified
             </h3>
             <p style={{ fontSize: "0.875rem", color: "hsl(200 15% 45%)", maxWidth: "24rem", marginBottom: "1.5rem" }}>
-              <strong>{selectedRental?.title}</strong> has been successfully verified. If you need to update documents or re-verify, please use the <strong>Re-Verification</strong> option.
+              <strong>{selectedRental?.title}</strong> has been successfully verified.
             </p>
           </>
         )}
         <button
           onClick={handleClose}
           style={{
-            padding: "0.75rem 2rem",
-            backgroundColor: "white",
-            border: "1px solid hsl(40 20% 88%)",
-            borderRadius: "0.5rem",
-            fontWeight: "600",
-            cursor: "pointer",
-            fontSize: "0.875rem",
-            color: "hsl(200 25% 15%)",
+            padding: "0.75rem 2rem", backgroundColor: "white", border: "1px solid hsl(40 20% 88%)",
+            borderRadius: "0.5rem", fontWeight: "600", cursor: "pointer", fontSize: "0.875rem", color: "hsl(200 25% 15%)",
           }}
         >
           Close
@@ -361,14 +302,14 @@ const VerificationRequestModal = ({ isOpen, onClose, agentData, selectedRental, 
     );
   };
 
-  // If modal is not open, nothing is rendered
   if (!isOpen) return null;
 
-  // ----- Toast & Modal styles -----
   const toastStyles = {
     success: { backgroundColor: "hsl(152 60% 40%)", borderColor: "hsl(152 60% 30%)", color: "white" },
     error: { backgroundColor: "hsl(0 72% 51%)", borderColor: "hsl(0 72% 40%)", color: "white" },
   };
+
+  const showForm = verificationStatus !== "pending" && verificationStatus !== "approved";
 
   return (
     <>
@@ -379,7 +320,6 @@ const VerificationRequestModal = ({ isOpen, onClose, agentData, selectedRental, 
         @keyframes slideInUp { from { opacity: 0; transform: translateY(1rem); } to { opacity: 1; transform: translateY(0); } }
       `}</style>
 
-      {/* Toast */}
       {toast && (
         <div style={{ position: "fixed", bottom: "1.5rem", right: "1.5rem", zIndex: 2000, animation: "slideInUp 0.3s ease-out" }}>
           <div style={{
@@ -394,7 +334,6 @@ const VerificationRequestModal = ({ isOpen, onClose, agentData, selectedRental, 
         </div>
       )}
 
-      {/* Backdrop */}
       <div
         style={{
           position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
@@ -403,7 +342,6 @@ const VerificationRequestModal = ({ isOpen, onClose, agentData, selectedRental, 
         }}
         onClick={(e) => { if (e.target === e.currentTarget && !processing) handleClose(); }}
       >
-        {/* Modal Container */}
         <div style={{
           backgroundColor: "white", borderRadius: "1rem", width: "100%", maxWidth: "48rem", maxHeight: "90vh",
           overflow: "hidden", boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)", animation: "modalFadeIn 0.3s ease-out",
@@ -420,9 +358,7 @@ const VerificationRequestModal = ({ isOpen, onClose, agentData, selectedRental, 
                   Request Listing Verification
                 </h2>
                 <p style={{ fontSize: "0.875rem", color: "hsl(200 15% 45%)" }}>
-                  {verificationStatus === "pending" || verificationStatus === "approved"
-                    ? "Verification status"
-                    : "Submit documents to verify your property"}
+                  {showForm ? "Submit documents to verify your property" : "Verification status"}
                 </p>
               </div>
             </div>
@@ -431,167 +367,174 @@ const VerificationRequestModal = ({ isOpen, onClose, agentData, selectedRental, 
             </button>
           </div>
 
-          {/* Main content (always visible) */}
-          <>
-            {/* Form errors (only in form view) */}
-            {verificationStatus !== "pending" && verificationStatus !== "approved" && Object.keys(errors).length > 0 && (
-              <div style={{ margin: "1rem 1.5rem 0", padding: "1rem", backgroundColor: "hsl(0 72% 51% / 0.1)", border: "1px solid hsl(0 72% 51% / 0.3)", borderRadius: "0.5rem", display: "flex", gap: "0.75rem", alignItems: "start" }}>
-                <AlertCircle style={{ height: "1.25rem", width: "1.25rem", color: "hsl(0 72% 51%)", flexShrink: 0 }} />
-                <div>
-                  <p style={{ fontWeight: "600", color: "hsl(0 72% 51%)", marginBottom: "0.25rem" }}>Error</p>
-                  {Object.entries(errors).map(([key, error]) => (
-                    <p key={key} style={{ fontSize: "0.875rem", color: "hsl(0 72% 40%)" }}>{error}</p>
-                  ))}
-                </div>
+          {showForm && Object.keys(errors).length > 0 && (
+            <div style={{ margin: "1rem 1.5rem 0", padding: "1rem", backgroundColor: "hsl(0 72% 51% / 0.1)", border: "1px solid hsl(0 72% 51% / 0.3)", borderRadius: "0.5rem", display: "flex", gap: "0.75rem", alignItems: "start" }}>
+              <AlertCircle style={{ height: "1.25rem", width: "1.25rem", color: "hsl(0 72% 51%)", flexShrink: 0 }} />
+              <div>
+                <p style={{ fontWeight: "600", color: "hsl(0 72% 51%)", marginBottom: "0.25rem" }}>Error</p>
+                {Object.entries(errors).map(([key, error]) => (
+                  <p key={key} style={{ fontSize: "0.875rem", color: "hsl(0 72% 40%)" }}>{error}</p>
+                ))}
               </div>
-            )}
-
-            <div style={{ padding: "1.5rem", overflowY: "auto", flex: 1 }}>
-              {/* Status view or form */}
-              {verificationStatus === "pending" || verificationStatus === "approved" ? (
-                renderStatusView()
-              ) : (
-                // ----- Full form -----
-                <>
-                  {/* Property Info */}
-                  <div style={{ backgroundColor: "hsl(174 62% 32% / 0.05)", border: "1px solid hsl(174 62% 32% / 0.2)", borderRadius: "0.5rem", padding: "1rem", marginBottom: "1.5rem" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "0.5rem" }}>
-                      <Building style={{ height: "1.25rem", width: "1.25rem", color: "hsl(174 62% 32%)" }} />
-                      <h3 style={{ fontSize: "0.875rem", fontWeight: "600", color: "hsl(200 25% 15%)" }}>Property Being Verified</h3>
-                    </div>
-                    <p style={{ fontSize: "0.875rem", fontWeight: "600", color: "hsl(174 62% 32%)", marginBottom: "0.25rem" }}>
-                      {data.rental_title || "No property selected"}
-                    </p>
-                    {errors.rental_id && <p style={{ fontSize: "0.75rem", color: "hsl(0 72% 51%)", marginTop: "0.25rem" }}>{errors.rental_id}</p>}
-                  </div>
-
-                  {/* Info note */}
-                  <div style={{ backgroundColor: "hsl(48 96% 89%)", border: "1px solid hsl(48 96% 70%)", borderRadius: "0.5rem", padding: "1rem", marginBottom: "1.5rem" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "0.5rem" }}>
-                      <CheckCircle style={{ height: "1.25rem", width: "1.25rem", color: "hsl(48 96% 30%)" }} />
-                      <h3 style={{ fontSize: "0.875rem", fontWeight: "600", color: "hsl(48 96% 20%)" }}>Simplified Verification Process</h3>
-                    </div>
-                    <p style={{ fontSize: "0.875rem", color: "hsl(48 96% 25%)", margin: 0 }}>Upload at least one document to get your listing verified. All document types are optional – choose what you have available.</p>
-                  </div>
-
-                  {/* Request Type */}
-                  <div style={{ marginBottom: "1.5rem" }}>
-                    <label style={{ display: "block", fontSize: "0.875rem", fontWeight: "600", color: "hsl(200 25% 15%)", marginBottom: "0.5rem" }}>Verification Type</label>
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "0.75rem" }}>
-                      {[
-                        { value: "initial_verification", label: "Initial Verification", icon: DocumentText },
-                        { value: "re_verification", label: "Re-Verification", icon: UserCheck },
-                      ].map(({ value, label, icon: Icon }) => (
-                        <button
-                          key={value}
-                          type="button"
-                          onClick={() => handleInputChange("request_type", value)}
-                          disabled={processing}
-                          style={{
-                            padding: "0.75rem", border: data.request_type === value ? "2px solid hsl(174 62% 32%)" : "1px solid hsl(40 20% 88%)",
-                            backgroundColor: data.request_type === value ? "hsl(174 62% 32% / 0.1)" : "white", borderRadius: "0.5rem",
-                            cursor: processing ? "not-allowed" : "pointer", textAlign: "center"
-                          }}
-                        >
-                          <Icon style={{ height: "1.5rem", width: "1.5rem", color: data.request_type === value ? "hsl(174 62% 32%)" : "hsl(200 15% 45%)", margin: "0 auto 0.5rem" }} />
-                          <span style={{ display: "block", fontSize: "0.875rem", fontWeight: "500", color: data.request_type === value ? "hsl(174 62% 32%)" : "hsl(200 25% 15%)" }}>{label}</span>
-                        </button>
-                      ))}
-                    </div>
-                    {errors.request_type && <p style={{ fontSize: "0.75rem", color: "hsl(0 72% 51%)", marginTop: "0.5rem" }}>{errors.request_type}</p>}
-                  </div>
-
-                  {/* Document upload sections */}
-                  {documentSections.map((section) => (
-                    <div key={section.key} style={{ marginBottom: "1.5rem" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.5rem" }}>
-                        <label style={{ fontSize: "0.875rem", fontWeight: "600", color: "hsl(200 25% 15%)" }}>{section.title}</label>
-                        {section.required && <span style={{ fontSize: "0.75rem", color: "hsl(0 65% 45%)", backgroundColor: "hsl(0 65% 45% / 0.1)", padding: "0.125rem 0.375rem", borderRadius: "0.25rem", fontWeight: "500" }}>Required</span>}
-                      </div>
-                      <p style={{ fontSize: "0.75rem", color: "hsl(200 15% 45%)", marginBottom: "0.75rem" }}>{section.description}</p>
-                      {errors[section.formKey] && <p style={{ fontSize: "0.75rem", color: "hsl(0 72% 51%)", marginBottom: "0.5rem" }}>{errors[section.formKey]}</p>}
-
-                      <div
-                        style={{ border: "2px dashed hsl(40 20% 88%)", borderRadius: "0.5rem", padding: "1.5rem", textAlign: "center", backgroundColor: "hsl(40 30% 98%)", cursor: processing ? "not-allowed" : "pointer", marginBottom: "0.75rem" }}
-                        onClick={() => !processing && document.getElementById(`${section.key}-input`).click()}
-                      >
-                        <Upload style={{ height: "1.5rem", width: "1.5rem", color: "hsl(200 15% 45%)", margin: "0 auto 0.5rem" }} />
-                        <p style={{ fontSize: "0.875rem", color: "hsl(200 25% 15%)", fontWeight: "500", marginBottom: "0.25rem" }}>Click to upload files</p>
-                        <p style={{ fontSize: "0.75rem", color: "hsl(200 15% 45%)" }}>PNG, JPG, PDF up to 10MB each</p>
-                        <input id={`${section.key}-input`} type="file" multiple accept="image/*,.pdf,.doc,.docx" onChange={(e) => handleFileUpload(section.key, e)} style={{ display: "none" }} disabled={processing} />
-                      </div>
-
-                      {selectedFiles[section.key].length > 0 && (
-                        <div>
-                          {selectedFiles[section.key].map((fileObj, index) => (
-                            <div key={fileObj.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.75rem", backgroundColor: "hsl(40 30% 96%)", borderRadius: "0.375rem", marginBottom: "0.5rem" }}>
-                              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flex: 1 }}>
-                                {uploadProgress[fileObj.id] >= 100 ? <CheckCircle style={{ height: "1rem", width: "1rem", color: "hsl(152 60% 40%)" }} /> : <div style={{ width: "1rem", height: "1rem", border: "2px solid hsl(174 62% 32%)", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 1s linear infinite" }} />}
-                                <span style={{ fontSize: "0.875rem", color: "hsl(200 25% 15%)", flex: 1 }}>{fileObj.name}</span>
-                              </div>
-                              <button type="button" onClick={() => removeFile(section.key, index)} disabled={processing || uploadProgress[fileObj.id] < 100} style={{ padding: "0.25rem", border: "none", backgroundColor: "transparent", cursor: (processing || uploadProgress[fileObj.id] < 100) ? "not-allowed" : "pointer", color: "hsl(0 65% 45%)" }}>
-                                <X style={{ height: "1rem", width: "1rem" }} />
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-
-                  {/* Additional Notes */}
-                  <div style={{ marginBottom: "1.5rem" }}>
-                    <label style={{ display: "block", fontSize: "0.875rem", fontWeight: "600", color: "hsl(200 25% 15%)", marginBottom: "0.5rem" }}>Additional Information</label>
-                    <textarea
-                      value={data.additional_notes}
-                      onChange={(e) => handleInputChange("additional_notes", e.target.value)}
-                      placeholder="Any additional information..." rows={3} disabled={processing}
-                      style={{ width: "100%", padding: "0.625rem", border: errors.additional_notes ? "1px solid hsl(0 72% 51%)" : "1px solid hsl(40 20% 88%)", borderRadius: "0.5rem", fontSize: "0.875rem", resize: "vertical", fontFamily: "inherit" }}
-                    />
-                    {errors.additional_notes && <p style={{ fontSize: "0.75rem", color: "hsl(0 72% 51%)", marginTop: "0.5rem" }}>{errors.additional_notes}</p>}
-                  </div>
-
-                  {/* Terms */}
-                  <div style={{ marginBottom: "1.5rem" }}>
-                    <div style={{ display: "flex", gap: "0.75rem" }}>
-                      <input type="checkbox" id="terms" checked={data.terms_accepted} onChange={(e) => handleInputChange("terms_accepted", e.target.checked)} disabled={processing} style={{ accentColor: "hsl(174 62% 32%)", width: "1.125rem", height: "1.125rem", cursor: "pointer" }} />
-                      <label htmlFor="terms" style={{ fontSize: "0.875rem", color: "hsl(200 25% 15%)", cursor: "pointer", flex: 1 }}>
-                        I confirm all submitted documents are authentic. I understand verification takes 3-5 business days and false information may result in account suspension.
-                      </label>
-                    </div>
-                    {errors.terms_accepted && <p style={{ fontSize: "0.75rem", color: "hsl(0 72% 51%)", marginTop: "0.5rem", marginLeft: "2rem" }}>{errors.terms_accepted}</p>}
-                  </div>
-                </>
-              )}
             </div>
+          )}
 
-            {/* Footer – only in form view */}
-            {verificationStatus !== "pending" && verificationStatus !== "approved" && (
-              <div style={{ padding: "1.5rem", borderTop: "1px solid hsl(40 20% 88%)", backgroundColor: "hsl(40 30% 98%)", display: "flex", gap: "0.75rem" }}>
-                <button type="button" onClick={handleClose} disabled={processing} style={{ flex: 1, padding: "0.75rem", border: "1px solid hsl(40 20% 88%)", backgroundColor: "white", borderRadius: "0.5rem", fontWeight: "600", cursor: processing ? "not-allowed" : "pointer", fontSize: "0.875rem", color: "hsl(200 15% 45%)" }}>
-                  Cancel
-                </button>
-                <button
-                  type="button" onClick={handleSubmit} disabled={processing || !data.terms_accepted}
-                  style={{
-                    flex: 2, padding: "0.75rem", border: "none",
-                    background: processing || !data.terms_accepted ? "hsl(200 15% 45%)" : "linear-gradient(135deg, hsl(174 62% 32%) 0%, hsl(174 50% 25%) 100%)",
-                    color: "white", borderRadius: "0.5rem", fontWeight: "600", cursor: processing || !data.terms_accepted ? "not-allowed" : "pointer", fontSize: "0.875rem",
-                    display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem"
-                  }}
-                >
-                  {processing ? (
-                    <>
-                      <div style={{ width: "1rem", height: "1rem", border: "2px solid white", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
-                      Submitting...
-                    </>
-                  ) : (
-                    "Submit Verification Request"
-                  )}
-                </button>
-              </div>
+          <div style={{ padding: "1.5rem", overflowY: "auto", flex: 1 }}>
+            {!showForm ? (
+              renderStatusView()
+            ) : (
+              <>
+                {/* Property title (read-only) */}
+                <div style={{ backgroundColor: "hsl(174 62% 32% / 0.05)", border: "1px solid hsl(174 62% 32% / 0.2)", borderRadius: "0.5rem", padding: "1rem", marginBottom: "1.5rem" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "0.5rem" }}>
+                    <Building style={{ height: "1.25rem", width: "1.25rem", color: "hsl(174 62% 32%)" }} />
+                    <h3 style={{ fontSize: "0.875rem", fontWeight: "600", color: "hsl(200 25% 15%)" }}>Property Being Verified</h3>
+                  </div>
+                  <p style={{ fontSize: "0.875rem", fontWeight: "600", color: "hsl(174 62% 32%)", margin: 0 }}>
+                    {data.property_title || "No property selected"}
+                  </p>
+                  {errors.listing_id && <p style={{ fontSize: "0.75rem", color: "hsl(0 72% 51%)", marginTop: "0.25rem" }}>{errors.listing_id}</p>}
+                </div>
+
+                {/* Property address */}
+                <div style={{ marginBottom: "1.5rem" }}>
+                  <label style={{ display: "block", fontSize: "0.875rem", fontWeight: "600", color: "hsl(200 25% 15%)", marginBottom: "0.5rem" }}>
+                    Property Address
+                  </label>
+                  <input
+                    type="text"
+                    value={data.property_address}
+                    onChange={(e) => handleInputChange("property_address", e.target.value)}
+                    placeholder="e.g. 12 Cantonments Road, Accra"
+                    disabled={processing}
+                    style={{ width: "100%", padding: "0.625rem", border: errors.property_address ? "1px solid hsl(0 72% 51%)" : "1px solid hsl(40 20% 88%)", borderRadius: "0.5rem", fontSize: "0.875rem" }}
+                  />
+                  {errors.property_address && <p style={{ fontSize: "0.75rem", color: "hsl(0 72% 51%)", marginTop: "0.5rem" }}>{errors.property_address}</p>}
+                </div>
+
+                {/* Availability status */}
+                <div style={{ marginBottom: "1.5rem" }}>
+                  <label style={{ display: "block", fontSize: "0.875rem", fontWeight: "600", color: "hsl(200 25% 15%)", marginBottom: "0.5rem" }}>
+                    Current Availability
+                  </label>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "0.5rem" }}>
+                    {AVAILABILITY_OPTIONS.map(({ value, label }) => (
+                      <button
+                        key={value}
+                        type="button"
+                        onClick={() => handleInputChange("availability_status", value)}
+                        disabled={processing}
+                        style={{
+                          padding: "0.5rem", border: data.availability_status === value ? "2px solid hsl(174 62% 32%)" : "1px solid hsl(40 20% 88%)",
+                          backgroundColor: data.availability_status === value ? "hsl(174 62% 32% / 0.1)" : "white", borderRadius: "0.5rem",
+                          cursor: processing ? "not-allowed" : "pointer", fontSize: "0.8125rem", fontWeight: "500",
+                          color: data.availability_status === value ? "hsl(174 62% 32%)" : "hsl(200 25% 15%)"
+                        }}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                  {errors.availability_status && <p style={{ fontSize: "0.75rem", color: "hsl(0 72% 51%)", marginTop: "0.5rem" }}>{errors.availability_status}</p>}
+                </div>
+
+                {/* Info note */}
+                <div style={{ backgroundColor: "hsl(48 96% 89%)", border: "1px solid hsl(48 96% 70%)", borderRadius: "0.5rem", padding: "1rem", marginBottom: "1.5rem" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "0.5rem" }}>
+                    <CheckCircle style={{ height: "1.25rem", width: "1.25rem", color: "hsl(48 96% 30%)" }} />
+                    <h3 style={{ fontSize: "0.875rem", fontWeight: "600", color: "hsl(48 96% 20%)" }}>Simplified Verification Process</h3>
+                  </div>
+                  <p style={{ fontSize: "0.875rem", color: "hsl(48 96% 25%)", margin: 0 }}>
+                    Upload at least one document across the categories below to get your listing verified.
+                  </p>
+                </div>
+
+                {/* Document upload sections */}
+                {DOCUMENT_SECTIONS.map((section) => (
+                  <div key={section.key} style={{ marginBottom: "1.5rem" }}>
+                    <label style={{ display: "block", fontSize: "0.875rem", fontWeight: "600", color: "hsl(200 25% 15%)", marginBottom: "0.25rem" }}>{section.title}</label>
+                    <p style={{ fontSize: "0.75rem", color: "hsl(200 15% 45%)", marginBottom: "0.75rem" }}>{section.description}</p>
+                    {errors[section.key] && <p style={{ fontSize: "0.75rem", color: "hsl(0 72% 51%)", marginBottom: "0.5rem" }}>{errors[section.key]}</p>}
+
+                    <div
+                      style={{ border: "2px dashed hsl(40 20% 88%)", borderRadius: "0.5rem", padding: "1.5rem", textAlign: "center", backgroundColor: "hsl(40 30% 98%)", cursor: processing ? "not-allowed" : "pointer", marginBottom: "0.75rem" }}
+                      onClick={() => !processing && document.getElementById(`${section.key}-input`).click()}
+                    >
+                      <Upload style={{ height: "1.5rem", width: "1.5rem", color: "hsl(200 15% 45%)", margin: "0 auto 0.5rem" }} />
+                      <p style={{ fontSize: "0.875rem", color: "hsl(200 25% 15%)", fontWeight: "500", marginBottom: "0.25rem" }}>Click to upload files</p>
+                      <p style={{ fontSize: "0.75rem", color: "hsl(200 15% 45%)" }}>PNG, JPG, PDF up to 10MB each</p>
+                      <input id={`${section.key}-input`} type="file" multiple accept="image/*,.pdf,.doc,.docx" onChange={(e) => handleFileUpload(section.key, e)} style={{ display: "none" }} disabled={processing} />
+                    </div>
+
+                    {selectedFiles[section.key].length > 0 && (
+                      <div>
+                        {selectedFiles[section.key].map((fileObj, index) => (
+                          <div key={fileObj.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.75rem", backgroundColor: "hsl(40 30% 96%)", borderRadius: "0.375rem", marginBottom: "0.5rem" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flex: 1 }}>
+                              {uploadProgress[fileObj.id] >= 100 ? <CheckCircle style={{ height: "1rem", width: "1rem", color: "hsl(152 60% 40%)" }} /> : <div style={{ width: "1rem", height: "1rem", border: "2px solid hsl(174 62% 32%)", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 1s linear infinite" }} />}
+                              <span style={{ fontSize: "0.875rem", color: "hsl(200 25% 15%)", flex: 1 }}>{fileObj.name}</span>
+                            </div>
+                            <button type="button" onClick={() => removeFile(section.key, index)} disabled={processing || uploadProgress[fileObj.id] < 100} style={{ padding: "0.25rem", border: "none", backgroundColor: "transparent", cursor: (processing || uploadProgress[fileObj.id] < 100) ? "not-allowed" : "pointer", color: "hsl(0 65% 45%)" }}>
+                              <X style={{ height: "1rem", width: "1rem" }} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+
+                {/* Notes */}
+                <div style={{ marginBottom: "1.5rem" }}>
+                  <label style={{ display: "block", fontSize: "0.875rem", fontWeight: "600", color: "hsl(200 25% 15%)", marginBottom: "0.5rem" }}>Additional Notes</label>
+                  <textarea
+                    value={data.notes}
+                    onChange={(e) => handleInputChange("notes", e.target.value)}
+                    placeholder="Any additional information..." rows={3} disabled={processing}
+                    style={{ width: "100%", padding: "0.625rem", border: errors.notes ? "1px solid hsl(0 72% 51%)" : "1px solid hsl(40 20% 88%)", borderRadius: "0.5rem", fontSize: "0.875rem", resize: "vertical", fontFamily: "inherit" }}
+                  />
+                  {errors.notes && <p style={{ fontSize: "0.75rem", color: "hsl(0 72% 51%)", marginTop: "0.5rem" }}>{errors.notes}</p>}
+                </div>
+
+                {/* Terms */}
+                <div style={{ marginBottom: "1.5rem" }}>
+                  <div style={{ display: "flex", gap: "0.75rem" }}>
+                    <input type="checkbox" id="terms" checked={data.terms_accepted} onChange={(e) => handleInputChange("terms_accepted", e.target.checked)} disabled={processing} style={{ accentColor: "hsl(174 62% 32%)", width: "1.125rem", height: "1.125rem", cursor: "pointer" }} />
+                    <label htmlFor="terms" style={{ fontSize: "0.875rem", color: "hsl(200 25% 15%)", cursor: "pointer", flex: 1 }}>
+                      I confirm all submitted documents are authentic. I understand verification takes 3-5 business days and false information may result in account suspension.
+                    </label>
+                  </div>
+                  {errors.terms_accepted && <p style={{ fontSize: "0.75rem", color: "hsl(0 72% 51%)", marginTop: "0.5rem", marginLeft: "2rem" }}>{errors.terms_accepted}</p>}
+                </div>
+              </>
             )}
-          </>
+          </div>
+
+          {showForm && (
+            <div style={{ padding: "1.5rem", borderTop: "1px solid hsl(40 20% 88%)", backgroundColor: "hsl(40 30% 98%)", display: "flex", gap: "0.75rem" }}>
+              <button type="button" onClick={handleClose} disabled={processing} style={{ flex: 1, padding: "0.75rem", border: "1px solid hsl(40 20% 88%)", backgroundColor: "white", borderRadius: "0.5rem", fontWeight: "600", cursor: processing ? "not-allowed" : "pointer", fontSize: "0.875rem", color: "hsl(200 15% 45%)" }}>
+                Cancel
+              </button>
+              <button
+                type="button" onClick={handleSubmit} disabled={processing || !data.terms_accepted}
+                style={{
+                  flex: 2, padding: "0.75rem", border: "none",
+                  background: processing || !data.terms_accepted ? "hsl(200 15% 45%)" : "linear-gradient(135deg, hsl(174 62% 32%) 0%, hsl(174 50% 25%) 100%)",
+                  color: "white", borderRadius: "0.5rem", fontWeight: "600", cursor: processing || !data.terms_accepted ? "not-allowed" : "pointer", fontSize: "0.875rem",
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem"
+                }}
+              >
+                {processing ? (
+                  <>
+                    <div style={{ width: "1rem", height: "1rem", border: "2px solid white", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
+                    Submitting...
+                  </>
+                ) : (
+                  "Submit Verification Request"
+                )}
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </>

@@ -9,7 +9,7 @@ use App\Http\Controllers\SaleSearchController;
 use App\Http\Controllers\AgentController;
 
 use App\Models\Rental;
-use App\Models\VerificationRequest;
+// use App\Models\VerificationRequest;
 
 use App\Http\Controllers\Admin\AgentsController;
 use App\Http\Controllers\Admin\ListingController;
@@ -26,7 +26,7 @@ use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\PaymentsController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\WebhookController;
-use App\Http\Controllers\VerificationsController;
+// use App\Http\Controllers\VerificationsController;
 use App\Http\Controllers\AgentAnalyticsController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\ContactController;
@@ -119,17 +119,6 @@ Route::middleware(['auth', 'verified', 'throttle:60,1', 'role:agent'])->group(fu
     Route::post('/rent', [RentController::class, 'store']);
     Route::put('/response', [ResponseController::class, 'response']);
 
-    Route::post('/settings/verification', [AgentVerificationController::class, 'store'])
-        ->name('settings.verification.store');
-
-    Route::get('/api/verification/status', [AgentVerificationController::class, 'status'])
-        ->name('verification.status');
-    
-    // Verification request routes for agents
-    // Route::post('/verification-requests', [VerificationsController::class, 'store'])
-    //     ->name('verification.store');
-
-    // Route::get('/verification-status/{id}', [VerificationsController::class, 'verificationStatus']);
 });
 
 Route::get('/agent/dashboard', [DashboardController::class, 'freeTier'])->middleware(['auth','role:agent','throttle:60,1'])->name('free.agent.dashboard');
@@ -153,6 +142,12 @@ Route::middleware(['auth','verified'])->group(function () {
 
     Route::get('/payment/callback', [CheckoutController::class, 'callback'])
         ->name('payment.callback');
+
+    Route::post('/settings/verification', [AgentVerificationController::class, 'store'])
+        ->name('settings.verification.store');
+
+    Route::get('/api/verification/status', [AgentVerificationController::class, 'status'])
+        ->name('verification.status');
 });
 
 // ── Admin Routes ──────────────────────────────────────────────────────────────

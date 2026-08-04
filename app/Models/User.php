@@ -119,18 +119,16 @@ class User extends Authenticatable
         return $this->hasOne(Subscription::class)->latestOfMany();
     }
 
+    public function verification()
+    {
+        return $this->hasOne(\App\Models\AgentVerification::class, 'agent_id');
+    }
+
     public function getRouteKeyName()
     {
         return 'id';  // Use the integer primary key for route binding (faster lookups)
     }
 
-    /**
-     * Historical subscriptions for the user.
-     *
-     * Used by services that need to query all records instead of the
-     * current active subscription. This complements the `subscription`
-     * helper above which returns the most recent subscription.
-     */
     public function subscriptions(): HasMany
     {
         return $this->hasMany(Subscription::class);

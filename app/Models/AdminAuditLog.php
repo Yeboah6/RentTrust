@@ -93,4 +93,12 @@ class AdminAuditLog extends Model
             'properties'    => $context['properties']     ?? null,
         ]);
     }
+
+    protected static function booted()
+    {
+        static::creating(function (AdminAuditLog $log) {
+            $log->admin_audit_log_id ??= (string) Str::uuid();
+            $log->created_at ??= now();
+        });
+    }
 }

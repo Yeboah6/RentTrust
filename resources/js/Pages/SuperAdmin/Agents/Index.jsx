@@ -85,29 +85,35 @@ const fmtRelative = (v) => {
 
 const avatarHue = (s = '') => [...s].reduce((a, c) => a + c.charCodeAt(0), 0) % 360;
 
-const normalise = (a) => ({
-    ...a,
-    _id:           a.id,
-    name:          a.name          ?? a.full_name      ?? '—',
-    email:         a.email         ?? '',
-    phone:         a.phone         ?? a.phone_number   ?? '',
-    status_key:    (a.status       ?? 'pending').toLowerCase(),
-    tier:          (a.tier         ?? a.plan           ?? a.subscription_type ?? 'standard').toLowerCase(),
-    agency:        a.agency        ?? a.agency_name    ?? a.company           ?? '',
-    license:       a.license       ?? a.license_number ?? a.rea_number        ?? '',
-    location:      a.location      ?? a.city           ?? a.area              ?? '',
-    listings_count:a.listings_count ?? a.total_listings ?? 0,
-    active_listings: a.active_listings ?? 0,
-    sold_count:    a.sold_count    ?? a.properties_sold ?? 0,
-    rating:        a.rating        ?? a.average_rating ?? null,
-    reviews_count: a.reviews_count ?? 0,
-    is_verified:   a.is_verified   ?? a.verified       ?? false,
-    is_featured:   a.is_featured   ?? a.featured       ?? false,
-    avatar:        a.avatar        ?? a.profile_photo  ?? null,
-    joined_at:     a.joined_at     ?? a.created_at     ?? '',
-    last_active:   a.last_active   ?? a.last_login_at  ?? '',
-    total_revenue: a.total_revenue ?? null,
-});
+const normalise = (a) => {
+    const isVerified = !!a.is_verified;
+    const rawStatus  = (a.status ?? 'pending').toLowerCase();
+
+    return {
+        ...a,
+        _id:           a.id,
+        name:          a.name          ?? a.full_name      ?? '—',
+        email:         a.email         ?? '',
+        phone:         a.phone         ?? a.phone_number   ?? '',
+        status_key:    isVerified ? 'verified' : rawStatus,
+        tier:          (a.tier         ?? a.plan           ?? a.subscription_type ?? 'standard').toLowerCase(),
+        agency:        a.agency        ?? a.agency_name    ?? a.company           ?? '',
+        license:       a.license       ?? a.license_number ?? a.rea_number        ?? '',
+        location:      a.location      ?? a.city           ?? a.area              ?? '',
+        listings_count:a.listings_count ?? a.total_listings ?? 0,
+        active_listings: a.active_listings ?? 0,
+        sold_count:    a.sold_count    ?? a.properties_sold ?? 0,
+        rating:        a.rating        ?? a.average_rating ?? null,
+        reviews_count: a.reviews_count ?? 0,
+        is_verified:   isVerified,
+        has_verification_submission: !!a.has_verification_submission,
+        is_featured:   a.is_featured   ?? a.featured       ?? false,
+        avatar:        a.avatar        ?? a.profile_photo  ?? null,
+        joined_at:     a.joined_at     ?? a.created_at     ?? '',
+        last_active:   a.last_active   ?? a.last_login_at  ?? '',
+        total_revenue: a.total_revenue ?? null,
+    };
+};
 
 // ─── Atoms ────────────────────────────────────────────────────────────────────
 
@@ -182,7 +188,6 @@ const ActionModal = ({ agent, action, onConfirm, onClose, processing }) => {
     const hue = avatarHue(agent.name);
 
     const meta = {
-        verify:    { label: 'Verify Agent',     accentBg: 'hsl(214 100% 95%)', accent: 'hsl(214 80% 40%)', confirmBg: 'hsl(214 80% 42%)', confirmLabel: 'Verify',    icon: Icons.shield,   body: `Verify ${agent.name}'s account. This grants them the verified badge and increases listing trust.` },
         suspend:   { label: 'Suspend Agent',    accentBg: 'hsl(0 70% 95%)',   accent: 'hsl(0 65% 40%)',   confirmBg: 'hsl(0 65% 50%)',   confirmLabel: 'Suspend',   icon: Icons.ban,      body: `Suspend ${agent.name}'s account. They will lose access to the platform immediately.` },
         reactivate:{ label: 'Reactivate Agent', accentBg: 'hsl(152 55% 92%)', accent: 'hsl(152 55% 30%)', confirmBg: 'hsl(152 55% 33%)', confirmLabel: 'Reactivate',icon: Icons.check,    body: `Reactivate ${agent.name}'s account. They will regain full platform access.` },
         delete:    { label: 'Delete Agent',     accentBg: 'hsl(0 70% 95%)',   accent: 'hsl(0 65% 40%)',   confirmBg: 'hsl(0 65% 50%)',   confirmLabel: 'Delete',    icon: Icons.trash,    body: `Permanently delete ${agent.name}? This removes all their listings, data, and cannot be undone.` },
@@ -268,6 +273,7 @@ const AgentCard = ({ agent: a, index, onAction }) => {
                                 {a.name.split(' ').map(w => w[0]).slice(0, 2).join('')}
                             </div>
                         )}
+                        {/* Checkmark only ever renders when verification is genuinely approved */}
                         {a.is_verified && (
                             <div style={{ position: 'absolute', bottom: '-2px', right: '-2px', width: '1.05rem', height: '1.05rem', borderRadius: '50%', backgroundColor: 'hsl(214 80% 50%)', border: '2px solid white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                 <svg style={{ width: '0.5rem', height: '0.5rem' }} fill="white" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
@@ -331,13 +337,13 @@ const AgentCard = ({ agent: a, index, onAction }) => {
                     <Icons.edit />
                 </Link>
 
-                {a.status_key === 'pending' && (
-                    <button onClick={() => onAction(a, 'verify')}
-                        style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem', height: '1.9rem', borderRadius: '0.45rem', border: 'none', backgroundColor: 'hsl(214 100% 95%)', color: 'hsl(214 80% 40%)', fontSize: '0.72rem', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit', transition: 'filter 0.15s' }}
+                {!a.is_verified && a.has_verification_submission && (
+                    <Link href={`/super-admin/verifications/agents?search=${encodeURIComponent(a.email)}`}
+                        style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem', height: '1.9rem', borderRadius: '0.45rem', border: 'none', backgroundColor: 'hsl(214 100% 95%)', color: 'hsl(214 80% 40%)', fontSize: '0.72rem', fontWeight: '700', textDecoration: 'none', fontFamily: 'inherit', transition: 'filter 0.15s' }}
                         onMouseEnter={e => e.currentTarget.style.filter = 'brightness(0.9)'}
                         onMouseLeave={e => e.currentTarget.style.filter = 'none'}>
-                        <Icons.shield /> Verify
-                    </button>
+                        <Icons.shield /> Review
+                    </Link>
                 )}
 
                 {(a.status_key === 'active' || a.status_key === 'verified') && (
@@ -461,13 +467,13 @@ const AgentRow = ({ agent: a, index, onAction }) => {
                     onMouseLeave={e => e.currentTarget.style.filter = 'none'}>
                     <Icons.edit />
                 </Link>
-                {a.status_key === 'pending' && (
-                    <button onClick={() => onAction(a, 'verify')}
-                        style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', padding: '0.38rem 0.55rem', borderRadius: '0.45rem', border: 'none', backgroundColor: 'hsl(214 100% 95%)', color: 'hsl(214 80% 40%)', fontSize: '0.72rem', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit', transition: 'filter 0.15s' }}
+                {!a.is_verified && a.has_verification_submission && (
+                    <Link href={`/super-admin/verifications/agents?search=${encodeURIComponent(a.email)}`}
+                        style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', padding: '0.38rem 0.55rem', borderRadius: '0.45rem', border: 'none', backgroundColor: 'hsl(214 100% 95%)', color: 'hsl(214 80% 40%)', fontSize: '0.72rem', fontWeight: '700', textDecoration: 'none', fontFamily: 'inherit', transition: 'filter 0.15s' }}
                         onMouseEnter={e => e.currentTarget.style.filter = 'brightness(0.9)'}
                         onMouseLeave={e => e.currentTarget.style.filter = 'none'}>
-                        <Icons.shield /> Verify
-                    </button>
+                        <Icons.shield /> Review
+                    </Link>
                 )}
                 {(a.status_key === 'active' || a.status_key === 'verified') && (
                     <button onClick={() => onAction(a, 'suspend')}
@@ -550,7 +556,6 @@ const AgentsIndex = ({ agents: rawAgents = [], listings_count }) => {
         const { agent, action } = modal;
         setProcessing(true);
         const routeMap = {
-            verify:     `/super-admin/agents/${agent._id}/verify`,
             suspend:    `/super-admin/agents/${agent._id}/suspend`,
             reactivate: `/super-admin/agents/${agent._id}/reactivate`,
             delete:     `/super-admin/agents/${agent._id}`,
@@ -612,6 +617,12 @@ const AgentsIndex = ({ agents: rawAgents = [], listings_count }) => {
                         </p>
                     </div>
                     <div style={{ display: 'flex', gap: '0.65rem', flexShrink: 0 }}>
+                        <Link href="/super-admin/verifications/agents"
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.6rem 1rem', borderRadius: '0.65rem', border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white', color: 'hsl(220 25% 28%)', fontWeight: '600', fontSize: '0.83rem', textDecoration: 'none', transition: 'background-color 0.15s' }}
+                            onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'hsl(220 15% 96%)'; }}
+                            onMouseLeave={e => e.currentTarget.style.backgroundColor = 'white'}>
+                            <Icons.shield /> Verification Queue
+                        </Link>
                         <button onClick={refresh} disabled={refreshing}
                             style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.6rem 1rem', borderRadius: '0.65rem', border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white', color: 'hsl(220 25% 28%)', fontWeight: '600', fontSize: '0.83rem', cursor: refreshing ? 'not-allowed' : 'pointer', fontFamily: 'inherit', transition: 'background-color 0.15s' }}
                             onMouseEnter={e => { if (!refreshing) e.currentTarget.style.backgroundColor = 'hsl(220 15% 96%)'; }}

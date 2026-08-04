@@ -66,7 +66,7 @@ const AdminSettingsPage = () => {
     license_documents: null,
     proof_of_address: null,
     resubmission_note: "", 
-    note: verification?.note || "",
+    notes: verification?.notes || "",
   });
 
   // Security settings
@@ -506,7 +506,7 @@ const AdminSettingsPage = () => {
                   </div>
 
                   {/* Rejection notes from reviewer */}
-                  {verificationStatus === "rejected" && verification?.notes && (
+                  {verificationStatus === "rejected" && verification?.admin_notes && (
                     <div style={{
                       backgroundColor: '#fef2f2',
                       border: '1px solid #fecaca',
@@ -517,7 +517,7 @@ const AdminSettingsPage = () => {
                       <p style={{ fontWeight: '600', color: '#991b1b', fontSize: '0.8125rem', marginBottom: '0.25rem' }}>
                         Reason for rejection
                       </p>
-                      <p style={{ color: '#991b1b', fontSize: '0.8125rem' }}>{verification.notes}</p>
+                      <p style={{ color: '#991b1b', fontSize: '0.8125rem' }}>{verification.admin_notes}</p>
                     </div>
                   )}
 
@@ -581,7 +581,7 @@ const AdminSettingsPage = () => {
                       </div>
 
                       {/* Resubmission Note - shown only when rejected */}
-                      {verificationStatus === "rejected" && (
+                      {/* {verificationStatus === "rejected" && (
                         <div>
                           <label style={{
                             ...fieldLabelStyle,
@@ -611,7 +611,7 @@ const AdminSettingsPage = () => {
                             This note will be visible to the reviewer when they process your new submission
                           </p>
                         </div>
-                      )}
+                      )} */}
 
                       {/* Government ID */}
                       <div>
@@ -694,8 +694,8 @@ const AdminSettingsPage = () => {
                       <div>
                         <label style={fieldLabelStyle}>Note / Reason (Optional)</label>
                         <textarea
-                          value={verificationForm.data.note}
-                          onChange={(e) => verificationForm.setData('note', e.target.value)}
+                          value={verificationForm.data.notes}
+                          onChange={(e) => verificationForm.setData('notes', e.target.value)}
                           placeholder="Add a note explaining your submission or the reason for this change..."
                           rows={3}
                           style={inputStyle}

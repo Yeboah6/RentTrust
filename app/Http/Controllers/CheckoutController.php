@@ -20,11 +20,6 @@ class CheckoutController extends Controller
     ) {}
 
     // ─── Shared plan data ─────────────────────────────────────────────────────
-
-    /**
-     * Returns all active plans formatted for the frontend.
-     * Nothing here references a slug — every attribute comes from the DB.
-     */
     public function plansForModal(): array
     {
         return Plan::active()
@@ -49,12 +44,10 @@ class CheckoutController extends Controller
 
         if ($planModel->isFree()) {
             $this->activateAndUpdatePackage(auth()->user(), $planModel);
-            $this->markUserVerified(auth()->user());
+            // $this->markUserVerified(auth()->user());
             return redirect()->route('agent.dashboard')->with('success', 'Free plan activated!');
         }
 
-        // Identify the "popular" plan dynamically — the one with the highest sort_order
-        // that is not the most expensive (i.e. middle tier). Falls back to second cheapest.
         $popularPlanId = $this->resolvePopularPlanId();
 
         return Inertia::render('CheckoutPage', [
@@ -84,7 +77,7 @@ class CheckoutController extends Controller
 
             if ($result['free'] ?? false) {
                 $this->updateUserPackage($user, $plan);
-                $this->markUserVerified($user);
+                // $this->markUserVerified($user);
                 return redirect()->route('agent.dashboard')->with('success', 'Free plan activated!');
             }
 
@@ -203,22 +196,14 @@ class CheckoutController extends Controller
         ];
     }
 
-    /**
-     * Build a features list entirely from DB columns.
-     * Add a `features` JSON column to plans if you want fully custom copy per plan.
-     * Falls back to deriving labels from the boolean/numeric capability columns.
-     */
     private function buildFeaturesList(Plan $plan): array
     {
-        // If the plan stores a JSON features column, use it directly.
         if (! empty($plan->features) && is_array($plan->features)) {
             return array_values(array_filter($plan->features));
         }
 
-        // Otherwise derive features from the DB columns that describe capabilities.
         $features = [];
 
-        // Listing limits — use the display string when available
         if ($plan->listing_limit_display) {
             $features[] = $plan->listing_limit_display . ' property listings';
         } elseif ($plan->listing_limit === null) {
@@ -227,7 +212,6 @@ class CheckoutController extends Controller
             $features[] = "{$plan->listing_limit} property listings";
         }
 
-        // Rental / sale split limits if your plans table carries them
         if (isset($plan->rental_limit)) {
             $features[] = $plan->rental_limit === null
                 ? 'Unlimited rental listings'
@@ -239,15 +223,6 @@ class CheckoutController extends Controller
                 ? 'Unlimited sale listings'
                 : "{$plan->sale_limit} sale listings";
         }
-
-        // Numeric capability limits
-        // if (($plan->boost_limit ?? 0) > 0) {
-        //     $features[] = "{$plan->boost_limit} listing boosts/month";
-        // }
-
-        // if (($plan->lead_limit ?? 0) > 0) {
-        //     $features[] = "{$plan->lead_limit} lead contacts/month";
-        // }
 
         // Boolean capabilities
         if ($plan->verified_badge) {
@@ -275,13 +250,6 @@ class CheckoutController extends Controller
     }
 
     // ─── Popular plan resolution ──────────────────────────────────────────────
-
-    /**
-     * Resolve which plan should be marked "popular" without hardcoding a slug.
-     *
-     * Strategy: pick the paid plan with the middle-most price.
-     * If there are only 1–2 paid plans, pick the cheapest paid plan.
-     */
     private function resolvePopularPlanId(): ?int
     {
         $paidPlans = Plan::active()
@@ -291,8 +259,6 @@ class CheckoutController extends Controller
 
         if ($paidPlans->isEmpty()) return null;
 
-        // Prefer a plan with a dedicated flag if the column exists, but fall back
-        // gracefully when the current schema does not have it.
         $hasPopularColumn = Schema::hasColumn('plans', 'is_popular');
         if ($hasPopularColumn) {
             $paidPlansWithFlags = Plan::active()
@@ -322,7 +288,7 @@ class CheckoutController extends Controller
 
         if ($payment->user) {
             $this->syncPackageFromSubscription($payment->user);
-            $this->markUserVerified($payment->user);
+            // $this->markUserVerified($payment->user);
         }
 
         $newPlan = $payment->subscription?->plan;

@@ -15,95 +15,95 @@ class PaymentsController extends Controller
 {
     // ─── Main Dashboard ───────────────────────────────────────────────────────
 
-    public function paymentDashboard()
-    {
-        return inertia('Payments/PaymentsDashboard', [
-            'kpis'          => $this->buildKpis(),
-            'payments'      => $this->recentPayments(),
-            'subscriptions' => $this->subscriptionList(),
-            'analytics'     => $this->analyticsData(),
-            'activity'      => $this->recentActivity(),
-        ]);
-    }
+    // public function paymentDashboard()
+    // {
+    //     return inertia('Payments/PaymentsDashboard', [
+    //         'kpis'          => $this->buildKpis(),
+    //         'payments'      => $this->recentPayments(),
+    //         'subscriptions' => $this->subscriptionList(),
+    //         'analytics'     => $this->analyticsData(),
+    //         'activity'      => $this->recentActivity(),
+    //     ]);
+    // }
 
     // ─── KPIs ─────────────────────────────────────────────────────────────────
 
-    private function buildKpis(): array
-    {
-        $now          = now();
-        $thisMonth    = $now->copy()->startOfMonth();
-        $lastMonth    = $now->copy()->subMonth()->startOfMonth();
-        $lastMonthEnd = $now->copy()->subMonth()->endOfMonth();
+    // private function buildKpis(): array
+    // {
+    //     $now          = now();
+    //     $thisMonth    = $now->copy()->startOfMonth();
+    //     $lastMonth    = $now->copy()->subMonth()->startOfMonth();
+    //     $lastMonthEnd = $now->copy()->subMonth()->endOfMonth();
 
-        // Revenue
-        $totalRevenue  = (float) Payment::where('status', 'success')->sum('amount');
-        $monthRevenue  = (float) Payment::where('status', 'success')
-                                        ->where('created_at', '>=', $thisMonth)->sum('amount');
-        $lastMonthRev  = (float) Payment::where('status', 'success')
-                                        ->whereBetween('created_at', [$lastMonth, $lastMonthEnd])->sum('amount');
-        $revChange     = $lastMonthRev > 0
-                            ? round((($monthRevenue - $lastMonthRev) / $lastMonthRev) * 100, 1)
-                            : null;
+    //     // Revenue
+    //     $totalRevenue  = (float) Payment::where('status', 'success')->sum('amount');
+    //     $monthRevenue  = (float) Payment::where('status', 'success')
+    //                                     ->where('created_at', '>=', $thisMonth)->sum('amount');
+    //     $lastMonthRev  = (float) Payment::where('status', 'success')
+    //                                     ->whereBetween('created_at', [$lastMonth, $lastMonthEnd])->sum('amount');
+    //     $revChange     = $lastMonthRev > 0
+    //                         ? round((($monthRevenue - $lastMonthRev) / $lastMonthRev) * 100, 1)
+    //                         : null;
 
-        // Active subscriptions
-        $activeSubs    = Subscription::where('status', 'active')->count();
-        $lastMonthSubs = Subscription::where('status', 'active')
-                                     ->where('created_at', '<', $thisMonth)->count();
-        $subsChange    = $lastMonthSubs > 0
-                            ? round((($activeSubs - $lastMonthSubs) / $lastMonthSubs) * 100, 1)
-                            : null;
+    //     // Active subscriptions
+    //     $activeSubs    = Subscription::where('status', 'active')->count();
+    //     $lastMonthSubs = Subscription::where('status', 'active')
+    //                                  ->where('created_at', '<', $thisMonth)->count();
+    //     $subsChange    = $lastMonthSubs > 0
+    //                         ? round((($activeSubs - $lastMonthSubs) / $lastMonthSubs) * 100, 1)
+    //                         : null;
 
-        // Failed this month
-        $failedCount     = Payment::where('status', 'failed')
-                                  ->where('created_at', '>=', $thisMonth)->count();
-        $lastFailedCount = Payment::where('status', 'failed')
-                                  ->whereBetween('created_at', [$lastMonth, $lastMonthEnd])->count();
-        $failedChange    = $lastFailedCount > 0
-                            ? round((($failedCount - $lastFailedCount) / $lastFailedCount) * 100, 1)
-                            : null;
+    //     // Failed this month
+    //     $failedCount     = Payment::where('status', 'failed')
+    //                               ->where('created_at', '>=', $thisMonth)->count();
+    //     $lastFailedCount = Payment::where('status', 'failed')
+    //                               ->whereBetween('created_at', [$lastMonth, $lastMonthEnd])->count();
+    //     $failedChange    = $lastFailedCount > 0
+    //                         ? round((($failedCount - $lastFailedCount) / $lastFailedCount) * 100, 1)
+    //                         : null;
 
-        // Pending refunds (payments marked refunded)
-        $pendingRefunds = Payment::where('status', 'refunded')->count();
-        $refundAmount   = (float) Payment::where('status', 'refunded')->sum('amount');
+    //     // Pending refunds (payments marked refunded)
+    //     $pendingRefunds = Payment::where('status', 'refunded')->count();
+    //     $refundAmount   = (float) Payment::where('status', 'refunded')->sum('amount');
 
-        // MRR = sum of plan prices for all active non-free subscriptions
-        $mrr = (float) Subscription::where('status', 'active')
-            ->join('plans', 'subscriptions.plan_id', '=', 'plans.id')
-            ->where('plans.price', '>', 0)
-            ->sum('plans.price');
+    //     // MRR = sum of plan prices for all active non-free subscriptions
+    //     $mrr = (float) Subscription::where('status', 'active')
+    //         ->join('plans', 'subscriptions.plan_id', '=', 'plans.id')
+    //         ->where('plans.price', '>', 0)
+    //         ->sum('plans.price');
 
-        // Last month MRR approximation
-        $lastMrr = (float) Subscription::where('status', 'active')
-            ->where('subscriptions.created_at', '<', $thisMonth)
-            ->join('plans', 'subscriptions.plan_id', '=', 'plans.id')
-            ->where('plans.price', '>', 0)
-            ->sum('plans.price');
-        $mrrChange = $lastMrr > 0 ? round((($mrr - $lastMrr) / $lastMrr) * 100, 1) : null;
+    //     // Last month MRR approximation
+    //     $lastMrr = (float) Subscription::where('status', 'active')
+    //         ->where('subscriptions.created_at', '<', $thisMonth)
+    //         ->join('plans', 'subscriptions.plan_id', '=', 'plans.id')
+    //         ->where('plans.price', '>', 0)
+    //         ->sum('plans.price');
+    //     $mrrChange = $lastMrr > 0 ? round((($mrr - $lastMrr) / $lastMrr) * 100, 1) : null;
 
-        // Plan breakdown
-        $planBreakdown = Subscription::where('subscriptions.status', 'active')
-            ->join('plans', 'subscriptions.plan_id', '=', 'plans.id')
-            ->select('plans.name', 'plans.slug', DB::raw('count(*) as count'))
-            ->groupBy('plans.id', 'plans.name', 'plans.slug')
-            ->get()
-            ->mapWithKeys(fn ($row) => [$row->slug => ['name' => $row->name, 'count' => $row->count]])
-            ->toArray();
+    //     // Plan breakdown
+    //     $planBreakdown = Subscription::where('subscriptions.status', 'active')
+    //         ->join('plans', 'subscriptions.plan_id', '=', 'plans.id')
+    //         ->select('plans.name', 'plans.slug', DB::raw('count(*) as count'))
+    //         ->groupBy('plans.id', 'plans.name', 'plans.slug')
+    //         ->get()
+    //         ->mapWithKeys(fn ($row) => [$row->slug => ['name' => $row->name, 'count' => $row->count]])
+    //         ->toArray();
 
-        return [
-            'total_revenue'   => $totalRevenue,
-            'month_revenue'   => $monthRevenue,
-            'rev_change'      => $revChange,
-            'active_subs'     => $activeSubs,
-            'subs_change'     => $subsChange,
-            'failed_payments' => $failedCount,
-            'failed_change'   => $failedChange,
-            'pending_refunds' => $pendingRefunds,
-            'refund_amount'   => $refundAmount,
-            'mrr'             => $mrr,
-            'mrr_change'      => $mrrChange,
-            'plan_breakdown'  => $planBreakdown,
-        ];
-    }
+    //     return [
+    //         'total_revenue'   => $totalRevenue,
+    //         'month_revenue'   => $monthRevenue,
+    //         'rev_change'      => $revChange,
+    //         'active_subs'     => $activeSubs,
+    //         'subs_change'     => $subsChange,
+    //         'failed_payments' => $failedCount,
+    //         'failed_change'   => $failedChange,
+    //         'pending_refunds' => $pendingRefunds,
+    //         'refund_amount'   => $refundAmount,
+    //         'mrr'             => $mrr,
+    //         'mrr_change'      => $mrrChange,
+    //         'plan_breakdown'  => $planBreakdown,
+    //     ];
+    // }
 
     // ─── Payments list ────────────────────────────────────────────────────────
 

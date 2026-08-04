@@ -107,6 +107,7 @@ const NAV = [
         items: [
             { label: 'Admin Accounts',  href: '/super-admin/admins',  icon: AdminsIcon },
             { label: 'Agent Accounts',  href: '/super-admin/agents',  icon: AdminsIcon },
+            { label: 'Agent Verifications',  href: '/super-admin/verifications/agents',  icon: AdminsIcon },
             { label: 'Tenant Accounts', href: '/super-admin/tenants', icon: AdminsIcon },
         ],
     },

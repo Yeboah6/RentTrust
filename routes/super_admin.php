@@ -70,6 +70,13 @@ Route::prefix('super-admin')
     Route::resource('agents', AgentController::class)
         ->only(['index', 'show', 'edit', 'update', 'destroy', 'create', 'store']);
 
+    Route::get('/verifications/agents', [AgentController::class, 'verification'])
+        ->name('agents.verification');
+
+    // Route::get('/agents/verifications', [AgentController::class, 'index'])->name('super-admin.verifications.index');
+    Route::post('/verifications/{verification}/approve', [AgentController::class, 'approve']);
+    Route::post('/verifications/{verification}/reject', [AgentController::class, 'reject']);
+
     Route::resource('tenants', TenantController::class)
         ->only(['index', 'show', 'destroy']);
  

@@ -55,7 +55,6 @@ class AgentController extends Controller
 
         Auth::login($agent);
 
-        // Send registration confirmation email
         try {
             Mail::to($agent->email)->queue(new AgentRegistration(
                 agentName: $agent->name,
@@ -80,7 +79,6 @@ class AgentController extends Controller
         $user = Auth::user();
 
         if ($request->package === 'free' || $request->package === null) {
-            // Activate free plan properly via CheckoutController helper
             $plan = \App\Models\Plan::where('slug', 'free')->firstOrFail();
             app(CheckoutController::class)->activateFreeForAgent($user, $plan);
 
@@ -88,8 +86,6 @@ class AgentController extends Controller
                 ->with('success', 'Free plan activated!');
         }
 
-        // Paid plans: redirect to checkout — should not normally reach here
-        // because PricingModal handles paid plans via router.visit('/checkout/slug')
         return redirect()->to("/checkout/{$request->package}");
     }
 }

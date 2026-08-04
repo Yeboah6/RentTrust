@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Rental;
 use App\Models\AdminAuditLog;
+use App\Models\AgentVerification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -35,7 +36,7 @@ class AgentController extends Controller
                 'reviews as reviews_count',
             ])
             ->withAvg('reviews as rating', 'overall_rating')
-            ->with(['subscription.plan'])   // for tier/package
+            ->with(['subscription.plan', 'verification'])   // for tier/package
             ->addSelect([
                 'users.*',
             ])
@@ -47,16 +48,18 @@ class AgentController extends Controller
                     'email'           => $user->email,
                     'phone'           => $user->phone,
                     'status'          => $user->status ?? 'pending',
-                    'type'       => $user->type,
-                    'company'          => $user->company,
-                    'bio'             => $user->bio,                    // add profile photo column if needed
+                    'type'            => $user->type,
+                    'company'         => $user->company,
+                    'bio'             => $user->bio,
                     'listings_count'  => $user->listings_count  ?? 0,
                     'active_listings' => $user->active_listings ?? 0,
                     'sold_count'      => $user->sold_count      ?? 0,
                     'rating'          => $user->rating ?? 0.0,
-                    'reviews_count'   => $user->reviews_count ?? 0,   // add if you track commissions
+                    'reviews_count'   => $user->reviews_count ?? 0,
                     'joined_at'       => $user->created_at,
                     'last_active'     => $user->last_active,
+                    'is_verified'              => $user->verification?->status === 'approved',
+                    'has_verification_submission' => (bool) $user->verification,
                 ];
             });
 
@@ -476,6 +479,86 @@ class AgentController extends Controller
         return redirect()
             ->route('super-admin.agents.index')
             ->with('success', "Agent \"{$name}\" and all their data have been permanently deleted.");
+    }
+
+    public function verification() {
+        return Inertia::render('SuperAdmin/Agents/VerificationPage', [
+            'verifications' => AgentVerification::orderBy('submitted_at', 'desc')->get(),
+        ]);
+    }
+
+    public function approve(AgentVerification $verification)
+    {
+        $verification->update([
+            'status' => 'approved',
+            'reviewed_at' => now(),
+            'reviewed_by' => auth()->user()->name,
+        ]);
+
+        $verification->agent()->update([
+            'status'      => 'verified',
+        ]);
+
+        Mail::raw(
+            "Hi {$verification->agent_name},\n\n" .
+            "Good news — your RentTrustGH agent verification has been approved. " .
+            "Your account is now marked as verified and your listings will show the verified badge.\n\n" .
+            "RentTrustGH",
+            function ($message) use ($verification) {
+                $message->to($verification->email)
+                    ->subject('You\'re verified on RentTrustGH');
+            }
+        );
+
+        return back();
+    }
+
+    public function reject(Request $request, AgentVerification $verification)
+    {
+        $request->validate(['admin_notes' => 'required|string']);
+
+        $verification->update([
+            'status' => 'rejected',
+            'notes' => $request->notes,
+            'admin_notes' => $request->admin_notes ?? null,
+            'reviewed_at' => now(),
+            'reviewed_by' => auth()->user()->name,
+        ]);
+
+        Mail::raw(
+            "Hi {$verification->agent_name},\n\n" .
+            "We reviewed your verification submission and weren't able to approve it this time.\n\n" .
+            "Reason: {$request->admin_notes}\n\n" .
+            "You can update your documents and resubmit from your account settings.\n\n" .
+            "RentTrustGH",
+            function ($message) use ($verification) {
+                $message->to($verification->email)
+                    ->subject('Update on your RentTrustGH verification');
+            }
+        );
+
+        $this->logAudit('Rejected agent verification', 'agent_verification', $verification, $request->notes);
+
+        return back();
+    }
+
+    private function logAudit(string $action, string $type, AgentVerification $verification, ?string $notes = null): void
+    {
+        AdminAuditLog::create([
+            'causer_id'      => auth()->id(),
+            'causer_name'    => auth()->user()->name,
+            'causer_email'   => auth()->user()->email,
+            'action'         => $action,
+            'type'           => $type,
+            'affected_user'  => $verification->agent_name,
+            'affected_id'    => $verification->agent_id,
+            'notes'          => $notes,
+            'ip_address'     => request()->ip(),
+            'properties'     => [
+                'verification_id' => $verification->id,
+                'email'            => $verification->email,
+            ],
+        ]);
     }
  
     // ─── Private helpers ──────────────────────────────────────────────────────
