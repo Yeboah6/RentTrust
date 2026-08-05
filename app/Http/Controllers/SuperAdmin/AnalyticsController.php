@@ -181,7 +181,7 @@ class AnalyticsController extends Controller
         $activeListings  = Rental::where('status', 'approved')->where('is_sold', false)->count();
         $pendingListings = Rental::where('status', 'pending')->count();
         $featuredListings= Rental::where('is_featured', true)->count();
-        $boostedListings = Rental::where('is_boosted', true)->count();
+        // $boostedListings = Rental::where('is_boosted', true)->count();
         $soldListings    = Rental::where('is_sold', true)->count();
         $rentedListings  = Rental::where('purpose', 'rent')->where('status', 'rented')->count();
 
@@ -190,7 +190,7 @@ class AnalyticsController extends Controller
             'active'   => $activeListings,
             'pending'  => $pendingListings,
             'featured' => $featuredListings,
-            'boosted'  => $boostedListings,
+            // 'boosted'  => $boostedListings,
             'sold'     => $soldListings,
             'rented'   => $rentedListings,
         ];

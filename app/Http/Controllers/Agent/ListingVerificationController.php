@@ -72,7 +72,7 @@ class ListingVerificationController extends Controller
         }
  
         return collect($request->file($field))
-            ->map(fn ($file) => $file->store("verifications/{$listingId}/{$field}", 'public'))
+            ->map(fn ($file) => $file->store("verifications/listings/{$field}", 'public'))
             ->all();
     }
 }

@@ -9,7 +9,7 @@ use App\Models\PropertyType;
 use App\Models\Amenity;
 use App\Models\User;
 use App\Models\AdminAuditLog;
-use App\Models\VerificationRequest;
+use App\Models\ListingVerification;
 use App\Http\Requests\AdminVerificationActionRequest;
 use App\Models\Location;
 use Illuminate\Support\Facades\DB;
@@ -59,196 +59,126 @@ class ListingController extends Controller
         ]);
     }
 
-    // public function verification(Request $request)
-    // {
-    //     $filter = request('filter', 'all');
-        
-    //     $query = VerificationRequest::with(['rental', 'agent:id,name,email,phone', 'reviewer:id,name'])
-    //         ->orderBy('created_at', 'desc');
+    public function verification(Request $request)
+    {
+        $verifications = ListingVerification::with(['listing', 'user'])
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($verification) {
+                $listingImage = null;
+                if ($verification->listing) {
+                    $images = $this->resolveImages($verification->listing);
+                    $listingImage = $images[0] ?? null;
+                }
 
-    //     // Apply status filter
-    //     if ($filter !== 'all') {
-    //         $query->where('status', $filter);
-    //     }
+                return [
+                    'id' => $verification->id,
+                    'listing_id' => $verification->listing_id,
+                    'user_id' => $verification->user_id,
+                    'property_title' => $verification->property_title,
+                    'property_address' => $verification->property_address,
+                    'ownership_documents' => $verification->ownership_documents,
+                    'photos' => $verification->photos,
+                    'other_documents' => $verification->other_documents,
+                    'availability_status' => $verification->availability_status,
+                    'status' => $verification->status,
+                    'notes' => $verification->notes,
+                    'admin_notes' => $verification->admin_notes,
+                    'submitted_at' => $verification->submitted_at,
+                    'reviewed_at' => $verification->reviewed_at,
+                    'agent_name' => $verification->user?->name,
+                    'listing_image' => $listingImage,
+                ];
+            });
 
-    //     $listings = $query->paginate(20)->withQueryString();
+        $metrics = [
+            'total' => ListingVerification::count(),
+            'pending' => ListingVerification::where('status', 'pending')->count(),
+            'approved' => ListingVerification::where('status', 'approved')->count(),
+            'rejected' => ListingVerification::where('status', 'rejected')->count(),
+        ];
 
-    //     // Calculate metrics
-    //     $metrics = [
-    //         'pending' => VerificationRequest::pending()->count(),
-    //         'approved' => VerificationRequest::approved()->count(),
-    //         'rejected' => VerificationRequest::where('status', 'rejected')->count(),
-    //         'total' => VerificationRequest::count(),
-    //     ];
-
-    //     return inertia('SuperAdmin/Listings/Verification', [
-    //         'listings' => $listings,
-    //         'metrics' => $metrics,
-    //         'filter' => $filter,
-    //     ]);
-    // }
+        return Inertia::render('SuperAdmin/Listings/Verification', [
+            'verifications' => $verifications,
+            'metrics' => $metrics,
+        ]);
+    }
 
     // ─── Approve Verification ──────────────────────────────────────────────────
 
-    // public function verificationApprove(AdminVerificationActionRequest $request, string $verificationRequestId): RedirectResponse
-    // {
-    //     try {
-    //         DB::beginTransaction();
+    /**
+     * Approve a verification request.
+     */
+    public function verificationApprove(Request $request, ListingVerification $verification)
+    {
+        $request->validate([
+            'admin_notes' => 'nullable|string|max:1000',
+        ]);
 
-    //         $verificationRequest = VerificationRequest::where('verification_request_id', $verificationRequestId)
-    //             ->lockForUpdate()
-    //             ->firstOrFail();
+        DB::transaction(function () use ($verification, $request) {
+            // Update verification status
+            $verification->update([
+                'status' => 'approved',
+                'admin_notes' => $request->admin_notes,
+                'reviewed_by' => auth()->user()->name ?? 'Admin',
+                'reviewed_at' => now(),
+            ]);
 
-    //         // Validate current status
-    //         if ($verificationRequest->status !== 'pending') {
-    //             return back()->with('error', 'This verification request has already been processed.');
-    //         }
+            // Update the associated listing status
+            if ($verification->listing) {
+                $verification->listing->update([
+                    'is_verified' => true,
+                    'verified_at' => now(),
+                    'verified_by' => auth()->id(),
+                ]);
+            }
 
-    //         // Update verification request
-    //         $verificationRequest->update([
-    //             'status' => 'approved',
-    //             'admin_notes' => $request->admin_notes,
-    //             'reviewed_at' => now(),
-    //             'reviewed_by' => auth()->id(),
-    //         ]);
+            // Optional: Send notification to agent
+            // event(new VerificationApproved($verification));
+        });
 
-    //         // Update rental status
-    //         $rental = Rental::findOrFail($verificationRequest->rental_id);
-    //         $rental->update([
-    //             'is_verified' => true,
-    //             'verification_status' => 'approved',
-    //             'verified_at' => now(),
-    //             'verified_by' => auth()->id(),
-    //         ]);
-
-    //         // Dispatch events or notifications
-    //         // event(new VerificationApproved($verificationRequest));
-
-    //         // Send email notification to agent
-    //         try {
-    //             $agent = $verificationRequest->rental->user ?? $verificationRequest->agent;
-    //             if ($agent && $agent->email) {
-    //                 Mail::to($agent->email)->send(
-    //                     new VerificationApproved(
-    //                         verificationRequest: $verificationRequest,
-    //                         approvedBy: auth()->user()?->name ?? 'System',
-    //                     )
-    //                 );
-    //                 Log::info('Verification approved email sent', [
-    //                     'verification_request_id' => $verificationRequest->id,
-    //                     'agent_id' => $agent->id,
-    //                 ]);
-    //             }
-    //         } catch (\Throwable $e) {
-    //             Log::warning('Failed to send verification approved email', [
-    //                 'verification_request_id' => $verificationRequest->id,
-    //                 'error' => $e->getMessage(),
-    //             ]);
-    //         }
-
-    //         DB::commit();
-
-    //         return back()->with('success', 'Verification request approved successfully.');
-
-    //     } catch (\Exception $e) {
-    //         DB::rollBack();
-    //         Log::error('Verification approval failed: ' . $e->getMessage());
-
-    //         return back()->with('error', 'Failed to approve verification request. Please try again.');
-    //     }
-    // }
+      return back()->with('success', 'Verification request approved successfully.');
+    }
 
     // ─── Reject Verification ───────────────────────────────────────────────────
 
-    //  public function verificationReject(AdminVerificationActionRequest $request, string $verificationRequestId): RedirectResponse
-    // {
-    //     try {
-    //         DB::beginTransaction();
+     /**
+     * Reject a verification request.
+     */
+    public function verificationReject(Request $request, ListingVerification $verification)
+    {
+        $request->validate([
+            'admin_notes' => 'required|string|max:1000',
+        ]);
 
-    //         $verificationRequest = VerificationRequest::where('verification_request_id', $verificationRequestId)
-    //             ->lockForUpdate()
-    //             ->firstOrFail();
+        DB::transaction(function () use ($verification, $request) {
+            $verification->update([
+                'status' => 'rejected',
+                'admin_notes' => $request->admin_notes,
+                'reviewed_by' => auth()->user()->name ?? 'Admin',
+                'reviewed_at' => now(),
+            ]);
 
-    //         // Validate current status
-    //         if ($verificationRequest->status !== 'pending') {
-    //             return back()->with('error', 'This verification request has already been processed.');
-    //         }
+            // Optional: Send notification to agent
+            // event(new VerificationRejected($verification));
+        });
 
-    //         // Validate rejection reason
-    //         $rejectionReason = $request->rejection_reason;
-    //         if (empty($rejectionReason)) {
-    //             $rejectionReason = 'Documents incomplete or insufficient verification evidence.';
-    //         }
+        return back()->with('success', 'Verification request rejected.');
+    }
 
-    //         // Update verification request
-    //         $verificationRequest->update([
-    //             'status' => 'rejected',
-    //             'rejection_reason' => $rejectionReason,
-    //             'admin_notes' => $request->admin_notes,
-    //             'reviewed_at' => now(),
-    //             'reviewed_by' => auth()->id(),
-    //         ]);
+    /**
+     * Get verification details with documents.
+     */
+    public function verificationShow(ListingVerification $verification)
+    {
+        $verification->load(['listing', 'user']);
 
-    //         // Update rental status
-    //         $rental = Rental::findOrFail($verificationRequest->rental_id);
-    //         $rental->update([
-    //             'is_verified' => false,
-    //             'verification_status' => 'rejected',
-    //         ]);
-
-    //         // Dispatch events or notifications
-    //         // event(new VerificationRejected($verificationRequest));
-
-    //         // Send email notification to agent
-    //         try {
-    //             $agent = $verificationRequest->rental->user ?? $verificationRequest->agent;
-    //             if ($agent && $agent->email) {
-    //                 Mail::to($agent->email)->send(
-    //                     new VerificationRejected(
-    //                         verificationRequest: $verificationRequest,
-    //                         rejectedBy: auth()->user()?->name ?? 'System',
-    //                         rejectionReason: $rejectionReason,
-    //                     )
-    //                 );
-    //                 Log::info('Verification rejected email sent', [
-    //                     'verification_request_id' => $verificationRequest->id,
-    //                     'agent_id' => $agent->id,
-    //                 ]);
-    //             }
-    //         } catch (\Throwable $e) {
-    //             Log::warning('Failed to send verification rejected email', [
-    //                 'verification_request_id' => $verificationRequest->id,
-    //                 'error' => $e->getMessage(),
-    //             ]);
-    //         }
-
-    //         DB::commit();
-
-    //         return back()->with('success', 'Verification request rejected successfully.');
-
-    //     } catch (\Exception $e) {
-    //         DB::rollBack();
-    //         Log::error('Verification rejection failed: ' . $e->getMessage());
-
-    //         return back()->with('error', 'Failed to reject verification request. Please try again.');
-    //     }
-    // }
-
-    //     public function bulkApprove(Request $request)
-    //     {
-    //         $request->validate([
-    //             'verification_request_ids' => 'required|array',
-    //             'verification_request_ids.*' => 'exists:verification_requests,verification_request_id',
-    //         ]);
-    
-    //         $verificationRequestIds = $request->input('verification_request_ids');
-    
-    //         foreach ($verificationRequestIds as $id) {
-    //             $this->approve($request, $id);
-    //         }
-    
-    //         return back()->with('success', 'Selected verification requests approved successfully.');
-    //     }
+        return response()->json([
+            'verification' => $verification,
+            'listing' => $verification->listing,
+            'agent' => $verification->user,
+        ]);
+    }
 
     // ─── Create ───────────────────────────────────────────────────────────────
 
@@ -274,8 +204,7 @@ class ListingController extends Controller
             'amenities'      => Amenity::active()
                                    ->select('id', 'name', 'icon', 'category')
                                    ->orderBy('category')->orderBy('name')->get(),
-            'property_types' => PropertyType::orderBy('sort_order')
-                                   ->orderBy('name')
+            'property_types' => PropertyType::orderBy('name')
                                    ->select('id', 'name', 'icon', 'slug')
                                    ->get(),
             'regions'        => $regions,
@@ -461,7 +390,7 @@ class ListingController extends Controller
     public function show(Rental $listing)
     {
         $listing->load([
-            'user:id,name,email,phone,avatar,company',
+            'user:id,name,email,phone,location,company',
         ]);
         $listing->loadCount(['inquiries', 'reports as flagged_count', 'views']);
 
@@ -488,31 +417,31 @@ class ListingController extends Controller
     // ─── Edit ─────────────────────────────────────────────────────────────────
 
     public function edit(Rental $listing)
-{
-    $listing->load(['user:id,name,email,company']);
-    $listing->loadCount(['inquiries', 'reports as flagged_count', 'views']); // ← add views
+    {
+        $listing->load(['user:id,name,email,company']);
+        $listing->loadCount(['inquiries', 'reports as flagged_count', 'views']); // ← add views
 
-    $regions = Location::where('type', 'region')
-        ->orWhere('type', 'city')
-        ->where('is_active', true)
-        ->orderBy('name')
-        ->select('id', 'name', 'slug')
-        ->with([
-            'children' => fn ($q) => $q
-                ->where('is_active', true)
-                ->orderBy('name')
-                ->select('id', 'parent_id', 'name', 'slug', 'type'),
-        ])
-        ->get();
+        $regions = Location::where('type', 'region')
+            ->orWhere('type', 'city')
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->select('id', 'name', 'slug')
+            ->with([
+                'children' => fn ($q) => $q
+                    ->where('is_active', true)
+                    ->orderBy('name')
+                    ->select('id', 'parent_id', 'name', 'slug', 'type'),
+            ])
+            ->get();
 
-    return Inertia::render('SuperAdmin/Listings/ListingEdit', [
-        'listing'        => $this->formatListing($listing, $regions), // ← pass regions
-        'agents'         => User::select('id', 'name', 'company as agency')->orderBy('name')->get(),
-        'amenities'      => Amenity::active()->select('id', 'name', 'is_active', 'category')->orderBy('name')->get(),
-        'property_types' => PropertyType::active()->select('id', 'name', 'slug')->orderBy('name')->get(),
-        'regions'        => $regions,
-    ]);
-}
+        return Inertia::render('SuperAdmin/Listings/ListingEdit', [
+            'listing'        => $this->formatListing($listing, $regions), // ← pass regions
+            'agents'         => User::select('id', 'name', 'company as agency')->orderBy('name')->get(),
+            'amenities'      => Amenity::active()->select('id', 'name', 'is_active', 'category')->orderBy('name')->get(),
+            'property_types' => PropertyType::active()->select('id', 'name', 'slug')->orderBy('name')->get(),
+            'regions'        => $regions,
+        ]);
+    }
 
     // ─── Update ───────────────────────────────────────────────────────────────
  
@@ -807,7 +736,7 @@ class ListingController extends Controller
                 try {
                     Mail::raw(
                         "Hello,\n\n" .
-                        "Your listing \"{$listing->title}\" has been updated by an administrator.\n\n" .
+                        "Your listing \"{$listing->title}\" has been updated by an RentTrustGh.\n\n" .
                         "If you did not expect this change, please contact support immediately.\n\n" .
                         "Thank you.\n",
                         function ($message) use ($agentEmail, $listing) {
@@ -1052,16 +981,11 @@ class ListingController extends Controller
  
     private function formatListing(Rental $listing, $regions = null): array
     {
-        // ── Resolve property_type to slug so frontend <FSelect> matches ──────────
-        // DB may store name ("Apartment") or slug ("apartment") — normalise to slug
         $rawPropType    = $listing->property_type ?? '';
         $propertyTypeSlug = \App\Models\PropertyType::where('name', $rawPropType)
                                 ->orWhere('slug', $rawPropType)
                                 ->value('slug') ?? \Illuminate\Support\Str::slug($rawPropType);
     
-        // ── Resolve city string → matched region/child name for the select ────────
-        // The select options are region.name and child.name strings.
-        // We store city in the DB — find the matching location name if regions passed.
         $cityValue = $listing->city ?? $listing->location ?? '';
         if ($regions && $cityValue) {
             $matched = null;
@@ -1091,7 +1015,6 @@ class ListingController extends Controller
             'rent_min'         => $listing->rent_min,
             'rent_max'         => $listing->rent_max,
             'advance_duration' => $listing->advance_duration,
-            // Rabbit@KEKStudios2026
             'currency'         => $listing->currency ?? 'GH₵',
             'status'           => $listing->status,
             'city'             => $cityValue,                 // ← matched to select option
@@ -1130,17 +1053,14 @@ class ListingController extends Controller
             $path = is_array($img) ? ($img['path'] ?? $img['url'] ?? '') : (string) $img;
             if (!$path) return null;
     
-            // Already a full URL
             if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
                 return $path;
             }
             
-            // Has a folder prefix — e.g. "rental_images/file.jpg" or "listings/file.jpg"
             if (str_contains($path, '/')) {
                 return Storage::disk('public')->url($path);
             }
             
-            // Bare filename — agent store saves without folder prefix
             return Storage::disk('public')->url("rental_images/{$path}");
         })->filter()->values()->toArray();
     }

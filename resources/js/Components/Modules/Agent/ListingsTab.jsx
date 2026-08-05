@@ -86,6 +86,20 @@ const SoldBadge = () => (
     </span>
 );
 
+const RentedBadge = () => (
+    <span style={{
+        display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
+        padding: '0.18rem 0.55rem', borderRadius: 999,
+        fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.04em',
+        backgroundColor: 'hsl(0 70% 45% / 0.12)',
+        color: 'hsl(0 70% 45%)',
+        border: '1px solid hsl(0 70% 45% / 0.3)',
+        flexShrink: 0,
+    }}>
+        {Icons.tag} Rented
+    </span>
+);
+
 // ─── Pagination ───────────────────────────────────────────────────────────────
 const Pagination = ({ currentPage, totalPages, onPageChange }) => {
     if (totalPages <= 1) return null;
@@ -477,17 +491,11 @@ const ListingsTab = ({
     const [featuredFilter, setFeaturedFilter] = useState('all');
     const [currentPage, setCurrentPage] = useState(1);
 
-    // Latest listing_verifications record per listing, so the button on each card
-    // reflects the live pending/approved/rejected state rather than the (possibly
-    // stale) verification_status column captured when the page first loaded.
     const latestVerificationByListing = useMemo(
         () => buildLatestVerificationMap(verificationData),
         [verificationData]
     );
 
-    // Properties enriched with a live verification_status. Falls back to the
-    // property's own column when there's no matching listing_verifications row
-    // (e.g. a listing verified before this table existed).
     const liveProperties = useMemo(() => {
         return properties.map((property) => {
             const record = latestVerificationByListing.get(property.id);
@@ -510,6 +518,15 @@ const ListingsTab = ({
             return matchesSearch && matchesStatus && matchesFeatured;
         });
     }, [liveProperties, searchTerm, statusFilter, featuredFilter]);
+
+    const getLiveVerificationStatus = (listingId, verificationData) => {
+        if (!verificationData || verificationData.length === 0) return null;
+        const relevant = verificationData
+            .filter(v => v.listing_id === listingId && (v.status === 'pending' || v.status === 'approved'))
+            .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        if (relevant.length === 0) return null;
+        return relevant[0].status === 'approved' ? 'verified' : relevant[0].status;
+    };
 
     const rentals = filteredProperties.filter(p => p.purpose !== 'sale');
     const sales = filteredProperties.filter(p => p.purpose === 'sale');

@@ -21,7 +21,7 @@ class ProfileController extends Controller
         // Recent activity from the audit log — last 20 entries by this admin
         $activity = [];
         if (class_exists(\App\Models\AdminAuditLog::class)) {
-            $activity = \App\Models\AdminAuditLog::where('admin_id', $admin->id)
+            $activity = \App\Models\AdminAuditLog::where('causer_id', $admin->id)
                 ->orWhere('causer_id', $admin->id)
                 ->latest()
                 ->limit(20)

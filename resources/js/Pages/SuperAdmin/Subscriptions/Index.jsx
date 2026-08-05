@@ -89,7 +89,7 @@ const normalise = (s) => ({
     status_key: (s.status ?? 'active').toLowerCase().replace(/\s+/g,'_'),
     grace:      s.on_grace_period  ?? s.grace        ?? false,
     days_left:  s.days_left        ?? null,
-    provider:   s.payment_method   ?? s.provider    ?? '—',
+    provider:   s.provider   ?? s.provider    ?? '—',
     created_at: s.created_at       ?? s.starts_at   ?? '',
     renews_at:  s.renews_at        ?? s.ends_at     ?? '',
 });

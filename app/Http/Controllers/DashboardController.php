@@ -163,7 +163,7 @@ class DashboardController extends Controller
             }])
             ->get()
             ->map(function ($agent) {
-                $sub = $agent->subscription->first();
+                $sub = $agent->subscription->get();
 
                 return [
                     'id' => $agent->id,
@@ -233,14 +233,18 @@ class DashboardController extends Controller
         $inquiries = ListingInquiry::with('rental:id,title,address,city,status,purpose', 'user:id,name,email,phone')
             ->latest()
             ->get();
-        $verifications = VerificationRequest::with(['rental', 'agent:id,name,email,phone', 'reviewer:id,name'])->orderBy('created_at', 'desc')->get();
+        // $verifications = VerificationRequest::with(['rental', 'agent:id,name,email,phone', 'reviewer:id,name'])->orderBy('created_at', 'desc')->get();
+
+        $verifications = AgentVerification::with('agent:id,name,email,phone')
+        ->orderByDesc('submitted_at')
+        ->get();
 
         $locations = Location::all();
         $propertyTypes = PropertyType::all();
         $amenities = Amenity::all();
 
         $plans = Plan::whereIn('id', [2, 3])->get(); // only pro and premium plans are relevant for admin dashboard
-        $subscriptions = Subscription::whereIn('plan', $plans->pluck('id'))
+        $subscriptions = Subscription::whereIn('plan_id', $plans->pluck('id'))
             ->where('status', 'active')
             ->distinct('user_id')
             ->count('user_id');
@@ -257,6 +261,7 @@ class DashboardController extends Controller
             'views' => $views,
             'totalViews' => $totalViews,
             'verifications' => $verifications,
+            // 'agentVerifications' => $agentVerifications,
             'locations' => $locations,
             'propertyTypes' => $propertyTypes,
             'amenities' => $amenities,

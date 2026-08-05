@@ -40,9 +40,9 @@ class PaymentController extends Controller
         $payment = Payment::with(['user', 'subscription.plan'])->findOrFail($id);
  
         // Fetch refund history for this payment
-        $refunds = Payment::where('parent_payment_id', $id)
+        $refunds = Payment::where('payment_id', $id)
             ->orWhere(fn ($q) => $q->where('reference', 'like', "REFUND-{$payment->reference}%"))
-            ->where('type', 'refund')
+            // ->where('type', 'refund')
             ->latest()
             ->get()
             ->map(fn ($r) => [

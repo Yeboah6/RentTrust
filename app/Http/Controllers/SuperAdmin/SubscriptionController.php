@@ -52,7 +52,7 @@ class SubscriptionController extends Controller
         return inertia('SuperAdmin/Subscriptions/SubscriptionShow', [
             'subscription' => $this->formatSubscription($sub),
             'audit_logs'   => $auditLogs,
-            'plans'        => Plan::orderBy('price')->get(['id', 'name', 'slug', 'price', 'billing_cycle']),
+            'plans'        => Plan::orderBy('price')->get(['id', 'name', 'slug', 'price']),
         ]);
     }
 

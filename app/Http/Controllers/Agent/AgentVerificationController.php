@@ -45,13 +45,13 @@ class AgentVerificationController extends Controller
         ];
 
         if ($request->hasFile('gov_id')) {
-            $data['gov_id'] = $request->file('gov_id')->store('verifications/gov_id', 'public');
+            $data['gov_id'] = $request->file('gov_id')->store('verifications/agents/gov_id', 'public');
         }
         if ($request->hasFile('license_documents')) {
-            $data['license_documents'] = $request->file('license_documents')->store('verifications/license', 'public');
+            $data['license_documents'] = $request->file('license_documents')->store('verifications/agents/license', 'public');
         }
         if ($request->hasFile('proof_of_address')) {
-            $data['proof_of_address'] = $request->file('proof_of_address')->store('verifications/address', 'public');
+            $data['proof_of_address'] = $request->file('proof_of_address')->store('verifications/agents/address', 'public');
         }
 
         if ($existing) {

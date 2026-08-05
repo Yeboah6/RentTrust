@@ -247,11 +247,11 @@ const AdminSetup = ({ token, name, email }) => {
                           }}
                       >
                           <img
-                              src="/rent-trust.png"
+                              src="/images/rent-trust.png"
                               alt="RentTrustGh Logo"
                               style={{
-                                  width: '100px',
-                                  height: '100px',
+                                  width: '120px',
+                                  height: '120px',
                               }}
                           />
                       </div>
