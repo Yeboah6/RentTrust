@@ -43,7 +43,7 @@ const StatusBadge = ({ status }) => {
         unverified:{ bg: 'hsl(220 15% 93%)', color: 'hsl(220 15% 45%)',  icon: Icons.alert, label: 'Unverified' },
     };
     const cfg = config[status] || config.unverified;
-    
+
     return (
         <span style={{
             display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
@@ -92,10 +92,10 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
 
     const pages = [];
     const maxVisible = 5;
-    
+
     let start = Math.max(1, currentPage - Math.floor(maxVisible / 2));
     let end = Math.min(totalPages, start + maxVisible - 1);
-    
+
     if (end - start + 1 < maxVisible) {
         start = Math.max(1, end - maxVisible + 1);
     }
@@ -151,16 +151,30 @@ const toBool = (v) => v === true || v === 1 || v === '1';
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const fmtPrice = (property) => {
     if (property.purpose === 'sale') {
-        return { 
-            text: `GH₵${Math.round(property.sale_price || 0).toLocaleString()}`, 
-            color: 'hsl(38 92% 45%)' 
+        return {
+            text: `GH₵${Math.round(property.sale_price || 0).toLocaleString()}`,
+            color: 'hsl(38 92% 45%)'
         };
     }
-    return { 
-        text: `GH₵${Math.round(property.rent_min || 0).toLocaleString()} – GH₵${Math.round(property.rent_max || 0).toLocaleString()}`, 
+    return {
+        text: `GH₵${Math.round(property.rent_min || 0).toLocaleString()} – GH₵${Math.round(property.rent_max || 0).toLocaleString()}`,
         sub: '/ month',
-        color: 'hsl(174 62% 32%)' 
+        color: 'hsl(174 62% 32%)'
     };
+};
+
+// Latest listing_verifications record per listing_id, keyed for O(1) lookup.
+// A listing can have several historical requests (rejected, re-submitted, etc.) —
+// only the most recently created one reflects the live state.
+const buildLatestVerificationMap = (records = []) => {
+    const map = new Map();
+    records.forEach((record) => {
+        const existing = map.get(record.listing_id);
+        if (!existing || new Date(record.created_at) > new Date(existing.created_at)) {
+            map.set(record.listing_id, record);
+        }
+    });
+    return map;
 };
 
 // ─── Feature state logic ──────────────────────────────────────────────────────
@@ -174,8 +188,8 @@ const getFeatureState = (property) => {
     const now = new Date();
 
     if (isFeatured && featuredAt) {
-        const endDate = featuredEndsAt 
-            ? new Date(featuredEndsAt) 
+        const endDate = featuredEndsAt
+            ? new Date(featuredEndsAt)
             : new Date(new Date(featuredAt).getTime() + 48 * 60 * 60 * 1000);
         if (now < endDate) {
             const hoursLeft = Math.max(0, Math.ceil((endDate - now) / (1000 * 60 * 60)));
@@ -339,28 +353,28 @@ const ListingCard = ({ property, onView, onEdit, onVerify, getVerificationButton
                 border: isFeatured ? '1px solid hsl(38 92% 50% / 0.4)' : '1px solid hsl(220 15% 91%)',
                 borderRadius: '0.875rem',
                 overflow: 'hidden',
-                boxShadow: isFeatured 
-                    ? '0 2px 12px hsl(38 92% 50% / 0.1), 0 1px 3px hsl(220 20% 15% / 0.04)' 
+                boxShadow: isFeatured
+                    ? '0 2px 12px hsl(38 92% 50% / 0.1), 0 1px 3px hsl(220 20% 15% / 0.04)'
                     : '0 1px 3px hsl(220 20% 15% / 0.04)',
                 display: 'flex', flexDirection: 'column',
                 transition: 'box-shadow 0.15s, border-color 0.15s',
             }}
-                onMouseEnter={e => e.currentTarget.style.boxShadow = isFeatured 
-                    ? '0 4px 20px hsl(38 92% 50% / 0.18), 0 4px 14px hsl(220 20% 15% / 0.08)' 
+                onMouseEnter={e => e.currentTarget.style.boxShadow = isFeatured
+                    ? '0 4px 20px hsl(38 92% 50% / 0.18), 0 4px 14px hsl(220 20% 15% / 0.08)'
                     : '0 4px 14px hsl(220 20% 15% / 0.08)'}
-                onMouseLeave={e => e.currentTarget.style.boxShadow = isFeatured 
-                    ? '0 2px 12px hsl(38 92% 50% / 0.1), 0 1px 3px hsl(220 20% 15% / 0.04)' 
+                onMouseLeave={e => e.currentTarget.style.boxShadow = isFeatured
+                    ? '0 2px 12px hsl(38 92% 50% / 0.1), 0 1px 3px hsl(220 20% 15% / 0.04)'
                     : '0 1px 3px hsl(220 20% 15% / 0.04)'}
             >
                 {/* Status strip */}
-                <div style={{ 
-                    height: 3, 
-                    background: isFeatured 
-                        ? 'linear-gradient(90deg, hsl(38 92% 50%), hsl(28 90% 45%))' 
-                        : property.effective_listing_status === 'approved' 
-                            ? 'hsl(152 60% 40%)' 
-                            : property.effective_listing_status === 'pending' 
-                                ? 'hsl(38 92% 50%)' 
+                <div style={{
+                    height: 3,
+                    background: isFeatured
+                        ? 'linear-gradient(90deg, hsl(38 92% 50%), hsl(28 90% 45%))'
+                        : property.effective_listing_status === 'approved'
+                            ? 'hsl(152 60% 40%)'
+                            : property.effective_listing_status === 'pending'
+                                ? 'hsl(38 92% 50%)'
                                 : 'hsl(220 15% 60%)',
                     opacity: isFeatured ? 1 : 0.7,
                 }} />
@@ -369,8 +383,8 @@ const ListingCard = ({ property, onView, onEdit, onVerify, getVerificationButton
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: '0.5rem' }}>
                         <div style={{ minWidth: 0, flex: 1 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem', flexWrap: 'wrap' }}>
-                                <h3 style={{ 
-                                    margin: 0, fontSize: '0.85rem', fontWeight: 700, 
+                                <h3 style={{
+                                    margin: 0, fontSize: '0.85rem', fontWeight: 700,
                                     color: 'hsl(220 25% 12%)', letterSpacing: '-0.01em',
                                     overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                                 }}>
@@ -426,7 +440,7 @@ const ListingCard = ({ property, onView, onEdit, onVerify, getVerificationButton
                         {featureState.label}
                     </button> */}
 
-                    <button onClick={() => !isVerificationButtonDisabled(property.effective_listing_status, property.verification_status) && onVerify(property)} 
+                    <button onClick={() => !isVerificationButtonDisabled(property.effective_listing_status, property.verification_status) && onVerify(property)}
                         style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', padding: '0.35rem 0.7rem', borderRadius: '0.4rem', border: '1px solid hsl(38 92% 70%)', backgroundColor: 'white', color: 'hsl(38 92% 40%)', fontSize: '0.7rem', fontWeight: 700, cursor: isVerificationButtonDisabled(property.effective_listing_status, property.verification_status) ? 'default' : 'pointer', fontFamily: 'inherit', opacity: isVerificationButtonDisabled(property.effective_listing_status, property.verification_status) ? 0.5 : 1, marginLeft: 'auto' }}>
                         {Icons.verify} {getVerificationButtonText(property.effective_listing_status, property.verification_status)}
                     </button>
@@ -447,13 +461,14 @@ const ListingCard = ({ property, onView, onEdit, onVerify, getVerificationButton
 };
 
 // ─── Main Listings Tab ────────────────────────────────────────────────────────
-const ListingsTab = ({ 
-    properties = [], 
+const ListingsTab = ({
+    properties = [],
     onAddListing,
-    onView, 
-    onEdit, 
+    onView,
+    onEdit,
     onVerify,
     onFeatureRequest,
+    verificationData = [],
     getVerificationButtonText,
     isVerificationButtonDisabled,
 }) => {
@@ -462,8 +477,28 @@ const ListingsTab = ({
     const [featuredFilter, setFeaturedFilter] = useState('all');
     const [currentPage, setCurrentPage] = useState(1);
 
+    // Latest listing_verifications record per listing, so the button on each card
+    // reflects the live pending/approved/rejected state rather than the (possibly
+    // stale) verification_status column captured when the page first loaded.
+    const latestVerificationByListing = useMemo(
+        () => buildLatestVerificationMap(verificationData),
+        [verificationData]
+    );
+
+    // Properties enriched with a live verification_status. Falls back to the
+    // property's own column when there's no matching listing_verifications row
+    // (e.g. a listing verified before this table existed).
+    const liveProperties = useMemo(() => {
+        return properties.map((property) => {
+            const record = latestVerificationByListing.get(property.id);
+            return record
+                ? { ...property, verification_status: record.status }
+                : property;
+        });
+    }, [properties, latestVerificationByListing]);
+
     const filteredProperties = useMemo(() => {
-        return properties.filter(property => {
+        return liveProperties.filter(property => {
             const matchesSearch = !searchTerm.trim() || (
                 (property.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
                 (property.address || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -474,17 +509,17 @@ const ListingsTab = ({
                 (featuredFilter === 'featured' ? toBool(property.is_featured) : !toBool(property.is_featured));
             return matchesSearch && matchesStatus && matchesFeatured;
         });
-    }, [properties, searchTerm, statusFilter, featuredFilter]);
+    }, [liveProperties, searchTerm, statusFilter, featuredFilter]);
 
     const rentals = filteredProperties.filter(p => p.purpose !== 'sale');
     const sales = filteredProperties.filter(p => p.purpose === 'sale');
 
     const rentalTotalPages = Math.ceil(rentals.length / ITEMS_PER_PAGE);
     const paginatedRentals = rentals.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
-    
+
     const salesTotalPages = Math.ceil(sales.length / ITEMS_PER_PAGE);
     const paginatedSales = sales.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
-    
+
     const maxTotalPages = Math.max(rentalTotalPages, salesTotalPages, 1);
     const safePage = Math.min(currentPage, maxTotalPages);
 
@@ -511,14 +546,6 @@ const ListingsTab = ({
     };
 
     const hasFilters = searchTerm.trim() !== '' || statusFilter !== 'all' || featuredFilter !== 'all';
-
-    const getVerificationStatusForRental = (rentalId) => {
-      if (!verification) return 'none';
-      const relevant = verification
-        .filter(v => v.rental_id === rentalId && (v.status === 'pending' || v.status === 'approved'))
-        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-      return relevant.length > 0 ? relevant[0].status : 'none';
-    };
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -632,15 +659,15 @@ const ListingsTab = ({
                     )}
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.875rem' }}>
                         {paginatedRentals.map(property => (
-                            <ListingCard 
-                                key={property.id} 
-                                property={property} 
-                                onView={onView} 
-                                onEdit={onEdit} 
+                            <ListingCard
+                                key={property.id}
+                                property={property}
+                                onView={onView}
+                                onEdit={onEdit}
                                 onVerify={onVerify}
                                 onFeatureRequest={onFeatureRequest}
-                                getVerificationButtonText={getVerificationButtonText} 
-                                isVerificationButtonDisabled={isVerificationButtonDisabled} 
+                                getVerificationButtonText={getVerificationButtonText}
+                                isVerificationButtonDisabled={isVerificationButtonDisabled}
                             />
                         ))}
                     </div>
@@ -662,15 +689,15 @@ const ListingsTab = ({
                     )}
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.875rem' }}>
                         {paginatedSales.map(property => (
-                            <ListingCard 
-                                key={property.id} 
-                                property={property} 
-                                onView={onView} 
-                                onEdit={onEdit} 
+                            <ListingCard
+                                key={property.id}
+                                property={property}
+                                onView={onView}
+                                onEdit={onEdit}
                                 onVerify={onVerify}
                                 onFeatureRequest={onFeatureRequest}
-                                getVerificationButtonText={getVerificationButtonText} 
-                                isVerificationButtonDisabled={isVerificationButtonDisabled} 
+                                getVerificationButtonText={getVerificationButtonText}
+                                isVerificationButtonDisabled={isVerificationButtonDisabled}
                             />
                         ))}
                     </div>

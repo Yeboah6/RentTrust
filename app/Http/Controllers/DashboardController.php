@@ -16,6 +16,7 @@ use App\Models\AgentVerification;
 use App\Models\ListingInquiry;
 use App\Models\ListingView;
 use App\Models\Subscription;
+use App\Models\ListingVerification;
 use Illuminate\Support\Facades\{Auth, DB};
 
 class DashboardController extends Controller
@@ -65,7 +66,8 @@ class DashboardController extends Controller
         $plans = app(\App\Http\Controllers\CheckoutController::class)->plansForModal();
         $sub  = $agentData->subscription()->with('plan')->first();
 
-        $verification = AgentVerification::where('agent_id', $agentData->id)->get();
+        // $verification = AgentVerification::where('agent_id', $agentData->id)->get();
+        $verification = ListingVerification::whereIn('listing_id', $rentalIds)->get();
 
         $locations = Location::all();
         $propertyTypes = PropertyType::all();

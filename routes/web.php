@@ -34,6 +34,7 @@ use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\setupPassword;
 use App\Http\Controllers\AgentSetupController;
 use App\Http\Controllers\Agent\AgentVerificationController;
+use App\Http\Controllers\Agent\ListingVerificationController;
 
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap.index');
 Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
@@ -148,6 +149,9 @@ Route::middleware(['auth','verified'])->group(function () {
 
     Route::get('/api/verification/status', [AgentVerificationController::class, 'status'])
         ->name('verification.status');
+
+    Route::post('/verification-requests', [ListingVerificationController::class, 'store'])
+        ->name('verification-requests.store');
 });
 
 // ── Admin Routes ──────────────────────────────────────────────────────────────
@@ -181,14 +185,6 @@ Route::middleware(['auth','verified','throttle:60,1','role:admin'])->group(funct
     // Listing approval
     Route::put('/admin/listings/{rent}/toggle-approval', [ListingController::class, 'toggleApprovalStatus'])
         ->name('admin.listings.toggle-approval');
-    
-    // Rental verification request management
-    // Route::get('/api/verification-requests', [VerificationsController::class, 'index'])
-    //     ->name('verification.index');
-    // Route::patch('/api/verification-requests/{id}/status', [VerificationsController::class, 'updateStatus'])
-    //     ->name('verification.update-status');
-    // Route::get('/api/verification-requests/{id}', [VerificationsController::class, 'show'])
-    //     ->name('verification.show');
     
     // Payment management
     Route::get('/admin/payments/dashboard', [PaymentsController::class, 'paymentDashboard'])

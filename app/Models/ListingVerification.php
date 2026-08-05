@@ -33,7 +33,7 @@ class ListingVerification extends Model
 
     public function listing()
     {
-        return $this->belongsTo(Listing::class, 'listing_id');
+        return $this->belongsTo(Rental::class, 'listing_id');
     }
 
     public function user()
