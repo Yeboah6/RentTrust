@@ -117,7 +117,7 @@ const PlanBadge = ({ plan }) => {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, verifications, plans, locations, propertyTypes, amenities, views, totalViews, inquiries, subscriptions, viewCount, subsCount }) => {
+const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, agentVerifications, listingVerifications, plans, locations, propertyTypes, amenities, views, totalViews, inquiries, subscriptions, viewCount, subsCount }) => {
   const { auth } = usePage().props;
   const findPlan = (packageSlug) => plans?.find(p => p.slug === packageSlug) ?? null;
   const [activeTab, setActiveTab] = useState("overview");
@@ -597,10 +597,15 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, verif
             {activeTab === 'verifications' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <h2 style={{ fontSize: '1.125rem', fontWeight: '600', color: 'hsl(200 25% 15%)' }}>Agent Verification Requests</h2>
-                  <span style={{ padding: '0.5rem 1rem', backgroundColor: 'hsl(174 62% 32% / 0.1)', color: 'hsl(174 62% 32%)', borderRadius: '0.375rem', fontSize: '0.875rem', fontWeight: '600' }}>Total: {verifications?.length ?? 0}</span>
+                  <h2 style={{ fontSize: '1.125rem', fontWeight: '600', color: 'hsl(200 25% 15%)' }}>Verification Requests</h2>
+                  <span style={{ padding: '0.5rem 1rem', backgroundColor: 'hsl(174 62% 32% / 0.1)', color: 'hsl(174 62% 32%)', borderRadius: '0.375rem', fontSize: '0.875rem', fontWeight: '600' }}>
+                    Total: {(agentVerifications?.length ?? 0) + (listingVerifications?.length ?? 0)}
+                  </span>
                 </div>
-                <ViewAgentVerifications verifications={verifications ?? []} />
+                <ViewAgentVerifications
+                  agentVerifications={agentVerifications ?? []}
+                  listingVerifications={listingVerifications ?? []}
+                />
               </div>
             )}
 

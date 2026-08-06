@@ -13,10 +13,10 @@ use App\Models\PropertyType;
 use App\Models\Amenity;
 use App\Models\Report;
 use App\Models\AgentVerification;
+use App\Models\ListingVerification;
 use App\Models\ListingInquiry;
 use App\Models\ListingView;
 use App\Models\Subscription;
-use App\Models\ListingVerification;
 use Illuminate\Support\Facades\{Auth, DB};
 
 class DashboardController extends Controller
@@ -28,13 +28,11 @@ class DashboardController extends Controller
 
     public function agentDashboard() {
         $agentData = Auth::user();
- 
-        // Guard: must be authenticated and an agent
+
         if (!$agentData || $agentData->role !== 'agent') {
             abort(403, 'Unauthorized. Agent access only.');
         }
 
-        // include view/inquiry/review counts for each rental and fetch status from DB
         $rentals = Rental::where(function ($query) use ($agentData) {
             $query->where('user_id', $agentData->id)
                   ->orWhere('agent_id', $agentData->id);
@@ -52,7 +50,6 @@ class DashboardController extends Controller
         $rentalIds = $rentals->pluck('id');
         $reviews = Review::whereIn('rental_id', $rentalIds)->latest()->get();
         
-        // Fetch inquiries and views for the agent's rentals
         $inquiries = ListingInquiry::whereIn('rental_id', $rentalIds)
             ->with(['user', 'rental'])
             ->orderByDesc('created_at')
@@ -66,14 +63,12 @@ class DashboardController extends Controller
         $plans = app(\App\Http\Controllers\CheckoutController::class)->plansForModal();
         $sub  = $agentData->subscription()->with('plan')->first();
 
-        // $verification = AgentVerification::where('agent_id', $agentData->id)->get();
         $verification = ListingVerification::whereIn('listing_id', $rentalIds)->get();
 
         $locations = Location::all();
         $propertyTypes = PropertyType::all();
         $amenities = Amenity::all();
         
-        // Get limit status for the agent
         $limitService = new \App\Services\ListingLimitService();
         $limitStatus = $limitService->getLimitStatus($agentData);
 
@@ -113,7 +108,6 @@ class DashboardController extends Controller
                 'lead_limit'       => $sub->plan?->lead_limit ?? 0,
             ] : null,
 
-            // Last 10 payments for history table
             'payments' => Payment::where('user_id', $agentData->id)
                 ->orderByDesc('created_at')
                 ->limit(10)
@@ -135,14 +129,12 @@ class DashboardController extends Controller
     public function adminDashboard() {
         $adminData = Auth::user();
 
-        // Guard: must be authenticated and an agent
         if ($adminData->status === 'suspended') {
             abort(403, 'Unauthorized. Account has been Suspended.');
         }
 
         $sub  = $adminData->subscription()->with('plan')->first();
         
-        // $rentals = Rental::latest()->get();
         $rentals = Rental::withCount(['views', 'inquiries', 'reviews'])
             ->select(
                 'id', 'rental_id', 'title', 'property_type', 'purpose',
@@ -154,16 +146,17 @@ class DashboardController extends Controller
             ->latest()
             ->get();
 
-        // Load agents with their total listings count and active subscription
         $agentData = User::where('role', 'agent')
             ->orWhere('role', 'landlord')
             ->withCount('rentals')
             ->with(['subscription' => function($q) {
-                $q->where('status', 'active')->orderByDesc('ends_at');
+                $q->where('status', 'active')
+                    ->with('plan')
+                    ->orderByDesc('ends_at');
             }])
             ->get()
             ->map(function ($agent) {
-                $sub = $agent->subscription->get();
+                $sub = $agent->subscription;
 
                 return [
                     'id' => $agent->id,
@@ -233,17 +226,19 @@ class DashboardController extends Controller
         $inquiries = ListingInquiry::with('rental:id,title,address,city,status,purpose', 'user:id,name,email,phone')
             ->latest()
             ->get();
-        // $verifications = VerificationRequest::with(['rental', 'agent:id,name,email,phone', 'reviewer:id,name'])->orderBy('created_at', 'desc')->get();
 
-        $verifications = AgentVerification::with('agent:id,name,email,phone')
-        ->orderByDesc('submitted_at')
-        ->get();
+        // $verifications = AgentVerification::with('agent:id,name,email,phone')
+        //     ->orderByDesc('submitted_at')
+        //     ->get();
+
+        $agentVerifications = AgentVerification::latest('submitted_at')->get();
+        $listingVerifications = ListingVerification::latest('submitted_at')->get();
 
         $locations = Location::all();
         $propertyTypes = PropertyType::all();
         $amenities = Amenity::all();
 
-        $plans = Plan::whereIn('id', [2, 3])->get(); // only pro and premium plans are relevant for admin dashboard
+        $plans = Plan::whereIn('id', [2, 3])->get();
         $subscriptions = Subscription::whereIn('plan_id', $plans->pluck('id'))
             ->where('status', 'active')
             ->distinct('user_id')
@@ -260,8 +255,9 @@ class DashboardController extends Controller
             'inquiries' => $inquiries,
             'views' => $views,
             'totalViews' => $totalViews,
-            'verifications' => $verifications,
-            // 'agentVerifications' => $agentVerifications,
+            // 'verifications' => $verifications,
+            'agentVerifications' => $agentVerifications,
+            'listingVerifications' => $listingVerifications,
             'locations' => $locations,
             'propertyTypes' => $propertyTypes,
             'amenities' => $amenities,
@@ -313,5 +309,76 @@ class DashboardController extends Controller
             'open_plan_modal' => is_null($agentData->package)
             || session()->pull('show_plan_modal', false),
         ]);
+    }
+
+    public function updateAgentVerificationStatus(Request $request, AgentVerification $agentVerification)
+    {
+        $validated = $request->validate([
+            'status' => 'required|in:approved,rejected',
+            'admin_notes' => 'nullable|string',
+            'rejection_reason' => 'nullable|string|required_if:status,rejected',
+        ]);
+
+        $notes = $validated['admin_notes'] ?? '';
+        if ($validated['status'] === 'rejected' && !empty($validated['rejection_reason'])) {
+            $notes = trim("Rejection reason: {$validated['rejection_reason']}\n{$notes}");
+        }
+
+        $agentVerification->update([
+            'status' => $validated['status'],
+            'admin_notes' => $notes ?: $agentVerification->admin_notes,
+            'reviewed_at' => now(),
+            'reviewed_by' => Auth::user()->name,
+        ]);
+
+        $agentVerification->agent()->update([
+            'status'      => 'verified',
+        ]);
+
+        return back()->with('success', 'Agent verification updated.');
+    }
+
+    public function approveListingVerification(Request $request, ListingVerification $listingVerification)
+    {
+        $validated = $request->validate([
+            'admin_notes' => 'nullable|string',
+        ]);
+
+        $listingVerification->update([
+            'verification_status' => 'approved',
+            'admin_notes' => $validated['admin_notes'] ?: $listingVerification->admin_notes,
+            'reviewed_at' => now(),
+            'reviewed_by' => Auth::user()->name,
+        ]);
+
+        $listingVerification->listing?->update([
+            'is_verified' => true,
+            'verification_status' => 'verified',
+        ]);
+
+        return back()->with('success', 'Listing verification approved.');
+    }
+
+    public function rejectListingVerification(Request $request, ListingVerification $listingVerification)
+    {
+        $validated = $request->validate([
+            'rejection_reason' => 'required|string',
+            'admin_notes' => 'nullable|string',
+        ]);
+
+        $listingVerification->update([
+            'verification_status' => 'rejected',
+            'admin_notes' => $validated['admin_notes'] ?: $listingVerification->admin_notes,
+            'reviewed_at' => now(),
+            'reviewed_by' => Auth::user()->name,
+        ]);
+
+        $listingVerification->listing?->update([
+            'verification_status' => 'rejected',
+            'verification_rejected_at' => now(),
+            'verification_rejection_reason' => $validated['rejection_reason'],
+        ]);
+
+        return back()->with('success', 'Listing verification rejected.');
     }
 }

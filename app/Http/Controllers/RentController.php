@@ -172,7 +172,7 @@ class RentController extends Controller
                 'agent_name'          => $request->agentName,
                 'agent_phone'         => $request->agentPhone,
                 'agent_email'         => $request->agentEmail,
-                'status'              => 'pending',
+                'status'              => 'active',
                 'is_verified'         => false,
                 'images'              => $filePaths,
             ];

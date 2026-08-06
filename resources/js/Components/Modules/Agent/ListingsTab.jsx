@@ -29,21 +29,42 @@ const Icons = {
     empty:      <Ico d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" size="2.5rem" sw={1.2} />,
 };
 
-// ─── Status Badge ─────────────────────────────────────────────────────────────
-const StatusBadge = ({ status }) => {
-    const config = {
-        approved:  { bg: 'hsl(152 60% 93%)', color: 'hsl(152 60% 35%)', icon: Icons.check, label: 'Approved' },
-        verified:  { bg: 'hsl(152 60% 93%)', color: 'hsl(152 60% 35%)', icon: Icons.check, label: 'Verified' },
-        active:    { bg: 'hsl(152 60% 93%)', color: 'hsl(152 60% 35%)', icon: Icons.check, label: 'Active' },
-        pending:   { bg: 'hsl(38 92% 93%)',  color: 'hsl(38 92% 40%)',  icon: Icons.clock, label: 'Pending' },
-        rejected:  { bg: 'hsl(0 72% 93%)',   color: 'hsl(0 72% 45%)',   icon: Icons.alert, label: 'Rejected' },
-        rented:    { bg: 'hsl(271 60% 93%)', color: 'hsl(271 60% 40%)',  icon: Icons.check, label: 'Rented' },
-        sold:      { bg: 'hsl(220 15% 93%)', color: 'hsl(220 25% 35%)',  icon: Icons.check, label: 'Sold' },
-        inactive:  { bg: 'hsl(220 15% 93%)', color: 'hsl(220 15% 45%)',  icon: Icons.alert, label: 'Inactive' },
-        unverified:{ bg: 'hsl(220 15% 93%)', color: 'hsl(220 15% 45%)',  icon: Icons.alert, label: 'Unverified' },
-    };
-    const cfg = config[status] || config.unverified;
+// ─── Availability Badge ─────────────────────────────────────────────────────────
+// Reflects `rentals.status` (active/inactive/rented/sold) — i.e. whether the
+// property is currently on the market. Nothing to do with agent verification.
+const AVAILABILITY_CFG = {
+    active:   { bg: 'hsl(152 60% 93%)', color: 'hsl(152 60% 35%)', icon: Icons.check, label: 'Active' },
+    inactive: { bg: 'hsl(220 15% 93%)', color: 'hsl(220 15% 45%)', icon: Icons.alert, label: 'Inactive' },
+    rented:   { bg: 'hsl(271 60% 93%)', color: 'hsl(271 60% 40%)', icon: Icons.check, label: 'Rented' },
+    sold:     { bg: 'hsl(220 15% 93%)', color: 'hsl(220 25% 35%)', icon: Icons.check, label: 'Sold' },
+};
+const AVAILABILITY_STATUSES = ['all', 'active', 'inactive', 'rented', 'sold'];
 
+const AvailabilityBadge = ({ status }) => {
+    const cfg = AVAILABILITY_CFG[status] || AVAILABILITY_CFG.inactive;
+    return (
+        <span style={{
+            display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
+            padding: '0.18rem 0.55rem', borderRadius: 999,
+            fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.04em',
+            backgroundColor: cfg.bg, color: cfg.color, flexShrink: 0,
+        }}>
+            {cfg.icon}{cfg.label}
+        </span>
+    );
+};
+
+// ─── Verification Badge ──────────────────────────────────────────────────────
+const VERIFICATION_CFG = {
+    approved:   { bg: 'hsl(152 60% 93%)', color: 'hsl(152 60% 35%)', icon: Icons.check, label: 'Approved' },
+    pending:    { bg: 'hsl(38 92% 93%)',  color: 'hsl(38 92% 40%)',  icon: Icons.clock, label: 'Pending Review' },
+    rejected:   { bg: 'hsl(0 72% 93%)',   color: 'hsl(0 72% 45%)',   icon: Icons.alert, label: 'Rejected' },
+    unverified: { bg: 'hsl(220 15% 93%)', color: 'hsl(220 15% 45%)', icon: Icons.alert, label: 'Unverified' },
+};
+const VERIFICATION_STATUSES = ['all', 'pending', 'approved', 'rejected', 'unverified'];
+
+const VerificationBadge = ({ status }) => {
+    const cfg = VERIFICATION_CFG[status] || VERIFICATION_CFG.unverified;
     return (
         <span style={{
             display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
@@ -177,9 +198,6 @@ const fmtPrice = (property) => {
     };
 };
 
-// Latest listing_verifications record per listing_id, keyed for O(1) lookup.
-// A listing can have several historical requests (rejected, re-submitted, etc.) —
-// only the most recently created one reflects the live state.
 const buildLatestVerificationMap = (records = []) => {
     const map = new Map();
     records.forEach((record) => {
@@ -385,9 +403,9 @@ const ListingCard = ({ property, onView, onEdit, onVerify, getVerificationButton
                     height: 3,
                     background: isFeatured
                         ? 'linear-gradient(90deg, hsl(38 92% 50%), hsl(28 90% 45%))'
-                        : property.effective_listing_status === 'approved'
+                        : property.effective_listing_status === 'active'
                             ? 'hsl(152 60% 40%)'
-                            : property.effective_listing_status === 'pending'
+                            : property.verification_request_status === 'pending'
                                 ? 'hsl(38 92% 50%)'
                                 : 'hsl(220 15% 60%)',
                     opacity: isFeatured ? 1 : 0.7,
@@ -404,7 +422,9 @@ const ListingCard = ({ property, onView, onEdit, onVerify, getVerificationButton
                                 }}>
                                     {property.title || 'Untitled Property'}
                                 </h3>
-                                <StatusBadge status={property.effective_listing_status} /> {isFeatured && <FeaturedBadge />} {isSold && <SoldBadge />}
+                                <AvailabilityBadge status={property.effective_listing_status} />
+                                <VerificationBadge status={property.verification_request_status || 'unverified'} />
+                                {isFeatured && <FeaturedBadge />} {isSold && <SoldBadge />}
                             </div>
                             <p style={{ margin: '0 0 0.35rem', fontSize: '0.7rem', color: 'hsl(220 15% 50%)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                                 {Icons.mapPin} {property.address}, {property.city}
@@ -431,28 +451,6 @@ const ListingCard = ({ property, onView, onEdit, onVerify, getVerificationButton
                     <button onClick={() => onEdit(property)} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', padding: '0.35rem 0.7rem', borderRadius: '0.4rem', border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white', color: 'hsl(220 25% 35%)', fontSize: '0.7rem', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
                         {Icons.edit} Edit
                     </button>
-
-                    {/* Feature request button – opens modal */}
-                    {/* <button
-                        onClick={() => featureState.canRequest && setFeatureModal(property)}
-                        disabled={!featureState.canRequest}
-                        title={featureState.tooltip}
-                        style={{
-                            display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
-                            padding: '0.35rem 0.7rem', borderRadius: '0.4rem',
-                            border: `1px solid ${featureState.canRequest ? 'hsl(38 92% 50%)' : 'hsl(220 15% 88%)'}`,
-                            backgroundColor: featureState.canRequest ? 'hsl(38 92% 97%)' : 'hsl(220 15% 96%)',
-                            color: featureState.canRequest ? 'hsl(38 92% 40%)' : 'hsl(220 15% 55%)',
-                            fontSize: '0.7rem', fontWeight: 700,
-                            cursor: featureState.canRequest ? 'pointer' : 'default',
-                            fontFamily: 'inherit',
-                            opacity: featureState.disabled ? 0.7 : 1,
-                            transition: 'all 0.12s',
-                        }}
-                    >
-                        {featureState.icon}
-                        {featureState.label}
-                    </button> */}
 
                     <button onClick={() => !isVerificationButtonDisabled(property.effective_listing_status, property.verification_status) && onVerify(property)}
                         style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', padding: '0.35rem 0.7rem', borderRadius: '0.4rem', border: '1px solid hsl(38 92% 70%)', backgroundColor: 'white', color: 'hsl(38 92% 40%)', fontSize: '0.7rem', fontWeight: 700, cursor: isVerificationButtonDisabled(property.effective_listing_status, property.verification_status) ? 'default' : 'pointer', fontFamily: 'inherit', opacity: isVerificationButtonDisabled(property.effective_listing_status, property.verification_status) ? 0.5 : 1, marginLeft: 'auto' }}>
@@ -487,7 +485,8 @@ const ListingsTab = ({
     isVerificationButtonDisabled,
 }) => {
     const [searchTerm, setSearchTerm] = useState('');
-    const [statusFilter, setStatusFilter] = useState('all');
+    const [availabilityFilter, setAvailabilityFilter] = useState('all');
+    const [verificationFilter, setVerificationFilter] = useState('all');
     const [featuredFilter, setFeaturedFilter] = useState('all');
     const [currentPage, setCurrentPage] = useState(1);
 
@@ -499,9 +498,12 @@ const ListingsTab = ({
     const liveProperties = useMemo(() => {
         return properties.map((property) => {
             const record = latestVerificationByListing.get(property.id);
-            return record
-                ? { ...property, verification_status: record.status }
-                : property;
+            if (!record) return property;
+            return {
+                ...property,
+                verification_request_status: record.status,
+                verification_status: record.status === 'approved' ? 'verified' : record.status,
+            };
         });
     }, [properties, latestVerificationByListing]);
 
@@ -512,21 +514,13 @@ const ListingsTab = ({
                 (property.address || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
                 (property.city || '').toLowerCase().includes(searchTerm.toLowerCase())
             );
-            const matchesStatus = statusFilter === 'all' || property.effective_listing_status === statusFilter;
+            const matchesAvailability = availabilityFilter === 'all' || property.effective_listing_status === availabilityFilter;
+            const matchesVerification = verificationFilter === 'all' || (property.verification_request_status || 'unverified') === verificationFilter;
             const matchesFeatured = featuredFilter === 'all' ||
                 (featuredFilter === 'featured' ? toBool(property.is_featured) : !toBool(property.is_featured));
-            return matchesSearch && matchesStatus && matchesFeatured;
+            return matchesSearch && matchesAvailability && matchesVerification && matchesFeatured;
         });
-    }, [liveProperties, searchTerm, statusFilter, featuredFilter]);
-
-    const getLiveVerificationStatus = (listingId, verificationData) => {
-        if (!verificationData || verificationData.length === 0) return null;
-        const relevant = verificationData
-            .filter(v => v.listing_id === listingId && (v.status === 'pending' || v.status === 'approved'))
-            .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-        if (relevant.length === 0) return null;
-        return relevant[0].status === 'approved' ? 'verified' : relevant[0].status;
-    };
+    }, [liveProperties, searchTerm, availabilityFilter, verificationFilter, featuredFilter]);
 
     const rentals = filteredProperties.filter(p => p.purpose !== 'sale');
     const sales = filteredProperties.filter(p => p.purpose === 'sale');
@@ -545,8 +539,13 @@ const ListingsTab = ({
         setCurrentPage(1);
     };
 
-    const handleStatusChange = (e) => {
-        setStatusFilter(e.target.value);
+    const handleAvailabilityChange = (e) => {
+        setAvailabilityFilter(e.target.value);
+        setCurrentPage(1);
+    };
+
+    const handleVerificationChange = (e) => {
+        setVerificationFilter(e.target.value);
         setCurrentPage(1);
     };
 
@@ -557,12 +556,13 @@ const ListingsTab = ({
 
     const clearFilters = () => {
         setSearchTerm('');
-        setStatusFilter('all');
+        setAvailabilityFilter('all');
+        setVerificationFilter('all');
         setFeaturedFilter('all');
         setCurrentPage(1);
     };
 
-    const hasFilters = searchTerm.trim() !== '' || statusFilter !== 'all' || featuredFilter !== 'all';
+    const hasFilters = searchTerm.trim() !== '' || availabilityFilter !== 'all' || verificationFilter !== 'all' || featuredFilter !== 'all';
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -610,9 +610,10 @@ const ListingsTab = ({
                         onBlur={e => e.currentTarget.style.borderColor = 'hsl(220 15% 88%)'}
                     />
                 </div>
+
                 <select
-                    value={statusFilter}
-                    onChange={handleStatusChange}
+                    value={availabilityFilter}
+                    onChange={handleAvailabilityChange}
                     style={{
                         padding: '0.65rem 1rem', borderRadius: '0.625rem',
                         border: '1px solid hsl(220 15% 88%)',
@@ -624,14 +625,28 @@ const ListingsTab = ({
                     onFocus={e => e.currentTarget.style.borderColor = 'hsl(174 62% 40%)'}
                     onBlur={e => e.currentTarget.style.borderColor = 'hsl(220 15% 88%)'}
                 >
-                    <option value="all">All statuses</option>
-                    <option value="approved">Approved</option>
-                    <option value="pending">Pending</option>
-                    <option value="rejected">Rejected</option>
-                    <option value="rented">Rented</option>
-                    <option value="sold">Sold</option>
-                    <option value="inactive">Inactive</option>
-                    <option value="unverified">Unverified</option>
+                    {AVAILABILITY_STATUSES.map(s => (
+                        <option key={s} value={s}>{s === 'all' ? 'All availability' : AVAILABILITY_CFG[s].label}</option>
+                    ))}
+                </select>
+
+                <select
+                    value={verificationFilter}
+                    onChange={handleVerificationChange}
+                    style={{
+                        padding: '0.65rem 1rem', borderRadius: '0.625rem',
+                        border: '1px solid hsl(220 15% 88%)',
+                        backgroundColor: 'white',
+                        fontSize: '0.8rem', color: 'hsl(220 25% 15%)',
+                        fontFamily: 'inherit', minWidth: '160px',
+                        outline: 'none', cursor: 'pointer',
+                    }}
+                    onFocus={e => e.currentTarget.style.borderColor = 'hsl(174 62% 40%)'}
+                    onBlur={e => e.currentTarget.style.borderColor = 'hsl(220 15% 88%)'}
+                >
+                    {VERIFICATION_STATUSES.map(s => (
+                        <option key={s} value={s}>{s === 'all' ? 'All verification' : VERIFICATION_CFG[s].label}</option>
+                    ))}
                 </select>
 
                 <select

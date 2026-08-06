@@ -114,19 +114,19 @@ class User extends Authenticatable
         return $this->status === 'active';
     }
 
-    public function subscription(): HasOne
-    {
-        return $this->hasOne(Subscription::class)->latestOfMany();
-    }
-
     public function verification()
     {
         return $this->hasOne(\App\Models\AgentVerification::class, 'agent_id');
     }
 
+    public function subscription()
+    {
+        return $this->hasOne(Subscription::class)->latestOfMany('ends_at');
+    }
+
     public function getRouteKeyName()
     {
-        return 'id';  // Use the integer primary key for route binding (faster lookups)
+        return 'id'; 
     }
 
     public function subscriptions(): HasMany

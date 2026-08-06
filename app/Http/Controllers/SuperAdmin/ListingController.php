@@ -125,16 +125,18 @@ class ListingController extends Controller
             ]);
 
             // Update the associated listing status
-            if ($verification->listing) {
-                $verification->listing->update([
-                    'is_verified' => true,
-                    'verified_at' => now(),
-                    'verified_by' => auth()->id(),
-                ]);
-            }
+            $verification->listing?->update([
+                'is_verified' => true,
+                'verification_status' => 'verified',
+                'verified_at' => now(),
+            ]);
 
-            // Optional: Send notification to agent
-            // event(new VerificationApproved($verification));
+            $this->notifyAgent(
+                $verification,
+                'Your listing verification has been approved',
+                "Good news! Your verification request for \"{$verification->property_title}\" has been approved."
+                    . ($request->admin_notes ? "\n\nNotes from our team: {$request->admin_notes}" : '')
+            );
         });
 
       return back()->with('success', 'Verification request approved successfully.');
@@ -159,11 +161,35 @@ class ListingController extends Controller
                 'reviewed_at' => now(),
             ]);
 
-            // Optional: Send notification to agent
-            // event(new VerificationRejected($verification));
+            $verification->listing?->update([
+                'is_verified' => false,
+                'verification_status' => 'rejected',
+                'verification_rejected_at' => now(),
+                'verification_rejection_reason' => $request->admin_notes,
+            ]);
+
+            $this->notifyAgent(
+                $verification,
+                'Your listing verification was rejected',
+                "Your verification request for \"{$verification->property_title}\" was rejected.\n\n"
+                    . "Reason: {$request->admin_notes}\n\nYou're welcome to submit a new request once this is addressed."
+            );
         });
 
         return back()->with('success', 'Verification request rejected.');
+    }
+
+    private function notifyAgent(ListingVerification $verification, string $subject, string $body): void
+    {
+        $email = $verification->user?->email;
+ 
+        if (! $email) {
+            return;
+        }
+ 
+        Mail::raw($body, function ($message) use ($email, $subject) {
+            $message->to($email)->subject($subject);
+        });
     }
 
     /**

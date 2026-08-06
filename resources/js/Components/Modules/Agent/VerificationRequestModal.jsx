@@ -72,18 +72,15 @@ const VerificationRequestModal = ({ isOpen, onClose, agentData, selectedRental, 
     other_documents: [],
   });
 
-  // 'pending' | 'approved' | 'none'
   const [verificationStatus, setVerificationStatus] = useState(null);
 
-  // Inertia form state — fields map 1:1 to listing_verifications columns.
-  // user_id / status / submitted_at are set server-side, not sent from the client.
   const { data, setData, processing, errors, reset, clearErrors } = useForm({
     listing_id: selectedRental?.id || "",
     property_title: selectedRental?.title || "",
     property_address: selectedRental?.address || "",
     availability_status: "available",
     notes: "",
-    terms_accepted: false, // client-only guard, not persisted
+    terms_accepted: false,
     ownership_documents: [],
     photos: [],
     other_documents: [],
