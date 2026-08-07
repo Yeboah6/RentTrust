@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from "@inertiajs/react";
-import { ArrowRight, MapPin, Shield, Sparkles, BedDouble, Bath, Home } from 'lucide-react';
+import { ArrowRight, MapPin, Shield, BedDouble, Bath, Home } from 'lucide-react';
 
 const parseImages = (images) => {
   try {
@@ -22,8 +22,6 @@ const resolveImageSrc = (value) => {
   if (/^https?:\/\//i.test(value) || value.startsWith('/')) return value;
   return `/storage/rental_images/${value}`;
 };
-
-const toBool = (v) => v === true || v === 1 || v === '1';
 
 const formatPrice = (price) => {
   const n = Number(price);
@@ -47,7 +45,6 @@ const PropertyCard = ({
   advance_duration,
   agent_name,
   status,
-  is_featured,
   bedrooms,
   bathrooms,
   images,
@@ -55,7 +52,6 @@ const PropertyCard = ({
   const [isHovered, setIsHovered]   = useState(false);
   const [imageError, setImageError] = useState(false);
 
-  const isFeatured  = toBool(is_featured);
   const isVerified  = status === 'verified';
   const imagesArray = parseImages(images);
   const firstImage  = imagesArray.length > 0 ? resolveImageSrc(imagesArray[0]) : null;
@@ -70,46 +66,17 @@ const PropertyCard = ({
         borderRadius: '1rem',
         overflow: 'hidden',
         backgroundColor: '#ffffff',
-        border: isFeatured
-          ? '1.5px solid hsl(38 92% 55%)'
-          : '1px solid hsl(40 20% 88%)',
+        border: '1px solid hsl(40 20% 88%)',
         transition: 'transform 0.25s ease, box-shadow 0.25s ease',
         transform: isHovered ? 'translateY(-5px)' : 'translateY(0)',
         boxShadow: isHovered
           ? '0 12px 28px -6px rgba(20,40,50,0.14), 0 4px 10px -3px rgba(20,40,50,0.08)'
-          : isFeatured
-          ? '0 2px 10px -2px hsl(38 92% 55% / 0.18)'
           : '0 2px 8px -2px rgba(20,40,50,0.08)',
         position: 'relative',
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* ── Featured ribbon ── */}
-      {isFeatured && (
-        <div style={{
-          position: 'absolute',
-          top: '0.75rem',
-          left: '0.75rem',
-          zIndex: 10,
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: '0.25rem',
-          padding: '0.25rem 0.625rem',
-          borderRadius: '9999px',
-          backgroundColor: 'hsl(38 92% 50%)',
-          color: 'hsl(28 90% 20%)',
-          fontSize: '0.68rem',
-          fontWeight: '700',
-          letterSpacing: '0.04em',
-          textTransform: 'uppercase',
-          pointerEvents: 'none',
-        }}>
-          <Sparkles style={{ width: '0.65rem', height: '0.65rem' }} />
-          Featured
-        </div>
-      )}
-
       {/* ── Image area ── */}
       <div style={{
         width: '100%',
@@ -397,21 +364,20 @@ const ListingGrid = ({ listings, purpose }) => (
       />
     ))}
   </div>
-  
 );
 
 // ---------------------------------------------------------------------------
-// FeaturedListings  (main export)
+// VerifiedListings  (main export)
 // ---------------------------------------------------------------------------
 
-const FeaturedListings = ({ featuredRentals, featuredSales }) => {
-  const rentals = (featuredRentals && Array.isArray(featuredRentals))
-    ? featuredRentals
-    : Object.values(featuredRentals ?? {}).filter(Boolean);
+const VerifiedListings = ({ verifiedRentals, verifiedSales }) => {
+  const rentals = (verifiedRentals && Array.isArray(verifiedRentals))
+    ? verifiedRentals
+    : Object.values(verifiedRentals ?? {}).filter(Boolean);
 
-  const sales = (featuredSales && Array.isArray(featuredSales))
-    ? featuredSales
-    : Object.values(featuredSales ?? {}).filter(Boolean);
+  const sales = (verifiedSales && Array.isArray(verifiedSales))
+    ? verifiedSales
+    : Object.values(verifiedSales ?? {}).filter(Boolean);
 
   const hasRentals = rentals.length > 0;
   const hasSales   = sales.length   > 0;
@@ -422,35 +388,33 @@ const FeaturedListings = ({ featuredRentals, featuredSales }) => {
         <div style={{ textAlign: 'center', padding: '2rem 1rem' }}>
           <Home style={{ width: '3rem', height: '3rem', color: 'hsl(200 20% 78%)', margin: '0 auto 0.75rem' }} />
           <p style={{ color: 'hsl(200 14% 52%)', fontSize: '1rem', margin: 0 }}>
-            No featured listings yet. Check back soon.
+            No verified listings yet. Check back soon.
           </p>
         </div>
       </section>
     );
   }
 
-  console.log('Listing', rentals, sales);
-
   return (
     <>
       <style>{`
-        .featured-section,
-        .featured-section * {
+        .verified-section,
+        .verified-section * {
           font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
           -webkit-font-smoothing: antialiased;
           box-sizing: border-box;
         }
       `}</style>
 
-      <section className="featured-section" style={{ padding: '4rem 0', backgroundColor: 'hsl(40 33% 98%)' }}>
+      <section className="verified-section" style={{ padding: '4rem 0', backgroundColor: 'hsl(40 33% 98%)' }}>
         <div className="container mx-auto px-4">
 
-          {/* ── Featured Rentals ── */}
+          {/* ── Verified Rentals ── */}
           {hasRentals && (
             <div style={{ marginBottom: hasSales ? '4rem' : 0 }}>
               <SectionHeader
-                title="Featured Rentals"
-                subtitle="Recommended rental listings from verified agents"
+                title="Verified Rentals"
+                subtitle="Rental listings from verified agents"
                 viewAllHref="/rent/listings"
                 viewAllLabel="View all rentals"
               />
@@ -458,12 +422,12 @@ const FeaturedListings = ({ featuredRentals, featuredSales }) => {
             </div>
           )}
 
-          {/* ── Featured Sales ── */}
+          {/* ── Verified Sales ── */}
           {hasSales && (
             <div>
               <SectionHeader
-                title="Featured Properties for Sale"
-                subtitle="High-priority sale listings from top agents"
+                title="Verified Properties for Sale"
+                subtitle="Sale listings from verified agents"
                 viewAllHref="/buy/listings"
                 viewAllLabel="View all for sale"
               />
@@ -477,4 +441,4 @@ const FeaturedListings = ({ featuredRentals, featuredSales }) => {
   );
 };
 
-export default FeaturedListings;
+export default VerifiedListings;

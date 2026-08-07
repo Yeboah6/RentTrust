@@ -26,7 +26,6 @@ use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\PaymentsController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\WebhookController;
-// use App\Http\Controllers\VerificationsController;
 use App\Http\Controllers\AgentAnalyticsController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\ContactController;
@@ -147,8 +146,7 @@ Route::middleware(['auth','verified'])->group(function () {
     Route::post('/settings/verification', [AgentVerificationController::class, 'store'])
         ->name('settings.verification.store');
 
-    Route::get('/api/verification/status', [AgentVerificationController::class, 'status'])
-        ->name('verification.status');
+    Route::put('/verification-requests/{verification}', [ListingVerificationController::class, 'update']);
 
     Route::post('/verification-requests', [ListingVerificationController::class, 'store'])
         ->name('verification-requests.store');
@@ -201,9 +199,9 @@ Route::middleware(['auth','verified','throttle:60,1','role:admin'])->group(funct
     
     Route::patch('/api/agent-verifications/{agentVerification}/status', [DashboardController::class, 'updateAgentVerificationStatus']);
 
-    Route::patch('/api/listing-verifications/{listingVerification}/approve', [AdminController::class, 'approveListingVerification']);
+    Route::patch('/api/listing-verifications/{listingVerification}/approve', [DashboardController::class, 'approveListingVerification']);
 
-    Route::patch('/api/listing-verifications/{listingVerification}/reject', [AdminController::class, 'rejectListingVerification']);
+    Route::patch('/api/listing-verifications/{listingVerification}/reject', [DashboardController::class, 'rejectListingVerification']);
 });
 
 // ── Settings (protected + verified) ──────────────────────────────────────────

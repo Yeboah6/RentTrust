@@ -60,6 +60,11 @@ const AVAILABILITY_OPTIONS = [
   { value: "unavailable", label: "Unavailable" },
 ];
 
+// Storage disk is public, symlinked via `php artisan storage:link` — same convention
+// used on the agent-verification review page.
+const fileUrl = (path) => (path ? `/storage/${path}` : null);
+const fileName = (path) => (path ? path.split("/").pop() : "");
+
 // ----- Main Component -----
 const VerificationRequestModal = ({ isOpen, onClose, agentData, selectedRental, verificationData }) => {
   const [uploadProgress, setUploadProgress] = useState({});
@@ -73,6 +78,12 @@ const VerificationRequestModal = ({ isOpen, onClose, agentData, selectedRental, 
   });
 
   const [verificationStatus, setVerificationStatus] = useState(null);
+  // Full record of the existing pending/rejected request for this listing, if any.
+  // When status is "rejected", we need more than just the id — we need to know
+  // which documents were already uploaded per category so the form can show
+  // "replace" affordances instead of looking like a first-time submission.
+  const [existingVerification, setExistingVerification] = useState(null);
+  const existingVerificationId = existingVerification?.id ?? null;
 
   const { data, setData, processing, errors, reset, clearErrors } = useForm({
     listing_id: selectedRental?.id || "",
@@ -86,31 +97,46 @@ const VerificationRequestModal = ({ isOpen, onClose, agentData, selectedRental, 
     other_documents: [],
   });
 
-  // ---------- Compute verification status from verificationData ----------
+  // ---------- Compute verification status (and the record to resubmit against) ----------
   useEffect(() => {
     if (!isOpen || !selectedRental?.id) {
       setVerificationStatus(null);
+      setExistingVerification(null);
       return;
     }
 
     if (verificationData && verificationData.length > 0) {
+      // Consider every request for this listing, not just pending/approved, so a
+      // rejected one can still be identified and resubmitted against.
       const relevant = verificationData
-        .filter(
-          (v) =>
-            v.listing_id === selectedRental.id &&
-            (v.status === "pending" || v.status === "approved")
-        )
+        .filter((v) => v.listing_id === selectedRental.id)
         .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
-      setVerificationStatus(relevant.length > 0 ? relevant[0].status : "none");
+      const latest = relevant[0];
+
+      if (latest && (latest.status === "pending" || latest.status === "approved")) {
+        setVerificationStatus(latest.status);
+        setExistingVerification(latest);
+      } else if (latest && latest.status === "rejected") {
+        setVerificationStatus("rejected");
+        setExistingVerification(latest);
+      } else {
+        setVerificationStatus("none");
+        setExistingVerification(null);
+      }
     } else {
       setVerificationStatus("none");
+      setExistingVerification(null);
     }
   }, [isOpen, selectedRental, verificationData]);
 
-  // Reset form fields when the modal opens and the user can submit (status = 'none')
+  // Populate form fields from the selected rental whenever the modal opens for a
+  // submittable state — both a fresh submission ("none") and a resubmission after
+  // rejection ("rejected") need listing_id/title/address filled in from selectedRental.
+  // Previously this only ran for "none", which is why rejected resubmissions showed
+  // "No property selected" and a blank address.
   useEffect(() => {
-    if (isOpen && selectedRental && verificationStatus === "none") {
+    if (isOpen && selectedRental && (verificationStatus === "none" || verificationStatus === "rejected")) {
       setData("listing_id", selectedRental.id);
       setData("property_title", selectedRental.title || "");
       setData("property_address", selectedRental.address || "");
@@ -207,6 +233,12 @@ const VerificationRequestModal = ({ isOpen, onClose, agentData, selectedRental, 
   const handleSubmit = () => {
     if (!validateForm()) return;
 
+    // Pending requests never reach here — the form itself is hidden (see `showForm`
+    // below), so there's no path that lets a pending listing generate a new request.
+    // For rejected requests, we resubmit against the same record instead of creating
+    // a new one, same as the agent-verification resubmission flow.
+    const isResubmission = verificationStatus === "rejected" && !!existingVerificationId;
+
     const formData = new FormData();
     formData.append("listing_id", data.listing_id);
     formData.append("property_title", data.property_title);
@@ -218,10 +250,25 @@ const VerificationRequestModal = ({ isOpen, onClose, agentData, selectedRental, 
     data.photos.forEach((file) => formData.append("photos[]", file));
     data.other_documents.forEach((file) => formData.append("other_documents[]", file));
 
-    router.post("/verification-requests", formData, {
+    if (isResubmission) {
+      // Laravel doesn't parse multipart PUT bodies natively — spoof the method.
+      formData.append("_method", "put");
+    }
+
+    const url = isResubmission
+      ? `/verification-requests/${existingVerificationId}`
+      : "/verification-requests";
+
+    router.post(url, formData, {
       forceFormData: true,
       onSuccess: () => {
-        showToast("Verification request submitted successfully!", "success", 3000);
+        showToast(
+          isResubmission
+            ? "Verification request resubmitted successfully!"
+            : "Verification request submitted successfully!",
+          "success",
+          3000
+        );
         setTimeout(() => {
           router.reload({ only: ["rentals"] });
           handleClose();
@@ -306,7 +353,10 @@ const VerificationRequestModal = ({ isOpen, onClose, agentData, selectedRental, 
     error: { backgroundColor: "hsl(0 72% 51%)", borderColor: "hsl(0 72% 40%)", color: "white" },
   };
 
+  // Pending/approved always render the status view instead — so this form (and
+  // therefore handleSubmit) is simply unreachable while a request is pending.
   const showForm = verificationStatus !== "pending" && verificationStatus !== "approved";
+  const isResubmitFlow = verificationStatus === "rejected";
 
   return (
     <>
@@ -352,10 +402,12 @@ const VerificationRequestModal = ({ isOpen, onClose, agentData, selectedRental, 
               </div>
               <div>
                 <h2 style={{ fontSize: "1.25rem", fontWeight: "700", color: "hsl(200 25% 15%)", marginBottom: "0.125rem" }}>
-                  Request Listing Verification
+                  {isResubmitFlow ? "Resubmit Listing Verification" : "Request Listing Verification"}
                 </h2>
                 <p style={{ fontSize: "0.875rem", color: "hsl(200 15% 45%)" }}>
-                  {showForm ? "Submit documents to verify your property" : "Verification status"}
+                  {showForm
+                    ? (isResubmitFlow ? "Update your documents and resubmit for review" : "Submit documents to verify your property")
+                    : "Verification status"}
                 </p>
               </div>
             </div>
@@ -363,6 +415,23 @@ const VerificationRequestModal = ({ isOpen, onClose, agentData, selectedRental, 
               <X style={{ height: "1.5rem", width: "1.5rem", color: "hsl(200 15% 45%)" }} />
             </button>
           </div>
+
+          {showForm && isResubmitFlow && (
+            <div style={{ margin: "1rem 1.5rem 0", padding: "1rem", backgroundColor: "hsl(0 72% 51% / 0.06)", border: "1px solid hsl(0 72% 51% / 0.25)", borderRadius: "0.5rem", display: "flex", gap: "0.75rem", alignItems: "start" }}>
+              <AlertCircle style={{ height: "1.25rem", width: "1.25rem", color: "hsl(0 72% 51%)", flexShrink: 0 }} />
+              <div>
+                <p style={{ fontWeight: "600", color: "hsl(0 72% 51%)", marginBottom: "0.25rem" }}>Previous request was rejected</p>
+                <p style={{ fontSize: "0.875rem", color: "hsl(0 72% 40%)", margin: 0 }}>
+                  Update your documents below and resubmit — this will replace your rejected request rather than create a new one.
+                </p>
+                {existingVerification?.admin_notes && (
+                  <p style={{ fontSize: "0.875rem", color: "hsl(0 72% 40%)", margin: "0.5rem 0 0" }}>
+                    <strong>Reason:</strong> {existingVerification.admin_notes}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
 
           {showForm && Object.keys(errors).length > 0 && (
             <div style={{ margin: "1rem 1.5rem 0", padding: "1rem", backgroundColor: "hsl(0 72% 51% / 0.1)", border: "1px solid hsl(0 72% 51% / 0.3)", borderRadius: "0.5rem", display: "flex", gap: "0.75rem", alignItems: "start" }}>
@@ -447,18 +516,42 @@ const VerificationRequestModal = ({ isOpen, onClose, agentData, selectedRental, 
                 </div>
 
                 {/* Document upload sections */}
-                {DOCUMENT_SECTIONS.map((section) => (
+                {DOCUMENT_SECTIONS.map((section) => {
+                  const existingPaths = isResubmitFlow ? (existingVerification?.[section.key] ?? []) : [];
+                  const hasExisting = existingPaths.length > 0;
+
+                  return (
                   <div key={section.key} style={{ marginBottom: "1.5rem" }}>
                     <label style={{ display: "block", fontSize: "0.875rem", fontWeight: "600", color: "hsl(200 25% 15%)", marginBottom: "0.25rem" }}>{section.title}</label>
                     <p style={{ fontSize: "0.75rem", color: "hsl(200 15% 45%)", marginBottom: "0.75rem" }}>{section.description}</p>
                     {errors[section.key] && <p style={{ fontSize: "0.75rem", color: "hsl(0 72% 51%)", marginBottom: "0.5rem" }}>{errors[section.key]}</p>}
+
+                    {/* Previously submitted documents for this category — only relevant on a
+                        rejected resubmission. Uploading new files below replaces these. */}
+                    {hasExisting && (
+                      <div style={{ marginBottom: "0.75rem" }}>
+                        <p style={{ fontSize: "0.72rem", fontWeight: "600", color: "hsl(200 15% 45%)", marginBottom: "0.4rem" }}>
+                          Previously submitted ({existingPaths.length}):
+                        </p>
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem" }}>
+                          {existingPaths.map((path, i) => (
+                            <a key={i} href={fileUrl(path)} target="_blank" rel="noopener noreferrer"
+                              style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem", padding: "0.28rem 0.55rem", borderRadius: "0.4rem", backgroundColor: "hsl(214 100% 96%)", color: "hsl(214 80% 42%)", fontSize: "0.7rem", fontWeight: "700", textDecoration: "none", border: "1px solid hsl(214 60% 88%)" }}>
+                              {fileName(path)}
+                            </a>
+                          ))}
+                        </div>
+                      </div>
+                    )}
 
                     <div
                       style={{ border: "2px dashed hsl(40 20% 88%)", borderRadius: "0.5rem", padding: "1.5rem", textAlign: "center", backgroundColor: "hsl(40 30% 98%)", cursor: processing ? "not-allowed" : "pointer", marginBottom: "0.75rem" }}
                       onClick={() => !processing && document.getElementById(`${section.key}-input`).click()}
                     >
                       <Upload style={{ height: "1.5rem", width: "1.5rem", color: "hsl(200 15% 45%)", margin: "0 auto 0.5rem" }} />
-                      <p style={{ fontSize: "0.875rem", color: "hsl(200 25% 15%)", fontWeight: "500", marginBottom: "0.25rem" }}>Click to upload files</p>
+                      <p style={{ fontSize: "0.875rem", color: "hsl(200 25% 15%)", fontWeight: "500", marginBottom: "0.25rem" }}>
+                        {hasExisting ? "Click to upload replacement files" : "Click to upload files"}
+                      </p>
                       <p style={{ fontSize: "0.75rem", color: "hsl(200 15% 45%)" }}>PNG, JPG, PDF up to 10MB each</p>
                       <input id={`${section.key}-input`} type="file" multiple accept="image/*,.pdf,.doc,.docx" onChange={(e) => handleFileUpload(section.key, e)} style={{ display: "none" }} disabled={processing} />
                     </div>
@@ -479,7 +572,8 @@ const VerificationRequestModal = ({ isOpen, onClose, agentData, selectedRental, 
                       </div>
                     )}
                   </div>
-                ))}
+                  );
+                })}
 
                 {/* Notes */}
                 <div style={{ marginBottom: "1.5rem" }}>
@@ -524,10 +618,10 @@ const VerificationRequestModal = ({ isOpen, onClose, agentData, selectedRental, 
                 {processing ? (
                   <>
                     <div style={{ width: "1rem", height: "1rem", border: "2px solid white", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
-                    Submitting...
+                    {isResubmitFlow ? "Resubmitting..." : "Submitting..."}
                   </>
                 ) : (
-                  "Submit Verification Request"
+                  isResubmitFlow ? "Resubmit Verification Request" : "Submit Verification Request"
                 )}
               </button>
             </div>

@@ -264,100 +264,6 @@ const getFeatureState = (property) => {
     };
 };
 
-// ─── Feature Confirmation Modal ───────────────────────────────────────────────
-const FeatureConfirmModal = ({ property, onClose, onConfirm, loading }) => {
-    if (!property) return null;
-
-    const featureEnds = new Date(Date.now() + 48 * 60 * 60 * 1000);
-    const slotsInfo = "If slots are full, your listing will be queued and featured when a slot opens.";
-
-    return (
-        <div onClick={onClose} style={{
-            position: 'fixed', inset: 0, zIndex: 100,
-            backgroundColor: 'hsla(222, 28%, 8%, 0.65)', backdropFilter: 'blur(5px)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center'
-        }}>
-            <div onClick={e => e.stopPropagation()} style={{
-                width: '100%', maxWidth: '420px', margin: '1rem',
-                backgroundColor: 'white', borderRadius: '1rem', overflow: 'hidden',
-                boxShadow: '0 20px 60px hsla(220, 28%, 6%, 0.3)',
-                animation: 'leModalIn 0.2s ease'
-            }}>
-                {/* Header */}
-                <div style={{
-                    padding: '1.25rem 1.5rem', borderBottom: '1px solid hsl(220 15% 90%)',
-                    display: 'flex', alignItems: 'center', gap: '0.75rem'
-                }}>
-                    <span style={{ color: 'hsl(38 92% 45%)', fontSize: '1.5rem' }}>⭐</span>
-                    <div>
-                        <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 800, color: 'hsl(220 25% 15%)' }}>
-                            Request Featured Listing
-                        </h3>
-                        <p style={{ margin: '0.1rem 0 0', fontSize: '0.78rem', color: 'hsl(220 15% 45%)' }}>
-                            for {property.title}
-                        </p>
-                    </div>
-                </div>
-
-                {/* Body */}
-                <div style={{ padding: '1.25rem 1.5rem' }}>
-                    <div style={{
-                        display: 'flex', flexDirection: 'column', gap: '0.75rem',
-                        fontSize: '0.82rem', color: 'hsl(220 15% 35%)', lineHeight: 1.6
-                    }}>
-                        <p style={{ margin: 0 }}>
-                            Featured listings are highlighted in search results and the featured section.
-                            They stay at the top for <strong>48 hours</strong> and receive more visibility.
-                        </p>
-                        <div style={{
-                            backgroundColor: 'hsl(38 92% 50% / 0.08)',
-                            border: '1px solid hsl(38 92% 50% / 0.2)',
-                            padding: '0.75rem', borderRadius: '0.5rem',
-                            display: 'flex', alignItems: 'flex-start', gap: '0.5rem'
-                        }}>
-                            <span style={{ marginTop: '0.15rem' }}>ℹ️</span>
-                            <span>{slotsInfo}</span>
-                        </div>
-                        <p style={{ margin: 0, fontSize: '0.75rem', color: 'hsl(220 15% 50%)' }}>
-                            Feature period: now → {featureEnds.toLocaleString()}
-                        </p>
-                    </div>
-                </div>
-
-                {/* Footer */}
-                <div style={{
-                    padding: '1rem 1.5rem', borderTop: '1px solid hsl(220 15% 90%)',
-                    display: 'flex', gap: '0.5rem', justifyContent: 'flex-end'
-                }}>
-                    <button onClick={onClose} disabled={loading}
-                        style={{
-                            padding: '0.5rem 1rem', borderRadius: '0.5rem',
-                            border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white',
-                            color: 'hsl(220 25% 30%)', fontSize: '0.8rem', fontWeight: 600,
-                            cursor: loading ? 'default' : 'pointer', fontFamily: 'inherit'
-                        }}>
-                        Cancel
-                    </button>
-                    <button onClick={onConfirm} disabled={loading}
-                        style={{
-                            padding: '0.5rem 1rem', borderRadius: '0.5rem',
-                            border: 'none', backgroundColor: loading ? 'hsl(220 25% 55%)' : 'hsl(38 92% 45%)',
-                            color: 'white', fontSize: '0.8rem', fontWeight: 700,
-                            cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
-                            display: 'flex', alignItems: 'center', gap: '0.35rem'
-                        }}>
-                        {loading ? (
-                            <><span style={{ display: 'inline-block', width: '0.9rem', height: '0.9rem', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: 'white', borderRadius: '50%', animation: 'spin 0.6s linear infinite' }} /> Requesting…</>
-                        ) : (
-                            <>⭐ Confirm Request</>
-                        )}
-                    </button>
-                </div>
-            </div>
-        </div>
-    );
-};
-
 // ─── Listing Card ─────────────────────────────────────────────────────────────
 const ListingCard = ({ property, onView, onEdit, onVerify, getVerificationButtonText, isVerificationButtonDisabled, onFeatureRequest }) => {
     const price = fmtPrice(property);
@@ -458,16 +364,6 @@ const ListingCard = ({ property, onView, onEdit, onVerify, getVerificationButton
                     </button>
                 </div>
             </div>
-
-            {/* Render confirmation modal */}
-            {featureModal && (
-                <FeatureConfirmModal
-                    property={featureModal}
-                    onClose={() => setFeatureModal(null)}
-                    onConfirm={handleConfirmFeature}
-                    loading={requesting}
-                />
-            )}
         </>
     );
 };

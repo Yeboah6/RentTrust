@@ -65,6 +65,56 @@ class ListingVerificationController extends Controller
         return back()->with('success', 'Verification request submitted.');
     }
 
+    public function update(Request $request, ListingVerification $verification)
+    {
+        if ($verification->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        if ($verification->status !== 'rejected') {
+            return back()->withErrors(['listing_id' => 'Only a rejected request can be resubmitted.']);
+        }
+
+        $validated = $request->validate([
+            'listing_id' => ['required', 'integer', 'exists:rentals,id'],
+            'property_title' => ['required', 'string', 'max:255'],
+            'property_address' => ['required', 'string', 'max:255'],
+            'availability_status' => ['required', Rule::in(self::AVAILABILITY_OPTIONS)],
+            'notes' => ['nullable', 'string', 'max:2000'],
+            'ownership_documents' => ['nullable', 'array'],
+            'ownership_documents.*' => ['file', 'mimes:' . self::ALLOWED_MIMES, 'max:' . self::MAX_FILE_KB],
+            'photos' => ['nullable', 'array'],
+            'photos.*' => ['file', 'mimes:' . self::ALLOWED_MIMES, 'max:' . self::MAX_FILE_KB],
+            'other_documents' => ['nullable', 'array'],
+            'other_documents.*' => ['file', 'mimes:' . self::ALLOWED_MIMES, 'max:' . self::MAX_FILE_KB],
+        ]);
+
+        $hasDocs = $request->hasFile('ownership_documents')
+            || $request->hasFile('photos')
+            || $request->hasFile('other_documents');
+
+        if (! $hasDocs) {
+            return back()->withErrors(['ownership_documents' => 'Please upload at least one document.']);
+        }
+
+        $verification->update([
+            'property_title' => $validated['property_title'],
+            'property_address' => $validated['property_address'],
+            'availability_status' => $validated['availability_status'],
+            'notes' => $validated['notes'] ?? null,
+            'status' => 'pending',
+            'submitted_at' => now(),
+            'ownership_documents' => $this->storeFiles($request, 'ownership_documents', $validated['listing_id'])
+                ?? $verification->ownership_documents,
+            'photos' => $this->storeFiles($request, 'photos', $validated['listing_id'])
+                ?? $verification->photos,
+            'other_documents' => $this->storeFiles($request, 'other_documents', $validated['listing_id'])
+                ?? $verification->other_documents,
+        ]);
+
+        return back()->with('success', 'Verification request resubmitted.');
+    }
+
     private function storeFiles(Request $request, string $field, int $listingId): ?array
     {
         if (! $request->hasFile($field)) {

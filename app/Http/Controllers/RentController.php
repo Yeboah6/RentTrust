@@ -27,22 +27,65 @@ class RentController extends Controller
 
     public function index()
     {
-        $service = app(FeaturedListingService::class);
-    
-        // ── Featured listings ────────────────────────────────────────────────
-        $featuredRentals = $service->getFeaturedListings('rent', 5);
-        $featuredSales   = $service->getFeaturedListings('sale', 5);
-    
+        // ── Verified listings (agent must have status = 'verified') ───────────
+        $verifiedRentals = Rental::where('purpose', 'rent')
+            ->where('is_rented', false)
+            ->whereHas('agent', fn ($q) => $q->where('status', 'verified'))
+            ->with('agent:id,name')
+            ->select('id', 'title', 'area', 'city', 'rent_min', 'rent_max', 'advance_duration',
+                     'status', 'bedrooms', 'bathrooms', 'images', 'agent_id', 'created_at')
+            ->latest()
+            ->take(5)
+            ->get()
+            ->map(fn ($r) => [
+                'id'               => $r->id,
+                'title'            => $r->title,
+                'area'             => $r->area,
+                'city'             => $r->city,
+                'rent_min'         => $r->rent_min,
+                'rent_max'         => $r->rent_max,
+                'advance_duration' => $r->advance_duration,
+                'agent_name'       => $r->agent->name ?? null,
+                'status'           => $r->status,
+                'bedrooms'         => $r->bedrooms,
+                'bathrooms'        => $r->bathrooms,
+                'images'           => $r->images,
+            ])
+            ->values()
+            ->all();
+
+        $verifiedSales = Rental::where('purpose', 'sale')
+            ->where('is_sold', false)
+            ->whereHas('agent', fn ($q) => $q->where('status', 'verified'))
+            ->with('agent:id,name')
+            ->select('id', 'title', 'area', 'city', 'sale_price',
+                     'status', 'bedrooms', 'bathrooms', 'images', 'agent_id', 'created_at')
+            ->latest()
+            ->take(5)
+            ->get()
+            ->map(fn ($r) => [
+                'id'         => $r->id,
+                'title'      => $r->title,
+                'area'       => $r->area,
+                'city'       => $r->city,
+                'sale_price' => $r->sale_price,
+                'agent_name' => $r->agent->name ?? null,
+                'status'     => $r->status,
+                'bedrooms'   => $r->bedrooms,
+                'bathrooms'  => $r->bathrooms,
+                'images'     => $r->images,
+            ])
+            ->values()
+            ->all();
+
         // ── Area market data ─────────────────────────────────────────────────
         $sixMonthsAgo = now()->subMonths(6);
     
-        // Fetch raw rental rows once — used for both aggregates and trend calculation.
         $rawRentals = Rental::where('purpose', 'rent')
             ->where('created_at', '>', $sixMonthsAgo)
             ->select('city', 'area', 'rent_min', 'rent_max', 'created_at')
             ->get();
     
-        // Group in PHP so calculateRealTrend() still receives a Collection of rows.
         $rentalAreas = $rawRentals
             ->groupBy('city')
             ->map(fn ($cityRows) => $cityRows
@@ -75,8 +118,8 @@ class RentController extends Controller
     
         // ── Stats ────────────────────────────────────────────────────────────
         return inertia('Home', [
-            'featuredRentals'     => $featuredRentals,
-            'featuredSales'       => $featuredSales,
+            'verifiedRentals'     => $verifiedRentals,
+            'verifiedSales'       => $verifiedSales,
             'rentalAreas'         => $rentalAreas,
             'saleAreas'           => $saleAreas,
             'totalAreas'          => Rental::distinct()->count('area'),
