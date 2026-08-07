@@ -40,7 +40,7 @@ class DashboardController extends Controller
         ->select(
             'id', 'rental_id', 'title', 'property_type', 'purpose',
             'city', 'area', 'address', 'rent_min', 'rent_max', 'sale_price',
-            'status', 'is_verified', 'is_featured', 'images', 'created_at', 'updated_at',
+            'status', 'is_verified', 'images', 'created_at', 'updated_at',
             'bedrooms', 'bathrooms', 'description', 'amenities', 'is_sold',
             'verification_status', 'advance_duration', 'agent_id', 'agent_name', 'agent_phone', 'agent_email'
         )
@@ -139,7 +139,7 @@ class DashboardController extends Controller
             ->select(
                 'id', 'rental_id', 'title', 'property_type', 'purpose',
                 'city', 'area', 'address', 'rent_min', 'rent_max', 'sale_price',
-                'status', 'is_verified', 'is_featured', 'images', 'created_at', 'updated_at',
+                'status', 'is_verified', 'images', 'created_at', 'updated_at',
                 'bedrooms', 'bathrooms', 'description', 'amenities', 'is_sold',
                 'verification_status', 'advance_duration', 'agent_id', 'agent_name', 'agent_phone', 'agent_email'
             )
@@ -227,10 +227,6 @@ class DashboardController extends Controller
             ->latest()
             ->get();
 
-        // $verifications = AgentVerification::with('agent:id,name,email,phone')
-        //     ->orderByDesc('submitted_at')
-        //     ->get();
-
         $agentVerifications = AgentVerification::latest('submitted_at')->get();
         $listingVerifications = ListingVerification::latest('submitted_at')->get();
 
@@ -255,7 +251,6 @@ class DashboardController extends Controller
             'inquiries' => $inquiries,
             'views' => $views,
             'totalViews' => $totalViews,
-            // 'verifications' => $verifications,
             'agentVerifications' => $agentVerifications,
             'listingVerifications' => $listingVerifications,
             'locations' => $locations,
@@ -282,7 +277,7 @@ class DashboardController extends Controller
         ->select(
             'id', 'rental_id', 'title', 'property_type', 'purpose',
             'city', 'area', 'address', 'rent_min', 'rent_max', 'sale_price',
-            'status', 'is_verified', 'is_featured', 'images', 'created_at', 'updated_at',
+            'status', 'is_verified', 'images', 'created_at', 'updated_at',
             'bedrooms', 'bathrooms', 'description', 'amenities', 'is_sold',
             'verification_status', 'advance_duration', 'agent_id', 'agent_name', 'agent_phone', 'agent_email'
         )
@@ -338,47 +333,4 @@ class DashboardController extends Controller
         return back()->with('success', 'Agent verification updated.');
     }
 
-    public function approveListingVerification(Request $request, ListingVerification $listingVerification)
-    {
-        $validated = $request->validate([
-            'admin_notes' => 'nullable|string',
-        ]);
-
-        $listingVerification->update([
-            'verification_status' => 'approved',
-            'admin_notes' => $validated['admin_notes'] ?: $listingVerification->admin_notes,
-            'reviewed_at' => now(),
-            'reviewed_by' => Auth::user()->name,
-        ]);
-
-        $listingVerification->listing?->update([
-            'is_verified' => true,
-            'verification_status' => 'verified',
-        ]);
-
-        return back()->with('success', 'Listing verification approved.');
-    }
-
-    public function rejectListingVerification(Request $request, ListingVerification $listingVerification)
-    {
-        $validated = $request->validate([
-            'rejection_reason' => 'required|string',
-            'admin_notes' => 'nullable|string',
-        ]);
-
-        $listingVerification->update([
-            'verification_status' => 'rejected',
-            'admin_notes' => $validated['admin_notes'] ?: $listingVerification->admin_notes,
-            'reviewed_at' => now(),
-            'reviewed_by' => Auth::user()->name,
-        ]);
-
-        $listingVerification->listing?->update([
-            'verification_status' => 'rejected',
-            'verification_rejected_at' => now(),
-            'verification_rejection_reason' => $validated['rejection_reason'],
-        ]);
-
-        return back()->with('success', 'Listing verification rejected.');
-    }
 }

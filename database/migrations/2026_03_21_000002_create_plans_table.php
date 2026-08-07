@@ -17,8 +17,8 @@ return new class extends Migration
             $table->string('slug')->unique();
             $table->decimal('price', 10, 2)->default(0);
             $table->string('currency')->default('GHS');
-            $table->string('interval')->default('monthly'); // monthly, yearly
-            $table->integer('listing_limit')->nullable(); // null = unlimited
+            $table->string('interval')->default('monthly');
+            $table->integer('listing_limit')->nullable();
             $table->integer('boost_limit')->default(0);
             $table->integer('lead_limit')->default(0);
             $table->boolean('verified_badge')->default(false);
@@ -31,8 +31,6 @@ return new class extends Migration
             $table->integer('sort_order')->default(0);
             $table->integer('rental_limit')->nullable();
             $table->integer('sale_limit')->nullable()->default(0);
-            $table->integer('featured_limit')->default(0);
-            $table->integer('featured_duration_days')->default(0);
             $table->timestamps();
         });
     }

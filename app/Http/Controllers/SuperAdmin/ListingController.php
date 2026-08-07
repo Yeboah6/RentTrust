@@ -41,21 +41,28 @@ class ListingController extends Controller
     
         $metrics = [
             'total'        => $listings->count(),
-            'active'       => $listings->where('status', 'approved')->count(),
-            'pending'      => $listings->where('status', 'pending')->count(),
-            'flagged'      => 0, // replace with your flagged logic
+    
+            'active'       => $listings->where('status', 'active')->count(),
+            'inactive'     => $listings->where('status', 'inactive')->count(),
+            'flagged'      => 0,
+    
             // Sale-specific
             'sale_total'   => $listings->where('purpose', 'sale')->count(),
-            'sale_active'  => $listings->where('purpose', 'sale')->where('status', 'approved')->count(),
+            'sale_active'  => $listings->where('purpose', 'sale')->where('status', 'active')->count(),
             'sale_sold'    => $listings->where('purpose', 'sale')->where('is_sold', true)->count(),
+    
             // Rent-specific
             'rent_total'   => $listings->where('purpose', 'rent')->count(),
-            'rent_active'  => $listings->where('purpose', 'rent')->where('status', 'approved')->count(),
+            'rent_active'  => $listings->where('purpose', 'rent')->where('status', 'active')->count(),
+            'rent_sold'    => $listings->where('purpose', 'rent')->where('is_rented', true)->count(),
         ];
     
+        $propertyTypes = $listings->pluck('property_type')->filter()->unique()->values();
+    
         return inertia('SuperAdmin/Listings/Index', [
-            'listings' => $listings,
-            'metrics'  => $metrics,
+            'listings'       => $listings,
+            'metrics'        => $metrics,
+            'property_types' => $propertyTypes,
         ]);
     }
 
@@ -273,9 +280,8 @@ class ListingController extends Controller
             'agentPhone'   => 'nullable|string|max:20',
             'agentEmail'   => 'nullable|email|max:255',
             'amenities'    => 'nullable',
-            'is_featured'  => 'boolean',
             'is_verified'  => 'boolean',
-            'status'       => 'required|in:active,pending,draft',
+            'status'       => 'required|in:active,inactive',
             'images.*'     => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
             ];
 
@@ -346,9 +352,8 @@ class ListingController extends Controller
                     'agent_name'   => $request->agentName,
                     'agent_phone'  => $request->agentPhone,
                     'agent_email'  => $request->agentEmail,
-                    'is_featured'  => $request->boolean('is_featured', false),
                     'is_verified'  => $request->boolean('is_verified', false),
-                    'status'       => $request->input('status', 'pending'),
+                    'status'       => $request->input('status', 'active'),
                     'images'       => $filePaths,
                 ];
 
@@ -383,7 +388,7 @@ class ListingController extends Controller
                 $notificationEmail = $assignedAgent?->email ?: $listing->agent_email;
                 if ($notificationEmail && filter_var($notificationEmail, FILTER_VALIDATE_EMAIL)) {
                     try {
-                        Mail::to($notificationEmail)->send(new ListingUpdatedMail($listing->fresh()));
+                        Mail::to($notificationEmail)->queue(new ListingUpdatedMail($listing->fresh()));
                         Log::info('Agent notification email sent for assigned listing', [
                             'listing_id'  => $listing->id,
                             'agent_id'    => $listing->agent_id,
@@ -478,7 +483,6 @@ class ListingController extends Controller
             'has_new_images'        => $request->hasFile('newImages'),
             'existing_images_count' => count($request->input('existingImages', [])),
             'removed_images_count'  => count($request->input('removedImages', [])),
-            'is_featured_changed'   => $request->has('is_featured'),
         ]);
     
         // ── Amenities — decode if sent as JSON string ─────────────────────────────
@@ -494,14 +498,12 @@ class ListingController extends Controller
     
         // ── Status map — DB only accepts 'pending', 'approved', 'rejected' ────────
         $statusMap = [
-            'active'   => 'approved',
-            'approved' => 'approved',
-            'pending'  => 'pending',
-            'rejected' => 'rejected',
+            'active'   => 'active',
+            'inactive' => 'inactive',
             'rented'   => 'rented',
             'sold'     => 'sold'
         ];
-        $dbStatus = $statusMap[$request->input('status', 'pending')] ?? 'pending';
+        $dbStatus = $statusMap[$request->input('status', 'active')] ?? 'active';
     
         // ── Purpose map — DB only accepts 'rent', 'sale' ──────────────────────────
         $purposeMap = [
@@ -527,10 +529,7 @@ class ListingController extends Controller
             'agentPhone'       => 'nullable|string|max:20',
             'agentEmail'       => 'nullable|email|max:255',
             'amenities'        => 'nullable',
-            'status'           => 'nullable|string',
-            'is_featured'      => 'nullable|boolean',
-            'featured_at'      => 'nullable|date',
-            'featured_priority' => 'nullable|integer|min:0', // Added for priority
+            'status'           => 'nullable|string', 
             'is_verified'      => 'nullable|boolean',
             'newImages.*'      => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
             'existingImages'   => 'nullable|array',
@@ -566,63 +565,6 @@ class ListingController extends Controller
         }
     
         try {
-            // ── Handle Featured Status Changes ─────────────────────────────────────
-            $featuredService = app(FeaturedListingService::class);
-            $featuredChanged = false;
-            $newIsFeatured = filter_var($request->input('is_featured', $listing->is_featured), FILTER_VALIDATE_BOOLEAN);
-            $newFeaturedPriority = $request->input('featured_priority', $listing->featured_priority ?? 0);
-            
-            // Determine featured_at value
-            if ($newIsFeatured) {
-                if (!$listing->is_featured) {
-                    // Listing is being featured for the first time or re-featured
-                    $featuredAt = $request->featured_at 
-                        ? Carbon::parse($request->featured_at) 
-                        : ($listing->featured_at ?? now());
-                    
-                    $featuredChanged = true;
-                    
-                    // Check if we need to queue or activate immediately
-                    $activeCount = Rental::where('is_featured', true)
-                        ->where('id', '!=', $listing->id)
-                        ->where(function($query) {
-                            $driver = DB::connection()->getDriverName();
-                            if ($driver === 'sqlite') {
-                                return $query->whereRaw("datetime(featured_at, '+48 hours') > datetime('now')");
-                            } elseif ($driver === 'mysql') {
-                                return $query->whereRaw('DATE_ADD(featured_at, INTERVAL 48 HOUR) > NOW()');
-                            } else {
-                                return $query->whereRaw("featured_at + INTERVAL '48 hours' > NOW()");
-                            }
-                        })
-                        ->count();
-                    
-                    if ($activeCount >= 10) {
-                        // Too many active featured listings, add to queue instead
-                        $featuredService->addToFeaturedQueue($listing, $newFeaturedPriority);
-                        $newIsFeatured = false; // Don't set as featured directly
-                        $featuredAt = null;
-                        
-                        Log::info('Listing added to featured queue', [
-                            'listing_id' => $listing->id,
-                            'queue_position' => $listing->fresh()->featured_queue_position,
-                        ]);
-                    }
-                } else {
-                    // Already featured, keep existing featured_at or update if provided
-                    $featuredAt = $request->featured_at 
-                        ? Carbon::parse($request->featured_at) 
-                        : $listing->featured_at;
-                }
-            } else {
-                // Unfeaturing the listing
-                $featuredAt = null;
-                if ($listing->is_featured) {
-                    $featuredService->unfeatureListing($listing);
-                    $featuredChanged = true;
-                }
-            }
-    
             // ── Image handling — identical to agent update() ───────────────────────
             $currentImages  = $this->parseImages($listing->images);
             $existingImages = $request->input('existingImages', []);
@@ -726,10 +668,7 @@ class ListingController extends Controller
                 'images'           => $finalImages,
                 'status'           => $dbStatus,
                 'purpose'          => $dbPurpose,
-                'is_featured'      => $newIsFeatured,
                 'is_verified'      => filter_var($request->input('is_verified', false), FILTER_VALIDATE_BOOLEAN),
-                'featured_at'      => $featuredAt,
-                'featured_priority' => $newFeaturedPriority,
                 // Pricing
                 'sale_price'       => $isSale  ? $request->salePrice  : null,
                 'rent_min'         => !$isSale ? $request->rentMin     : null,
@@ -740,18 +679,11 @@ class ListingController extends Controller
     
             $listing->update($updateData);
     
-            // Clear featured cache if featured status changed
-            if ($featuredChanged) {
-                $featuredService->clearCache($listing->purpose);
-            }
-    
             Log::info('SuperAdmin listing updated successfully', [
                 'listing_id' => $listing->id,
                 'title'      => $listing->title,
                 'status'     => $dbStatus,
                 'purpose'    => $dbPurpose,
-                'is_featured' => $newIsFeatured,
-                'featured_at' => $featuredAt,
             ]);
     
             // ---- EMAIL SENDING (simplified) ------------------------------------------
@@ -791,17 +723,6 @@ class ListingController extends Controller
                 'listing' => $this->formatListing($listing->fresh()),
                 'emailSent' => $emailSent,
             ];
-    
-            // Add queue information if listing is queued
-            if ($listing->fresh()->is_featured_queued) {
-                $response['featured_queue'] = [
-                    'status' => 'queued',
-                    'position' => $listing->featured_queue_position,
-                    'estimated_activation' => $listing->queued_at 
-                        ? $listing->queued_at->addHours(48 * ceil($listing->featured_queue_position / 10))
-                        : null,
-                ];
-            }
     
             return response()->json($response);
     
@@ -844,7 +765,7 @@ class ListingController extends Controller
         try {
             $agentEmail = $listing->agent_email ?? $listing->user?->email;
             if ($agentEmail && filter_var($agentEmail, FILTER_VALIDATE_EMAIL)) {
-                Mail::to($agentEmail)->send(
+                Mail::to($agentEmail)->queue(
                     new ListingApproved(
                         listing: $listing,
                         approvedBy: auth()->user()?->name ?? 'System',
@@ -898,7 +819,7 @@ class ListingController extends Controller
         try {
             $agentEmail = $listing->agent_email ?? $listing->user?->email;
             if ($agentEmail && filter_var($agentEmail, FILTER_VALIDATE_EMAIL)) {
-                Mail::to($agentEmail)->send(
+                Mail::to($agentEmail)->queue(
                     new ListingRejected(
                         listing: $listing,
                         rejectedBy: auth()->user()?->name ?? 'System',
@@ -1036,23 +957,23 @@ class ListingController extends Controller
             'description'      => $listing->description,
             'purpose'          => $listing->purpose,
             'listing_type'     => $listing->purpose,
-            'property_type'    => $propertyTypeSlug,          // ← normalised to slug
+            'property_type'    => $propertyTypeSlug,          
             'sale_price'       => $listing->sale_price,
             'rent_min'         => $listing->rent_min,
             'rent_max'         => $listing->rent_max,
             'advance_duration' => $listing->advance_duration,
             'currency'         => $listing->currency ?? 'GH₵',
             'status'           => $listing->status,
-            'city'             => $cityValue,                 // ← matched to select option
+            'city'             => $cityValue,                 
             'area'             => $listing->area,
-            'location'         => $cityValue,                 // ← same resolved value
+            'location'         => $cityValue,                
             'address'          => $listing->address,
             'bedrooms'         => $listing->bedrooms,
             'bathrooms'        => $listing->bathrooms,
-            'is_featured'      => (bool) $listing->is_featured,
+            // 'is_featured'      => (bool) $listing->is_featured,
             'is_verified'      => (bool) $listing->is_verified,
             'is_sold'          => (bool) ($listing->is_sold ?? false),
-            'views_count'      => $listing->views_count ?? 0, // ← now populated via loadCount
+            'views_count'      => $listing->views_count ?? 0, 
             'inquiries_count'  => $listing->inquiries_count ?? 0,
             'flagged_count'    => $listing->flagged_count ?? 0,
             'images'           => $this->resolveImages($listing),

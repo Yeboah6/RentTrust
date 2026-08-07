@@ -10,11 +10,19 @@ class Subscription extends Model
 {
     use GeneratesUUIDs;
     protected $fillable = [
-        'user_id', 'plan_id', 'provider',
+        'user_id', 
+        'plan_id', 
+        'provider',
         'subscription_uuid',
-        'provider_subscription_id', 'provider_customer_code',
-        'status', 'starts_at', 'ends_at', 'grace_ends_at',
-        'retry_count', 'last_retry_at', 'meta',
+        'provider_subscription_id', 
+        'provider_customer_code',
+        'status', 
+        'starts_at', 
+        'ends_at', 
+        'grace_ends_at',
+        'retry_count', 
+        'last_retry_at', 
+        'meta',
     ];
 
     protected static function boot()

@@ -38,7 +38,7 @@ class StoreListingRequest extends FormRequest
             'agentPhone'      => 'required|string|max:20',
             'agentEmail'      => 'required|email|max:255',
             'amenities'       => 'nullable|string',
-            'images.*'        => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
+            'images.*'        => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
         ];
 
         if ($purpose === 'sale') {
@@ -79,7 +79,7 @@ class StoreListingRequest extends FormRequest
             'agentEmail.required'    => 'Email address is required',
             'agentEmail.email'       => 'Please provide a valid email address',
             'images.*.image'         => 'Each file must be a valid image',
-            'images.*.mimes'         => 'Images must be in JPEG, PNG, JPG, or GIF format',
+            'images.*.mimes'         => 'Images must be in JPEG, PNG, WEBP, JPG, or GIF format',
             'images.*.max'           => 'Each image must not exceed 5MB',
         ];
     }

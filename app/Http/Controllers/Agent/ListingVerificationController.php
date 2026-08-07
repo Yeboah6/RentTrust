@@ -11,9 +11,8 @@ use Illuminate\Validation\Rule;
 class ListingVerificationController extends Controller
 {
     private const MAX_FILE_KB = 10240; // 10MB, matches frontend limit
-    private const ALLOWED_MIMES = 'jpg,jpeg,png,pdf,doc,docx';
+    private const ALLOWED_MIMES = 'jpg,jpeg,png,pdf,doc,docx,webp';
     private const AVAILABILITY_OPTIONS = ['available', 'rented', 'sold', 'unavailable'];
-    // private const ADMIN_ROLES = ['admin', 'super_admin'];
 
     public function store(Request $request)
     {

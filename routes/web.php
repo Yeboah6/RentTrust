@@ -197,11 +197,11 @@ Route::middleware(['auth','verified','throttle:60,1','role:admin'])->group(funct
     Route::get('/admin/payments/filter', [PaymentsController::class, 'filterPayments'])
         ->name('admin.payments.filter');
     
-    Route::patch('/api/agent-verifications/{agentVerification}/status', [DashboardController::class, 'updateAgentVerificationStatus']);
+    Route::put('/api/agent-verifications/{agentVerification}/status', [DashboardController::class, 'updateAgentVerificationStatus']);
 
-    Route::patch('/api/listing-verifications/{listingVerification}/approve', [DashboardController::class, 'approveListingVerification']);
+    Route::put('/api/listing-verifications/{listingVerification}/approve', [ListingController::class, 'approveListingVerification']);
 
-    Route::patch('/api/listing-verifications/{listingVerification}/reject', [DashboardController::class, 'rejectListingVerification']);
+    Route::put('/api/listing-verifications/{listingVerification}/reject', [ListingController::class, 'rejectListingVerification']);
 });
 
 // ── Settings (protected + verified) ──────────────────────────────────────────

@@ -10,10 +10,16 @@ class Payment extends Model
 {
     use GeneratesUUIDs;
     protected $fillable = [
-        'user_id', 'subscription_id', 'reference',
+        'user_id', 
+        'subscription_id', 
+        'reference',
         'payment_id',
-        'provider', 'amount', 'currency',
-        'status', 'failure_reason', 'raw_payload',
+        'provider', 
+        'amount', 
+        'currency',
+        'status', 
+        'failure_reason', 
+        'raw_payload',
     ];
 
     protected static function boot()

@@ -34,11 +34,6 @@ const Icons = {
     chevR:    () => <Ico d="M9 5l7 7-7 7" size="0.8rem" />,
     key:      () => <Ico d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" size="1.15rem" />,
     tag:      () => <Ico d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" size="1.15rem" />,
-    star:     ({ filled } = {}) => filled ? (
-        <svg style={{ width: '0.85rem', height: '0.85rem', flexShrink: 0 }} viewBox="0 0 24 24" fill="currentColor">
-            <path d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.562.562 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.562.562 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
-        </svg>
-    ) : <Ico d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.562.562 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.562.562 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" size="0.85rem" />,
     spinner:  () => (
         <svg style={{ width: '0.95rem', height: '0.95rem', animation: 'lstSpin 0.75s linear infinite', flexShrink: 0 }} fill="none" viewBox="0 0 24 24">
             <circle style={{ opacity: 0.2 }} cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -48,31 +43,26 @@ const Icons = {
 };
 
 // ─── Config ───────────────────────────────────────────────────────────────────
+// Matches the `rentals` table's `status` enum: active | inactive | rented | sold
 
 const STATUS_CFG = {
     active:    { label: 'Active',    bg: 'hsl(152 60% 93%)', color: 'hsl(152 60% 28%)', dot: 'hsl(152 60% 38%)' },
-    approved:  { label: 'Active',    bg: 'hsl(152 60% 93%)', color: 'hsl(152 60% 28%)', dot: 'hsl(152 60% 38%)' },
-    pending:   { label: 'Pending',   bg: 'hsl(40 90% 93%)',  color: 'hsl(40 80% 30%)',  dot: 'hsl(40 80% 44%)' },
+    inactive:  { label: 'Inactive',  bg: 'hsl(40 90% 93%)',  color: 'hsl(40 80% 30%)',  dot: 'hsl(40 80% 44%)' },
     sold:      { label: 'Sold',      bg: 'hsl(214 100% 95%)',color: 'hsl(214 80% 38%)', dot: 'hsl(214 80% 50%)' },
     rented:    { label: 'Rented',    bg: 'hsl(270 60% 95%)', color: 'hsl(270 55% 38%)', dot: 'hsl(270 55% 50%)' },
-    rejected:  { label: 'Rejected',  bg: 'hsl(0 70% 95%)',   color: 'hsl(0 65% 40%)',   dot: 'hsl(0 65% 50%)' },
     draft:     { label: 'Draft',     bg: 'hsl(220 15% 93%)', color: 'hsl(220 15% 38%)', dot: 'hsl(220 15% 52%)' },
-    expired:   { label: 'Expired',   bg: 'hsl(220 15% 93%)', color: 'hsl(220 15% 38%)', dot: 'hsl(220 15% 52%)' },
-    flagged:   { label: 'Flagged',   bg: 'hsl(0 80% 94%)',   color: 'hsl(0 70% 38%)',   dot: 'hsl(0 70% 50%)' },
-    suspended: { label: 'Suspended', bg: 'hsl(0 70% 95%)',   color: 'hsl(0 65% 40%)',   dot: 'hsl(0 65% 50%)' },
 };
 
+// Matches the `rentals` table's `purpose` enum: rent | sale
 const TYPE_CFG = {
     sale:   { label: 'For Sale',  bg: 'hsl(152 55% 92%)', color: 'hsl(152 55% 30%)', dot: 'hsl(152 55% 42%)' },
     rent:   { label: 'For Rent',  bg: 'hsl(214 100% 95%)',color: 'hsl(214 80% 40%)', dot: 'hsl(214 80% 52%)' },
-    short:  { label: 'Short Let', bg: 'hsl(270 60% 95%)', color: 'hsl(270 55% 40%)', dot: 'hsl(270 55% 52%)' },
-    lease:  { label: 'Lease',     bg: 'hsl(40 90% 93%)',  color: 'hsl(40 80% 32%)',  dot: 'hsl(40 80% 46%)' },
 };
 
 const SORT_COLS = ['title', 'price', 'created_at', 'views'];
 const PAGE_SIZE = 12;
-const STATUSES  = ['all','active','pending','sold','rented','draft','flagged','rejected','expired'];
-const LISTING_TYPES = ['all','sale','rent','short','lease'];
+const STATUSES  = ['all','active','inactive','sold','rented'];
+const LISTING_TYPES = ['all','sale','rent'];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -93,57 +83,52 @@ const fmtPrice = (v, currency = 'GH₵') => {
 const avatarHue = (s = '') => [...s].reduce((a, c) => a + c.charCodeAt(0), 0) % 360;
 
 const resolveImage = (img) => {
-        if (!img) return null;
-        if (typeof img !== 'string') return null;
+    if (!img) return null;
+    if (typeof img !== 'string') return null;
 
-        // Already a full URL
-        if (img.startsWith('http://') || img.startsWith('https://')) return img;
+    // Already a full URL
+    if (img.startsWith('http://') || img.startsWith('https://')) return img;
 
-        // Has folder prefix already e.g. "rental_images/file.jpg"
-        if (img.includes('/')) return `/storage/${img}`;
+    // Has folder prefix already e.g. "rental_images/file.jpg"
+    if (img.includes('/')) return `/storage/${img}`;
 
-        // Bare filename — agent store saves without folder prefix
-        return `/storage/rental_images/${img}`;
-    };
+    // Bare filename — agent store saves without folder prefix
+    return `/storage/rental_images/${img}`;
+};
 
-    const resolveImages = (raw) => {
-        if (!raw) return [];
-        const arr = typeof raw === 'string' ? (() => { try { return JSON.parse(raw); } catch { return []; } })() : raw;
-        return (Array.isArray(arr) ? arr : []).map(resolveImage).filter(Boolean);
-    };
+const resolveImages = (raw) => {
+    if (!raw) return [];
+    const arr = typeof raw === 'string' ? (() => { try { return JSON.parse(raw); } catch { return []; } })() : raw;
+    return (Array.isArray(arr) ? arr : []).map(resolveImage).filter(Boolean);
+};
 
+// `rentals` table field names: status, purpose, property_type, city, area,
+// rent_min, sale_price, agent_name, agent_id, is_verified, is_sold, is_rented, images
 const normalise = (l) => ({
     ...l,
     _id:           l.id,
-    title:         l.title         ?? l.name          ?? 'Untitled Listing',
-    // Map 'approved' → 'active' for display, preserve 'pending', etc.
-    status_key:    (() => {
-        const raw = (l.status ?? 'pending').toLowerCase();
-        if (raw === 'approved') return 'active';
-        return raw;
-    })(),
-    listing_type:  (l.purpose      ?? l.listing_type  ?? l.type ?? 'sale').toLowerCase(),
-    property_type: (l.property_type ?? l.category     ?? '').toLowerCase(),
-    price:         l.sale_price    ?? l.rent_min      ?? l.price ?? 0,
-    currency:      l.currency      ?? 'GH₵',
-    location:      l.city          ?? l.area          ?? l.location ?? '—',
+    title:         l.title         ?? 'Untitled Listing',
+    status_key:    (l.status ?? 'inactive').toLowerCase(),
+    listing_type:  (l.purpose ?? 'sale').toLowerCase(),
+    property_type: (l.property_type ?? '').toLowerCase(),
+    price:         l.purpose === 'sale' ? (l.sale_price ?? 0) : (l.rent_min ?? 0),
+    currency:      'GH₵',
+    location:      [l.area, l.city].filter(Boolean).join(', ') || '—',
     agent_name:    l.agent_name    ?? '—',
     agent_id:      l.agent_id      ?? null,
-    views:         l.views_count   ?? l.views         ?? 0,
-    inquiries:     l.inquiries_count ?? l.inquiries   ?? 0,
-    images:        resolveImages(l.images ?? l.media),
+    views:         l.views_count     ?? 0,
+    inquiries:     l.inquiries_count ?? 0,
+    images:        resolveImages(l.images),
     bedrooms:      l.bedrooms      ?? null,
     bathrooms:     l.bathrooms     ?? null,
-    is_featured:   l.is_featured   ?? l.featured      ?? false,
-    is_verified:   l.is_verified   ?? l.verified      ?? false,
-    is_sold:       l.is_sold       ?? false,
+    is_verified:   !!l.is_verified,
+    is_sold:       !!l.is_sold,
+    is_rented:     !!l.is_rented,
     created_at:    l.created_at    ?? '',
-    flagged_count: l.flagged_count ?? l.reports_count ?? 0,
-    is_rented:     l.is_rented     ?? false,
+    flagged_count: l.flagged_count ?? l.reports_count ?? 0, // no reports table yet — always 0 for now
 });
 
 // ─── Atoms ────────────────────────────────────────────────────────────────────
-
 
 const StatusBadge = ({ sk }) => {
     const cfg = STATUS_CFG[sk] ?? STATUS_CFG.draft;
@@ -236,14 +221,13 @@ const Pagination = ({ page, total, onChange }) => {
 // ─── Action confirm modal ─────────────────────────────────────────────────────
 
 const ActionModal = ({ listing, action, onConfirm, onClose, processing }) => {
-    const isDelete   = action === 'delete';
+    const isDelete = action === 'delete';
 
     const meta = {
-        delete:  { label: 'Delete Listing',      accent: 'hsl(0 65% 50%)',   accentBg: 'hsl(0 70% 95%)',   icon: Icons.trash,   confirmBg: 'hsl(0 65% 50%)',   confirmLabel: 'Delete' },
-        feature: { label: listing?.is_featured ? 'Remove Featured' : 'Mark as Featured', accent: 'hsl(40 80% 36%)', accentBg: 'hsl(40 90% 94%)', icon: () => <Icons.star filled />, confirmBg: 'hsl(40 80% 40%)', confirmLabel: listing?.is_featured ? 'Remove' : 'Feature It' },
-        approve: { label: 'Approve Listing',     accent: 'hsl(152 55% 32%)', accentBg: 'hsl(152 55% 93%)', icon: Icons.check,   confirmBg: 'hsl(152 55% 33%)', confirmLabel: 'Approve' },
-        reject:  { label: 'Reject Listing',      accent: 'hsl(0 65% 50%)',   accentBg: 'hsl(0 70% 95%)',   icon: Icons.ban,     confirmBg: 'hsl(0 65% 50%)',   confirmLabel: 'Reject' },
-        suspend: { label: 'Suspend Listing',     accent: 'hsl(0 65% 50%)',   accentBg: 'hsl(0 70% 95%)',   icon: Icons.ban,     confirmBg: 'hsl(0 65% 50%)',   confirmLabel: 'Suspend' },
+        delete:  { label: 'Delete Listing',  accent: 'hsl(0 65% 50%)',   accentBg: 'hsl(0 70% 95%)',   icon: Icons.trash, confirmBg: 'hsl(0 65% 50%)',   confirmLabel: 'Delete' },
+        approve: { label: 'Approve Listing', accent: 'hsl(152 55% 32%)', accentBg: 'hsl(152 55% 93%)', icon: Icons.check, confirmBg: 'hsl(152 55% 33%)', confirmLabel: 'Approve' },
+        reject:  { label: 'Reject Listing',  accent: 'hsl(0 65% 50%)',   accentBg: 'hsl(0 70% 95%)',   icon: Icons.ban,   confirmBg: 'hsl(0 65% 50%)',   confirmLabel: 'Reject' },
+        suspend: { label: 'Suspend Listing', accent: 'hsl(0 65% 50%)',   accentBg: 'hsl(0 70% 95%)',   icon: Icons.ban,   confirmBg: 'hsl(0 65% 50%)',   confirmLabel: 'Suspend' },
     };
     const m = meta[action] ?? meta.reject;
     const ActionIcon = m.icon;
@@ -314,7 +298,6 @@ const ListingRow = ({ listing: l, index, onAction }) => {
             <div style={{ minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.22rem', flexWrap: 'wrap' }}>
                     <span style={{ fontSize: '0.865rem', fontWeight: '700', color: 'hsl(220 25% 14%)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '18rem' }}>{l.title}</span>
-                    {l.is_featured && <span style={{ fontSize: '0.6rem', fontWeight: '800', backgroundColor: 'hsl(40 90% 93%)', color: 'hsl(40 80% 30%)', padding: '0.08rem 0.35rem', borderRadius: '0.25rem', letterSpacing: '0.05em' }}>⭐ FEAT</span>}
                     {l.is_verified && <span style={{ fontSize: '0.6rem', fontWeight: '800', backgroundColor: 'hsl(214 100% 95%)', color: 'hsl(214 80% 38%)', padding: '0.08rem 0.35rem', borderRadius: '0.25rem', letterSpacing: '0.05em' }}>✓ VER</span>}
                     {l.flagged_count > 0 && <span style={{ fontSize: '0.6rem', fontWeight: '800', backgroundColor: 'hsl(0 80% 95%)', color: 'hsl(0 70% 40%)', padding: '0.08rem 0.35rem', borderRadius: '0.25rem', letterSpacing: '0.05em' }}>🚩 {l.flagged_count}</span>}
                     {l.is_sold && <span style={{ fontSize: '0.6rem', fontWeight: '800', backgroundColor: 'hsl(214 100% 95%)', color: 'hsl(214 80% 38%)', padding: '0.08rem 0.35rem', borderRadius: '0.25rem', letterSpacing: '0.05em' }}>SOLD</span>}
@@ -330,7 +313,7 @@ const ListingRow = ({ listing: l, index, onAction }) => {
             {/* Agent */}
             <div style={{ minWidth: 0 }}>
                 {l.agent_name && l.agent_name !== '—' ? (
-                    <Link href={`/super-admin/agents/${l.user_id}`}
+                    <Link href={`/super-admin/agents/${l.agent_id}`}
                         style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', textDecoration: 'none' }}>
                         <div style={{ width: '1.65rem', height: '1.65rem', borderRadius: '50%', backgroundColor: `hsl(${avatarHue(l.agent_name)} 50% 88%)`, color: `hsl(${avatarHue(l.agent_name)} 50% 32%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6rem', fontWeight: '800', flexShrink: 0 }}>
                             {l.agent_name.split(' ').map(w => w[0]).slice(0, 2).join('')}
@@ -383,23 +366,16 @@ const ListingRow = ({ listing: l, index, onAction }) => {
                     onMouseLeave={e => e.currentTarget.style.filter = 'none'}>
                     <Icons.edit />
                 </Link>
-                <button onClick={() => onAction(l, 'feature')}
-                    title={l.is_featured ? 'Remove from featured' : 'Mark as featured'}
-                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.38rem 0.5rem', borderRadius: '0.45rem', border: 'none', backgroundColor: 'hsl(40 90% 93%)', color: 'hsl(40 80% 38%)', cursor: 'pointer', transition: 'filter 0.15s', fontFamily: 'inherit' }}
-                    onMouseEnter={e => e.currentTarget.style.filter = 'brightness(0.92)'}
-                    onMouseLeave={e => e.currentTarget.style.filter = 'none'}>
-                    <Icons.star filled={l.is_featured} />
-                </button>
-                {l.status_key === 'pending' && (
-                    <button onClick={() => onAction(l, 'approve')}
+                {l.status_key === 'inactive' && (
+                    <button onClick={() => onAction(l, 'active')}
                         style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.38rem 0.5rem', borderRadius: '0.45rem', border: 'none', backgroundColor: 'hsl(152 55% 92%)', color: 'hsl(152 55% 30%)', cursor: 'pointer', transition: 'filter 0.15s', fontFamily: 'inherit' }}
                         onMouseEnter={e => e.currentTarget.style.filter = 'brightness(0.9)'}
                         onMouseLeave={e => e.currentTarget.style.filter = 'none'}>
                         <Icons.check />
                     </button>
                 )}
-                {(l.status_key === 'pending' || l.status_key === 'active') && (
-                    <button onClick={() => onAction(l, l.status_key === 'pending' ? 'reject' : 'suspend')}
+                {(l.status_key === 'inactive' || l.status_key === 'active') && (
+                    <button onClick={() => onAction(l, l.status_key === 'inactive' ? 'reject' : 'suspend')}
                         style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.38rem 0.5rem', borderRadius: '0.45rem', border: 'none', backgroundColor: 'hsl(0 65% 96%)', color: 'hsl(0 65% 48%)', cursor: 'pointer', transition: 'filter 0.15s', fontFamily: 'inherit' }}
                         onMouseEnter={e => e.currentTarget.style.filter = 'brightness(0.9)'}
                         onMouseLeave={e => e.currentTarget.style.filter = 'none'}>
@@ -434,7 +410,6 @@ const ListingsIndex = ({ listings: rawListings = [], metrics: serverMetrics = {}
     const [toast,       setToast]       = useState(null);
     const [refreshing,   refresh]   = useRefresh(['listings', 'metrics']);
     const toastTimer = useRef(null);
-    const [featuredFilter, setFeaturedFilter] = useState('all');
 
     const showToast = (msg, type = 'success') => {
         clearTimeout(toastTimer.current);
@@ -466,8 +441,7 @@ const ListingsIndex = ({ listings: rawListings = [], metrics: serverMetrics = {}
                 })();
                 const okLt = lstType  === 'all' || l.listing_type  === lstType;
                 const okPt = propType === 'all' || l.property_type === propType;
-                const okFeat = featuredFilter === 'all' || (featuredFilter === 'featured' && l.is_featured) || (featuredFilter === 'not-featured' && !l.is_featured);
-                return okQ && okSt && okLt && okPt && okFeat;
+                return okQ && okSt && okLt && okPt;
             })
             .sort((a, b) => {
                 let av = a[sortCol], bv = b[sortCol];
@@ -477,20 +451,21 @@ const ListingsIndex = ({ listings: rawListings = [], metrics: serverMetrics = {}
                 if (typeof bv === 'string') bv = bv.toLowerCase();
                 return sortDir === 'asc' ? (av > bv ? 1 : -1) : (av < bv ? 1 : -1);
             });
-    }, [listings, search, status, lstType, propType, sortCol, sortDir, featuredFilter]);
+    }, [listings, search, status, lstType, propType, sortCol, sortDir]);
 
     const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
     const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
     // KPIs — prefer server-side metrics, fall back to client-side
-    const activeCount  = serverMetrics.active   ?? listings.filter(l => l.status_key === 'active').length;
-    const pendingCount = serverMetrics.pending   ?? listings.filter(l => l.status_key === 'pending').length;
-    const flaggedCount = serverMetrics.flagged   ?? listings.filter(l => l.flagged_count > 0).length;
-    const saleTotal    = serverMetrics.sale_total  ?? listings.filter(l => l.listing_type === 'sale').length;
-    const saleActive   = serverMetrics.sale_active ?? listings.filter(l => l.listing_type === 'sale' && l.status_key === 'active').length;
-    const saleSold     = serverMetrics.sale_sold   ?? listings.filter(l => l.is_sold).length;
-    const rentTotal    = serverMetrics.rent_total  ?? listings.filter(l => l.listing_type === 'rent').length;
-    const rentActive   = serverMetrics.rent_active ?? listings.filter(l => l.listing_type === 'rent' && l.status_key === 'active').length;
+    const activeCount   = serverMetrics.active   ?? listings.filter(l => l.status_key === 'active').length;
+    const inactiveCount = serverMetrics.inactive ?? listings.filter(l => l.status_key === 'inactive').length;
+    const flaggedCount  = serverMetrics.flagged  ?? listings.filter(l => l.flagged_count > 0).length;
+    const saleTotal     = serverMetrics.sale_total  ?? listings.filter(l => l.listing_type === 'sale').length;
+    const saleActive    = serverMetrics.sale_active ?? listings.filter(l => l.listing_type === 'sale' && l.status_key === 'active').length;
+    const saleSold      = serverMetrics.sale_sold   ?? listings.filter(l => l.is_sold).length;
+    const rentSold      = serverMetrics.rent_sold   ?? listings.filter(l => l.is_rented).length;
+    const rentTotal      = serverMetrics.rent_total  ?? listings.filter(l => l.listing_type === 'rent').length;
+    const rentActive    = serverMetrics.rent_active ?? listings.filter(l => l.listing_type === 'rent' && l.status_key === 'active').length;
 
     const handleAction = (listing, action) => setModal({ listing, action });
 
@@ -501,18 +476,13 @@ const ListingsIndex = ({ listings: rawListings = [], metrics: serverMetrics = {}
             approve: `/super-admin/listings/${listing._id}/approve`,
             reject:  `/super-admin/listings/${listing._id}/reject`,
             suspend: `/super-admin/listings/${listing._id}/suspend`,
-            feature: `/super-admin/listings/${listing._id}/feature`,
             delete:  `/super-admin/listings/${listing._id}`,
         };
         const method = action === 'delete' ? 'delete' : 'post';
-        const wasFeatured = listing.is_featured;
         router[method](routeMap[action], {}, {
             preserveScroll: true,
             onSuccess: () => {
-                const msg = action === 'feature'
-                    ? `"${listing.title}" ${wasFeatured ? 'removed from featured' : 'marked as featured'}.`
-                    : `Listing "${listing.title}" ${action}d successfully.`;
-                showToast(msg);
+                showToast(`Listing "${listing.title}" ${action}d successfully.`);
                 setModal(null);
                 router.reload({ only: ['listings', 'metrics'] });
             },
@@ -555,7 +525,7 @@ const ListingsIndex = ({ listings: rawListings = [], metrics: serverMetrics = {}
                     <div>
                         <h1 style={{ fontSize: '1.5rem', fontWeight: '900', color: 'hsl(220 25% 12%)', margin: '0 0 0.22rem', letterSpacing: '-0.02em' }}>Listings</h1>
                         <p style={{ fontSize: '0.82rem', color: 'hsl(220 15% 50%)', margin: 0 }}>
-                            {listings.length.toLocaleString()} total · {activeCount} active · {pendingCount} pending review
+                            {listings.length.toLocaleString()} total · {activeCount} active · {inactiveCount} pending review
                         </p>
                     </div>
                     <div style={{ display: 'flex', gap: '0.65rem', flexShrink: 0 }}>
@@ -565,7 +535,7 @@ const ListingsIndex = ({ listings: rawListings = [], metrics: serverMetrics = {}
                             onMouseLeave={e => e.currentTarget.style.backgroundColor = 'white'}>
                             {refreshing ? <><Icons.spinner /> Refreshing…</> : <><Icons.refresh /> Refresh</>}
                         </button>
-                        
+
                         <Link href="/super-admin/listings/create"
                             style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem', padding: '0.625rem 1.2rem', borderRadius: '0.65rem', backgroundColor: 'hsl(220 25% 15%)', color: 'white', fontWeight: '700', fontSize: '0.875rem', textDecoration: 'none', whiteSpace: 'nowrap', transition: 'background-color 0.15s' }}
                             onMouseEnter={e => e.currentTarget.style.backgroundColor = 'hsl(220 25% 22%)'}
@@ -579,12 +549,12 @@ const ListingsIndex = ({ listings: rawListings = [], metrics: serverMetrics = {}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.75rem', marginBottom: '0.75rem' }}>
                     <Kpi label="Total Listings"  value={listings.length.toLocaleString()} sub="All records"        accent="hsl(220 25% 15%)"  iconBg="hsl(220 20% 93%)"   iconColor="hsl(220 25% 30%)" icon={<Icons.building />} />
                     <Kpi label="Active"          value={activeCount.toLocaleString()}      sub="Live on platform"  accent="hsl(152 55% 33%)"  iconBg="hsl(152 55% 92%)"  iconColor="hsl(152 55% 35%)" icon={<Icons.check />} />
-                    <Kpi label="Pending Review"  value={pendingCount.toLocaleString()}     sub="Awaiting approval" accent="hsl(40 80% 36%)"   iconBg="hsl(40 90% 93%)"   iconColor="hsl(40 80% 36%)"  icon={<Icons.alert />} />
+                    <Kpi label="Pending Review"  value={inactiveCount.toLocaleString()}     sub="Awaiting approval" accent="hsl(40 80% 36%)"   iconBg="hsl(40 90% 93%)"   iconColor="hsl(40 80% 36%)"  icon={<Icons.alert />} />
                     <Kpi label="Flagged"         value={flaggedCount.toLocaleString()}     sub="Need attention"    accent="hsl(0 65% 44%)"    iconBg="hsl(0 70% 95%)"    iconColor="hsl(0 65% 44%)"   icon={<Icons.flag />} />
                 </div>
 
                 {/* ── KPI strip — row 2: sale vs rent breakdown ── */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem', marginBottom: '1.25rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.75rem', marginBottom: '1.25rem' }}>
                     <SplitKpi
                         label="Total Listings by Purpose"
                         saleVal={saleTotal.toLocaleString()}
@@ -602,6 +572,15 @@ const ListingsIndex = ({ listings: rawListings = [], metrics: serverMetrics = {}
                         label="Properties Sold"
                         value={saleSold.toLocaleString()}
                         sub="Completed sales"
+                        accent="hsl(214 80% 40%)"
+                        iconBg="hsl(214 100% 95%)"
+                        iconColor="hsl(214 80% 42%)"
+                        icon={<Icons.tag />}
+                    />
+                    <Kpi
+                        label="Properties Rented"
+                        value={rentSold.toLocaleString()}
+                        sub="Completed rentals"
                         accent="hsl(214 80% 40%)"
                         iconBg="hsl(214 100% 95%)"
                         iconColor="hsl(214 80% 42%)"
@@ -662,36 +641,6 @@ const ListingsIndex = ({ listings: rawListings = [], metrics: serverMetrics = {}
                                 style={{ padding: '0.3rem 0.65rem', borderRadius: '999px', border: `1.5px solid ${a ? (cfg?.dot ?? 'hsl(220 25% 20%)') : 'hsl(220 15% 88%)'}`, fontSize: '0.72rem', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s', backgroundColor: a ? (cfg?.bg ?? 'hsl(220 25% 15%)') : 'transparent', color: a ? (cfg?.color ?? 'white') : 'hsl(220 15% 48%)' }}>
                                 {t === 'all' ? 'All Types' : (cfg?.label ?? t)}
                             </button>;
-                        })}
-                    </div>
-
-                    {/* Featured pills */}
-                    <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap', alignItems: 'center' }}>
-                        <span style={{ fontSize: '0.7rem', fontWeight: '700', color: 'hsl(220 15% 52%)', marginRight: '0.2rem' }}>Featured:</span>
-                        {['all', 'featured', 'not-featured'].map(f => {
-                            const a = featuredFilter === f;
-                            const cfg = {
-                                all: { label: 'All', bg: 'transparent', color: 'hsl(220 15% 48%)', dot: 'hsl(220 15% 55%)' },
-                                featured: { label: 'Featured', bg: 'hsl(40 90% 93%)', color: 'hsl(40 80% 30%)', dot: 'hsl(40 80% 44%)' },
-                                'not-featured': { label: 'Not Featured', bg: 'hsl(220 15% 93%)', color: 'hsl(220 15% 40%)', dot: 'hsl(220 15% 55%)' },
-                            }[f];
-                            return (
-                                <button key={f} onClick={() => { setFeaturedFilter(f); setPage(1); }}
-                                    style={{
-                                        padding: '0.3rem 0.65rem',
-                                        borderRadius: '999px',
-                                        border: `1.5px solid ${a ? cfg.dot : 'hsl(220 15% 88%)'}`,
-                                        fontSize: '0.72rem',
-                                        fontWeight: '700',
-                                        cursor: 'pointer',
-                                        fontFamily: 'inherit',
-                                        transition: 'all 0.15s',
-                                        backgroundColor: a ? cfg.bg : 'transparent',
-                                        color: a ? cfg.color : 'hsl(220 15% 48%)',
-                                    }}>
-                                    {cfg.label}
-                                </button>
-                            );
                         })}
                     </div>
                 </div>

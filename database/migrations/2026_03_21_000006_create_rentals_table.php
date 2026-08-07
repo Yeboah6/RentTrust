@@ -35,20 +35,10 @@ return new class extends Migration
             $table->string('agent_phone');
             $table->string('agent_email');
             $table->enum('status', ['active', 'inactive', 'rented', 'sold'])->default('active');
+            $table->string('verification_status')->default('pending');
             $table->boolean('is_verified')->default(false);
-            $table->boolean('is_featured')->default(false);
             $table->enum('purpose', ['rent', 'sale'])->default('rent');
             $table->decimal('sale_price', 15, 2)->nullable();
-
-            $table->boolean('is_featured_queued')->default(false);
-            $table->integer('featured_queue_position')->nullable();
-            $table->timestamp('queued_at')->nullable();
-            $table->integer('times_featured')->default(0);
-            $table->timestamp('last_featured_at')->nullable();
-
-            $table->timestamp('featured_at')->nullable();
-            $table->timestamp('featured_expires_at')->nullable();
-            $table->integer('featured_priority')->default(0);
 
             // Track when sale was completed
             $table->boolean('is_sold')->default(false);

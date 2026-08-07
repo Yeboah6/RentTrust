@@ -111,7 +111,8 @@ const normalise = (l) => {
     listing_type:  (l.listing_type  ?? l.type           ?? 'sale').toLowerCase(),
     property_type: (l.property_type ?? l.category       ?? ''),
     currency:      l.currency       ?? 'GH₵',
-    location:      l.location       ?? l.city           ?? l.area ?? '—',
+    location:      l.location       ?? l.city           ?? '—',
+    area:          l.area            ?? null,
     address:       l.address        ?? '',
     description:   l.description    ?? '',
     agent_name:    l.agent?.name    ?? l.agent_name     ?? '—',
@@ -632,6 +633,7 @@ const ListingShow = ({ listing: rawListing, property_types = [], regions = [] })
                                     </>
                                 )}
                                 <InfoRow label="Location"       value={listing.location} />
+                                {listing.area && <InfoRow label="Area" value={listing.area} />}
                                 {listing.address && <InfoRow label="Address" value={listing.address} />}
                                 {listing.bedrooms  !== null && <InfoRow label="Bedrooms"  value={listing.bedrooms} />}
                                 {listing.bathrooms !== null && <InfoRow label="Bathrooms" value={listing.bathrooms} />}

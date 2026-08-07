@@ -4,7 +4,7 @@ Allow: /rent
 Allow: /buy
 Allow: /blog
 Allow: /agents
-Disallow: /dashboard
+Disallow: /agent/dashboard
 Disallow: /agent-dashboard
 Disallow: /admin
 Disallow: /login

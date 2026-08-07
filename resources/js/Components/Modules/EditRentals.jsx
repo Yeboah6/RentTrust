@@ -102,11 +102,10 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental, locations = [
         return {
           id: `existing-${index}`,
           name: `image-${index}`,
-          // Construct full path - adjust based on your storage structure
           preview: imagePath.startsWith('http') 
             ? imagePath 
             : `/storage/rental_images/${imagePath}`,
-          path: imagePath, // Store original path
+          path: imagePath,
           isExisting: true
         };
       });
@@ -200,21 +199,17 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental, locations = [
 
   const removeImage = (id, isExisting) => {
     if (isExisting) {
-      // Find the image being removed
       const imageToRemove = existingImages.find(img => img.id === id);
       
-      // Remove from existing images display
       const updatedExistingImages = existingImages.filter(img => img.id !== id);
       setExistingImages(updatedExistingImages);
       
-      // Update form data
       setData(prev => ({
         ...prev,
         existingImages: updatedExistingImages.map(img => img.path),
         removedImages: [...prev.removedImages, imageToRemove.path]
       }));
     } else {
-      // Remove from new images
       const updatedNewImages = newImages.filter(img => img.id !== id);
       setNewImages(updatedNewImages);
       setData('newImages', updatedNewImages.map(img => img.file));
@@ -264,17 +259,14 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental, locations = [
 
     const formData = new FormData();
     
-    // Add method spoofing for PUT request
     formData.append('_method', 'PUT');
     
-    // Add all text fields
     formData.append('id', data.id);
     formData.append('title', data.title);
     formData.append('propertyType', data.propertyType);
     formData.append('area', data.area);
     formData.append('city', data.city);
     formData.append('address', data.address || '');
-    // only append relevant price fields
     if (data.purpose === 'rent') {
       formData.append('rentMin', data.rentMin);
       formData.append('rentMax', data.rentMax);
@@ -290,7 +282,6 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental, locations = [
     formData.append('agentName', data.agentName);
     formData.append('agentPhone', data.agentPhone);
     formData.append('agentEmail', data.agentEmail);
-    // formData.append('status', data.status);
 
     if (isAdmin) {
       formData.append('status', data.status);
@@ -301,22 +292,16 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental, locations = [
       formData.append('is_rented', availability === 'rented' ? '1' : '0');
     }
 
-    
-
-    // Add amenities as JSON string
     formData.append('amenities', JSON.stringify(data.amenities));
     
-    // Add existing images (images to keep)
     data.existingImages.forEach((imagePath, index) => {
       formData.append(`existingImages[${index}]`, imagePath);
     });
     
-    // Add removed images
     data.removedImages.forEach((imagePath, index) => {
       formData.append(`removedImages[${index}]`, imagePath);
     });
     
-    // Add new image files
     newImages.forEach((imageObj, index) => {
       formData.append(`newImages[${index}]`, imageObj.file);
     });
@@ -1801,19 +1786,16 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental, locations = [
                                 e.target.style.boxShadow = 'none';
                             }}
                         >
-                            <option value="">Select status</option>
-                            <option value="approved">Active</option>
-                            <option value="pending">Pending</option>
-                            <option value="rejected">Rejected</option>
+                            <option value="active">Active</option>
                             <option value="rented">Rented</option>
                             <option value="sold">Sold</option>
                             <option value="inactive">Inactive</option>
                         </select>
                         {errors.status && (
-                            <p style={{ fontSize: 'clamp(0.75rem, 2vw, 0.75rem)', marginTop: 'clamp(0.25rem, 1vw, 0.375rem)', color: 'hsl(0 72% 51%)', display: 'flex', alignItems: 'center', gap: 'clamp(0.25rem, 1vw, 0.375rem)' }}>
-                                <AlertCircle style={{ height: 'clamp(0.75rem, 2vw, 0.875rem)', width: 'clamp(0.75rem, 2vw, 0.875rem)' }} /> 
-                                {errors.status}
-                            </p>
+                          <p style={{ fontSize: 'clamp(0.75rem, 2vw, 0.75rem)', marginTop: 'clamp(0.25rem, 1vw, 0.375rem)', color: 'hsl(0 72% 51%)', display: 'flex', alignItems: 'center', gap: 'clamp(0.25rem, 1vw, 0.375rem)' }}>
+                              <AlertCircle style={{ height: 'clamp(0.75rem, 2vw, 0.875rem)', width: 'clamp(0.75rem, 2vw, 0.875rem)' }} /> 
+                              {errors.status}
+                          </p>
                         )}
                     </div>
                 ) : (
@@ -1837,7 +1819,7 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental, locations = [
                                 transition: 'all 0.2s'
                             }}
                         >
-                            <option>Pending</option>
+                            <option value="active">Active</option>
                             {data.purpose === 'sale' && <option value="sold">Sold</option>}
                             {data.purpose === 'rent' && <option value="rented">Rented</option>}
                         </select>

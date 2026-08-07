@@ -12,22 +12,22 @@ class AdminAuditLog extends Model
 {
     use GeneratesUUIDs;
     public    $timestamps  = true;
-    public    const UPDATED_AT = null;          // audit records are immutable
+    public    const UPDATED_AT = null;
 
-    protected $table       = 'admin_audit_logs';
+    protected $table = 'admin_audit_logs';
 
     protected $fillable = [
         'admin_audit_log_id',
-        'causer_id',        // admin user id
-        'causer_name',      // snapshot of admin name at log time
-        'causer_email',     // snapshot of admin email at log time
-        'action',           // human label: "Subscription cancelled", "User suspended"…
-        'type',             // payment | refund | subscription | suspension | listing | verification | report | user | settings | security
-        'affected_user',    // display name of the entity acted upon
-        'affected_id',      // numeric id of the affected entity (user_id, listing_id…)
-        'notes',            // free-text context
+        'causer_id',        
+        'causer_name',      
+        'causer_email',     
+        'action',           
+        'type',             
+        'affected_user',    
+        'affected_id',      
+        'notes',            
         'ip_address',
-        'properties',       // JSON blob for extra structured data
+        'properties',       
     ];
 
     protected $casts = [
@@ -61,19 +61,6 @@ class AdminAuditLog extends Model
         return $this->belongsTo(User::class, 'causer_id');
     }
 
-    // ─── Factory helper ───────────────────────────────────────────────────────
-
-    /**
-     * Write an audit entry from anywhere in the application.
-     *
-     * Usage:
-     *   AdminAuditLog::record('subscription', 'Subscription cancelled', [
-     *       'affected_user' => $user->name,
-     *       'affected_id'   => $user->id,
-     *       'notes'         => 'Admin-initiated cancellation.',
-     *       'properties'    => ['plan' => 'pro', 'refunded' => false],
-     *   ]);
-     */
     public static function record(
         string $type,
         string $action,

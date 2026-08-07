@@ -314,7 +314,6 @@ class RentController extends Controller
      */
     public function update(UpdateListingRequest $request, Rental $rent)
     {
-        // Log the incoming request for debugging
         Log::info('Rental update request', [
             'rental_id' => $rent->id,
             'has_new_images' => $request->hasFile('newImages'),
@@ -326,16 +325,12 @@ class RentController extends Controller
         $purpose = $request->input('purpose', $rent->purpose);
 
         try {
-            // Parse existing rental images
             $currentImages = $this->parseImages($rent->images);
 
-            // Get images to keep (existing images)
             $existingImages = $request->input('existingImages', []);
 
-            // Get images to remove
             $removedImages = $request->input('removedImages', []);
 
-            // Delete removed images from storage
             foreach ($removedImages as $imagePath) {
                 if (in_array($imagePath, $currentImages)) {
                     $this->deleteImage($imagePath);
@@ -411,8 +406,11 @@ class RentController extends Controller
                 'final_total' => count($finalImages)
             ]);
 
-            // Update rental data
-            $rent->update([
+            // Prepare update payload
+            $isSold = $request->boolean('is_sold');
+            $isRented = $request->boolean('is_rented');
+
+            $updateData = [
                 'title' => $request->title,
                 'property_type' => $request->propertyType,
                 'area' => $request->area,
@@ -428,12 +426,34 @@ class RentController extends Controller
                 'agent_name' => $request->agentName,
                 'agent_phone' => $request->agentPhone,
                 'agent_email' => $request->agentEmail,
-                'images' => $finalImages ?? [],
+                'images' => $finalImages,
                 'updated_at' => now(),
-                'status'   => $request->has('status') ? $request->status : $rent->status,
-                'is_sold' => $request->boolean('is_sold'),
-                'is_rented' => $request->boolean('is_rented'),
-            ]);
+                'status' => $request->has('status') ? $request->status : $rent->status,
+                'is_sold' => $isSold,
+                'is_rented' => $isRented,
+            ];
+
+            if ($request->input('status') === "active" && $rent->status !== "active") {
+                $updateData['status'] = 'active';
+                $updateData['is_sold'] = false;
+                $updateData['is_rented'] = false;
+                $updateData['sold_at'] = null;
+                $updateData['rented_at'] = null;
+            }
+
+            if ($isSold) {
+                $updateData['sold_at'] = $rent->is_sold ? $rent->sold_at : now();
+            } else {
+                $updateData['sold_at'] = null;
+            }
+
+            if ($isRented) {
+                $updateData['rented_at'] = $rent->is_rented ? $rent->rented_at : now();
+            } else {
+                $updateData['rented_at'] = null;
+            }
+
+            $rent->update($updateData);
 
             Log::info('Rental updated successfully', [
                 'rental_id' => $rent->id,

@@ -10,13 +10,26 @@ class Plan extends Model
 {
     use GeneratesUUIDs;
     protected $fillable = [
-        'name', 'description', 'slug', 'price', 'currency', 'interval',
+        'name', 
+        'description', 
+        'slug', 
+        'price', 
+        'currency', 
+        'interval',
         'plan_id',
-        'listing_limit', 'rental_limit', 'sale_limit', 'boost_limit', 'lead_limit',
-        'featured_limit', 'featured_duration_days',
-        'verified_badge', 'priority_ranking', 'analytics_access', 'features',
-        'paystack_plan_code', 'flutterwave_plan_id',
-        'is_active', 'sort_order', 'featured_limit', 'featured_duration_days'
+        'listing_limit', 
+        'rental_limit', 
+        'sale_limit', 
+        'boost_limit', 
+        'lead_limit',
+        'verified_badge', 
+        'priority_ranking', 
+        'analytics_access', 
+        'features',
+        'paystack_plan_code', 
+        'flutterwave_plan_id',
+        'is_active', 
+        'sort_order', 
     ];
 
     protected static function boot()
@@ -41,8 +54,6 @@ class Plan extends Model
         'sale_limit'       => 'integer',
         'boost_limit'      => 'integer',
         'lead_limit'       => 'integer',
-        'featured_limit'   => 'integer',
-        'featured_duration_days' => 'integer',
         'features' => 'array',
     ];
 
@@ -67,7 +78,7 @@ class Plan extends Model
             return 'Free';
         }
 
-        return 'GHS ' . number_format($this->price, 2) . '/mo';
+        return 'GH₵ ' . number_format($this->price, 2) . '/mo';
     }
 
     public function getListingLimitDisplayAttribute(): string

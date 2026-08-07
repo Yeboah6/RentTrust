@@ -321,7 +321,7 @@ const AgentVerificationsList = ({ items, showToast }) => {
       {filtered.length === 0 ? (
         <EmptyState icon={ShieldCheck} filterStatus={filterStatus} entityLabel="agent verifications" />
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))', flexDirection: 'column', gap: '1rem' }}>
           {filtered.map((item) => (
             <div
               key={item.id}
@@ -425,7 +425,7 @@ const ListingVerificationsList = ({ items, showToast }) => {
 
   const handleApprove = (id) => {
   if (!confirm("Approve this listing verification request?")) return;
-  router.patch(`/api/listing-verifications/${id}/approve`, {
+  router.put(`/api/listing-verifications/${id}/approve`, {
     admin_notes: adminNotes[id] || ""
   }, {
     onSuccess: () => {
@@ -442,7 +442,7 @@ const handleReject = (id) => {
     return;
   }
   if (!confirm("Reject this listing verification request?")) return;
-  router.patch(`/api/listing-verifications/${id}/reject`, {
+  router.put(`/api/listing-verifications/${id}/reject`, {
     rejection_reason: rejectionReason[id],
     admin_notes: adminNotes[id] || ""
   }, {
@@ -464,7 +464,7 @@ const handleReject = (id) => {
       {filtered.length === 0 ? (
         <EmptyState icon={Home} filterStatus={filterStatus} entityLabel="listing verifications" />
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))', flexDirection: 'column', gap: '1rem' }}>
           {filtered.map((item) => (
             <div
               key={item.id}
@@ -565,7 +565,6 @@ const handleReject = (id) => {
 };
 
 // ---- Main component ----
-
 const ViewAgentVerifications = ({ agentVerifications = [], listingVerifications = [] }) => {
   const [activeTab, setActiveTab] = useState("agents");
   const [toast, setToast] = useState(null);

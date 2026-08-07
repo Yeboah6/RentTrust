@@ -21,7 +21,6 @@ return Application::configure(basePath: dirname(__DIR__))
             HandleInertiaRequests::class,
             \App\Http\Middleware\TrailingSlashMiddleware::class,
             \App\Http\Middleware\CanonicalUrlMiddleware::class,
-            // CheckSuspended::class,
         ]);
             $middleware->alias([
             'role' => RoleMiddleware::class,

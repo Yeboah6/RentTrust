@@ -50,7 +50,7 @@ class UpdateListingRequest extends FormRequest
             'agentName'        => 'required|string|max:255',
             'agentPhone'       => 'required|string|max:20',
             'agentEmail'       => 'required|email|max:255',
-            'newImages.*'      => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
+            'newImages.*'      => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
             'existingImages'   => 'nullable|array',
             'existingImages.*' => 'string',
             'removedImages'    => 'nullable|array',
@@ -80,7 +80,7 @@ class UpdateListingRequest extends FormRequest
         return [
             'rentMax.gte'        => 'Maximum rent must be greater than or equal to minimum rent',
             'newImages.*.max'    => 'Each image must not exceed 5MB',
-            'newImages.*.mimes'  => 'Images must be jpeg, png, jpg, or gif format',
+            'newImages.*.mimes'  => 'Images must be jpeg, png, webp, jpg, or gif format',
         ];
     }
 }

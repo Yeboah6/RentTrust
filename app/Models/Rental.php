@@ -38,12 +38,6 @@ class Rental extends Model
         'agent_email',
         'status',
         'is_verified',
-        'is_featured',
-        'featured_at',
-        'featured_expires_at',
-        'is_boosted',
-        'boost_expires_at',
-        'featured_priority',
         'is_sold',
         'is_rented',
         'sold_at',
@@ -66,17 +60,6 @@ class Rental extends Model
         'bathrooms' => 'integer',
         'advance_duration' => 'integer',
         'is_verified' => 'boolean',
-        'is_featured' => 'boolean',
-        'is_featured_queued'  => 'boolean',
-        'featured_at' => 'datetime',
-        'featured_expires_at' => 'datetime',
-        'queued_at'           => 'datetime',
-        'last_featured_at'    => 'datetime',
-        'times_featured'      => 'integer',
-        'featured_queue_position' => 'integer',
-        'is_boosted' => 'boolean',
-        'boost_expires_at' => 'datetime',
-        'featured_priority' => 'integer',
         'is_sold' => 'boolean',
         'is_rented' => 'boolean',
         'sold_at' => 'datetime',
@@ -199,7 +182,7 @@ class Rental extends Model
      */
     public function isActive(): bool
     {
-        return $this->status === 'approved' && !$this->is_sold;
+        return $this->status === 'active' && !$this->is_sold;
     }
 
     /**
@@ -223,20 +206,7 @@ class Rental extends Model
         return match($planSlug) {
             'elite' => 3,
             'pro' => 2,
-            default => 1, // free
+            default => 1,
         };
-    }
-
-    public function scopeFeatured($query)
-    {
-        return $query->where('is_featured', true);
-    }
-    
-    public function scopeOrderByPriority($query)
-    {
-        return $query
-            ->orderByDesc('featured_priority')
-            ->orderByDesc('featured_at')
-            ->orderByDesc('created_at');
     }
 }

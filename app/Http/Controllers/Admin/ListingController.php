@@ -4,7 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Models\Rental;
 use App\Models\AdminAuditLog;
-use Illuminate\Support\Facades\Log;
+use App\Models\ListingVerification;
+use Illuminate\Support\Facades\{Log, Auth};
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
@@ -38,5 +39,49 @@ class ListingController extends Controller
 
             return redirect()->back()->with('error', 'Failed to update listing status. Please try again.');
         }
+    }
+
+    public function approveListingVerification(Request $request, ListingVerification $listingVerification)
+    {
+        $validated = $request->validate([
+            'admin_notes' => 'nullable|string',
+        ]);
+
+        $listingVerification->update([
+            'status' => 'approved',
+            'admin_notes' => $validated['admin_notes'] ?: $listingVerification->admin_notes,
+            'reviewed_at' => now(),
+            'reviewed_by' => Auth::user()->name,
+        ]);
+
+        $listingVerification->listing?->update([
+            'is_verified' => true,
+            'verification_status' => 'verified',
+            'verified_at' => now(),
+        ]);
+
+        return back()->with('success', 'Listing verification approved.');
+    }
+
+    public function rejectListingVerification(Request $request, ListingVerification $listingVerification)
+    {
+        $validated = $request->validate([
+            'rejection_reason' => 'nullable|string',
+        ]);
+
+        $listingVerification->update([
+            'status' => 'rejected',
+            'admin_notes' => $validated['rejection_reason'] ?: $listingVerification->rejection_reason,
+            'reviewed_at' => now(),
+            'reviewed_by' => Auth::user()->name,
+        ]);
+
+        $listingVerification->listing?->update([
+            'verification_status' => 'rejected',
+            'verification_rejected_at' => now(),
+            'verification_rejection_reason' => $validated['rejection_reason'],
+        ]);
+
+        return back()->with('success', 'Listing verification rejected.');
     }
 }

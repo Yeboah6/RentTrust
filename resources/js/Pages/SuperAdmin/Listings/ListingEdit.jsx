@@ -40,13 +40,9 @@ const Icons = {
 
 const STATUS_CFG = {
     active:    { label: 'Active',    bg: 'hsl(152 60% 93%)', color: 'hsl(152 60% 28%)', dot: 'hsl(152 60% 38%)' },
-    pending:   { label: 'Pending',   bg: 'hsl(40 90% 93%)',  color: 'hsl(40 80% 30%)',  dot: 'hsl(40 80% 44%)' },
+    inactive:  { label: 'Inactive',   bg: 'hsl(40 90% 93%)',  color: 'hsl(40 80% 30%)',  dot: 'hsl(40 80% 44%)' },
     sold:      { label: 'Sold',      bg: 'hsl(214 100% 95%)',color: 'hsl(214 80% 38%)', dot: 'hsl(214 80% 50%)' },
     rented:    { label: 'Rented',    bg: 'hsl(270 60% 95%)', color: 'hsl(270 55% 38%)', dot: 'hsl(270 55% 50%)' },
-    rejected:  { label: 'Rejected',  bg: 'hsl(0 70% 95%)',   color: 'hsl(0 65% 40%)',   dot: 'hsl(0 65% 50%)' },
-    draft:     { label: 'Draft',     bg: 'hsl(220 15% 93%)', color: 'hsl(220 15% 38%)', dot: 'hsl(220 15% 52%)' },
-    expired:   { label: 'Expired',   bg: 'hsl(220 15% 93%)', color: 'hsl(220 15% 38%)', dot: 'hsl(220 15% 52%)' },
-    flagged:   { label: 'Flagged',   bg: 'hsl(0 80% 94%)',   color: 'hsl(0 70% 38%)',   dot: 'hsl(0 70% 50%)' },
     suspended: { label: 'Suspended', bg: 'hsl(0 70% 95%)',   color: 'hsl(0 65% 40%)',   dot: 'hsl(0 65% 50%)' },
 };
 
@@ -65,7 +61,7 @@ const CURRENCIES = [
     { value: '₦',   label: '₦ NGN' },
 ];
 
-const ALL_STATUSES = ['active','pending','sold','rented','rejected','draft','expired','flagged','suspended'];
+const ALL_STATUSES = ['active','inactive','sold','rented'];
 
 const STEPS = [
     { number: 1, label: 'Property Info', icon: Icons.home },
@@ -178,7 +174,7 @@ const SectionLabel = ({ children }) => (
 );
 
 const StatusBadge = ({ sk }) => {
-    const c = STATUS_CFG[sk] ?? STATUS_CFG.draft;
+    const c = STATUS_CFG[sk] ?? STATUS_CFG.active;
     return (
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', padding: '0.2rem 0.6rem', borderRadius: '999px', fontSize: '0.68rem', fontWeight: '800', letterSpacing: '0.06em', backgroundColor: c.bg, color: c.color }}>
             <span style={{ width: '0.35rem', height: '0.35rem', borderRadius: '50%', backgroundColor: c.dot }} />
@@ -265,18 +261,7 @@ const ReviewRow = ({ label, value }) => (
 
 const ListingEdit = ({ listing, agents = [], property_types = [], amenities = [], regions = [] }) => {
     const l         = listing ?? {};
-    // FIX: normalise status — 'approved' maps to 'active'
     const statusKey = (() => { const s = (l.status ?? 'pending').toLowerCase(); return s === 'approved' ? 'active' : s; })();
-
-    // ── Featured queue status ─────────────────────────────────────────────────
-    const isQueued = l.is_featured_queued ?? false;
-    const queuePosition = l.featured_queue_position ?? null;
-    const timesFeatured = l.times_featured ?? 0;
-    const lastFeaturedAt = l.last_featured_at ?? null;
-    const featuredEndsAt = l.featured_at 
-        ? new Date(new Date(l.featured_at).getTime() + 48 * 60 * 60 * 1000) 
-        : null;
-    const isFeaturedExpired = featuredEndsAt ? new Date() > featuredEndsAt : false;
 
     // ── Form state ────────────────────────────────────────────────────────────
     const [form, setForm] = useState({
@@ -295,10 +280,7 @@ const ListingEdit = ({ listing, agents = [], property_types = [], amenities = []
         address:          l.address          ?? '',
         bedrooms:         l.bedrooms         ?? '',
         bathrooms:        l.bathrooms        ?? '',
-        is_featured:      l.is_featured      ?? false,
         is_verified:      l.is_verified      ?? false,
-        featured_priority: l.featured_priority ?? 0,
-        featured_at:       l.featured_at      ?? '',
         status:           statusKey,
         agent_id:         l.agent?.id        ?? l.agent_id ?? '',
         amenities:        (() => {
@@ -321,8 +303,8 @@ const ListingEdit = ({ listing, agents = [], property_types = [], amenities = []
     // ── Image state ───────────────────────────────────────────────────────────
     const [existingImages, setExistingImages] = useState(() =>
         parseImages(l.images).map((img, i) => {
-            const raw     = toRawPath(img);            // bare path as stored in DB
-            const preview = resolveImagePreview(img);  // FIX: smart resolver handles all shapes
+            const raw     = toRawPath(img);           
+            const preview = resolveImagePreview(img); 
             return { id: `existing-${i}`, path: raw, preview, isExisting: true };
         })
     );
@@ -382,7 +364,6 @@ const ListingEdit = ({ listing, agents = [], property_types = [], amenities = []
                 set('agentEmail', agent.email ?? '');
             }
         }
-        // if agentId is empty (unassigned), do nothing – keep whatever is already in the fields
     };
 
     const showToast = (msg, type = 'success') => {
@@ -437,14 +418,8 @@ const ListingEdit = ({ listing, agents = [], property_types = [], amenities = []
         fd.append('address',     form.address ?? '');
         fd.append('bedrooms',    form.bedrooms ?? '');
         fd.append('bathrooms',   form.bathrooms ?? '');
-        fd.append('is_featured', form.is_featured ? '1' : '0');
         fd.append('is_verified', form.is_verified ? '1' : '0');
 
-        // Featured queue fields
-        fd.append('featured_priority', form.featured_priority ?? 0);
-        if (form.featured_at) {
-            fd.append('featured_at', form.featured_at);
-        }
 
         fd.append('agentName',  form.agentName  ?? '');
         fd.append('agentPhone', form.agentPhone ?? '');
@@ -668,138 +643,8 @@ const ListingEdit = ({ listing, agents = [], property_types = [], amenities = []
                                         </FField>
                                     </div>
 
-                                    {/* ── Featured Listing Section (NEW) ── */}
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                                        <SectionLabel>Featured Listing</SectionLabel>
-                                        
-                                        {/* Featured toggle */}
-                                        <Toggle 
-                                            value={form.is_featured} 
-                                            onChange={v => {
-                                                set('is_featured', v);
-                                                if (v && !form.featured_at) {
-                                                    set('featured_at', new Date().toISOString().slice(0, 16));
-                                                }
-                                                if (!v) {
-                                                    set('featured_at', '');
-                                                }
-                                            }} 
-                                            label="Featured Listing" 
-                                            sub="Highlighted in search and featured sections" 
-                                        />
-
-                                        {/* Featured details - only show when featured is enabled */}
-                                        {form.is_featured && (
-                                            <div style={{ 
-                                                padding: '1rem', 
-                                                borderRadius: '0.65rem', 
-                                                backgroundColor: 'hsl(40 90% 97%)', 
-                                                border: '1px solid hsl(40 80% 88%)',
-                                                display: 'flex',
-                                                flexDirection: 'column',
-                                                gap: '0.875rem'
-                                            }}>
-                                                {/* Queue status indicator */}
-                                                {isQueued && (
-                                                    <div style={{ 
-                                                        padding: '0.5rem 0.75rem', 
-                                                        borderRadius: '0.5rem', 
-                                                        backgroundColor: 'hsl(214 100% 96%)', 
-                                                        border: '1px solid hsl(214 80% 88%)',
-                                                        fontSize: '0.75rem',
-                                                        color: 'hsl(214 80% 38%)',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        gap: '0.5rem'
-                                                    }}>
-                                                        <Icons.queue />
-                                                        <span>
-                                                            <strong>In Queue</strong> — Position #{queuePosition}
-                                                            {queuePosition > 10 && ' (Will be activated when slots available)'}
-                                                        </span>
-                                                    </div>
-                                                )}
-
-                                                {/* Featured stats */}
-                                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
-                                                    <div style={{ fontSize: '0.72rem', color: 'hsl(220 15% 50%)' }}>
-                                                        <div style={{ fontWeight: '600', marginBottom: '0.15rem' }}>Times Featured</div>
-                                                        <div style={{ color: 'hsl(220 25% 22%)' }}>{timesFeatured}</div>
-                                                    </div>
-                                                    <div style={{ fontSize: '0.72rem', color: 'hsl(220 15% 50%)' }}>
-                                                        <div style={{ fontWeight: '600', marginBottom: '0.15rem' }}>Last Featured</div>
-                                                        <div style={{ color: 'hsl(220 25% 22%)' }}>{fmtDate(lastFeaturedAt)}</div>
-                                                    </div>
-                                                </div>
-
-                                                {/* Featured expiration info */}
-                                                {form.featured_at && (
-                                                    <div style={{ 
-                                                        padding: '0.5rem 0.75rem', 
-                                                        borderRadius: '0.5rem', 
-                                                        backgroundColor: isFeaturedExpired ? 'hsl(0 70% 96%)' : 'hsl(152 60% 96%)',
-                                                        border: `1px solid ${isFeaturedExpired ? 'hsl(0 65% 88%)' : 'hsl(152 55% 85%)'}`,
-                                                        fontSize: '0.72rem',
-                                                        color: isFeaturedExpired ? 'hsl(0 65% 40%)' : 'hsl(152 55% 28%)',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        gap: '0.4rem'
-                                                    }}>
-                                                        <Icons.clock />
-                                                        <span>
-                                                            {isFeaturedExpired 
-                                                                ? 'Featured period has expired' 
-                                                                : `Featured until ${fmtDateTime(featuredEndsAt)}`
-                                                            }
-                                                        </span>
-                                                    </div>
-                                                )}
-
-                                                {/* Featured date input */}
-                                                <FField label="Featured Start Date" hint="When the featured period should start">
-                                                    <FInput 
-                                                        type="datetime-local" 
-                                                        value={form.featured_at ? form.featured_at.slice(0, 16) : ''} 
-                                                        onChange={e => set('featured_at', e.target.value ? new Date(e.target.value).toISOString() : '')} 
-                                                    />
-                                                </FField>
-
-                                                {/* Priority slider */}
-                                                <FField label="Featured Priority" hint="Higher priority listings appear first (0-100)">
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                                                        <input 
-                                                            type="range" 
-                                                            min="0" 
-                                                            max="100" 
-                                                            value={form.featured_priority} 
-                                                            onChange={e => set('featured_priority', parseInt(e.target.value))}
-                                                            style={{ flex: 1, height: '6px', appearance: 'none', backgroundColor: 'hsl(220 15% 88%)', borderRadius: '3px', outline: 'none' }}
-                                                        />
-                                                        <span style={{ 
-                                                            fontSize: '0.8rem', 
-                                                            fontWeight: '700', 
-                                                            color: 'hsl(220 25% 22%)',
-                                                            minWidth: '2rem',
-                                                            textAlign: 'right'
-                                                        }}>
-                                                            {form.featured_priority}
-                                                        </span>
-                                                    </div>
-                                                </FField>
-
-                                                {/* Featured duration info */}
-                                                <div style={{ fontSize: '0.7rem', color: 'hsl(220 15% 52%)', lineHeight: 1.5 }}>
-                                                    <Icons.star /> Featured listings are displayed for 48 hours. 
-                                                    {timesFeatured >= 3 && ' Maximum featured limit reached.'}
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                                         <SectionLabel>Visibility & Trust</SectionLabel>
-                                        {/* FIX: is_featured restored — was commented out but Toggle referenced it */}
-                                        {/* <Toggle value={form.is_featured} onChange={v => set('is_featured', v)} label="Featured Listing" sub="Highlighted in search and featured sections" /> */}
                                         <Toggle value={form.is_verified} onChange={v => set('is_verified', v)} label="Verified Listing" sub="Shows the verified badge on the listing" />
                                     </div>
 
@@ -998,7 +843,6 @@ const ListingEdit = ({ listing, agents = [], property_types = [], amenities = []
                                             <ReviewRow label="Area"          value={form.area} />
                                             <ReviewRow label="Address"       value={form.address} />
                                             <ReviewRow label="Status"        value={STATUS_CFG[form.status]?.label ?? form.status} />
-                                            <ReviewRow label="Featured"      value={form.is_featured ? 'Yes' : 'No'} />
                                             <ReviewRow label="Verified"      value={form.is_verified ? 'Yes' : 'No'} />
                                         </div>
                                     </div>
@@ -1087,30 +931,6 @@ const ListingEdit = ({ listing, agents = [], property_types = [], amenities = []
 
                     {/* ═══ RIGHT: sidebar ═══════════════════════════════════ */}
                     <div style={{ position: 'sticky', top: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                        {/* Featured Queue Status Card (NEW) */}
-                        {(isQueued || timesFeatured > 0) && (
-                            <div style={{ backgroundColor: 'white', border: '1px solid hsl(40 80% 88%)', borderRadius: '0.875rem', overflow: 'hidden', boxShadow: '0 1px 3px hsl(220 20% 15% / 0.04)' }}>
-                                <div style={{ padding: '0.7rem 1rem', borderBottom: '1px solid hsl(40 80% 90%)', backgroundColor: 'hsl(40 90% 97%)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                    <Icons.star />
-                                    <p style={{ margin: 0, fontSize: '0.72rem', fontWeight: '800', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'hsl(40 80% 30%)' }}>Featured Status</p>
-                                </div>
-                                <div style={{ padding: '0.5rem 1rem 0.75rem' }}>
-                                    {[
-                                        { label: 'Queue Status', value: isQueued ? `Position #${queuePosition}` : (form.is_featured ? 'Active' : 'Not Featured') },
-                                        { label: 'Times Featured', value: timesFeatured },
-                                        { label: 'Last Featured', value: fmtDate(lastFeaturedAt) },
-                                        { label: 'Priority', value: `${form.featured_priority}/100` },
-                                        ...(form.featured_at ? [{ label: 'Featured Until', value: fmtDateTime(featuredEndsAt) }] : []),
-                                    ].map(({ label, value }) => (
-                                        <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.42rem 0', borderBottom: '1px solid hsl(220 15% 95%)' }}>
-                                            <span style={{ fontSize: '0.74rem', color: 'hsl(220 15% 52%)' }}>{label}</span>
-                                            <span style={{ fontSize: '0.78rem', fontWeight: '600', color: 'hsl(220 25% 22%)' }}>{value ?? '—'}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
                         <div style={{ backgroundColor: 'white', border: '1px solid hsl(220 15% 91%)', borderRadius: '0.875rem', overflow: 'hidden', boxShadow: '0 1px 3px hsl(220 20% 15% / 0.04)' }}>
                             <div style={{ padding: '0.7rem 1rem', borderBottom: '1px solid hsl(220 15% 94%)', backgroundColor: 'hsl(220 15% 98.5%)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                 <p style={{ margin: 0, fontSize: '0.72rem', fontWeight: '800', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'hsl(220 25% 22%)' }}>Record Info</p>
