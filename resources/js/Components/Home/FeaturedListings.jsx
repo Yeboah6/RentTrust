@@ -2,6 +2,14 @@ import React, { useState } from 'react';
 import { Link } from "@inertiajs/react";
 import { ArrowRight, MapPin, Shield, BedDouble, Bath, Home } from 'lucide-react';
 
+const slugifyArea = (value) => {
+  return String(value || '')
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9\-]/g, '');
+};
+
 const parseImages = (images) => {
   try {
     if (!images) return [];
@@ -48,14 +56,19 @@ const PropertyCard = ({
   bedrooms,
   bathrooms,
   images,
+  slug,
 }) => {
   const [isHovered, setIsHovered]   = useState(false);
   const [imageError, setImageError] = useState(false);
 
+  const listingAreaSlug = slugifyArea(area);
+  const listingSlug = slug || id;
+
   const isVerified  = status === 'verified';
   const imagesArray = parseImages(images);
   const firstImage  = imagesArray.length > 0 ? resolveImageSrc(imagesArray[0]) : null;
-  const linkHref    = purpose === 'sale' ? `/buy/${id}` : `/rent/${id}`;
+  const linkHref    = purpose === 'sale' ? `/buy/${listingAreaSlug}/${listingSlug}` : `/rent/${listingAreaSlug}/${listingSlug}`;
+  // /rent/${listingAreaSlug}/${listingSlug}
 
   return (
     <Link

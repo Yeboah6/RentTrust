@@ -30,12 +30,12 @@ class RentController extends Controller
         // ── Verified listings (agent must have status = 'verified') ───────────
         $verifiedRentals = Rental::where('purpose', 'rent')
             ->where('is_rented', false)
-            ->whereHas('agent', fn ($q) => $q->where('status', 'verified'))
+            ->where('verification_status', 'verified')
             ->with('agent:id,name')
-            ->select('id', 'title', 'area', 'city', 'rent_min', 'rent_max', 'advance_duration',
+            ->select('id', 'title', 'area', 'city', 'rent_min', 'rent_max', 'advance_duration','slug',
                      'status', 'bedrooms', 'bathrooms', 'images', 'agent_id', 'created_at')
             ->latest()
-            ->take(5)
+            ->take(4)
             ->get()
             ->map(fn ($r) => [
                 'id'               => $r->id,
@@ -50,18 +50,19 @@ class RentController extends Controller
                 'bedrooms'         => $r->bedrooms,
                 'bathrooms'        => $r->bathrooms,
                 'images'           => $r->images,
+                'slug'             => $r->slug,
             ])
             ->values()
             ->all();
 
         $verifiedSales = Rental::where('purpose', 'sale')
             ->where('is_sold', false)
-            ->whereHas('agent', fn ($q) => $q->where('status', 'verified'))
+            ->where('verification_status', 'verified')
             ->with('agent:id,name')
-            ->select('id', 'title', 'area', 'city', 'sale_price',
+            ->select('id', 'title', 'area', 'city', 'sale_price', 'slug',
                      'status', 'bedrooms', 'bathrooms', 'images', 'agent_id', 'created_at')
             ->latest()
-            ->take(5)
+            ->take(4)
             ->get()
             ->map(fn ($r) => [
                 'id'         => $r->id,
@@ -74,6 +75,7 @@ class RentController extends Controller
                 'bedrooms'   => $r->bedrooms,
                 'bathrooms'  => $r->bathrooms,
                 'images'     => $r->images,
+                'slug'       => $r->slug,
             ])
             ->values()
             ->all();
@@ -433,12 +435,19 @@ class RentController extends Controller
                 'is_rented' => $isRented,
             ];
 
-            if ($request->input('status') === "active" && $rent->status !== "active") {
-                $updateData['status'] = 'active';
-                $updateData['is_sold'] = false;
-                $updateData['is_rented'] = false;
-                $updateData['sold_at'] = null;
-                $updateData['rented_at'] = null;
+            if ($request->has('status')) {
+                // Admin path: explicit status control
+                $updateData['status'] = $request->status;
+
+                if ($request->status === 'active' && $rent->status !== 'active') {
+                    $updateData['is_sold'] = false;
+                    $updateData['is_rented'] = false;
+                    $updateData['sold_at'] = null;
+                    $updateData['rented_at'] = null;
+                }
+            } else {
+                // Agent path: derive status from availability flags
+                $updateData['status'] = $isSold ? 'sold' : ($isRented ? 'rented' : 'active');
             }
 
             if ($isSold) {
@@ -473,9 +482,11 @@ class RentController extends Controller
                 ]);
             }
 
-            return redirect()
-                ->back()
-                ->with('success', 'Rental listing updated successfully!');
+            return response()->json([
+                'message' => 'Rental listing updated successfully!',
+                'rental'  => $rent,
+            ]);
+
 
         } catch (\Exception $e) {
             Log::error('Rental update failed', [
@@ -484,9 +495,9 @@ class RentController extends Controller
                 'trace' => $e->getTraceAsString()
             ]);
 
-            return back()
-                ->withInput()
-                ->with('error', 'Failed to update listing. Please try again.');
+            return response()->json([
+                'message' => 'Failed to update listing. Please try again.',
+            ], 500);
         }
     }
 
@@ -877,7 +888,7 @@ class RentController extends Controller
                 'sale_limit'    => $plan->sale_limit,
                 'boost_limit'   => $plan->boost_limit,
                 'lead_limit'    => $plan->lead_limit,
-                'verified_badge'   => $plan->verified_badge,
+                // 'verified_badge'   => $plan->verified_badge,
                 'priority_ranking' => $plan->priority_ranking,
                 'analytics_access' => $plan->analytics_access,
                 'sort_order'    => $plan->sort_order,
@@ -887,28 +898,6 @@ class RentController extends Controller
         return inertia('PricingPage', [
             'plans' => $plans,
         ]);
-    }
-
-    public function featureListing(Request $request, Rental $rent)
-    {
-        $user = auth()->user();
-        
-        $featuredService = app(FeaturedListingService::class);
-        
-        try {
-            $result = $featuredService->featureListing($user, $rent);
-            
-            return response()->json([
-                'success' => true,
-                'message' => $result['message'] ?? 'Listing featured successfully',
-                'data' => $result
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage()
-            ], 400);
-        }
     }
 
     public function subscribe(Request $request)
@@ -937,34 +926,5 @@ class RentController extends Controller
  
         return back();
     }
-
-    // private function notifySubscribers(Rental $rental): void
-    // {
-    //     try {
-    //         $emails = NewsletterSubscriber::active()->pluck('email');
- 
-    //         if ($emails->isEmpty()) {
-    //             return;
-    //         }
- 
-    //         $priceLabel = $rental->purpose === 'rent'
-    //             ? "GHS {$rental->rent_min} - {$rental->rent_max}/month"
-    //             : "GHS {$rental->sale_price}";
- 
-    //         $body = "New listing on RentTrustGh!\n\n"
-    //             . "{$rental->title}\n"
-    //             . "{$rental->area}, {$rental->city}\n"
-    //             . "{$priceLabel}\n\n"
-    //             . "View it here: " . url('/listings/' . $rental->id);
- 
-    //         foreach ($emails as $email) {
-    //             Mail::raw($body, function ($message) use ($email) {
-    //                 $message->to($email)->subject('New listing on RentTrustGh');
-    //             });
-    //         }
-    //     } catch (\Exception $e) {
-    //         Log::error('Failed to notify newsletter subscribers: ' . $e->getMessage());
-    //     }
-    // }
 
 }

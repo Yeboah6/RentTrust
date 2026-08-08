@@ -16,12 +16,6 @@ use Carbon\Carbon;
 
 class AnalyticsController extends Controller
 {
-    // ── Date helpers ──────────────────────────────────────────────────────────
-
-    /**
-     * Return the strftime-compatible month format string.
-     * SQLite uses strftime; MySQL uses DATE_FORMAT.
-     */
     private function monthFormat(string $column): string
     {
         $driver = DB::getDriverName();
@@ -30,10 +24,7 @@ class AnalyticsController extends Controller
             ? "strftime('%Y-%m', {$column})"
             : "DATE_FORMAT({$column}, '%Y-%m')";
     }
-
-    /**
-     * Resolve a Carbon start date from a range shorthand.
-     */
+    
     private function resolveFrom(string $range): Carbon
     {
         return match (strtoupper($range)) {
@@ -180,8 +171,6 @@ class AnalyticsController extends Controller
         $totalListings   = Rental::count();
         $activeListings  = Rental::where('status', 'approved')->where('is_sold', false)->count();
         $pendingListings = Rental::where('status', 'pending')->count();
-        $featuredListings= Rental::where('is_featured', true)->count();
-        // $boostedListings = Rental::where('is_boosted', true)->count();
         $soldListings    = Rental::where('is_sold', true)->count();
         $rentedListings  = Rental::where('purpose', 'rent')->where('status', 'rented')->count();
 
@@ -189,8 +178,6 @@ class AnalyticsController extends Controller
             'total'    => $totalListings,
             'active'   => $activeListings,
             'pending'  => $pendingListings,
-            'featured' => $featuredListings,
-            // 'boosted'  => $boostedListings,
             'sold'     => $soldListings,
             'rented'   => $rentedListings,
         ];

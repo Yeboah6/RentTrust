@@ -46,6 +46,7 @@ Route::post('/admin-setup/{token}',  [setupPassword::class, 'store'])->name('adm
 Route::resource('rent', RentController::class)
     ->except('index')
     ->except('show')
+    ->except('update')
     ->where(['rent' => '[a-f0-9\-]{36}|[0-9]+']);
 
 Route::get('/', [RentController::class, 'index'])->name('home');
@@ -117,11 +118,12 @@ Route::post('/become-agent', [AgentController::class, 'storeBecomeAgent']);
 Route::middleware(['auth', 'verified', 'throttle:60,1', 'role:agent'])->group(function () {
     Route::get('/agent-dashboard', [DashboardController::class, 'agentDashboard'])->name('agent.dashboard');
     Route::post('/rent', [RentController::class, 'store']);
+    Route::put('/rent/{rent}', [RentController::class, 'update'])->name('agent.rent.update');
     Route::put('/response', [ResponseController::class, 'response']);
 
-});
+    Route::get('/agent/dashboard', [DashboardController::class, 'freeTier'])->name('free.agent.dashboard');
 
-Route::get('/agent/dashboard', [DashboardController::class, 'freeTier'])->middleware(['auth','role:agent','throttle:60,1'])->name('free.agent.dashboard');
+});
 
 Route::prefix('webhooks')->group(function () {
     Route::post('/paystack', [WebhookController::class, 'paystack'])->name('webhook.paystack');
@@ -150,13 +152,18 @@ Route::middleware(['auth','verified'])->group(function () {
 
     Route::post('/verification-requests', [ListingVerificationController::class, 'store'])
         ->name('verification-requests.store');
+
+    // ── Settings (protected + verified) ──────────────────────────────────────────
+    Route::get('settings', [AuthController::class, 'settings'])->name('settings.page');
+    Route::put('settings/profile/agent', [AuthController::class, 'updateAgentProfile'])->name('settings.agent.page');
+    Route::put('settings/profile/admin', [AuthController::class, 'updateAdminProfile'])->name('settings.admin.page');
+    Route::put('settings/password', [AuthController::class, 'updatePassword'])->name('settings.password')->middleware('password.confirm');
 });
 
 // ── Admin Routes ──────────────────────────────────────────────────────────────
 Route::middleware(['auth','verified','throttle:60,1','role:admin'])->group(function () {
     Route::get('/admin', [DashboardController::class, 'adminDashboard'])->name('admin.dashboard');
 
-    // Allow admins to create and edit listings via dedicated admin endpoints
     Route::post('/admin/rent', [RentController::class, 'store'])->name('admin.rent.store');
     Route::put('/admin/rent/{rent}', [RentController::class, 'update'])->name('admin.rent.update');
 
@@ -202,14 +209,6 @@ Route::middleware(['auth','verified','throttle:60,1','role:admin'])->group(funct
     Route::put('/api/listing-verifications/{listingVerification}/approve', [ListingController::class, 'approveListingVerification']);
 
     Route::put('/api/listing-verifications/{listingVerification}/reject', [ListingController::class, 'rejectListingVerification']);
-});
-
-// ── Settings (protected + verified) ──────────────────────────────────────────
-Route::middleware(['auth','verified'])->group(function () {
-    Route::get('settings', [AuthController::class, 'settings'])->name('settings.page');
-    Route::put('settings/profile/agent', [AuthController::class, 'updateAgentProfile'])->name('settings.agent.page');
-    Route::put('settings/profile/admin', [AuthController::class, 'updateAdminProfile'])->name('settings.admin.page');
-    Route::put('settings/password', [AuthController::class, 'updatePassword'])->name('settings.password')->middleware('password.confirm');
 });
 
 Route::middleware('guest')->group(function () {

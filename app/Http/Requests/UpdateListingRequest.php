@@ -15,11 +15,14 @@ class UpdateListingRequest extends FormRequest
 
     protected function failedValidation(Validator $validator): void
     {
+        if ($this->expectsJson()) {
+            throw new HttpResponseException(
+                response()->json(['errors' => $validator->errors()], 422)
+            );
+        }
+
         throw new HttpResponseException(
-            back()
-                ->withErrors($validator)
-                ->withInput()
-                ->with('error', 'Please correct the errors below.')
+            back()->withErrors($validator)->withInput()->with('error', 'Please correct the errors below.')
         );
     }
 
@@ -58,6 +61,7 @@ class UpdateListingRequest extends FormRequest
             'is_sold'          => 'nullable|in:0,1',
             'is_rented'        => 'nullable|in:0,1',
             'status'           => 'nullable',
+            'amenities' => 'nullable|string',
         ];
 
         if ($purpose === 'rent') {

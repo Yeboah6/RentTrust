@@ -15,60 +15,77 @@ class RentalSearchController extends Controller
      * Display rental listings
      */
     public function listings()
-    {
-        // Initial load: show 8 listings
+{
+    $listings = Rental::where('purpose', 'rent')
+        ->orderByRaw("
+            CASE status
+                WHEN 'active' THEN 0
+                WHEN 'rented' THEN 1
+                WHEN 'inactive' THEN 2
+                WHEN 'sold' THEN 3
+                ELSE 4
+            END
+        ")
+        ->latest()
+        ->paginate(8);
+
+    return inertia('RentalListingsPage', [
+        'listings' => $listings
+    ]);
+}
+
+/**
+ * Get more rental listings (AJAX)
+ */
+public function getMore(Request $request)
+{
+    $page = $request->query('page', 2);
+    $perPage = 8;
+
+    if (!is_numeric($page) || $page < 2) {
+        return response()->json([
+            'error' => 'Invalid page number',
+            'listings' => [],
+            'has_more' => false,
+        ], 400);
+    }
+
+    try {
         $listings = Rental::where('purpose', 'rent')
+            ->orderByRaw("
+                CASE status
+                    WHEN 'active' THEN 0
+                    WHEN 'rented' THEN 1
+                    WHEN 'inactive' THEN 2
+                    WHEN 'sold' THEN 3
+                    ELSE 4
+                END
+            ")
             ->latest()
-            ->paginate(8);
+            ->paginate($perPage, ['*'], 'page', $page);
 
-        return inertia('RentalListingsPage', [
-            'listings' => $listings
+        return response()->json([
+            'listings' => $listings->items(),
+            'has_more' => $listings->hasMorePages(),
+            'current_page' => $listings->currentPage(),
+            'total' => $listings->total(),
+            'per_page' => $listings->perPage(),
         ]);
+
+    } catch (\Exception $e) {
+        Log::error('Failed to fetch more rental listings', [
+            'error' => $e->getMessage(),
+            'page' => $page,
+        ]);
+
+        return response()->json([
+            'error' => 'Failed to fetch listings',
+            'message' => config('app.debug') ? $e->getMessage() : 'Server error',
+            'listings' => [],
+            'has_more' => false,
+        ], 500);
     }
-
-    /**
-     * Get more rental listings (AJAX)
-     */
-    public function getMore(Request $request)
-    {
-        $page = $request->query('page', 2);
-        $perPage = 8;
-        
-        if (!is_numeric($page) || $page < 2) {
-            return response()->json([
-                'error' => 'Invalid page number',
-                'listings' => [],
-                'has_more' => false,
-            ], 400);
-        }
-
-        try {
-            $listings = Rental::where('purpose', 'rent')
-                ->latest()
-                ->paginate($perPage, ['*'], 'page', $page);
-
-            return response()->json([
-                'listings' => $listings->items(),
-                'has_more' => $listings->hasMorePages(),
-                'current_page' => $listings->currentPage(),
-                'total' => $listings->total(),
-                'per_page' => $listings->perPage(),
-            ]);
-
-        } catch (\Exception $e) {
-            Log::error('Failed to fetch more rental listings', [
-                'error' => $e->getMessage(),
-                'page' => $page,
-            ]);
-
-            return response()->json([
-                'error' => 'Failed to fetch listings',
-                'message' => config('app.debug') ? $e->getMessage() : 'Server error',
-                'listings' => [],
-                'has_more' => false,
-            ], 500);
-        }
-    }
+}
 
     /**
      * Get rental cities
@@ -282,7 +299,7 @@ class RentalSearchController extends Controller
             ->select(
                 'id', 'rental_id', 'title', 'property_type', 'purpose',
                 'city', 'area', 'address', 'rent_min', 'rent_max', 'sale_price',
-                'status', 'is_verified', 'is_featured', 'images', 'created_at', 'updated_at',
+                'status', 'is_verified', 'images', 'created_at', 'updated_at',
                 'bedrooms', 'bathrooms', 'description', 'amenities',
                 'advance_duration', 'agent_id', 'user_id', 'agent_name', 'agent_phone', 'agent_email'
             )

@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Plan;
 use App\Models\Payment;
-// use App\Services\FeatureGateService;
 use App\Services\PaymentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,7 +15,6 @@ class CheckoutController extends Controller
 {
     public function __construct(
         private PaymentService     $paymentService,
-        // private FeatureGateService $featureGate,
     ) {}
 
     // ─── Shared plan data ─────────────────────────────────────────────────────

@@ -6,17 +6,15 @@ use App\Models\Rental;
 use App\Services\ListingAnalyticsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Services\FeatureGateService;
 
 class AgentAnalyticsController extends Controller
 {
     protected ListingAnalyticsService $analytics;
-    protected FeatureGateService $gate;
 
-    public function __construct(ListingAnalyticsService $analytics, FeatureGateService $gate)
+    public function __construct(ListingAnalyticsService $analytics)
     {
         $this->analytics = $analytics;
-        $this->gate = $gate;
+        // $this->gate = $gate;
     }
 
     /**
@@ -24,13 +22,8 @@ class AgentAnalyticsController extends Controller
      */
     public function summary(Rental $rent)
     {
-        // ensure the user has analytics permission
         $user = Auth::user();
-        if (! $user || ! $this->gate->canViewAnalytics($user)) {
-            abort(403);
-        }
 
-        // optionally ensure the authenticated user owns this listing or has permission
         if ($user->id !== $rent->user_id && ! $user->super) {
             abort(403);
         }
@@ -46,10 +39,6 @@ class AgentAnalyticsController extends Controller
         $user = Auth::user();
         if (! $user) {
             abort(401);
-        }
-
-        if (! $this->gate->canViewAnalytics($user)) {
-            abort(403);
         }
 
         $rentals = $user->rentals()->get();

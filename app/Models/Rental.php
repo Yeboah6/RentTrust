@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Support\Str;
 use App\Models\Review;
 use App\Models\User;
-use App\Models\VerificationRequest;
+// use App\Models\VerificationRequest;
 use App\Traits\GeneratesUUIDs;
 
 class Rental extends Model
@@ -99,9 +99,22 @@ class Rental extends Model
         return $this->hasMany(Report::class);
     }
 
-    public function verificationRequests()
+    // public function verificationRequests()
+    // {
+    //     return $this->hasMany(VerificationRequest::class);
+    // }
+
+    public function scopeOrderByAvailability($query)
     {
-        return $this->hasMany(VerificationRequest::class);
+        return $query->orderByRaw("
+            CASE status
+                WHEN 'active' THEN 0
+                WHEN 'rented' THEN 1
+                WHEN 'inactive' THEN 2
+                WHEN 'sold' THEN 3
+                ELSE 4
+            END
+        ");
     }
 
     protected static function booted()

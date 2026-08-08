@@ -11,7 +11,6 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental, locations = [
   const amenitiesData = amenities.length ? amenities : pageAmenities;
   const isAdmin = userRole === 'admin';
 
-  // Use form for data management
   const { data, setData, processing, errors, reset } = useForm({
     purpose: 'rent',
     id: rental?.id,
@@ -41,9 +40,9 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental, locations = [
   const [existingImages, setExistingImages] = useState([]);
   const [currentStep, setCurrentStep] = useState(1);
   const [toast, setToast] = useState(null);
-  const [availability, setAvailability] = useState('pending');
+  const [availability, setAvailability] = useState('active');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Extract names from DB objects
   const cityNames = locationsData?.map(l => l?.name) || [];
   const propertyTypeNames = propertyTypesData?.map(p => p?.name) || [];
   const amenityNames = amenitiesData?.map(a => a?.name) || [];
@@ -72,7 +71,6 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental, locations = [
 
   useEffect(() => {
     if (rental) {
-      // Parse amenities
       let parsedAmenities = [];
       try {
         if (rental.amenities) {
@@ -85,11 +83,9 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental, locations = [
         parsedAmenities = [];
       }
 
-      // Parse and set existing images
       const imagesArray = parseImages(rental.images);
       
       const existingImagesList = imagesArray.map((img, index) => {
-        // Handle different image formats
         let imagePath = '';
         if (typeof img === 'string') {
           imagePath = img;
@@ -117,7 +113,7 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental, locations = [
       } else if (rental.is_rented) {
         setAvailability('rented');
       } else {
-        setAvailability('pending');
+        setAvailability('active');
       }
       
       setData({
@@ -257,6 +253,8 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental, locations = [
       return;
     }
 
+    setIsSubmitting(true);
+
     const formData = new FormData();
     
     formData.append('_method', 'PUT');
@@ -288,6 +286,7 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental, locations = [
       formData.append('is_sold', data.status === 'sold' ? '1' : '0');
       formData.append('is_rented', data.status === 'rented' ? '1' : '0');
     } else {
+      // formData.append('status', data.status);
       formData.append('is_sold', availability === 'sold' ? '1' : '0');
       formData.append('is_rented', availability === 'rented' ? '1' : '0');
     }
@@ -324,7 +323,6 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental, locations = [
       console.error('Update error response:', error.response?.data);
       const errorData = error.response?.data;
       
-      // Handle validation errors
       if (errorData?.errors) {
         const errorMessages = Object.entries(errorData.errors)
           .map(([field, messages]) => {
@@ -332,7 +330,7 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental, locations = [
           })
           .filter(Boolean);
         
-        const errorMessage = errorMessages.join(' ');
+      const errorMessage = errorMessages.join(' ');
         showToast("Validation Error", errorMessage || "Please check your input and try again.", "error");
       } else if (errorData?.error) {
         showToast("Update Failed", errorData.error, "error");
@@ -341,6 +339,9 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental, locations = [
       } else {
         showToast("Update Failed", "An error occurred while updating your listing. Please try again.", "error");
       }
+    })
+    .finally(() => {
+      setIsSubmitting(false);
     });
   };
 
@@ -2320,7 +2321,7 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental, locations = [
                     <button
                       type="button"
                       onClick={handlePrevious}
-                      disabled={processing}
+                      disabled={isSubmitting}
                       className="action-button"
                       style={{
                         padding: 'clamp(0.625rem, 2vw, 0.75rem) clamp(1.5rem, 4vw, 2rem)',
@@ -2350,7 +2351,7 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental, locations = [
                     <button
                       type="button"
                       onClick={handleNext}
-                      disabled={processing}
+                      disabled={isSubmitting}
                       className="action-button"
                       style={{
                         padding: 'clamp(0.625rem, 2vw, 0.75rem) clamp(1.5rem, 4vw, 2rem)',
@@ -2375,7 +2376,7 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental, locations = [
                   ) : (
                     <button
                       type="submit"
-                      disabled={processing}
+                      disabled={isSubmitting}
                       className="action-button"
                       style={{
                         padding: 'clamp(0.625rem, 2vw, 0.75rem) clamp(1.5rem, 4vw, 2rem)',
@@ -2384,13 +2385,13 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental, locations = [
                         color: 'hsl(200 25% 10%)',
                         fontWeight: '600',
                         fontSize: 'clamp(0.875rem, 2vw, 0.875rem)',
-                        cursor: processing ? 'not-allowed' : 'pointer',
+                        cursor: isSubmitting ? 'not-allowed' : 'pointer',
                         border: 'none',
                         transition: 'all 0.2s',
-                        opacity: processing ? 0.7 : 1
+                        opacity: isSubmitting ? 0.7 : 1
                       }}
                     >
-                      {processing ? 'Submitting...' : 'Submit Listing'}
+                      {isSubmitting ? 'Submitting...' : 'Submit Listing'}
                     </button>
                   )}
                 </div>

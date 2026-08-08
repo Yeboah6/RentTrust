@@ -6,9 +6,10 @@ import PopularAreas from "../Components/Home/PopularAreas";
 import RentCalculator from "../Components/Home/RentCalculator";
 import TrustFeatures from "../Components/Home/TrustFeatures";
 import CTASection from "../Components/Home/CTASection";
+import NewsletterSection from "../Components/Home/NewsletterSection";
 import { Head } from '@inertiajs/react';
 
-const Home = ({ featuredRentals, featuredSales, rentalAreas, saleAreas, totalListings, totalAreas, totalVerifiedAgents, users }) => {
+const Home = ({ verifiedRentals, verifiedSales, rentalAreas, saleAreas, totalListings, totalAreas, totalVerifiedAgents, users }) => {
   return (
     <>
     <Head>
@@ -32,11 +33,12 @@ const Home = ({ featuredRentals, featuredSales, rentalAreas, saleAreas, totalLis
 
       <main className="flex-1">
         <HeroSearch totalAreas={totalAreas} totalListings={totalListings} totalVerifiedAgents={totalVerifiedAgents} users={users} />
-        <FeaturedListings featuredRentals={featuredRentals} featuredSales={featuredSales} />
+        <FeaturedListings verifiedRentals={verifiedRentals} verifiedSales={verifiedSales} />
         <PopularAreas rentalAreas={rentalAreas} saleAreas={saleAreas} />
         <RentCalculator />
         <TrustFeatures />
         <CTASection />
+        <NewsletterSection />
       </main>
 
       <Footer />
