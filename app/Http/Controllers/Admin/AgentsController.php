@@ -7,8 +7,9 @@ use App\Models\Plan;
 use App\Models\Subscription;
 use App\Models\AdminAuditLog;
 use App\Mail\AgentInvitation;
+use App\Models\AgentVerification;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\{Hash, Log, DB, Mail};
+use Illuminate\Support\Facades\{Hash, Log, DB, Mail, Auth, Storage};
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Str;
 use App\Http\Controllers\Controller;
@@ -16,29 +17,29 @@ use Illuminate\Http\Request;
 
 class AgentsController extends Controller
 {
-    public function verifyAgent(Request $request, $id)
-    {
-        $validated = $request->validate([
-            'status' => 'required|in:verified,rejected,request_info',
-        ]);
+    // public function verifyAgent(Request $request, $id)
+    // {
+    //     $validated = $request->validate([
+    //         'status' => 'required|in:verified,rejected,request_info',
+    //     ]);
 
-        $verify = User::findOrFail($id);
-        $oldStatus = $verify->status;
-        $verify->update([
-            'status' => $validated['status'],
-            'updated_at' => now(),
-        ]);
+    //     $verify = User::findOrFail($id);
+    //     $oldStatus = $verify->status;
+    //     $verify->update([
+    //         'status' => $validated['status'],
+    //         'updated_at' => now(),
+    //     ]);
 
-        // Audit log
-        AdminAuditLog::record('verification', "Agent verification status changed to {$validated['status']}", [
-            'affected_user' => $verify->name,
-            'affected_id' => $verify->id,
-            'notes' => "Status changed from {$oldStatus} to {$validated['status']}",
-            'properties' => ['old_status' => $oldStatus, 'new_status' => $validated['status']],
-        ]);
+    //     // Audit log
+    //     AdminAuditLog::record('verification', "Agent verification status changed to {$validated['status']}", [
+    //         'affected_user' => $verify->name,
+    //         'affected_id' => $verify->id,
+    //         'notes' => "Status changed from {$oldStatus} to {$validated['status']}",
+    //         'properties' => ['old_status' => $oldStatus, 'new_status' => $validated['status']],
+    //     ]);
 
-        return redirect()->back()->with('success', 'Agent status updated successfully');
-    }
+    //     return redirect()->back()->with('success', 'Agent status updated successfully');
+    // }
 
     public function suspendAgent(Request $request, $id)
     {
@@ -85,7 +86,6 @@ class AgentsController extends Controller
             'company'  => ['nullable', 'string', 'max:255'],
             'type'     => ['nullable', 'string', 'max:100'],
             'bio'      => ['nullable', 'string', 'max:2000'],
-            // 'status'   => ['required', Rule::in(['active', 'pending', 'verified'])],
             'location' => ['nullable', 'string', 'max:255']
         ]);
 
@@ -107,9 +107,9 @@ class AgentsController extends Controller
             'location'               => $validated['location'] ?? null,
             'package'                => null,
             'status'                 => "pending",
-            'password'               => Hash::make(Str::random(32)), // unusable until setup
+            'password'               => Hash::make(Str::random(32)), 
             'setup_token'            => hash('sha256', $setupToken),
-            'setup_token_expires_at' => now()->addHours(48),         // agents get 48hrs
+            'setup_token_expires_at' => now()->addHours(48),         
         ]);
 
         $setupUrl = route('agent.setup', ['token' => $setupToken]);
@@ -265,7 +265,7 @@ class AgentsController extends Controller
         $expiresAt = now()->addDays(7)->toDateTimeString();
 
         // Send invitation email
-        Mail::to($agent->email)->send(new AgentInvitation(
+        Mail::to($agent->email)->queue(new AgentInvitation(
             $agent->name,
             $agent->email,
             $setupUrl,
@@ -283,6 +283,123 @@ class AgentsController extends Controller
         ]);
 
         return back()->with('success', "Invitation email resent to {$agent->name}");
+    }
+
+    public function approveAgentVerification(Request $request, AgentVerification $agentVerification)
+    {
+        $validated = $request->validate([
+            'admin_notes' => 'nullable|string',
+        ]);
+
+        $oldStatus = $agentVerification->status;
+
+        $agentVerification->update([
+            'status' => 'approved',
+            'admin_notes' => $validated['admin_notes'] ?: $agentVerification->admin_notes,
+            'reviewed_at' => now(),
+            'reviewed_by' => Auth::user()->name,
+        ]);
+
+        $agentVerification->agent()->update([
+            'status'      => 'verified',
+        ]);
+
+        Mail::raw(
+            "Hi {$agentVerification->agent_name},\n\n" .
+            "Good news — your RentTrustGH agent verification has been approved. " .
+            "Your account is now marked as verified.\n\n" .
+            "RentTrustGH",
+            function ($message) use ($agentVerification) {
+                $message->to($agentVerification->email)
+                    ->subject('You\'re verified on RentTrustGH');
+            }
+        );
+
+        AdminAuditLog::record('agent_verification', "Approved agent verification: {$agentVerification->agent_name}", [
+            'affected_user' => $agentVerification->agent_name,
+            'affected_id' => $agentVerification->agent_id,
+            'notes' => "Agent verification status changed from {$oldStatus} to approved",
+            'properties' => [
+                'old_status' => $oldStatus,
+                'new_status' => 'approved',
+                'verification_id' => $agentVerification->id,
+            ],
+        ]);
+
+        return back()->with('success', 'Agent verification approved.');
+    }
+
+    public function rejectAgentVerification(Request $request, AgentVerification $agentVerification)
+    {
+        $validated = $request->validate([
+            'rejection_reason' => 'required|string',
+        ]);
+
+        $oldStatus = $agentVerification->status;
+
+        $agentVerification->update([
+            'status' => 'rejected',
+            'admin_notes' => $validated['rejection_reason'],
+            'reviewed_at' => now(),
+            'reviewed_by' => Auth::user()->name,
+        ]);
+
+        Mail::raw(
+            "Hi {$agentVerification->agent_name},\n\n" .
+            "We reviewed your verification submission and weren't able to approve it this time.\n\n" .
+            "Reason: {$validated['rejection_reason']}\n\n" .
+            "You can update your documents and resubmit from your account settings.\n\n" .
+            "RentTrustGH",
+            function ($message) use ($agentVerification) {
+                $message->to($agentVerification->email)
+                    ->subject('Update on your RentTrustGH verification');
+            }
+        );
+
+        AdminAuditLog::record('agent_verification', "Rejected agent verification: {$agentVerification->agent_name}", [
+            'affected_user' => $agentVerification->agent_name,
+            'affected_id' => $agentVerification->agent_id,
+            'notes' => "Agent verification status changed from {$oldStatus} to rejected",
+            'properties' => [
+                'old_status' => $oldStatus,
+                'new_status' => 'rejected',
+                'verification_id' => $agentVerification->id,
+            ],
+        ]);
+
+        return back()->with('success', 'Agent verification rejected.');
+    }
+
+    public function downloadDocument(Request $request, AgentVerification $verification, string $filename)
+    {
+        $filename = urldecode($filename);
+    
+        $fields = ['gov_id', 'license_documents', 'proof_of_address'];
+        $foundFile = null;
+    
+        foreach ($fields as $field) {
+            foreach ($this->parseDocumentField($verification->{$field}) as $entry) {
+                $path = is_array($entry) ? ($entry['url'] ?? $entry['path'] ?? '') : $entry;
+                if ($path && (basename($path) === $filename || $path === $filename)) {
+                    $foundFile = $path;
+                    break 2;
+                }
+            }
+        }
+    
+        if (!$foundFile) {
+            abort(404, 'Document not found');
+        }
+    
+        // NOTE: adjust this to whatever folder your store()/resubmit() actually
+        // saves agent verification uploads into — flagged as an assumption below.
+        $filePath = 'agent_verification_documents/' . basename($foundFile);
+    
+        if (!Storage::disk('public')->exists($filePath)) {
+            abort(404, 'Document not found on disk');
+        }
+    
+        return Storage::disk('public')->download($filePath, $filename);
     }
 
 }

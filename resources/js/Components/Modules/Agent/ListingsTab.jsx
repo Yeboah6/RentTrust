@@ -30,8 +30,6 @@ const Icons = {
 };
 
 // ─── Availability Badge ─────────────────────────────────────────────────────────
-// Reflects `rentals.status` (active/inactive/rented/sold) — i.e. whether the
-// property is currently on the market. Nothing to do with agent verification.
 const AVAILABILITY_CFG = {
     active:   { bg: 'hsl(152 60% 93%)', color: 'hsl(152 60% 35%)', icon: Icons.check, label: 'Active' },
     inactive: { bg: 'hsl(220 15% 93%)', color: 'hsl(220 15% 45%)', icon: Icons.alert, label: 'Inactive' },
@@ -77,21 +75,6 @@ const VerificationBadge = ({ status }) => {
     );
 };
 
-// ─── Featured Badge ───────────────────────────────────────────────────────────
-const FeaturedBadge = () => (
-    <span style={{
-        display: 'inline-flex', alignItems: 'center', gap: '0.2rem',
-        padding: '0.18rem 0.55rem', borderRadius: 999,
-        fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.04em',
-        backgroundColor: 'hsl(38 92% 50% / 0.12)',
-        color: 'hsl(38 92% 35%)',
-        border: '1px solid hsl(38 92% 50% / 0.3)',
-        flexShrink: 0,
-    }}>
-        {Icons.sparkles}
-        Featured
-    </span>
-);
 
 const SoldBadge = () => (
     <span style={{
@@ -209,91 +192,20 @@ const buildLatestVerificationMap = (records = []) => {
     return map;
 };
 
-// ─── Feature state logic ──────────────────────────────────────────────────────
-const getFeatureState = (property) => {
-    const isFeatured = toBool(property.is_featured);
-    const isQueued = toBool(property.is_featured_queued);
-    const timesFeatured = property.times_featured ?? 0;
-    const maxFeatured = property.max_times_featured ?? 3;
-    const featuredAt = property.featured_at;
-    const featuredEndsAt = property.featured_ends_at;
-    const now = new Date();
-
-    if (isFeatured && featuredAt) {
-        const endDate = featuredEndsAt
-            ? new Date(featuredEndsAt)
-            : new Date(new Date(featuredAt).getTime() + 48 * 60 * 60 * 1000);
-        if (now < endDate) {
-            const hoursLeft = Math.max(0, Math.ceil((endDate - now) / (1000 * 60 * 60)));
-            return {
-                canRequest: false,
-                label: `Featured (${hoursLeft}h left)`,
-                disabled: true,
-                tooltip: `Listing is featured for another ${hoursLeft} hours`,
-                icon: Icons.clock,
-            };
-        }
-    }
-
-    if (isQueued) {
-        return {
-            canRequest: false,
-            label: `In Queue #${property.featured_queue_position ?? '?'}`,
-            disabled: true,
-            tooltip: 'Your listing is waiting to be featured',
-            icon: Icons.clock,
-        };
-    }
-
-    if (timesFeatured >= maxFeatured) {
-        return {
-            canRequest: false,
-            label: 'Max Featured',
-            disabled: true,
-            tooltip: `Already featured ${maxFeatured} times`,
-            icon: Icons.sparkles,
-        };
-    }
-
-    return {
-        canRequest: true,
-        label: 'Request Feature',
-        disabled: false,
-        tooltip: 'Get more visibility! Featured listings appear at the top for 48 hours.',
-        icon: Icons.sparkles,
-    };
-};
-
 // ─── Listing Card ─────────────────────────────────────────────────────────────
 const ListingCard = ({ property, onView, onEdit, onVerify, getVerificationButtonText, isVerificationButtonDisabled, onFeatureRequest }) => {
     const price = fmtPrice(property);
-    const isFeatured = toBool(property.is_featured);
     const isSold = toBool(property.is_sold);
-    const featureState = getFeatureState(property);
-    const [featureModal, setFeatureModal] = useState(null);
     const [requesting, setRequesting] = useState(false);
-
-    const handleConfirmFeature = async () => {
-        if (!featureModal) return;
-        setRequesting(true);
-        try {
-            await onFeatureRequest?.(featureModal);
-        } finally {
-            setRequesting(false);
-            setFeatureModal(null);
-        }
-    };
 
     return (
         <>
             <div style={{
                 backgroundColor: 'white',
-                border: isFeatured ? '1px solid hsl(38 92% 50% / 0.4)' : '1px solid hsl(220 15% 91%)',
+                border: '1px solid hsl(220 15% 91%)',
                 borderRadius: '0.875rem',
                 overflow: 'hidden',
-                boxShadow: isFeatured
-                    ? '0 2px 12px hsl(38 92% 50% / 0.1), 0 1px 3px hsl(220 20% 15% / 0.04)'
-                    : '0 1px 3px hsl(220 20% 15% / 0.04)',
+                boxShadow: '0 1px 3px hsl(220 20% 15% / 0.04)',
                 display: 'flex', flexDirection: 'column',
                 transition: 'box-shadow 0.15s, border-color 0.15s',
             }}
@@ -314,7 +226,7 @@ const ListingCard = ({ property, onView, onEdit, onVerify, getVerificationButton
                             : property.verification_request_status === 'pending'
                                 ? 'hsl(38 92% 50%)'
                                 : 'hsl(220 15% 60%)',
-                    opacity: isFeatured ? 1 : 0.7,
+                    opacity: 0.7,
                 }} />
 
                 <div style={{ padding: '1rem', flex: 1, display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
@@ -330,7 +242,7 @@ const ListingCard = ({ property, onView, onEdit, onVerify, getVerificationButton
                                 </h3>
                                 <AvailabilityBadge status={property.effective_listing_status} />
                                 <VerificationBadge status={property.verification_request_status || 'unverified'} />
-                                {isFeatured && <FeaturedBadge />} {isSold && <SoldBadge />}
+                                {isSold && <SoldBadge />}
                             </div>
                             <p style={{ margin: '0 0 0.35rem', fontSize: '0.7rem', color: 'hsl(220 15% 50%)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                                 {Icons.mapPin} {property.address}, {property.city}
@@ -338,7 +250,7 @@ const ListingCard = ({ property, onView, onEdit, onVerify, getVerificationButton
                         </div>
                     </div>
 
-                    <div style={{
+                    {/* <div style={{
                         padding: '0.65rem 0.75rem',
                         backgroundColor: isFeatured ? 'hsl(38 92% 50% / 0.04)' : 'hsl(220 15% 97%)',
                         borderRadius: '0.5rem',
@@ -347,7 +259,7 @@ const ListingCard = ({ property, onView, onEdit, onVerify, getVerificationButton
                     }}>
                         <span style={{ fontSize: '1rem', fontWeight: 800, color: price.color }}>{price.text}</span>
                         {price.sub && <span style={{ fontSize: '0.68rem', color: 'hsl(220 15% 50%)', fontWeight: 600 }}>{price.sub}</span>}
-                    </div>
+                    </div> */}
                 </div>
 
                 <div style={{ borderTop: '1px solid hsl(220 15% 93%)', padding: '0.6rem 1rem', backgroundColor: 'hsl(220 15% 98.5%)', display: 'flex', gap: '0.4rem', flexWrap: 'wrap', alignItems: 'center' }}>
@@ -445,10 +357,10 @@ const ListingsTab = ({
         setCurrentPage(1);
     };
 
-    const handleFeaturedChange = (e) => {
-        setFeaturedFilter(e.target.value);
-        setCurrentPage(1);
-    };
+    // const handleFeaturedChange = (e) => {
+    //     setFeaturedFilter(e.target.value);
+    //     setCurrentPage(1);
+    // };
 
     const clearFilters = () => {
         setSearchTerm('');
@@ -545,7 +457,7 @@ const ListingsTab = ({
                     ))}
                 </select>
 
-                <select
+                {/* <select
                     value={featuredFilter}
                     onChange={handleFeaturedChange}
                     style={{
@@ -562,7 +474,7 @@ const ListingsTab = ({
                     <option value="all">All</option>
                     <option value="featured">Featured</option>
                     <option value="not-featured">Not Featured</option>
-                </select>
+                </select> */}
 
                 {hasFilters && (
                     <button onClick={clearFilters}

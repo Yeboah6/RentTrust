@@ -230,6 +230,16 @@ class DashboardController extends Controller
         $agentVerifications = AgentVerification::latest('submitted_at')->get();
         $listingVerifications = ListingVerification::latest('submitted_at')->get();
 
+        $agentverifyPendingCount = AgentVerification::where('status', 'pending')->count();
+        $listingverifyPendingCount = ListingVerification::where('status', 'pending')->count();
+
+        $totalPendingVerifications = $agentverifyPendingCount + $listingverifyPendingCount;
+
+        $agentVerifyCount = AgentVerification::all()->count();
+        $listingVerifyCount = ListingVerification::all()->count();
+
+        $totalVerifications = $agentVerifyCount + $listingVerifyCount;
+
         $locations = Location::all();
         $propertyTypes = PropertyType::all();
         $amenities = Amenity::all();
@@ -253,6 +263,8 @@ class DashboardController extends Controller
             'totalViews' => $totalViews,
             'agentVerifications' => $agentVerifications,
             'listingVerifications' => $listingVerifications,
+            'totalVerifications' => $totalVerifications,
+            'totalPendingVerifications' => $totalPendingVerifications,
             'locations' => $locations,
             'propertyTypes' => $propertyTypes,
             'amenities' => $amenities,
@@ -290,6 +302,8 @@ class DashboardController extends Controller
         $propertyTypes = PropertyType::all();
         $amenities = Amenity::all();
 
+        $listingVerifications = ListingVerification::whereIn('listing_id', $rentalIds)->get();
+
         $plans = app(\App\Http\Controllers\CheckoutController::class)->plansForModal();
 
         return inertia('Dashboards/FreeTierDashboard', 
@@ -303,34 +317,8 @@ class DashboardController extends Controller
             'amenities' => $amenities,
             'open_plan_modal' => is_null($agentData->package)
             || session()->pull('show_plan_modal', false),
+            'verificationData' => $listingVerifications,
         ]);
-    }
-
-    public function updateAgentVerificationStatus(Request $request, AgentVerification $agentVerification)
-    {
-        $validated = $request->validate([
-            'status' => 'required|in:approved,rejected',
-            'admin_notes' => 'nullable|string',
-            'rejection_reason' => 'nullable|string|required_if:status,rejected',
-        ]);
-
-        $notes = $validated['admin_notes'] ?? '';
-        if ($validated['status'] === 'rejected' && !empty($validated['rejection_reason'])) {
-            $notes = trim("Rejection reason: {$validated['rejection_reason']}\n{$notes}");
-        }
-
-        $agentVerification->update([
-            'status' => $validated['status'],
-            'admin_notes' => $notes ?: $agentVerification->admin_notes,
-            'reviewed_at' => now(),
-            'reviewed_by' => Auth::user()->name,
-        ]);
-
-        $agentVerification->agent()->update([
-            'status'      => 'verified',
-        ]);
-
-        return back()->with('success', 'Agent verification updated.');
     }
 
 }

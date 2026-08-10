@@ -10,7 +10,7 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class AgentReactivated extends Mailable
+class AgentReactivated extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 

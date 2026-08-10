@@ -150,12 +150,12 @@ class ListingLimitService
 
         $activeRentals = Rental::where('user_id', $user->id)
         ->where('purpose', 'rent')
-        ->whereIn('status', ['pending', 'approved'])
+        ->whereIn('status',['active', 'inactive', 'rented'])
         ->count();
 
         $activeSales = Rental::where('user_id', $user->id)
             ->where('purpose', 'sale')
-            ->whereIn('status', ['pending', 'approved'])
+            ->whereIn('status',['active', 'inactive', 'sold'])
             ->count();
 
         return [

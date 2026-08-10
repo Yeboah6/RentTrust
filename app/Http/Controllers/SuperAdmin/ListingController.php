@@ -10,26 +10,21 @@ use App\Models\Amenity;
 use App\Models\User;
 use App\Models\AdminAuditLog;
 use App\Models\ListingVerification;
-use App\Http\Requests\AdminVerificationActionRequest;
 use App\Models\Location;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Auth;
+// use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rule;
 use App\Mail\ListingUpdatedMail;
 use App\Mail\ListingApproved;
 use App\Mail\ListingRejected;
-use App\Mail\VerificationApproved;
-use App\Mail\VerificationRejected;
 use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 use Illuminate\Support\Str;
-use App\Services\FeaturedListingService;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Cache;
-use Carbon\Carbon;
+// use Illuminate\Http\RedirectResponse;
+// use Illuminate\Support\Facades\Cache;
+// use Carbon\Carbon;
 
 class ListingController extends Controller
 {
@@ -144,16 +139,19 @@ class ListingController extends Controller
                 "Good news! Your verification request for \"{$verification->property_title}\" has been approved."
                     . ($request->admin_notes ? "\n\nNotes from our team: {$request->admin_notes}" : '')
             );
+
+            AdminAuditLog::record('listing_verification', 'Approved listing verification', [
+                'affected_user' => $verification->property_title,
+                'affected_id'   => $verification->id,
+                'notes'         => $request->admin_notes,
+                'properties'    => ['listing_id' => $verification->listing_id],
+            ]);
         });
 
       return back()->with('success', 'Verification request approved successfully.');
     }
 
     // ─── Reject Verification ───────────────────────────────────────────────────
-
-     /**
-     * Reject a verification request.
-     */
     public function verificationReject(Request $request, ListingVerification $verification)
     {
         $request->validate([
@@ -181,6 +179,13 @@ class ListingController extends Controller
                 "Your verification request for \"{$verification->property_title}\" was rejected.\n\n"
                     . "Reason: {$request->admin_notes}\n\nYou're welcome to submit a new request once this is addressed."
             );
+
+            AdminAuditLog::record('listing_verification', 'Rejected listing verification', [
+                'affected_user' => $verification->property_title,
+                'affected_id'   => $verification->id,
+                'notes'         => $request->admin_notes,
+                'properties'    => ['listing_id' => $verification->listing_id],
+            ]);
         });
 
         return back()->with('success', 'Verification request rejected.');
@@ -678,6 +683,17 @@ class ListingController extends Controller
             ];
     
             $listing->update($updateData);
+
+            AdminAuditLog::record('listing', 'Listing updated', [
+                'affected_user' => $listing->title,
+                'affected_id'   => $listing->id,
+                'notes'         => "Listing \"{$listing->title}\" updated by super admin.",
+                'properties'    => [
+                    'status'   => $dbStatus,
+                    'purpose'  => $dbPurpose,
+                    'agent_id' => $updateData['agent_id'],
+                ],
+            ]);
     
             Log::info('SuperAdmin listing updated successfully', [
                 'listing_id' => $listing->id,
@@ -742,118 +758,115 @@ class ListingController extends Controller
 
     // ─── Approve ──────────────────────────────────────────────────────────────
  
-    public function approve(Rental $listing)
-    {
-        if ($listing->status === 'approved') {
-            return back()->with('error', 'Listing is already approved.');
-        }
+    // public function approve(Rental $listing)
+    // {
+    //     if ($listing->status === 'approved') {
+    //         return back()->with('error', 'Listing is already approved.');
+    //     }
  
-        $oldStatus = $listing->status;
-        $listing->update([
-            'status'      => 'approved',
-        ]);
+    //     $oldStatus = $listing->status;
+    //     $listing->update([
+    //         'status'      => 'approved',
+    //     ]);
  
-        // Audit log
-        AdminAuditLog::record('listing', "Listing approved: {$listing->title}", [
-            'affected_user' => $listing->user->name ?? 'Unknown',
-            'affected_id' => $listing->id,
-            'notes' => "Listing '{$listing->title}' status changed from {$oldStatus} to approved",
-            'properties' => ['old_status' => $oldStatus, 'new_status' => 'approved', 'listing_id' => $listing->id],
-        ]);
+    //     // Audit log
+    //     AdminAuditLog::record('listing', "Listing approved: {$listing->title}", [
+    //         'affected_user' => $listing->user->name ?? 'Unknown',
+    //         'affected_id' => $listing->id,
+    //         'notes' => "Listing '{$listing->title}' status changed from {$oldStatus} to approved",
+    //         'properties' => ['old_status' => $oldStatus, 'new_status' => 'approved', 'listing_id' => $listing->id],
+    //     ]);
 
-        // Send email notification to agent
-        try {
-            $agentEmail = $listing->agent_email ?? $listing->user?->email;
-            if ($agentEmail && filter_var($agentEmail, FILTER_VALIDATE_EMAIL)) {
-                Mail::to($agentEmail)->queue(
-                    new ListingApproved(
-                        listing: $listing,
-                        approvedBy: auth()->user()?->name ?? 'System',
-                    )
-                );
-                Log::info('Listing approved email sent', [
-                    'listing_id' => $listing->id,
-                    'agent_email' => $agentEmail,
-                ]);
-            }
-        } catch (\Throwable $e) {
-            Log::warning('Failed to send listing approved email', [
-                'listing_id' => $listing->id,
-                'error' => $e->getMessage(),
-            ]);
-        }
+    //     // Send email notification to agent
+    //     try {
+    //         $agentEmail = $listing->agent_email ?? $listing->user?->email;
+    //         if ($agentEmail && filter_var($agentEmail, FILTER_VALIDATE_EMAIL)) {
+    //             Mail::to($agentEmail)->queue(
+    //                 new ListingApproved(
+    //                     listing: $listing,
+    //                     approvedBy: auth()->user()?->name ?? 'System',
+    //                 )
+    //             );
+    //             Log::info('Listing approved email sent', [
+    //                 'listing_id' => $listing->id,
+    //                 'agent_email' => $agentEmail,
+    //             ]);
+    //         }
+    //     } catch (\Throwable $e) {
+    //         Log::warning('Failed to send listing approved email', [
+    //             'listing_id' => $listing->id,
+    //             'error' => $e->getMessage(),
+    //         ]);
+    //     }
 
-        Log::info('SuperAdmin approved listing', [
-            'listing_id' => $listing->id,
-            'admin_id'   => auth()->id(),
-        ]);
+    //     Log::info('SuperAdmin approved listing', [
+    //         'listing_id' => $listing->id,
+    //         'admin_id'   => auth()->id(),
+    //     ]);
 
-        return back()->with('success', "Listing \"{$listing->title}\" approved successfully.");
-    }
+    //     return back()->with('success', "Listing \"{$listing->title}\" approved successfully.");
+    // }
 
     // ─── Reject ───────────────────────────────────────────────────────────────
  
-    public function reject(Request $request, Rental $listing)
-    {
-        $request->validate([
-            'reason' => ['nullable', 'string', 'max:1000'],
-        ]);
+    // public function reject(Request $request, Rental $listing)
+    // {
+    //     $request->validate([
+    //         'reason' => ['nullable', 'string', 'max:1000'],
+    //     ]);
  
-        $oldStatus = $listing->status;
-        $listing->update([
-            'status'          => 'rejected',
-            'rejection_reason' => $request->input('reason'),
-            'rejected_at'     => now(),
-            'rejected_by'     => auth()->id(),
-        ]);
+    //     $oldStatus = $listing->status;
+    //     $listing->update([
+    //         'status'          => 'rejected',
+    //         'rejection_reason' => $request->input('reason'),
+    //         'rejected_at'     => now(),
+    //         'rejected_by'     => auth()->id(),
+    //     ]);
  
-        // Audit log
-        AdminAuditLog::record('listing', "Listing rejected: {$listing->title}", [
-            'affected_user' => $listing->user->name ?? 'Unknown',
-            'affected_id' => $listing->id,
-            'notes' => "Listing '{$listing->title}' rejected. Reason: {$request->input('reason')}",
-            'properties' => ['old_status' => $oldStatus, 'new_status' => 'rejected', 'reason' => $request->input('reason'), 'listing_id' => $listing->id],
-        ]);
+    //     // Audit log
+    //     AdminAuditLog::record('listing', "Listing rejected: {$listing->title}", [
+    //         'affected_user' => $listing->user->name ?? 'Unknown',
+    //         'affected_id' => $listing->id,
+    //         'notes' => "Listing '{$listing->title}' rejected. Reason: {$request->input('reason')}",
+    //         'properties' => ['old_status' => $oldStatus, 'new_status' => 'rejected', 'reason' => $request->input('reason'), 'listing_id' => $listing->id],
+    //     ]);
 
-        // Send email notification to agent
-        try {
-            $agentEmail = $listing->agent_email ?? $listing->user?->email;
-            if ($agentEmail && filter_var($agentEmail, FILTER_VALIDATE_EMAIL)) {
-                Mail::to($agentEmail)->queue(
-                    new ListingRejected(
-                        listing: $listing,
-                        rejectedBy: auth()->user()?->name ?? 'System',
-                        reason: $request->input('reason'),
-                    )
-                );
-                Log::info('Listing rejected email sent', [
-                    'listing_id' => $listing->id,
-                    'agent_email' => $agentEmail,
-                ]);
-            }
-        } catch (\Throwable $e) {
-            Log::warning('Failed to send listing rejected email', [
-                'listing_id' => $listing->id,
-                'error' => $e->getMessage(),
-            ]);
-        }
+    //     // Send email notification to agent
+    //     try {
+    //         $agentEmail = $listing->agent_email ?? $listing->user?->email;
+    //         if ($agentEmail && filter_var($agentEmail, FILTER_VALIDATE_EMAIL)) {
+    //             Mail::to($agentEmail)->queue(
+    //                 new ListingRejected(
+    //                     listing: $listing,
+    //                     rejectedBy: auth()->user()?->name ?? 'System',
+    //                     reason: $request->input('reason'),
+    //                 )
+    //             );
+    //             Log::info('Listing rejected email sent', [
+    //                 'listing_id' => $listing->id,
+    //                 'agent_email' => $agentEmail,
+    //             ]);
+    //         }
+    //     } catch (\Throwable $e) {
+    //         Log::warning('Failed to send listing rejected email', [
+    //             'listing_id' => $listing->id,
+    //             'error' => $e->getMessage(),
+    //         ]);
+    //     }
 
-        Log::info('SuperAdmin rejected listing', [
-            'listing_id' => $listing->id,
-            'admin_id'   => auth()->id(),
-            'reason'     => $request->input('reason'),
-        ]);
+    //     Log::info('SuperAdmin rejected listing', [
+    //         'listing_id' => $listing->id,
+    //         'admin_id'   => auth()->id(),
+    //         'reason'     => $request->input('reason'),
+    //     ]);
 
-        return back()->with('success', "Listing \"{$listing->title}\" has been rejected.");
-    }
+    //     return back()->with('success', "Listing \"{$listing->title}\" has been rejected.");
+    // }
 
     // ─── Suspend ──────────────────────────────────────────────────────────────
  
     public function suspend(Request $request, Rental $listing)
     {
-        // $request->validate([
-        //     'reason' => ['nullable', 'string', 'max:1000'],
-        // ]);
  
         if ($listing->status === 'suspended') {
             return back()->with('error', 'Listing is already suspended.');
@@ -862,8 +875,6 @@ class ListingController extends Controller
         $oldStatus = $listing->status;
         $listing->update([
             'status'       => 'suspended',
-            'verified_at' => now(),
-           // 'suspended_by' => auth()->id(),
         ]);
  
         // Audit log
@@ -890,7 +901,8 @@ class ListingController extends Controller
     public function destroy(Rental $listing)
     {
         $title = $listing->title;
- 
+        $listingId = $listing->id;
+    
         DB::transaction(function () use ($listing) {
             // Delete images from storage
             if (!empty($listing->images)) {
@@ -901,24 +913,26 @@ class ListingController extends Controller
                     }
                 }
             }
- 
-            // Detach pivot relations
-            // if (method_exists($listing, 'amenities')) {
-            //     $listing->amenities()->detach();
-            // }
- 
+    
             // Cascade delete child records
             $listing->inquiries()->delete();
             $listing->reports()->delete();
- 
+    
             $listing->delete();
         });
- 
+    
+        AdminAuditLog::record('listing', 'Listing deleted', [
+            'affected_user' => $title,
+            'affected_id'   => $listingId,
+            'notes'         => "Listing \"{$title}\" and all associated data permanently deleted.",
+            'properties'    => [],
+        ]);
+    
         Log::info('SuperAdmin deleted listing', [
             'listing_title' => $title,
             'admin_id'      => auth()->id(),
         ]);
- 
+    
         return redirect()
             ->route('super-admin.listings.index')
             ->with('success', "Listing \"{$title}\" has been permanently deleted.");
@@ -970,7 +984,6 @@ class ListingController extends Controller
             'address'          => $listing->address,
             'bedrooms'         => $listing->bedrooms,
             'bathrooms'        => $listing->bathrooms,
-            // 'is_featured'      => (bool) $listing->is_featured,
             'is_verified'      => (bool) $listing->is_verified,
             'is_sold'          => (bool) ($listing->is_sold ?? false),
             'views_count'      => $listing->views_count ?? 0, 

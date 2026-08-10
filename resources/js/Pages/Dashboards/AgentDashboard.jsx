@@ -94,8 +94,6 @@ const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views
   const { billing, plans } = usePage().props;
 
   const [activeTab, setActiveTab] = useState("overview");
-  const [respondingTo, setRespondingTo] = useState(null);
-  const [responseText, setResponseText] = useState("");
   const [showAddListingModal, setShowAddListingModal] = useState(false);
   const [showEditListingModal, setShowEditListingModal] = useState(false);
   const [selectedRental, setSelectedRental] = useState(null);
@@ -104,43 +102,6 @@ const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views
   const [showViewModal, setShowViewModal] = useState(false);
   const [showPricingModal, setShowPricingModal] = useState(false);
   const [showToast, setShowToast] = useState(null);
-
-  const { data, setData, put, processing, reset } = useForm({
-    'response': "",
-    'response_name': agentData?.name
-  });
-
-  const handleResponse = (e, reviewId) => {
-    e.preventDefault();
-
-    router.put('/response', {
-      review_id: reviewId,
-      response: responseText,
-      response_name: agentData?.name
-    }, {
-      onSuccess: () => {
-        setShowToast({ 
-          message: "Response Submitted", 
-          description: "Your response has been posted successfully.", 
-          variant: "success" 
-        });
-        setTimeout(() => setShowToast(null), 3000);
-        setResponseText("");
-        setRespondingTo(null);
-
-        console.log(agentData?.name, responseText);
-      },
-      onError: (errors) => {
-        console.error('Submission errors:', errors);
-        setShowToast({ 
-          message: "Submission Failed", 
-          description: "Please correct the errors and try again.", 
-          variant: "error" 
-        });
-        setTimeout(() => setShowToast(null), 3000);
-      },
-    });
-  };
 
   const handleEditClick = (rental) => {
     const selectedRentalData = rentals.find(r => r.id === rental.id);
@@ -481,12 +442,7 @@ const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views
               {activeTab === 'reviews' && (
                   <ReviewsTab 
                       reviews={formattedReviews}
-                      respondingTo={respondingTo}
-                      setRespondingTo={setRespondingTo}
-                      responseText={responseText}
-                      setResponseText={setResponseText}
-                      onSubmitResponse={(reviewId) => handleResponse({ preventDefault: () => {} }, reviewId)}
-                      processing={processing}
+                      agentData={agentData} 
                       onView={(review) => {
                           const rental = rentals?.find(r => r.id === review.rental_id);
                           if (rental) {

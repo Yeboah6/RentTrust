@@ -70,7 +70,6 @@ const VerificationRequestModal = ({ isOpen, onClose, agentData, selectedRental, 
   const [uploadProgress, setUploadProgress] = useState({});
   const [toast, setToast] = useState(null);
 
-  // Files selected for display, keyed exactly like the table's document columns
   const [selectedFiles, setSelectedFiles] = useState({
     ownership_documents: [],
     photos: [],
@@ -78,10 +77,6 @@ const VerificationRequestModal = ({ isOpen, onClose, agentData, selectedRental, 
   });
 
   const [verificationStatus, setVerificationStatus] = useState(null);
-  // Full record of the existing pending/rejected request for this listing, if any.
-  // When status is "rejected", we need more than just the id — we need to know
-  // which documents were already uploaded per category so the form can show
-  // "replace" affordances instead of looking like a first-time submission.
   const [existingVerification, setExistingVerification] = useState(null);
   const existingVerificationId = existingVerification?.id ?? null;
 
@@ -106,8 +101,6 @@ const VerificationRequestModal = ({ isOpen, onClose, agentData, selectedRental, 
     }
 
     if (verificationData && verificationData.length > 0) {
-      // Consider every request for this listing, not just pending/approved, so a
-      // rejected one can still be identified and resubmitted against.
       const relevant = verificationData
         .filter((v) => v.listing_id === selectedRental.id)
         .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
@@ -130,11 +123,6 @@ const VerificationRequestModal = ({ isOpen, onClose, agentData, selectedRental, 
     }
   }, [isOpen, selectedRental, verificationData]);
 
-  // Populate form fields from the selected rental whenever the modal opens for a
-  // submittable state — both a fresh submission ("none") and a resubmission after
-  // rejection ("rejected") need listing_id/title/address filled in from selectedRental.
-  // Previously this only ran for "none", which is why rejected resubmissions showed
-  // "No property selected" and a blank address.
   useEffect(() => {
     if (isOpen && selectedRental && (verificationStatus === "none" || verificationStatus === "rejected")) {
       setData("listing_id", selectedRental.id);
@@ -233,10 +221,6 @@ const VerificationRequestModal = ({ isOpen, onClose, agentData, selectedRental, 
   const handleSubmit = () => {
     if (!validateForm()) return;
 
-    // Pending requests never reach here — the form itself is hidden (see `showForm`
-    // below), so there's no path that lets a pending listing generate a new request.
-    // For rejected requests, we resubmit against the same record instead of creating
-    // a new one, same as the agent-verification resubmission flow.
     const isResubmission = verificationStatus === "rejected" && !!existingVerificationId;
 
     const formData = new FormData();
@@ -251,7 +235,6 @@ const VerificationRequestModal = ({ isOpen, onClose, agentData, selectedRental, 
     data.other_documents.forEach((file) => formData.append("other_documents[]", file));
 
     if (isResubmission) {
-      // Laravel doesn't parse multipart PUT bodies natively — spoof the method.
       formData.append("_method", "put");
     }
 

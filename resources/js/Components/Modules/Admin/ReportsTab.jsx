@@ -439,14 +439,44 @@ const ReportCard = ({ report, onViewProperty, onStatusChange }) => {
 
                 {/* Status messages for non-pending */}
                 {report.status === 'reviewing' && (
+                    <>
                     <div style={{ 
-                        width: '100%', padding: '0.5rem', 
+                        width: '45%', padding: '0.5rem', 
                         backgroundColor: 'hsl(214 100% 96%)', borderRadius: '0.4rem',
                         color: 'hsl(214 100% 42%)', fontSize: '0.7rem', fontWeight: 600,
                         textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem',
                     }}>
                         {Icons.clock} Under Review
                     </div>
+                    <button
+                        onClick={() => onStatusChange?.(report.id, 'resolved')}
+                        style={{
+                            display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
+                            padding: '0.35rem 0.7rem', borderRadius: '0.4rem',
+                            border: 'none', backgroundColor: 'hsl(152 60% 40%)',
+                            color: 'white', fontSize: '0.7rem', fontWeight: 700,
+                            cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.12s',
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.backgroundColor = 'hsl(152 60% 35%)'}
+                        onMouseLeave={e => e.currentTarget.style.backgroundColor = 'hsl(152 60% 40%)'}
+                    >
+                        {Icons.check} Resolve
+                    </button>
+                    <button
+                        onClick={() => onStatusChange?.(report.id, 'dismissed')}
+                        style={{
+                            display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
+                            padding: '0.35rem 0.7rem', borderRadius: '0.4rem',
+                            border: '1px solid hsl(220 15% 75%)', backgroundColor: 'white',
+                            color: 'hsl(220 15% 45%)', fontSize: '0.7rem', fontWeight: 700,
+                            cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.12s',
+                        }}
+                        onMouseEnter={e => { e.currentTarget.style.borderColor = 'hsl(220 15% 55%)'; e.currentTarget.style.backgroundColor = 'hsl(220 15% 95%)'; }}
+                        onMouseLeave={e => { e.currentTarget.style.borderColor = 'hsl(220 15% 75%)'; e.currentTarget.style.backgroundColor = 'white'; }}
+                    >
+                        {Icons.x} Dismiss
+                    </button>
+                    </>
                 )}
                 {report.status === 'resolved' && (
                     <div style={{ 

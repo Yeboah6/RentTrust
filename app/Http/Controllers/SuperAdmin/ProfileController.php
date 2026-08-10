@@ -4,10 +4,9 @@ namespace App\Http\Controllers\SuperAdmin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\{Auth, Hash, Log};
 use Illuminate\Validation\Rules\Password;
+use App\Models\AdminAuditLog;
 use Inertia\Inertia;
 
 class ProfileController extends Controller
@@ -83,7 +82,15 @@ class ProfileController extends Controller
             'email' => ['required', 'email', 'max:255', \Illuminate\Validation\Rule::unique('users', 'email')->ignore($admin->id)],
         ]);
 
+        $before = $admin->only(['name', 'email']);
         $admin->update($validated);
+
+        AdminAuditLog::record('profile', 'Admin updated profile', [
+            'affected_user' => $admin->name,
+            'affected_id'   => $admin->id,
+            'notes'         => 'Admin updated their own profile details.',
+            'properties'    => ['before' => $before, 'after' => $validated],
+        ]);
 
         Log::info('SuperAdmin updated their profile', ['admin_id' => $admin->id]);
 
@@ -95,22 +102,29 @@ class ProfileController extends Controller
     public function updatePassword(Request $request)
     {
         $admin = Auth::user();
-
+    
         $request->validate([
-            'current_password'      => ['required', 'current_password'],
-            'password'              => ['required', 'confirmed', Password::min(8)->mixedCase()->numbers()],
+            'current_password' => ['required', 'current_password'],
+            'password'         => ['required', 'confirmed', Password::min(8)->mixedCase()->numbers()],
         ], [
             'current_password.current_password' => 'The current password is incorrect.',
             'password.min'                       => 'Password must be at least 8 characters.',
         ]);
-
+    
         $admin->update([
-            'password'            => Hash::make($request->password),
+            'password'   => Hash::make($request->password),
             'updated_at' => now(),
         ]);
-
+    
+        AdminAuditLog::record('profile', 'Admin changed password', [
+            'affected_user' => $admin->name,
+            'affected_id'   => $admin->id,
+            'notes'         => 'Admin changed their own account password.',
+            'properties'    => [],
+        ]);
+    
         Log::info('SuperAdmin changed their password', ['admin_id' => $admin->id]);
-
+    
         return back()->with('success', 'Password updated successfully.');
     }
 }

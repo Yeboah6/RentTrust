@@ -5,6 +5,7 @@ namespace App\Http\Controllers\SuperAdmin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Plan;
+use App\Models\AdminAuditLog;
 
 class PlanController extends Controller
 {
@@ -47,7 +48,15 @@ class PlanController extends Controller
         $data['features'] = array_filter($data['features'], fn($feature) => !empty(trim($feature)));
 
         $data['plan_id'] = Plan::generateUUID();
-        Plan::create($data);
+        $plan = Plan::create($data);
+
+        AdminAuditLog::record('plan', 'Plan created', [
+            'affected_user' => $plan->name,
+            'affected_id'   => $plan->id,
+            'notes'         => "Plan \"{$plan->name}\" created ({$plan->price} {$plan->currency}/{$plan->interval}).",
+            'properties'    => ['price' => $plan->price, 'interval' => $plan->interval, 'is_active' => $plan->is_active],
+        ]);
+
         return redirect()->back()->with('success', 'Plan created');
     }
 
@@ -78,13 +87,36 @@ class PlanController extends Controller
         // Filter out empty features
         $data['features'] = array_filter($data['features'], fn($feature) => !empty(trim($feature)));
 
+        $before = $plan->only(['price', 'interval', 'is_active', 'sort_order']);
         $plan->update($data);
+
+        AdminAuditLog::record('plan', 'Plan updated', [
+            'affected_user' => $plan->name,
+            'affected_id'   => $plan->id,
+            'notes'         => "Plan \"{$plan->name}\" updated.",
+            'properties'    => ['before' => $before, 'after' => [
+                'price' => $data['price'], 'interval' => $data['interval'],
+                'is_active' => $data['is_active'] ?? false, 'sort_order' => $data['sort_order'],
+            ]],
+        ]);
+
         return redirect()->back()->with('success', 'Plan updated');
     }
 
     public function destroy(Plan $plan)
     {
+        $name = $plan->name;
+        $id   = $plan->plan_id;
+    
         $plan->delete();
+    
+        AdminAuditLog::record('plan', 'Plan deleted', [
+            'affected_user' => $name,
+            'affected_id'   => $id,
+            'notes'         => "Plan \"{$name}\" permanently deleted.",
+            'properties'    => [],
+        ]);
+    
         return redirect()->back()->with('success', 'Plan deleted');
     }
 }

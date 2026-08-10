@@ -19,6 +19,7 @@ const Icons = {
     dollar:     <Ico d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />,
     download:   <Ico d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />,
     flag:       <Ico d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" />,
+    shield:     <Ico d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />,
 };
 
 // ─── Stat Card ────────────────────────────────────────────────────────────────
@@ -57,6 +58,7 @@ const AdminAnalyticsTab = ({
     inquiries = [],
     reviews = [],
     subscriptions = 0,
+    totalVerifications = 0
 }) => {
     // Compute views per rental from aggregated views array
     const viewsMap = useMemo(() => {
@@ -183,7 +185,7 @@ const AdminAnalyticsTab = ({
                 <StatCard icon={Icons.home}    value={totalListings.toLocaleString()} label="Total Listings" />
                 <StatCard icon={Icons.check}   value={activeListings.toLocaleString()} label="Active Listings" accent="hsl(152 60% 35%)" bg="hsl(152 60% 93%)" />
                 <StatCard icon={Icons.clock}   value={pendingListings.toLocaleString()} label="Pending Review" accent="hsl(38 92% 40%)" bg="hsl(38 92% 93%)" />
-                <StatCard icon={Icons.flag}    value={featuredListings.toLocaleString()} label="Featured Listings" accent="hsl(40 80% 36%)" bg="hsl(40 90% 93%)" />
+                <StatCard icon={Icons.shield}    value={totalVerifications.toLocaleString()} label="Verifications" accent="hsl(40 80% 36%)" bg="hsl(40 90% 93%)" />
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.875rem' }}>

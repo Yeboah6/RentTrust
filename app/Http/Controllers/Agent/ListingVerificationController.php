@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Agent;
 use App\Http\Controllers\Controller;
 use App\Models\ListingVerification;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\{Auth, Mail, Storage};
 use Illuminate\Validation\Rule;
 
 class ListingVerificationController extends Controller
@@ -123,5 +123,34 @@ class ListingVerificationController extends Controller
         return collect($request->file($field))
             ->map(fn ($file) => $file->store("verifications/listings/{$field}", 'public'))
             ->all();
+    }
+
+    public function downloadDocument(Request $request, ListingVerification $verification, string $filename)
+    {
+        $filename = urldecode($filename);
+    
+        $fields = ['ownership_documents', 'photos', 'other_documents'];
+        $foundPath = null;
+    
+        foreach ($fields as $field) {
+            $paths = $verification->{$field} ?? []; // array of string paths
+    
+            foreach ((array) $paths as $path) {
+                if ($path && basename($path) === $filename) {
+                    $foundPath = $path;
+                    break 2;
+                }
+            }
+        }
+    
+        if (!$foundPath) {
+            abort(404, 'Document not found');
+        }
+    
+        if (!Storage::disk('public')->exists($foundPath)) {
+            abort(404, 'Document not found on disk');
+        }
+    
+        return Storage::disk('public')->download($foundPath, $filename);
     }
 }

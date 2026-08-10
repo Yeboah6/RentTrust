@@ -119,7 +119,6 @@ const NAV = [
             { label: 'Locations',      href: '/super-admin/locations',      icon: LocationsIcon },
             { label: 'Amenities',      href: '/super-admin/amenities',      icon: AmenitiesIcon },
             { label: 'Settings',       href: '/super-admin/settings',       icon: SettingsIcon },
-            { label: 'Feature Flags',  href: '/super-admin/features',       icon: FeaturesIcon },
         ],
     },
     {

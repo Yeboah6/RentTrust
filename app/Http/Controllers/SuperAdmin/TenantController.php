@@ -5,8 +5,8 @@ namespace App\Http\Controllers\SuperAdmin;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\{DB, Mail, Log};
+use App\Models\AdminAuditLog;
 use Inertia\Inertia;
 
 class TenantController extends Controller
@@ -30,11 +30,20 @@ class TenantController extends Controller
             return back()->with('error', 'Tenant is already suspended.');
         }
 
+        $previousStatus = $tenant->status;
+
         $tenant->update([
             'status'          => 'suspended',
             'suspended_at'    => now(),
             'suspended_by'    => auth()->id(),
             'previous_status' => $tenant->status,
+        ]);
+
+        AdminAuditLog::record('tenant', 'Tenant suspended', [
+            'affected_user' => $tenant->name,
+            'affected_id'   => $tenant->id,
+            'notes'         => "Tenant \"{$tenant->name}\" suspended.",
+            'properties'    => ['previous_status' => $previousStatus],
         ]);
 
         Log::info('SuperAdmin suspended tenant', ['tenant_id' => $tenant->id, 'admin_id' => auth()->id()]);
@@ -48,11 +57,20 @@ class TenantController extends Controller
             return back()->with('error', 'Tenant is not suspended.');
         }
 
+        $restoredStatus = $tenant->previous_status ?? 'active';
+
         $tenant->update([
-            'status'          => $tenant->previous_status ?? 'active',
+            'status'          => $restoredStatus,
             'suspended_at'    => null,
             'suspended_by'    => null,
             'previous_status' => null,
+        ]);
+
+        AdminAuditLog::record('tenant', 'Tenant reactivated', [
+            'affected_user' => $tenant->name,
+            'affected_id'   => $tenant->id,
+            'notes'         => "Tenant \"{$tenant->name}\" reactivated to status \"{$restoredStatus}\".",
+            'properties'    => ['restored_status' => $restoredStatus],
         ]);
 
         Log::info('SuperAdmin reactivated tenant', ['tenant_id' => $tenant->id, 'admin_id' => auth()->id()]);
@@ -63,16 +81,22 @@ class TenantController extends Controller
     public function destroy(User $tenant)
     {
         $name = $tenant->name;
-
+        $id   = $tenant->id;
+    
         DB::transaction(function () use ($tenant) {
             $tenant->inquiries()->delete();
-            // $tenant->savedListings()->detach();
-            // $tenant->reviews()->delete();
             $tenant->delete();
         });
-
+    
+        AdminAuditLog::record('tenant', 'Tenant deleted', [
+            'affected_user' => $name,
+            'affected_id'   => $id,
+            'notes'         => "Tenant \"{$name}\" and associated inquiries permanently deleted.",
+            'properties'    => [],
+        ]);
+    
         Log::info('SuperAdmin deleted tenant', ['tenant_name' => $name, 'admin_id' => auth()->id()]);
-
+    
         return redirect()
             ->route('super-admin.tenants.index')
             ->with('success', "Tenant \"{$name}\" permanently deleted.");

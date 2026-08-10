@@ -6,8 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Review;
 use App\Models\Report;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\{Log, Storage};
+use App\Models\AdminAuditLog;
 use Inertia\Inertia;
 
 class ReviewsReportsController extends Controller
@@ -48,7 +48,14 @@ class ReviewsReportsController extends Controller
         $review->update([
             'response'        => $request->response,
             'response_person' => auth()->user()->name,
-            'updated_at'    => now(),
+            'updated_at'      => now(),
+        ]);
+
+        AdminAuditLog::record('review', 'Replied to review', [
+            'affected_user' => $review->full_name ?? $review->reviewer_name ?? 'Anonymous',
+            'affected_id'   => $review->id,
+            'notes'         => $request->response,
+            'properties'    => ['listing_id' => $review->rental_id ?? $review->listing_id],
         ]);
 
         Log::info('SuperAdmin replied to review', [
@@ -67,10 +74,19 @@ class ReviewsReportsController extends Controller
             'status' => ['required', 'in:pending,reviewing,resolved,dismissed'],
         ]);
 
+        $previousStatus = $report->status;
+
         $report->update([
             'status'      => $request->status,
             'resolved_by' => auth()->id(),
-            'updated_at' => now(),
+            'updated_at'  => now(),
+        ]);
+
+        AdminAuditLog::record('report', 'Report status updated', [
+            'affected_user' => $report->full_name ?? $report->reporter_name ?? 'Anonymous',
+            'affected_id'   => $report->id,
+            'notes'         => "Status changed from \"{$previousStatus}\" to \"{$request->status}\".",
+            'properties'    => ['from' => $previousStatus, 'to' => $request->status],
         ]);
 
         Log::info('SuperAdmin updated report status', [
@@ -86,10 +102,20 @@ class ReviewsReportsController extends Controller
 
     public function deleteReview(Review $review)
     {
+        $id   = $review->id;
+        $name = $review->full_name ?? $review->reviewer_name ?? 'Anonymous';
+
         $review->delete();
 
+        AdminAuditLog::record('review', 'Review deleted', [
+            'affected_user' => $name,
+            'affected_id'   => $id,
+            'notes'         => 'Rent review permanently deleted.',
+            'properties'    => [],
+        ]);
+
         Log::info('SuperAdmin deleted review', [
-            'review_id' => $review->id,
+            'review_id' => $id,
             'admin_id'  => auth()->id(),
         ]);
 
@@ -101,10 +127,20 @@ class ReviewsReportsController extends Controller
     public function deleteAppReview($review)
     {
         $review = Review::where('id', $review->id)->where('review_type', 'app')->firstOrFail();
+        $id     = $review->id;
+        $name   = $review->full_name ?? $review->reviewer_name ?? 'Anonymous';
+
         $review->delete();
 
+        AdminAuditLog::record('review', 'App review deleted', [
+            'affected_user' => $name,
+            'affected_id'   => $id,
+            'notes'         => 'App review permanently deleted.',
+            'properties'    => [],
+        ]);
+
         Log::info('SuperAdmin deleted app review', [
-            'review_id' => $review->id,
+            'review_id' => $id,
             'admin_id'  => auth()->id(),
         ]);
 
@@ -115,13 +151,23 @@ class ReviewsReportsController extends Controller
 
     public function deleteReport(Report $report)
     {
+        $id   = $report->id;
+        $name = $report->full_name ?? $report->reporter_name ?? 'Anonymous';
+    
         $report->delete();
-
+    
+        AdminAuditLog::record('report', 'Report deleted', [
+            'affected_user' => $name,
+            'affected_id'   => $id,
+            'notes'         => 'Report permanently deleted.',
+            'properties'    => [],
+        ]);
+    
         Log::info('SuperAdmin deleted report', [
-            'report_id' => $report->id,
+            'report_id' => $id,
             'admin_id'  => auth()->id(),
         ]);
-
+    
         return back()->with('success', 'Report deleted.');
     }
 

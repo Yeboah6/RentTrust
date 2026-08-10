@@ -10,14 +10,13 @@ use App\Models\ListingView;
 use App\Models\ListingInquiry;
 use App\Models\AdminAuditLog;
 use App\Models\NewsletterSubscriber;
-use App\Services\FeaturedListingService;
 use App\Services\Seo\SeoService;
 use Illuminate\Http\Request;
 use App\Services\ListingLimitService;
 use App\Http\Requests\StoreListingRequest;
 use App\Http\Requests\UpdateListingRequest;
 use App\Jobs\NotifySubscribersOfNewListing;
-use Illuminate\Support\Facades\{Auth, DB, Mail, Log, Storage, Validator};
+use Illuminate\Support\Facades\{Auth, DB, Mail, Log, Storage};
 
 class RentController extends Controller
 {
@@ -879,8 +878,8 @@ class RentController extends Controller
                 'price'         => (float) $plan->price,
                 'currency'      => $plan->currency ?? 'GHS',
                 'interval'      => $plan->interval,
-                'features'      => $this->buildFeaturesList($plan), // ← merged list
-                'is_popular'    => $plan->slug === 'pro',           // or add a DB column
+                'features'      => $this->buildFeaturesList($plan), 
+                'is_popular'    => $plan->slug === 'pro',           
                 'is_free'       => $plan->isFree(),
                 'cta_text'      => $plan->isFree() ? 'Get Started Free' : "Choose {$plan->name}",
                 'listing_limit' => $plan->listing_limit,
@@ -888,7 +887,6 @@ class RentController extends Controller
                 'sale_limit'    => $plan->sale_limit,
                 'boost_limit'   => $plan->boost_limit,
                 'lead_limit'    => $plan->lead_limit,
-                // 'verified_badge'   => $plan->verified_badge,
                 'priority_ranking' => $plan->priority_ranking,
                 'analytics_access' => $plan->analytics_access,
                 'sort_order'    => $plan->sort_order,

@@ -148,14 +148,14 @@ class AuthController extends Controller
 
     // ── Email availability check ──────────────────────────────────────────────
  
-    // public function checkEmail(Request $request): JsonResponse
-    // {
-    //     $request->validate(['email' => 'required|email|max:255']);
+    public function checkEmail(Request $request): JsonResponse
+    {
+        $request->validate(['email' => 'required|email|max:255']);
  
-    //     $taken = User::where('email', $request->email)->exists();
+        $taken = User::where('email', $request->email)->exists();
  
-    //     return response()->json(['taken' => $taken]);
-    // }
+        return response()->json(['taken' => $taken]);
+    }
 
     public function settings()
     {
@@ -201,13 +201,26 @@ class AuthController extends Controller
             'name'=>'nullable|string|max:255',
             'email' => 'nullable|email|unique:users,email,' . Auth::id(),
         ]);
-    
+
         $admin = Auth::user();
-        
+
+        $before = $admin->only(array_keys($validated));
+
         $admin->update([
             'name' => $validated['name'] ?? $admin->name,
             'email' => $validated['email'] ?? $admin->email,
         ]);
+
+        $changed = array_diff_assoc($admin->only(array_keys($validated)), $before);
+
+        if (! empty($changed)) {
+            AdminAuditLog::record('admin_profile', "Admin updated own profile: {$admin->name}", [
+                'affected_user' => $admin->name,
+                'affected_id' => $admin->id,
+                'notes' => 'Admin self-updated profile fields: ' . implode(', ', array_keys($changed)),
+                'properties' => ['before' => $before, 'after' => $changed],
+            ]);
+        }
 
         return redirect()->back()->with('success', 'Profile updated successfully');
     }

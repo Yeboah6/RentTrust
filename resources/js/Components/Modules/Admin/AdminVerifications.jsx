@@ -96,7 +96,7 @@ const StatusBadge = ({ status }) => {
   return null;
 };
 
-const DocumentSection = ({ title, documents }) => {
+const DocumentSection = ({ title, documents, downloadBase }) => {
   if (!documents || documents.length === 0) {
     return (
       <div style={{ marginBottom: '1rem' }}>
@@ -116,26 +116,33 @@ const DocumentSection = ({ title, documents }) => {
         {title}
       </p>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-        {documents.map((doc, idx) => (
-          <a
-            key={idx}
-            href={doc.url || '#'}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem',
-              backgroundColor: 'hsl(40 30% 97%)', borderRadius: '0.375rem',
-              border: '1px solid hsl(40 20% 88%)', textDecoration: 'none',
-              color: 'hsl(174 62% 32%)', fontSize: '0.875rem', fontWeight: '500',
-              transition: 'all 0.2s'
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(174 62% 32% / 0.05)'}
-            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'hsl(40 30% 97%)'}
-          >
-            <Download style={{ height: '0.875rem', width: '0.875rem' }} />
-            {doc.original_name || `Document ${idx + 1}`}
-          </a>
-        ))}
+        {documents.map((doc, idx) => {
+          const rawPath = doc.url || doc.path || (typeof doc === 'string' ? doc : '');
+          const filename = rawPath.split('/').pop();
+          const label = doc.original_name || filename || `Document ${idx + 1}`;
+          const href = `${downloadBase}/${encodeURIComponent(filename)}`;
+
+          return (
+            <a
+              key={idx}
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem',
+                backgroundColor: 'hsl(40 30% 97%)', borderRadius: '0.375rem',
+                border: '1px solid hsl(40 20% 88%)', textDecoration: 'none',
+                color: 'hsl(174 62% 32%)', fontSize: '0.875rem', fontWeight: '500',
+                transition: 'all 0.2s'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(174 62% 32% / 0.05)'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'hsl(40 30% 97%)'}
+            >
+              <Download style={{ height: '0.875rem', width: '0.875rem' }} />
+              {label}
+            </a>
+          );
+        })}
       </div>
     </div>
   );
@@ -177,7 +184,11 @@ const FilterBar = ({ filterStatus, setFilterStatus }) => (
   </div>
 );
 
-const ReviewSection = ({ item, onApprove, onReject, adminNotes, setAdminNotes, rejectionReason, setRejectionReason }) => (
+// Single notes field, reused for both actions — approve stores it as `admin_notes`,
+// reject stores the same text but the backend treats it as the rejection reason.
+// There's only one `admin_notes` column on either table, so a separate
+// "rejection reason" input would have nowhere distinct to be saved.
+const ReviewSection = ({ item, onApprove, onReject, reviewNotes, setReviewNotes }) => (
   <>
     {item.status === 'pending' && (
       <div style={{ backgroundColor: 'hsl(174 62% 32% / 0.05)', padding: '1rem', borderRadius: '0.5rem', marginBottom: '1rem', border: '1px solid hsl(174 62% 32% / 0.2)' }}>
@@ -187,28 +198,12 @@ const ReviewSection = ({ item, onApprove, onReject, adminNotes, setAdminNotes, r
 
         <div style={{ marginBottom: '1rem' }}>
           <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '600', color: 'hsl(200 25% 15%)', marginBottom: '0.5rem' }}>
-            Admin Notes (optional)
+            Admin Notes <span style={{ fontWeight: '400', color: 'hsl(200 15% 55%)' }}>(optional to approve, required to reject)</span>
           </label>
           <textarea
-            value={adminNotes[item.id] || ''}
-            onChange={(e) => setAdminNotes(prev => ({ ...prev, [item.id]: e.target.value }))}
-            placeholder="Add notes about this verification..."
-            style={{
-              width: '100%', padding: '0.75rem', border: '1px solid hsl(200 15% 85%)',
-              borderRadius: '0.375rem', fontSize: '0.875rem', fontFamily: 'inherit',
-              minHeight: '80px', resize: 'vertical', boxSizing: 'border-box'
-            }}
-          />
-        </div>
-
-        <div style={{ marginBottom: '1rem' }}>
-          <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '600', color: 'hsl(200 25% 15%)', marginBottom: '0.5rem' }}>
-            Rejection Reason (if rejecting)
-          </label>
-          <textarea
-            value={rejectionReason[item.id] || ''}
-            onChange={(e) => setRejectionReason(prev => ({ ...prev, [item.id]: e.target.value }))}
-            placeholder="Provide reason for rejection..."
+            value={reviewNotes[item.id] || ''}
+            onChange={(e) => setReviewNotes(prev => ({ ...prev, [item.id]: e.target.value }))}
+            placeholder="Add notes about this verification, or explain why it's being rejected..."
             style={{
               width: '100%', padding: '0.75rem', border: '1px solid hsl(200 15% 85%)',
               borderRadius: '0.375rem', fontSize: '0.875rem', fontFamily: 'inherit',
@@ -275,38 +270,33 @@ const ReviewSection = ({ item, onApprove, onReject, adminNotes, setAdminNotes, r
 const AgentVerificationsList = ({ items, showToast }) => {
   const [expandedId, setExpandedId] = useState(null);
   const [filterStatus, setFilterStatus] = useState("all");
-  const [adminNotes, setAdminNotes] = useState({});
-  const [rejectionReason, setRejectionReason] = useState({});
+  const [reviewNotes, setReviewNotes] = useState({});
 
   const handleApprove = (id) => {
     if (!confirm("Approve this agent verification request?")) return;
-    router.patch(`/api/agent-verifications/${id}/status`, {
-      status: "approved",
-      admin_notes: adminNotes[id] || ""
+    router.post(`/admin/agent-verifications/${id}/approve`, {
+      admin_notes: reviewNotes[id] || ""
     }, {
       onSuccess: () => {
         showToast("Approved", "Agent verification has been approved", "success");
-        setAdminNotes(prev => ({ ...prev, [id]: "" }));
+        setReviewNotes(prev => ({ ...prev, [id]: "" }));
       },
       onError: () => showToast("Error", "Failed to approve request", "error"),
     });
   };
 
   const handleReject = (id) => {
-    if (!rejectionReason[id]?.trim()) {
-      showToast("Required", "Please provide a rejection reason", "warning");
+    if (!reviewNotes[id]?.trim()) {
+      showToast("Required", "Please provide a reason before rejecting", "warning");
       return;
     }
     if (!confirm("Reject this agent verification request?")) return;
-    router.patch(`/api/agent-verifications/${id}/status`, {
-      status: "rejected",
-      rejection_reason: rejectionReason[id],
-      admin_notes: adminNotes[id] || ""
+    router.post(`/admin/agent-verifications/${id}/reject`, {
+      rejection_reason: reviewNotes[id]
     }, {
       onSuccess: () => {
         showToast("Rejected", "Agent verification has been rejected", "success");
-        setRejectionReason(prev => ({ ...prev, [id]: "" }));
-        setAdminNotes(prev => ({ ...prev, [id]: "" }));
+        setReviewNotes(prev => ({ ...prev, [id]: "" }));
       },
       onError: () => showToast("Error", "Failed to reject request", "error"),
     });
@@ -390,9 +380,21 @@ const AgentVerificationsList = ({ items, showToast }) => {
                       Uploaded Documents
                     </p>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem' }}>
-                      <DocumentSection title="Government ID" documents={parseDocuments(item.gov_id)} />
-                      <DocumentSection title="License Documents" documents={parseDocuments(item.license_documents)} />
-                      <DocumentSection title="Proof of Address" documents={parseDocuments(item.proof_of_address)} />
+                      <DocumentSection
+                        title="Government ID"
+                        documents={parseDocuments(item.gov_id)}
+                        downloadBase={`/admin/agent-verifications/${item.id}/documents`}
+                      />
+                      <DocumentSection
+                        title="License Documents"
+                        documents={parseDocuments(item.license_documents)}
+                        downloadBase={`/admin/agent-verifications/${item.id}/documents`}
+                      />
+                      <DocumentSection
+                        title="Proof of Address"
+                        documents={parseDocuments(item.proof_of_address)}
+                        downloadBase={`/admin/agent-verifications/${item.id}/documents`}
+                      />
                     </div>
                   </div>
 
@@ -400,10 +402,8 @@ const AgentVerificationsList = ({ items, showToast }) => {
                     item={item}
                     onApprove={handleApprove}
                     onReject={handleReject}
-                    adminNotes={adminNotes}
-                    setAdminNotes={setAdminNotes}
-                    rejectionReason={rejectionReason}
-                    setRejectionReason={setRejectionReason}
+                    reviewNotes={reviewNotes}
+                    setReviewNotes={setReviewNotes}
                   />
                 </div>
               )}
@@ -420,40 +420,37 @@ const AgentVerificationsList = ({ items, showToast }) => {
 const ListingVerificationsList = ({ items, showToast }) => {
   const [expandedId, setExpandedId] = useState(null);
   const [filterStatus, setFilterStatus] = useState("all");
-  const [adminNotes, setAdminNotes] = useState({});
-  const [rejectionReason, setRejectionReason] = useState({});
+  const [reviewNotes, setReviewNotes] = useState({});
 
   const handleApprove = (id) => {
-  if (!confirm("Approve this listing verification request?")) return;
-  router.put(`/api/listing-verifications/${id}/approve`, {
-    admin_notes: adminNotes[id] || ""
-  }, {
-    onSuccess: () => {
-      showToast("Approved", "Listing verification has been approved", "success");
-      setAdminNotes(prev => ({ ...prev, [id]: "" }));
-    },
-    onError: () => showToast("Error", "Failed to approve request", "error"),
-  });
-};
+    if (!confirm("Approve this listing verification request?")) return;
+    router.post(`/admin/listing-verifications/${id}/approve`, {
+      admin_notes: reviewNotes[id] || ""
+    }, {
+      onSuccess: () => {
+        showToast("Approved", "Listing verification has been approved", "success");
+        setReviewNotes(prev => ({ ...prev, [id]: "" }));
+      },
+      onError: () => showToast("Error", "Failed to approve request", "error"),
+    });
+  };
 
-const handleReject = (id) => {
-  if (!rejectionReason[id]?.trim()) {
-    showToast("Required", "Please provide a rejection reason", "warning");
-    return;
-  }
-  if (!confirm("Reject this listing verification request?")) return;
-  router.put(`/api/listing-verifications/${id}/reject`, {
-    rejection_reason: rejectionReason[id],
-    admin_notes: adminNotes[id] || ""
-  }, {
-    onSuccess: () => {
-      showToast("Rejected", "Listing verification has been rejected", "success");
-      setRejectionReason(prev => ({ ...prev, [id]: "" }));
-      setAdminNotes(prev => ({ ...prev, [id]: "" }));
-    },
-    onError: () => showToast("Error", "Failed to reject request", "error"),
-  });
-};
+  const handleReject = (id) => {
+    if (!reviewNotes[id]?.trim()) {
+      showToast("Required", "Please provide a reason before rejecting", "warning");
+      return;
+    }
+    if (!confirm("Reject this listing verification request?")) return;
+    router.post(`/admin/listing-verifications/${id}/reject`, {
+      rejection_reason: reviewNotes[id]
+    }, {
+      onSuccess: () => {
+        showToast("Rejected", "Listing verification has been rejected", "success");
+        setReviewNotes(prev => ({ ...prev, [id]: "" }));
+      },
+      onError: () => showToast("Error", "Failed to reject request", "error"),
+    });
+  };
 
   const filtered = filterStatus === "all" ? items : items.filter(v => v.status === filterStatus);
 
@@ -539,9 +536,21 @@ const handleReject = (id) => {
                       Uploaded Documents
                     </p>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem' }}>
-                      <DocumentSection title="Ownership Documents" documents={parseDocuments(item.ownership_documents)} />
-                      <DocumentSection title="Photos" documents={parseDocuments(item.photos)} />
-                      <DocumentSection title="Other Documents" documents={parseDocuments(item.other_documents)} />
+                      <DocumentSection
+                        title="Ownership Documents"
+                        documents={parseDocuments(item.ownership_documents)}
+                        downloadBase={`/admin/listing-verifications/${item.id}/documents`}
+                      />
+                      <DocumentSection
+                        title="Photos"
+                        documents={parseDocuments(item.photos)}
+                        downloadBase={`/admin/listing-verifications/${item.id}/documents`}
+                      />
+                      <DocumentSection
+                        title="Other Documents"
+                        documents={parseDocuments(item.other_documents)}
+                        downloadBase={`/admin/listing-verifications/${item.id}/documents`}
+                      />
                     </div>
                   </div>
 
@@ -549,10 +558,8 @@ const handleReject = (id) => {
                     item={item}
                     onApprove={handleApprove}
                     onReject={handleReject}
-                    adminNotes={adminNotes}
-                    setAdminNotes={setAdminNotes}
-                    rejectionReason={rejectionReason}
-                    setRejectionReason={setRejectionReason}
+                    reviewNotes={reviewNotes}
+                    setReviewNotes={setReviewNotes}
                   />
                 </div>
               )}

@@ -61,18 +61,6 @@ class PasswordResetController extends Controller
             'created_at' => Carbon::now(),
         ]);
 
-        // DB::table('password_reset_tokens')->updateOrInsert(
-        //     [
-        //         'email' => $email,
-        //     ],
-        //     [
-        //         'email' => $email,
-        //         'token' => Hash::make($token),
-        //         'user_type' => $userType,
-        //         'created_at' => Carbon::now(),
-        //     ]
-        // );
-
         // Send email with reset link
         $resetUrl = url('/reset-password/' . $token . '?email=' . urlencode($email) . '&type=' . $userType);
         
@@ -121,10 +109,10 @@ class PasswordResetController extends Controller
                 'required',
                 'confirmed',
                 'min:8',
-                'regex:/[a-z]/',      // must contain at least one lowercase letter
-                'regex:/[A-Z]/',      // must contain at least one uppercase letter
-                'regex:/[0-9]/',      // must contain at least one digit
-                'regex:/[@$!%*#?&]/', // must contain a special character
+                'regex:/[a-z]/',      
+                'regex:/[A-Z]/',      
+                'regex:/[0-9]/',      
+                'regex:/[@$!%*#?&]/', 
             ],
         ], [
             'password.regex' => 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character.',

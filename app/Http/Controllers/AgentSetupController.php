@@ -6,18 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\{Auth, Hash};
 use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class AgentSetupController extends Controller
 {
-    /**
-     * Show the password setup form.
-     * Route: GET /agent/setup/{token}
-     */
     public function show(string $token): Response|RedirectResponse
     {
         $agent = $this->resolveAgent($token);
@@ -35,10 +30,7 @@ class AgentSetupController extends Controller
         ]);
     }
 
-    /**
-     * Handle password submission and activate the account.
-     * Route: POST /agent/setup/{token}
-     */
+    // Agent sets password
     public function store(Request $request, string $token): RedirectResponse
     {
         $agent = $this->resolveAgent($token);

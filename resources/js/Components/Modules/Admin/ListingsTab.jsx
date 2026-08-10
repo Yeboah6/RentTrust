@@ -157,7 +157,7 @@ const fmtPrice = (property) => {
 const ITEMS_PER_PAGE = 9;
 
 // ─── Single Listing Card ──────────────────────────────────────────────────────
-const ListingCard = ({ property, onView, onEdit, onApproveToggle, onDelete }) => {
+const ListingCard = ({ property, onView, onEdit, onDelete }) => {
     const price = fmtPrice(property);
     const isApproved = property.status === 'approved';
     const isFeatured = toBool(property.is_featured);
@@ -310,19 +310,6 @@ const ListingCard = ({ property, onView, onEdit, onApproveToggle, onDelete }) =>
                 >
                     {Icons.edit} Edit
                 </button>
-                <button onClick={() => onApproveToggle?.(property)} style={{
-                    display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
-                    padding: '0.35rem 0.7rem', borderRadius: '0.4rem',
-                    border: 'none',
-                    backgroundColor: isApproved ? 'hsl(271 60% 50%)' : 'hsl(152 60% 40%)',
-                    color: 'white', fontSize: '0.7rem', fontWeight: 700,
-                    cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.12s',
-                }}
-                    onMouseEnter={e => { e.currentTarget.style.opacity = '0.9'; }}
-                    onMouseLeave={e => { e.currentTarget.style.opacity = '1'; }}
-                >
-                    {isApproved ? <>{Icons.undo} Revert</> : <>{Icons.check} Approve</>}
-                </button>
                 <button onClick={() => onDelete?.(property)} style={{
                     display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
                     padding: '0.35rem 0.7rem', borderRadius: '0.4rem',
@@ -370,7 +357,6 @@ const ListingsTab = ({
     onAddListing,
     onView, 
     onEdit, 
-    onApproveToggle, 
     onDelete 
 }) => {
     const [searchTerm, setSearchTerm] = useState('');
@@ -626,7 +612,6 @@ const ListingsTab = ({
                                         property={property}
                                         onView={onView}
                                         onEdit={onEdit}
-                                        onApproveToggle={onApproveToggle}
                                         onDelete={onDelete}
                                     />
                                 ))}
@@ -656,7 +641,6 @@ const ListingsTab = ({
                                         property={property}
                                         onView={onView}
                                         onEdit={onEdit}
-                                        onApproveToggle={onApproveToggle}
                                         onDelete={onDelete}
                                     />
                                 ))}

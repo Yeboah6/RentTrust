@@ -88,7 +88,7 @@ const OrderSummary = ({ plan, provider }) => {
 
           <div style={{ flex: 1, minWidth: 0 }}>
             <h3 className="font-semibold" style={{ color: "hsl(200 25% 15%)", fontSize: "clamp(0.9375rem, 2.5vw, 1.0625rem)", marginBottom: "0.2rem", lineHeight: "1.3" }}>
-              RentTrust {plan.name} Plan
+              RentTrustGh {plan.name} Plan
             </h3>
             <p style={{ color: "hsl(200 15% 45%)", fontSize: "clamp(0.8125rem, 2vw, 0.875rem)", lineHeight: "1.5", marginBottom: "0.75rem" }}>
               {plan.description} · Monthly subscription · Renews automatically
@@ -187,7 +187,7 @@ const PaymentProviderSelector = ({ selectedProvider, onProviderChange }) => {
         <div style={{ padding: "1rem", backgroundColor: "hsl(40 33% 98%)", borderRadius: "0.5rem", display: "flex", alignItems: "center", gap: "0.75rem" }}>
           <Lock style={{ height: "1.25rem", width: "1.25rem", color: "hsl(200 15% 45%)", flexShrink: 0 }} />
           <p style={{ color: "hsl(200 15% 45%)", fontSize: "clamp(0.75rem, 1.8vw, 0.8125rem)", lineHeight: "1.5", margin: 0 }}>
-            You will be redirected to {selectedProvider === "paystack" ? "Paystack" : "Flutterwave"} to complete payment securely. Your card or MoMo details are never stored on RentTrust.
+            You will be redirected to {selectedProvider === "paystack" ? "Paystack" : "Flutterwave"} to complete payment securely. Your card or MoMo details are never stored on RentTrustGh.
           </p>
         </div>
       </div>
@@ -215,7 +215,7 @@ const SuccessState = ({ plan }) => (
     </div>
     <h3 className="font-bold" style={{ color: "hsl(200 25% 15%)", fontSize: "clamp(1.5rem, 4vw, 2rem)", marginBottom: "0.75rem" }}>Payment Successful!</h3>
     <p style={{ color: "hsl(200 15% 45%)", fontSize: "clamp(0.9375rem, 2.5vw, 1.0625rem)", lineHeight: "1.6", maxWidth: "500px", margin: "0 auto 2rem" }}>
-      Your RentTrust {plan?.name} subscription is now active. Enjoy all your new features!
+      Your RentTrustGh {plan?.name} subscription is now active. Enjoy all your new features!
     </p>
     <Link href="/agent-dashboard" style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", padding: "clamp(0.75rem, 2.5vw, 1rem) clamp(1.5rem, 4vw, 2rem)", backgroundColor: "hsl(174 62% 32%)", color: "white", borderRadius: "0.5rem", fontWeight: "600", textDecoration: "none", fontSize: "clamp(0.9375rem, 2vw, 1rem)" }}>
       Go to Dashboard <ArrowRight style={{ height: "1rem", width: "1rem" }} />

@@ -228,6 +228,7 @@ const Dashboard = ({ platform, saas }) => {
             badge: 'VERIFICATIONS',
             value: platform.total_verifications?.toLocaleString() ?? '—',
             label: 'Total Verifications',
+            subValue: `${platform.agent_verifications ?? 0} agent · ${platform.listing_verifications ?? 0} listing`,
         },
     ];
 

@@ -173,9 +173,8 @@ Route::middleware(['auth','verified','throttle:60,1','role:admin'])->group(funct
     Route::put('/admin/agents/{id}', [AgentsController::class, 'updateAgentByAdmin'])->name('admin.agents.update');
     Route::post('/admin/agents/{userId}/grant-subscription', [AgentsController::class, 'grantSubscription'])
         ->name('admin.agents.grant-subscription');
+
     // Agent verification and management
-    Route::put('/admin/agents/{id}/verify', [AgentsController::class, 'verifyAgent'])
-        ->name('admin.verify.agent');
     Route::put('/admin/agents/{id}/suspend', [AgentsController::class, 'suspendAgent'])
         ->name('admin.suspend.agent');
     Route::post('/admin/agents/{id}/resend-invitation', [AgentsController::class, 'resendInvitation'])
@@ -186,29 +185,19 @@ Route::middleware(['auth','verified','throttle:60,1','role:admin'])->group(funct
         ->name('admin.reports.status');
     Route::get('/admin/reports/{report}/evidence/{filename}', [ReviewResponseController::class, 'downloadReportEvidence'])
         ->name('admin.reports.evidence.download');
+
+    Route::get('/admin/agent-verifications/{verification}/documents/{filename}', [AgentVerificationController::class, 'downloadDocument'])
+        ->name('admin.agent-verifications.document.download');
+
+    Route::get('/admin/listing-verifications/{verification}/documents/{filename}', [ListingVerificationController::class, 'downloadDocument'])
+        ->name('admin.listing-verifications.document.download');
     
-    // Listing approval
-    Route::put('/admin/listings/{rent}/toggle-approval', [ListingController::class, 'toggleApprovalStatus'])
-        ->name('admin.listings.toggle-approval');
-    
-    // Payment management
-    Route::get('/admin/payments/dashboard', [PaymentsController::class, 'paymentDashboard'])
-        ->name('admin.payments.dashboard');
+    Route::post('/admin/agent-verifications/{agentVerification}/approve', [AgentsController::class, 'approveAgentVerification']);
+    Route::post('/admin/agent-verifications/{agentVerification}/reject', [AgentsController::class, 'rejectAgentVerification']);
 
-    Route::post('/admin/payments/{id}/refund', [PaymentsController::class, 'refundPayment'])
-        ->name('admin.payments.refund');
+    Route::put('/admin/listing-verifications/{listingVerification}/approve', [ListingController::class, 'approveListingVerification']);
 
-    Route::post('/admin/subscriptions/{id}/cancel', [PaymentsController::class, 'cancelSubscription'])
-        ->name('admin.subscriptions.cancel');
-
-    Route::get('/admin/payments/filter', [PaymentsController::class, 'filterPayments'])
-        ->name('admin.payments.filter');
-    
-    Route::put('/api/agent-verifications/{agentVerification}/status', [DashboardController::class, 'updateAgentVerificationStatus']);
-
-    Route::put('/api/listing-verifications/{listingVerification}/approve', [ListingController::class, 'approveListingVerification']);
-
-    Route::put('/api/listing-verifications/{listingVerification}/reject', [ListingController::class, 'rejectListingVerification']);
+    Route::put('/admin/listing-verifications/{listingVerification}/reject', [ListingController::class, 'rejectListingVerification']);
 });
 
 Route::middleware('guest')->group(function () {

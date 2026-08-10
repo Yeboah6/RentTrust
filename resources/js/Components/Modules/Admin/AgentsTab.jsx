@@ -222,7 +222,7 @@ const fmtDate = (v) => {
 const ITEMS_PER_PAGE = 9;
 
 // ─── Single Agent Card ────────────────────────────────────────────────────────
-const AgentCard = ({ agent, onViewDetails, onEdit, onVerify, onSuspend, onUpgrade, onResendInvite, onDelete }) => {
+const AgentCard = ({ agent, onViewDetails, onEdit, onSuspend, onUpgrade, onResendInvite, onDelete }) => {
     return (
         <div style={{
             backgroundColor: 'white',
@@ -386,23 +386,6 @@ const AgentCard = ({ agent, onViewDetails, onEdit, onVerify, onSuspend, onUpgrad
                     {Icons.mail} Invite
                 </button>
 
-                {(agent.status === 'unverified' || agent.status === 'pending') && (
-                    <button
-                        onClick={() => onVerify?.(agent.id)}
-                        style={{
-                            display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
-                            padding: '0.35rem 0.7rem', borderRadius: '0.4rem',
-                            border: 'none', backgroundColor: 'hsl(152 60% 40%)',
-                            color: 'white', fontSize: '0.7rem', fontWeight: 700,
-                            cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.12s',
-                        }}
-                        onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'hsl(152 60% 35%)'; }}
-                        onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'hsl(152 60% 40%)'; }}
-                    >
-                        {Icons.check} Verify
-                    </button>
-                )}
-
                 {agent.status === 'verified' && (
                     <button
                         onClick={() => onSuspend?.(agent.id)}
@@ -482,7 +465,6 @@ const AgentsTab = ({
     onAddAgent,
     onViewDetails,
     onEdit,
-    onVerify,
     onSuspend,
     onUpgrade,
     onResendInvite,
@@ -632,7 +614,6 @@ const AgentsTab = ({
                                 agent={agent}
                                 onViewDetails={onViewDetails}
                                 onEdit={onEdit}
-                                onVerify={onVerify}
                                 onSuspend={onSuspend}
                                 onUpgrade={onUpgrade}
                                 onResendInvite={onResendInvite}

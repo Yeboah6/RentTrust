@@ -29,7 +29,6 @@ class ReviewController extends Controller
 
     public function storeReviewForms(Request $request)
     {
-        // If the reviewer did not provide a full_name, attempt to populate it from the authenticated user
         $user = Auth::user();
         if ((! $request->has('full_name') || trim($request->input('full_name')) === '') && ($user)) {
             $name = $user->fullName ?? null;
@@ -58,7 +57,6 @@ class ReviewController extends Controller
         ]);
 
         try {
-            // Convert checkbox values to boolean (they come as 'on' or null)
             $checkboxFields = [
                 'landlord_responsive',
                 'property_matched_description',
@@ -98,7 +96,6 @@ class ReviewController extends Controller
 
     public function reportListing(Request $request)
     {
-        // If the reporter did not provide a name, try to use the authenticated user's full name
         $user = Auth::user();
         if ((! $request->has('name') || trim($request->input('name')) === '') && ($user)) {
             $name = $user->fullName ?? null;

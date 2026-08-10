@@ -5,9 +5,7 @@ namespace App\Http\Controllers\Agent;
 use App\Http\Controllers\Controller;
 use App\Models\AgentVerification;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\{Auth, Mail, Storage};
 use Illuminate\Validation\Rule;
 
 class AgentVerificationController extends Controller
@@ -88,5 +86,32 @@ class AgentVerificationController extends Controller
         );
 
         return back()->with('success', 'Verification submitted for review.');
+    }
+
+    public function downloadDocument(Request $request, AgentVerification $verification, string $filename)
+    {
+        $filename = urldecode($filename);
+    
+        $fields = ['gov_id', 'license_documents', 'proof_of_address'];
+        $foundPath = null;
+    
+        foreach ($fields as $field) {
+            $path = $verification->{$field}; // single string path, or null
+    
+            if ($path && basename($path) === $filename) {
+                $foundPath = $path;
+                break;
+            }
+        }
+    
+        if (!$foundPath) {
+            abort(404, 'Document not found');
+        }
+    
+        if (!Storage::disk('public')->exists($foundPath)) {
+            abort(404, 'Document not found on disk');
+        }
+    
+        return Storage::disk('public')->download($foundPath, $filename);
     }
 }

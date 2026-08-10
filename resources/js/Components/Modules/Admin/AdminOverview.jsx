@@ -37,9 +37,6 @@ const fmtDate = (v) => {
     catch { return v; }
 };
 
-// Mirrors the same 'approved' → 'active' normalisation used elsewhere in the
-// admin UI. Rentals don't always carry effective_listing_status (only the
-// pre-aggregated `views` prop does), so fall back to the raw status column.
 const statusKey = (r) => {
     const raw = (r?.effective_listing_status ?? r?.status ?? 'pending').toString().toLowerCase();
     return raw === 'approved' ? 'active' : raw;
@@ -182,22 +179,32 @@ const RecentListingCard = ({ listing }) => (
 );
 
 // ─── Verification Request Row ─────────────────────────────────────────────────
-const VerificationRow = ({ v }) => (
-    <div style={{
-        display: 'flex', alignItems: 'center', gap: '0.75rem',
-        padding: '0.7rem 0', borderBottom: '1px solid hsl(220 15% 93%)',
-    }}>
-        <div style={{ flex: 1, minWidth: 0 }}>
-            <p style={{ margin: 0, fontSize: '0.8rem', fontWeight: 700, color: 'hsl(220 25% 14%)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {v.rental?.title ?? 'Untitled Listing'}
-            </p>
-            <p style={{ margin: '0.1rem 0 0', fontSize: '0.7rem', color: 'hsl(220 15% 52%)' }}>
-                {v.agent?.name ?? 'Unknown agent'} · {fmtDate(v.created_at)}
-            </p>
+const VerificationRow = ({ v, kind = 'listing' }) => {
+    const primary = kind === 'agent'
+        ? (v.agent_name ?? v.agent?.name ?? v.name ?? 'Unknown agent')
+        : (v.rental?.title ?? v.property_title ?? 'Untitled Listing');
+
+    const secondary = kind === 'agent'
+        ? (v.email ?? v.agent?.email ?? '—')
+        : (v.agent?.name ?? v.agent_name ?? 'Unknown agent');
+
+    return (
+        <div style={{
+            display: 'flex', alignItems: 'center', gap: '0.75rem',
+            padding: '0.7rem 0', borderBottom: '1px solid hsl(220 15% 93%)',
+        }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{ margin: 0, fontSize: '0.8rem', fontWeight: 700, color: 'hsl(220 25% 14%)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {primary}
+                </p>
+                <p style={{ margin: '0.1rem 0 0', fontSize: '0.7rem', color: 'hsl(220 15% 52%)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {secondary} · {fmtDate(v.created_at)}
+                </p>
+            </div>
+            <StatusBadge status={v.status} />
         </div>
-        <StatusBadge status={v.status} />
-    </div>
-);
+    );
+};
 
 
 const AdminOverview = ({
@@ -209,22 +216,19 @@ const AdminOverview = ({
     views = [],
     viewCount = 0,
     verifications = [],
+    listingVerifications=[],
+    agentVerifications=[],
     subsCount = 0,
+    totalPendingVerifications = 0,
     onViewAllListings,
-    onViewAllAgents,
     onViewAllReports,
     onViewAllVerifications,
 }) => {
-    // const total = views.length;
-
-    // rental_id -> view count, sourced from the controller's pre-aggregated `views` prop
     const viewsByRental = useMemo(
         () => Object.fromEntries(views.map(v => [v.id, v.views])),
         [views]
     );
 
-    // rental_id -> inquiry count, grouped client-side since the controller
-    // passes the raw inquiry list rather than a per-listing count
     const inquiriesByRental = useMemo(() => {
         const map = {};
         inquiries.forEach(inq => {
@@ -237,15 +241,14 @@ const AdminOverview = ({
     const stats = useMemo(() => ({
         totalListings:   rentals.length,
         activeListings:  rentals.filter(r => ['active', 'verified', 'approved'].includes(statusKey(r))).length,
-        pendingListings: rentals.filter(r => statusKey(r) === 'pending').length,
+        pendingListings:  rentals.filter(r => ['inactive', 'sold', 'rented'].includes(statusKey(r))).length,
         totalAgents:     agentData.length,
         activeAgents:    agentData.filter(a => a.status !== 'suspended').length,
-        pendingVerifs:   verifications.filter(v => (v.status ?? 'pending').toLowerCase() === 'pending').length,
+        pendingVerifs:   totalPendingVerifications,
         openReports:     reports.filter(r => !['resolved', 'dismissed'].includes((r.status ?? 'pending').toLowerCase())).length,
         totalInquiries:  inquiries.length,
         totalReviews:    reviews.length,
-        // total: views.length;
-    }), [rentals, agentData, verifications, reports, inquiries, reviews]);
+    }), [rentals, agentData, verifications, agentVerifications, listingVerifications, reports, inquiries, reviews]);
 
     const recentListings = useMemo(() => (
         [...rentals]
@@ -262,11 +265,17 @@ const AdminOverview = ({
             }))
     ), [rentals, viewsByRental, inquiriesByRental]);
 
-    const recentVerifications = useMemo(() => (
-        [...verifications]
+    const recentListingVerifications = useMemo(() => (
+        [...listingVerifications]
             .sort((a, b) => new Date(b.created_at ?? 0) - new Date(a.created_at ?? 0))
             .slice(0, 5)
-    ), [verifications]);
+    ), [listingVerifications]);
+
+    const recentAgentVerifications = useMemo(() => (
+        [...agentVerifications]
+            .sort((a, b) => new Date(b.created_at ?? 0) - new Date(a.created_at ?? 0))
+            .slice(0, 5)
+    ), [agentVerifications]);
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -298,7 +307,7 @@ const AdminOverview = ({
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.875rem' }}>
                     <AttentionCard
-                        icon={Icons.clock} count={stats.pendingListings} label="Listings Awaiting Approval"
+                        icon={Icons.clock} count={stats.pendingListings} label="Inactive, Sold & Rented Listings"
                         accent="hsl(38 92% 40%)" accentBg="hsl(38 92% 93%)" onClick={onViewAllListings}
                     />
                     <AttentionCard
@@ -337,27 +346,56 @@ const AdminOverview = ({
             </div>
 
             {/* Recent Verification Requests */}
-            <div style={{
-                backgroundColor: 'white', border: '1px solid hsl(220 15% 91%)', borderRadius: '0.875rem',
-                padding: '1.25rem', boxShadow: '0 1px 3px hsl(220 20% 15% / 0.04)',
-            }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.25rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <div style={{ width: 3, height: '1rem', borderRadius: 999, backgroundColor: 'hsl(214 80% 45%)' }} />
-                        <h2 style={{ margin: 0, fontSize: '0.9rem', fontWeight: 800, color: 'hsl(220 25% 12%)' }}>Recent Verification Requests</h2>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                        
+                {/* Agent Verifications — teal */}
+                <div style={{
+                    backgroundColor: 'white', border: '1px solid hsl(220 15% 91%)', borderRadius: '0.875rem',
+                    padding: '1.25rem', boxShadow: '0 1px 3px hsl(220 20% 15% / 0.04)',
+                }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.25rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <div style={{ width: 3, height: '1rem', borderRadius: 999, backgroundColor: 'hsl(174 62% 32%)' }} />
+                            <h2 style={{ margin: 0, fontSize: '0.9rem', fontWeight: 800, color: 'hsl(220 25% 12%)' }}>Recent Agent Verification Requests</h2>
+                        </div>
+                        <ViewAllButton onClick={onViewAllVerifications} />
                     </div>
-                    <ViewAllButton onClick={onViewAllVerifications} />
+            
+                    {recentAgentVerifications.length > 0 ? (
+                        <div>
+                            {recentAgentVerifications.map(v => <VerificationRow key={v.id} v={v} kind="agent" />)}
+                        </div>
+                    ) : (
+                        <div style={{ textAlign: 'center', padding: '1.5rem', color: 'hsl(220 15% 52%)', fontSize: '0.82rem' }}>
+                            No agent verification requests yet.
+                        </div>
+                    )}
                 </div>
-
-                {recentVerifications.length > 0 ? (
-                    <div>
-                        {recentVerifications.map(v => <VerificationRow key={v.id} v={v} />)}
+                
+                {/* Listing Verifications — amber */}
+                <div style={{
+                    backgroundColor: 'white', border: '1px solid hsl(220 15% 91%)', borderRadius: '0.875rem',
+                    padding: '1.25rem', boxShadow: '0 1px 3px hsl(220 20% 15% / 0.04)',
+                }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.25rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <div style={{ width: 3, height: '1rem', borderRadius: 999, backgroundColor: 'hsl(38 92% 50%)' }} />
+                            <h2 style={{ margin: 0, fontSize: '0.9rem', fontWeight: 800, color: 'hsl(220 25% 12%)' }}>Recent Listing Verification Requests</h2>
+                        </div>
+                        <ViewAllButton onClick={onViewAllVerifications} />
                     </div>
-                ) : (
-                    <div style={{ textAlign: 'center', padding: '1.5rem', color: 'hsl(220 15% 52%)', fontSize: '0.82rem' }}>
-                        No verification requests yet.
-                    </div>
-                )}
+            
+                    {recentListingVerifications.length > 0 ? (
+                        <div>
+                            {recentListingVerifications.map(v => <VerificationRow key={v.id} v={v} kind="listing" />)}
+                        </div>
+                    ) : (
+                        <div style={{ textAlign: 'center', padding: '1.5rem', color: 'hsl(220 15% 52%)', fontSize: '0.82rem' }}>
+                            No listing verification requests yet.
+                        </div>
+                    )}
+                </div>
+                
             </div>
 
         </div>

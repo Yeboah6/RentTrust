@@ -208,7 +208,7 @@ const AgentEdit = ({ agent: a }) => {
         location:              a.location     ?? a.city         ?? '',
         bio:                   a.bio          ?? a.about        ?? '',
         status:                statusKey,
-        is_verified:           a.is_verified  ?? false,
+        // is_verified:           a.is_verified  ?? false,
         password:              '',
         password_confirmation: '',
     });
@@ -403,10 +403,10 @@ const AgentEdit = ({ agent: a }) => {
                                             })}
                                         </FSelect>
                                     </FField>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.55rem' }}>
+                                    {/* <div style={{ display: 'flex', flexDirection: 'column', gap: '0.55rem' }}>
                                         <Toggle value={data.is_verified} onChange={v => setData('is_verified', v)} label="Verified Agent" sub="Shows the blue verified checkmark on their profile and listings" />
-                                        {/* <Toggle value={data.is_featured} onChange={v => setData('is_featured', v)} label="Featured Agent" sub="Agent appears in featured agent sections" /> */}
-                                    </div>
+                                        <Toggle value={data.is_featured} onChange={v => setData('is_featured', v)} label="Featured Agent" sub="Agent appears in featured agent sections" />
+                                    </div> */}
                                 </div>
 
                                 {/* ── Password ── */}

@@ -21,7 +21,7 @@ return new class extends Migration
             $table->string('action',        200);
             $table->string('type',           40)->index();
             $table->string('affected_user', 160)->nullable();
-            $table->unsignedBigInteger('affected_id')->nullable()->index();
+            $table->unsignedBigInteger('affected_id')->nullable()->change();
 
             // Context
             $table->text('notes')->nullable();

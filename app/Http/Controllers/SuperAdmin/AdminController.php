@@ -65,7 +65,7 @@ class AdminController extends Controller
 
             $setupUrl = route('admin.setup', ['token' => $setupToken]); // plain token in URL
 
-            Mail::to($admin->email)->send(
+            Mail::to($admin->email)->queue(
                 new AdminInvitation(
                     adminName:  $admin->name,
                     adminEmail: $admin->email,
@@ -109,7 +109,7 @@ class AdminController extends Controller
 
             $setupUrl = route('admin.setup', ['token' => $setupToken]);
 
-            Mail::to($user->email)->send(
+            Mail::to($user->email)->queue(
                 new AdminInvitation(
                     adminName:  $user->name,
                     adminEmail: $user->email,
@@ -145,15 +145,12 @@ class AdminController extends Controller
             'role' => 'required|string',
             'password' => 'nullable|string|min:8|confirmed',
         ]);
-        // We'll perform the update inside a transaction so we can
-        // send a notification and write an audit record atomically.
+
         DB::beginTransaction();
 
         try {
-            // Snapshot relevant original fields to compute changes
             $original = $user->only(['name', 'email', 'role', 'status']);
 
-            // Only hash and update password if provided
             if (!empty($data['password'])) {
                 $data['password'] = Hash::make($data['password']);
             } else {
@@ -162,7 +159,6 @@ class AdminController extends Controller
 
             $user->update($data);
 
-            // Build a simple changes array for the email/audit log
             $changes = [];
             foreach (['name', 'email', 'role', 'status'] as $key) {
                 $from = $original[$key] ?? null;
@@ -177,14 +173,13 @@ class AdminController extends Controller
 
             // Send notification email to the admin about the change
             try {
-                Mail::to($user->email)->send(new \App\Mail\AdminUpdated(
+                Mail::to($user->email)->queue(new \App\Mail\AdminUpdated(
                     adminName: $user->name,
                     adminEmail: $user->email,
                     updatedBy: auth()->user()?->name ?? 'System',
                     changes: $changes,
                 ));
             } catch (\Throwable $e) {
-                // Log but don't fail the whole request for email issues
                 Log::warning('Failed to send admin updated email', ['error' => $e->getMessage(), 'admin_id' => $user->id]);
             }
 
@@ -225,7 +220,6 @@ class AdminController extends Controller
     
             $user->delete();
     
-            // Notify admin of deletion
             try {
                 Mail::raw(
                     "Hello {$adminName},\n\n" .
@@ -279,7 +273,7 @@ class AdminController extends Controller
             ]);
     
             // Send password reset email
-            Mail::to($admin->email)->send(new AdminInvitation(
+            Mail::to($admin->email)->queue(new AdminInvitation(
                 adminName: $admin->name,
                 adminEmail: $admin->email,
                 temporaryPassword: $temporaryPassword,
@@ -312,7 +306,6 @@ class AdminController extends Controller
                 'properties'    => ['email' => $user->email, 'role' => $user->role],
             ]);
     
-            // Send suspension notification email
             try {
                 Mail::raw(
                     "Hello {$user->name},\n\n" .
@@ -354,7 +347,6 @@ class AdminController extends Controller
                 'properties'    => ['email' => $user->email, 'role' => $user->role],
             ]);
     
-            // Send reactivation notification email
             try {
                 Mail::raw(
                     "Hello {$user->name},\n\n" .

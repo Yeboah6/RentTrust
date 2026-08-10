@@ -37,10 +37,8 @@ class ReviewResponseController extends Controller
 
     public function downloadReportEvidence(Request $request, Report $report, string $filename)
     {
-        // URL decode the filename parameter if needed
         $filename = urldecode($filename);
 
-        // Check if the evidence file exists in the report's evidence array
         $evidence = $report->evidence ?? [];
         $foundFile = null;
 
@@ -55,15 +53,12 @@ class ReviewResponseController extends Controller
             abort(404, 'Evidence file not found');
         }
 
-        // Construct the full path
         $filePath = 'report_files/' . basename($foundFile);
 
-        // Check if file exists in storage
         if (!Storage::disk('public')->exists($filePath)) {
             abort(404, 'Evidence file not found on disk');
         }
 
-        // Return the file for download
         return Storage::disk('public')->download($filePath, $filename);
     }
 }

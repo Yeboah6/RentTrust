@@ -83,6 +83,26 @@ const fmtDate = (v) => {
     return new Date(v).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 };
 
+// ─── Toast ────────────────────────────────────────────────────────────────────
+const Toast = ({ toast }) => {
+    if (!toast) return null;
+    const bg = toast.variant === 'success' ? 'hsl(152 60% 40%)'
+        : toast.variant === 'error' ? 'hsl(0 70% 50%)'
+        : 'hsl(40 80% 50%)';
+
+    return (
+        <div style={{
+            position: 'fixed', top: '1rem', right: '1rem',
+            backgroundColor: bg, color: 'white', padding: '1rem 1.5rem',
+            borderRadius: '0.5rem', zIndex: 50,
+            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)', fontWeight: 500,
+        }}>
+            <p style={{ margin: 0, fontWeight: 600, marginBottom: '0.25rem' }}>{toast.message}</p>
+            <p style={{ margin: 0, fontSize: '0.875rem' }}>{toast.description}</p>
+        </div>
+    );
+};
+
 // ─── Review Card ──────────────────────────────────────────────────────────────
 const ReviewCard = ({ review, onRespond, respondingTo, responseText, setResponseText, onSubmitResponse, onCancelResponse, processing, onView }) => {
     const hasAttributes = review.landlord_responsive || review.property_matched_description || review.fair_pricing || review.good_communication;
@@ -92,7 +112,7 @@ const ReviewCard = ({ review, onRespond, respondingTo, responseText, setResponse
         <div style={{ backgroundColor: 'white', border: '1px solid hsl(220 15% 91%)', borderRadius: '0.875rem', overflow: 'hidden', boxShadow: '0 1px 3px hsl(220 20% 15% / 0.04)', display: 'flex', flexDirection: 'column', transition: 'box-shadow 0.15s' }}
             onMouseEnter={e => e.currentTarget.style.boxShadow = '0 4px 14px hsl(220 20% 15% / 0.08)'}
             onMouseLeave={e => e.currentTarget.style.boxShadow = '0 1px 3px hsl(220 20% 15% / 0.04)'}>
-            
+
             <div style={{ height: 3, backgroundColor: (review.overall_rating >= 4) ? 'hsl(152 60% 40%)' : (review.overall_rating >= 3) ? 'hsl(38 92% 50%)' : 'hsl(0 72% 48%)', opacity: 0.7 }} />
 
             <div style={{ padding: '1rem', flex: 1, display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
@@ -164,19 +184,59 @@ const ReviewCard = ({ review, onRespond, respondingTo, responseText, setResponse
 };
 
 // ─── Reviews Tab Module ───────────────────────────────────────────────────────
-const ReviewsTab = ({ reviews = [], respondingTo, setRespondingTo, responseText, setResponseText, onSubmitResponse, processing, onView, properties = [] }) => {
+// respondingTo/responseText/isSubmitting/toast all live here now — the parent
+// only needs to pass `reviews`, `agentData`, `onView`, and `properties`.
+const ReviewsTab = ({ reviews = [], agentData, onView, properties = [] }) => {
     const [currentPage, setCurrentPage] = useState(1);
+    const [respondingTo, setRespondingTo] = useState(null);
+    const [responseText, setResponseText] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [toast, setToast] = useState(null);
+
+    const showToast = (message, description, variant = 'success') => {
+        setToast({ message, description, variant });
+        setTimeout(() => setToast(null), 3000);
+    };
 
     const total = reviews.length;
     const filteredTotal = reviews.length;
     const avgRating = total > 0 ? (reviews.reduce((sum, r) => sum + (Number(r.overall_rating) || 0), 0) / total).toFixed(1) : '0.0';
 
-    // Pagination
     const totalPages = Math.ceil(filteredTotal / ITEMS_PER_PAGE);
     const paginatedReviews = reviews.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
+    const handleResponse = (reviewId) => {
+        setIsSubmitting(true);
+
+        router.put('/response', {
+            review_id: reviewId,
+            response: responseText,
+            response_name: agentData?.name,
+        }, {
+            onSuccess: () => {
+                showToast('Response Submitted', 'Your response has been posted successfully.', 'success');
+                setResponseText('');
+                setRespondingTo(null);
+            },
+            onError: (errors) => {
+                console.error('Submission errors:', errors);
+                showToast('Submission Failed', 'Please correct the errors and try again.', 'error');
+            },
+            onFinish: () => {
+                setIsSubmitting(false);
+            },
+        });
+    };
+
+    const handleCancelResponse = () => {
+        setRespondingTo(null);
+        setResponseText('');
+    };
+
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            <Toast toast={toast} />
+
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
                     <div style={{ width: 3, height: '1.2rem', borderRadius: 999, backgroundColor: 'hsl(38 92% 50%)', flexShrink: 0 }} />
@@ -198,7 +258,18 @@ const ReviewsTab = ({ reviews = [], respondingTo, setRespondingTo, responseText,
                 <>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.875rem' }}>
                         {paginatedReviews.map(review => (
-                            <ReviewCard key={review.id} review={review} onRespond={setRespondingTo} respondingTo={respondingTo} responseText={responseText} setResponseText={setResponseText} onSubmitResponse={onSubmitResponse} onCancelResponse={() => { setRespondingTo(null); setResponseText(''); }} processing={processing} onView={onView} />
+                            <ReviewCard
+                                key={review.id}
+                                review={review}
+                                onRespond={setRespondingTo}
+                                respondingTo={respondingTo}
+                                responseText={responseText}
+                                setResponseText={setResponseText}
+                                onSubmitResponse={handleResponse}
+                                onCancelResponse={handleCancelResponse}
+                                processing={isSubmitting}
+                                onView={onView}
+                            />
                         ))}
                     </div>
                     <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />

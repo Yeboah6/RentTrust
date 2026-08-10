@@ -8,17 +8,13 @@ use App\Models\User;
 use App\Models\Rental;
 use App\Models\AdminAuditLog;
 use App\Models\AgentVerification;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\{DB, Hash, Log, Storage};
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use App\Mail\AgentInvitation;
 use App\Mail\AgentStatusChanged;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\AgentAccountUpdated;
-use App\Mail\AgentVerified;
 use App\Mail\AgentSuspended;
 use App\Mail\AgentReactivated;
 use App\Mail\AgentDeleted;
@@ -120,7 +116,7 @@ class AgentController extends Controller
 
         $setupUrl = route('agent.setup', ['token' => $setupToken]);
 
-        Mail::to($agent->email)->send(
+        Mail::to($agent->email)->queue(
             new AgentInvitation(
                 agentName: $agent->name,
                 agentEmail: $agent->email,
@@ -283,50 +279,6 @@ class AgentController extends Controller
             ->with('success', 'Agent account updated successfully.');
     }
 
-    // ─── Verify ───────────────────────────────────────────────────────────────
- 
-    public function verify(User $agent)
-    {
-        if ($agent->is_verified) {
-            return back()->with('info', 'Agent is already verified.');
-        }
-
-        $agent->update([
-            'is_verified' => true,
-            'status'      => 'verified',
-            'verified_at' => now(),
-            'verified_by' => auth()->id(),
-        ]);
-
-        try {
-            Mail::to($agent->email)->send(
-                new AgentVerified(
-                    agent: $agent,
-                    verifiedBy: auth()->user(),
-                )
-            );
-        } catch (\Throwable $e) {
-            Log::warning('Failed to send agent verified email', [
-                'error'    => $e->getMessage(),
-                'agent_id' => $agent->id,
-            ]);
-        }
-
-        AdminAuditLog::record('verification', "Agent verified: {$agent->name}", [
-            'affected_user' => $agent->name,
-            'affected_id'   => $agent->id,
-            'notes'         => "Agent {$agent->email} has been verified",
-            'properties'    => ['agent_id' => $agent->id, 'verified_by' => auth()->id()],
-        ]);
-
-        Log::info('SuperAdmin verified agent', [
-            'user_id'  => $agent->id,
-            'admin_id' => auth()->id(),
-        ]);
-
-        return back()->with('success', "{$agent->name} has been verified.");
-    }
-
     // ─── Suspend ──────────────────────────────────────────────────────────────
  
     public function suspend(User $agent)
@@ -345,7 +297,7 @@ class AgentController extends Controller
         ]);
 
         try {
-            Mail::to($agent->email)->send(
+            Mail::to($agent->email)->queue(
                 new AgentSuspended(
                     agent: $agent,
                     suspendedBy: auth()->user(),
@@ -367,7 +319,7 @@ class AgentController extends Controller
 
         Rental::where('agent_id', $agent->id)
             ->where('status', 'approved')
-            ->update(['status' => 'suspended']);
+            ->update(['status' => 'inactive']);
 
         Log::info('SuperAdmin suspended agent', [
             'user_id'  => $agent->id,
@@ -395,7 +347,7 @@ class AgentController extends Controller
         ]);
 
         try {
-            Mail::to($agent->email)->send(
+            Mail::to($agent->email)->queue(
                 new AgentReactivated(
                     agent: $agent,
                     reactivatedBy: auth()->user(),
@@ -417,7 +369,7 @@ class AgentController extends Controller
 
         Rental::where('agent_id', $agent->id)
             ->where('status', 'suspended')
-            ->update(['status' => 'approved']);
+            ->update(['status' => 'active']);
 
         Log::info('SuperAdmin reactivated agent', [
             'agent_id' => $agent->id,
@@ -430,8 +382,9 @@ class AgentController extends Controller
  
     public function destroy(User $agent)
     {
-        $name  = $agent->name;
-        $email = $agent->email;
+        $name     = $agent->name;
+        $email    = $agent->email;
+        $agentId  = $agent->id; // capture before delete
 
         DB::transaction(function () use ($agent, $name, $email) {
             if ($agent->avatar && !str_starts_with($agent->avatar, 'http')) {
@@ -456,8 +409,15 @@ class AgentController extends Controller
             $agent->delete();
         });
 
+        AdminAuditLog::record('user', 'Agent deleted', [
+            'affected_user' => $name,
+            'affected_id'   => $agentId,
+            'notes'         => 'Agent account and all associated listings permanently deleted.',
+            'properties'    => ['email' => $email],
+        ]);
+
         try {
-            Mail::to($email)->send(
+            Mail::to($email)->queue(
                 new AgentDeleted(
                     agentName: $name,
                     agentEmail: $email,
@@ -494,11 +454,11 @@ class AgentController extends Controller
             'reviewed_at' => now(),
             'reviewed_by' => auth()->user()->name,
         ]);
-
+    
         $verification->agent()->update([
-            'status'      => 'verified',
+            'status' => 'verified',
         ]);
-
+    
         Mail::raw(
             "Hi {$verification->agent_name},\n\n" .
             "Good news — your RentTrustGH agent verification has been approved. " .
@@ -509,7 +469,9 @@ class AgentController extends Controller
                     ->subject('You\'re verified on RentTrustGH');
             }
         );
-
+    
+        $this->logAudit('Approved agent verification', 'agent_verification', $verification, null);
+    
         return back();
     }
 

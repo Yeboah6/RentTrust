@@ -763,11 +763,13 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData, locations
                               fontSize: 'clamp(0.875rem, 2.5vw, 1rem)'
                             }}
                           >
-                            <option value="1">1 year</option>
-                            <option value="2">2 years</option>
-                            <option value="3">3 years</option>
-                            <option value="4">4 years</option>
-                            <option value="5">5 years</option>
+                            <option value="1">1 month</option>
+                            <option value="2">2 months</option>
+                            <option value="3">3 months</option>
+                            <option value="4">4 months</option>
+                            <option value="5">5 months</option>
+                            <option value="6">6 months</option>
+                            <option value="7">7 months</option>
                           </select>
                         </div>
                       </div>
@@ -1197,7 +1199,7 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData, locations
                             <div className="flex justify-between gap-2">
                               <span style={{ color: 'hsl(200 15% 45%)' }}>Advance Duration:</span>
                               <span style={{ color: 'hsl(200 25% 15%)', textAlign: 'right' }}>
-                                {data.advanceDuration} {data.advanceDuration === '1' ? 'Year' : 'Years'}
+                                {data.advanceDuration} {data.advanceDuration === '1' ? 'Month' : 'Months'}
                               </span>
                             </div>
                           </>

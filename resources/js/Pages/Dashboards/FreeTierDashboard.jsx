@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Link, useForm, usePage, router, Head } from "@inertiajs/react";
 import Header from "@/Components/Layouts/Header";
 import Footer from "@/Components/Layouts/Footer";
@@ -6,6 +6,7 @@ import AddRentalPage from "@/Components/Modules/AddRentals";
 import EditRentals from "@/Components/Modules/EditRentals";
 import ViewRentals from "@/Components/Modules/ViewRental";
 import PricingModal from "@/Components/Modules/PricingModal";
+import VerificationRequestModal from "@/Components/Modules/Agent/VerificationRequestModal";
 
 // Icon components (unchanged)
 const Home = ({ style }) => (
@@ -57,6 +58,12 @@ const Lock = ({ style }) => (
   </svg>
 );
 
+const ShieldCheck = ({ style }) => (
+  <svg style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+  </svg>
+);
+
 const Zap = ({ style }) => (
   <svg style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -82,7 +89,51 @@ const BarChart = ({ style }) => (
   </svg>
 );
 
-const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, propertyTypes, amenities }) => {
+const VERIFICATION_CFG = {
+  approved:   { bg: 'hsl(152 60% 93%)', color: 'hsl(152 60% 35%)', label: 'Verified' },
+  pending:    { bg: 'hsl(38 92% 93%)',  color: 'hsl(38 92% 40%)',  label: 'Pending Review' },
+  rejected:   { bg: 'hsl(0 72% 93%)',   color: 'hsl(0 72% 45%)',   label: 'Rejected' },
+  unverified: { bg: 'hsl(220 15% 93%)', color: 'hsl(220 15% 45%)', label: 'Unverified' },
+};
+
+const getVerificationBadge = (status) => {
+  const cfg = VERIFICATION_CFG[status] || VERIFICATION_CFG.unverified;
+  return (
+    <span style={{
+      display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
+      padding: 'clamp(0.25rem, 1vw, 0.25rem) clamp(0.5rem, 2vw, 0.625rem)',
+      fontSize: 'clamp(0.75rem, 2vw, 0.75rem)', fontWeight: 600,
+      backgroundColor: cfg.bg, color: cfg.color, borderRadius: '9999px',
+    }}>
+      <ShieldCheck style={{ height: '0.75rem', width: '0.75rem' }} />
+      {cfg.label}
+    </span>
+  );
+};
+
+const getVerificationButtonText = (verificationStatus) => {
+  if (verificationStatus === 'approved') return 'Verified';
+  if (verificationStatus === 'pending') return 'Pending Review';
+  if (verificationStatus === 'rejected') return 'Resubmit Verification';
+  return 'Request Verification';
+};
+
+const isVerificationButtonDisabled = (verificationStatus) =>
+  verificationStatus === 'approved' || verificationStatus === 'pending';
+
+// Pick the most recent verification record per listing — same pattern as ListingsTab.jsx
+const buildLatestVerificationMap = (records = []) => {
+  const map = new Map();
+  records.forEach((record) => {
+    const existing = map.get(record.listing_id);
+    if (!existing || new Date(record.created_at) > new Date(existing.created_at)) {
+      map.set(record.listing_id, record);
+    }
+  });
+  return map;
+};
+
+const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, propertyTypes, amenities, verificationData = []  }) => {
   const [activeTab, setActiveTab] = useState("overview");
   const [showAddListingModal, setShowAddListingModal] = useState(false);
   const [selectedRental, setSelectedRental] = useState(null);
@@ -91,18 +142,32 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
   const [showPricingModal, setShowPricingModal] = useState(open_plan_modal ?? false);
   const [showEditListingModal, setShowEditListingModal] = useState(false);
 
+  const [showVerifyModal, setShowVerifyModal] = useState(false);
+  const [verifyTarget, setVerifyTarget] = useState(null);
+
+    const latestVerificationStatus = (listingId) => {
+      if (!verificationData || verificationData.length === 0) return 'unverified';
+      const relevant = verificationData
+        .filter(v => v.listing_id === listingId)
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      return relevant[0]?.status || 'unverified';
+    };
+
   // Free tier limits
   const LISTING_LIMIT = 5;
   const INQUIRY_LIMIT = 10;
-  // const PHOTO_LIMIT = 5;
 
   const agent = {
     name: agentData?.name || "Unknown Agent",
     company: agentData?.company || null,
     status: agentData?.status || "unverified",
     plan: agentData?.plan || "free",
-    // average_rating: 4.7,
   };
+
+  const latestVerificationByListing = useMemo(
+    () => buildLatestVerificationMap(verificationData),
+    [verificationData]
+  );
 
   const properties = rentals && rentals.length > 0
     ? rentals.map(rental => ({
@@ -117,6 +182,7 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
         listing_status: rental?.status ? rental.status : "unverified",
         views: rental.views_count || 0,
         inquiries: rental.inquiries_count || 0,
+        verification_status: latestVerificationStatus(rental.id),
       }))
     : [];
 
@@ -152,7 +218,7 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
         : '0.0';
 
   const getStatusBadge = (status) => {
-    if (status === "approved") {
+    if (status === "verified") {
       return (
         <span style={{
           display: 'inline-flex',
@@ -233,6 +299,12 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
     const selectViewData = rentals.find(r => r.id === rental.id);
     setSelectedRental(selectViewData);
     setShowViewModal(true);
+  };
+
+  const handleVerifyClick = (property) => {
+    const rentalData = rentals.find(r => r.id === property.id);
+    setVerifyTarget(rentalData);
+    setShowVerifyModal(true);
   };
 
   return (
@@ -472,6 +544,13 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
                   <Zap style={{ height: '1rem', width: '1rem' }} />
                   Upgrade to Pro
                 </button>
+                <Link className="settings-link action-button" href={'/settings'} style={{ padding: 'clamp(0.5rem, 2vw, 0.5rem) clamp(1rem, 3vw, 1rem)', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.375rem, 2vw, 0.5rem)', backgroundColor: 'white', color: 'hsl(174 62% 32%)', fontWeight: '500', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'clamp(0.5rem, 2vw, 0.5rem)', textDecoration: 'none', fontSize: 'clamp(0.875rem, 2vw, 0.875rem)', transition: 'all 0.2s', whiteSpace: 'nowrap', height: 'fit-content' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'hsl(40 30% 96%)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'white'; }}
+                >
+                  <Settings style={{ height: 'clamp(1rem, 3vw, 1rem)', width: 'clamp(1rem, 3vw, 1rem)' }} />
+                  Settings
+                </Link>
               </div>
 
               {/* Limit Warning Banners */}
@@ -851,7 +930,8 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
                                   GH₵{Math.round(property.rent_min).toLocaleString()} – GH₵{Math.round(property.rent_max).toLocaleString()} / month
                                 </p>
                               </div>
-                              {getStatusBadge(property.listing_status)}
+                                {getStatusBadge(property.listing_status)}
+                                {getVerificationBadge(property.verification_status)}
                             </div>
                             <div style={{
                               display: 'grid',
@@ -889,6 +969,27 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
                                   textAlign: 'center'
                                 }}>
                                 Edit
+                              </button>
+                              <button
+                                onClick={() => !isVerificationButtonDisabled(property.verification_status) && handleVerifyClick(property)}
+                                disabled={isVerificationButtonDisabled(property.verification_status)}
+                                className="action-button"
+                                style={{
+                                  width: '100%',
+                                  padding: 'clamp(0.5rem, 2vw, 0.5rem) clamp(0.75rem, 3vw, 1rem)',
+                                  border: '1px solid hsl(38 70% 70%)',
+                                  borderRadius: 'clamp(0.25rem, 1.5vw, 0.375rem)',
+                                  backgroundColor: 'white',
+                                  color: 'hsl(38 80% 38%)',
+                                  fontSize: 'clamp(0.75rem, 2vw, 0.875rem)',
+                                  fontWeight: '500',
+                                  cursor: isVerificationButtonDisabled(property.verification_status) ? 'default' : 'pointer',
+                                  opacity: isVerificationButtonDisabled(property.verification_status) ? 0.55 : 1,
+                                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.375rem',
+                                }}
+                              >
+                                <ShieldCheck style={{ height: '0.875rem', width: '0.875rem' }} />
+                                {getVerificationButtonText(property.verification_status)}
                               </button>
                             </div>
                           </div>
@@ -951,7 +1052,8 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
                                   GH₵{Math.round(property.sale_price).toLocaleString()}
                                 </p>
                               </div>
-                              {getStatusBadge(property.listing_status)}
+                                {getStatusBadge(property.listing_status)}
+                                {getVerificationBadge(property.verification_status)}
                             </div>
                             <div style={{
                               display: 'grid',
@@ -1137,6 +1239,14 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
             </div>
           </div>
         )}
+
+        <VerificationRequestModal
+          isOpen={showVerifyModal}
+          onClose={() => { setShowVerifyModal(false); setVerifyTarget(null); }}
+          agentData={agentData}
+          selectedRental={verifyTarget}
+          verificationData={verificationData}
+        />
       </div>
     </>
   );

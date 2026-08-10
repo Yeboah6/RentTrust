@@ -3,9 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\{Auth, Log, Hash, Mail};
 use App\Models\User;
 use Illuminate\Support\Str;
 use App\Mail\AgentRegistration;
@@ -21,7 +19,7 @@ class AgentController extends Controller
     {
         $agents = User::where('role', 'agent')
             ->orWhere('role', 'landlord')
-            // ->whereIn('status', ['verified', 'unverified', 'pending'])
+            ->whereIn('status', 'verified')
             ->withCount('rentals')
             ->withCount('reviews')
             ->withAvg('reviews', 'overall_rating')
@@ -48,7 +46,7 @@ class AgentController extends Controller
         $validated['password'] = Hash::make($validated['password']);
         $validated['role']     = 'agent';
         $validated['status']   = 'unverified';
-        $validated['package']  = null; // No plan yet — modal will prompt them
+        $validated['package']  = null;
         $validated['user_id']  = Str::uuid();
 
         $agent = User::create($validated);
@@ -63,7 +61,7 @@ class AgentController extends Controller
                 dashboardUrl: route('free.agent.dashboard'),
             ));
         } catch (\Exception $e) {
-            \Log::error('Failed to send agent registration email: ' . $e->getMessage());
+            Log::error('Failed to send agent registration email: ' . $e->getMessage());
         }
 
         return redirect()->route('free.agent.dashboard')

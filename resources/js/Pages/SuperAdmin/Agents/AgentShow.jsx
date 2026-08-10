@@ -49,13 +49,6 @@ const STATUS_CFG = {
     inactive:  { label: 'Inactive',  bg: 'hsl(220 15% 93%)', color: 'hsl(220 15% 38%)', dot: 'hsl(220 15% 52%)', bar: 'hsl(220 15% 55%)' },
 };
 
-// const TIER_CFG = {
-//     premium:  { label: 'Premium',  bg: 'hsl(40 90% 93%)',  color: 'hsl(40 80% 30%)',  dot: 'hsl(40 80% 44%)' },
-//     pro:      { label: 'Pro',      bg: 'hsl(270 60% 95%)', color: 'hsl(270 55% 38%)', dot: 'hsl(270 55% 50%)' },
-//     standard: { label: 'Standard', bg: 'hsl(220 15% 93%)', color: 'hsl(220 15% 38%)', dot: 'hsl(220 15% 52%)' },
-//     basic:    { label: 'Basic',    bg: 'hsl(220 15% 93%)', color: 'hsl(220 15% 38%)', dot: 'hsl(220 15% 52%)' },
-// };
-
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const fmtDate = (v) => {
@@ -111,13 +104,10 @@ const normalise = (a) => ({
     company:         a.company           ?? '',
     location:       a.location        ?? '',
     bio:            a.bio            ?? a.about           ?? '',
-    // listings_count: a.listings_count ?? a.listings  ?? 0,
     active_listings:a.active_listings ?? 0,
     sold_count:     a.sold_count     ?? a.properties_sold ?? 0,
     rating:         a.rating         ?? a.average_rating  ?? null,
     reviews_count:  a.reviews_count  ?? 0,
-    // total_revenue:  a.total_revenue  ?? null,
-    is_verified:    a.is_verified    ?? a.verified        ?? false,
     avatar:         a.avatar         ?? a.profile_photo   ?? null,
     joined_at:      a.joined_at      ?? a.created_at      ?? '',
     last_active:    a.last_active    ?? a.last_login_at   ?? '',
@@ -371,7 +361,7 @@ const AgentShow = ({ agent: rawAgent}) => {
     };
 
     const isPending   = agent.status_key === 'pending';
-    const isActive    = agent.status_key === 'active' || agent.status_key === 'verified';
+    const isActive    = agent.status_key === 'verified';
     const isSuspended = agent.status_key === 'suspended';
 
     return (
@@ -404,13 +394,6 @@ const AgentShow = ({ agent: rawAgent}) => {
                             <h1 style={{ fontSize: '1.35rem', fontWeight: '900', color: 'hsl(220 25% 12%)', margin: '0 0 0.2rem', letterSpacing: '-0.02em' }}>{agent.name}</h1>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
                                 <StatusBadge sk={agent.status_key} />
-                                {/* <TierBadge tier={agent.tier} />
-                                {agent.is_verified && (
-                                    <span style={{ fontSize: '0.62rem', fontWeight: '800', backgroundColor: 'hsl(214 100% 95%)', color: 'hsl(214 80% 38%)', padding: '0.1rem 0.4rem', borderRadius: '0.3rem' }}>✓ VERIFIED</span>
-                                )}
-                                {agent.is_featured && (
-                                    <span style={{ fontSize: '0.62rem', fontWeight: '800', backgroundColor: 'hsl(40 90% 93%)', color: 'hsl(40 80% 30%)', padding: '0.1rem 0.4rem', borderRadius: '0.3rem' }}>⭐ FEATURED</span>
-                                )} */}
                                 <span style={{ fontSize: '0.72rem', color: 'hsl(220 15% 52%)' }}>#{agent._id} · Joined {fmtDate(agent.joined_at)}</span>
                                 {agent.last_active && (
                                     <span style={{ fontSize: '0.72rem', color: 'hsl(214 60% 45%)', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
@@ -479,7 +462,7 @@ const AgentShow = ({ agent: rawAgent}) => {
                                                 {agent.name.split(' ').map(w => w[0]).slice(0, 2).join('')}
                                               </div>
                                         }
-                                        {agent.is_verified && (
+                                        {agent.status === 'verified' && (
                                             <div style={{ position: 'absolute', bottom: 0, right: 0, width: '1.3rem', height: '1.3rem', borderRadius: '50%', backgroundColor: 'hsl(214 80% 50%)', border: '2.5px solid hsl(222 30% 14%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                                 <svg style={{ width: '0.6rem', height: '0.6rem' }} fill="white" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
                                             </div>
