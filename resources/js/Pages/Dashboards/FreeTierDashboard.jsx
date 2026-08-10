@@ -1092,6 +1092,27 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
                                 }}>
                                 Edit
                               </button>
+                              <button
+                                onClick={() => !isVerificationButtonDisabled(property.verification_status) && handleVerifyClick(property)}
+                                disabled={isVerificationButtonDisabled(property.verification_status)}
+                                className="action-button"
+                                style={{
+                                  width: '100%',
+                                  padding: 'clamp(0.5rem, 2vw, 0.5rem) clamp(0.75rem, 3vw, 1rem)',
+                                  border: '1px solid hsl(38 70% 70%)',
+                                  borderRadius: 'clamp(0.25rem, 1.5vw, 0.375rem)',
+                                  backgroundColor: 'white',
+                                  color: 'hsl(38 80% 38%)',
+                                  fontSize: 'clamp(0.75rem, 2vw, 0.875rem)',
+                                  fontWeight: '500',
+                                  cursor: isVerificationButtonDisabled(property.verification_status) ? 'default' : 'pointer',
+                                  opacity: isVerificationButtonDisabled(property.verification_status) ? 0.55 : 1,
+                                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.375rem',
+                                }}
+                              >
+                                <ShieldCheck style={{ height: '0.875rem', width: '0.875rem' }} />
+                                {getVerificationButtonText(property.verification_status)}
+                              </button>
                             </div>
                           </div>
                         ))}

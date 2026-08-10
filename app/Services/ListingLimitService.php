@@ -41,21 +41,22 @@ class ListingLimitService
      */
     public function countActiveRentals(User $user): int
     {
-        return Rental::where('user_id', $user->id)
-            ->orWhere('agent_id', $user->id)
+        return Rental::where(function ($q) use ($user) {
+                $q->where('user_id', $user->id)
+                  ->orWhere('agent_id', $user->id);
+            })
             ->where('purpose', 'rent')
             ->whereIn('status', ['approved', 'pending'])
-            ->where('is_sold', false)
+            ->where('is_rented', false)
             ->count();
     }
-
-    /**
-     * Count active sale listings for a user
-     */
+    
     public function countActiveSales(User $user): int
     {
-        return Rental::where('user_id', $user->id)
-            ->orWhere('agent_id', $user->id)
+        return Rental::where(function ($q) use ($user) {
+                $q->where('user_id', $user->id)
+                  ->orWhere('agent_id', $user->id);
+            })
             ->where('purpose', 'sale')
             ->whereIn('status', ['approved', 'pending'])
             ->where('is_sold', false)

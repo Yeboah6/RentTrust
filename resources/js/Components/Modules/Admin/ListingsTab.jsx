@@ -160,39 +160,29 @@ const ITEMS_PER_PAGE = 9;
 const ListingCard = ({ property, onView, onEdit, onDelete }) => {
     const price = fmtPrice(property);
     const isApproved = property.status === 'approved';
-    const isFeatured = toBool(property.is_featured);
-    const isSold = toBool(property.is_sold);
 
     return (
         <div style={{
             backgroundColor: 'white',
-            border: isFeatured ? '1px solid hsl(38 92% 50% / 0.4)' : '1px solid hsl(220 15% 91%)',
+            border: '1px solid hsl(220 15% 91%)',
             borderRadius: '0.875rem',
             overflow: 'hidden',
-            boxShadow: isFeatured 
-                ? '0 2px 12px hsl(38 92% 50% / 0.1), 0 1px 3px hsl(220 20% 15% / 0.04)' 
-                : '0 1px 3px hsl(220 20% 15% / 0.04)',
+            boxShadow: '0 1px 3px hsl(220 20% 15% / 0.04)',
             display: 'flex', flexDirection: 'column',
             transition: 'box-shadow 0.15s, border-color 0.15s',
         }}
-            onMouseEnter={e => e.currentTarget.style.boxShadow = isFeatured 
-                ? '0 4px 20px hsl(38 92% 50% / 0.18), 0 4px 14px hsl(220 20% 15% / 0.08)' 
-                : '0 4px 14px hsl(220 20% 15% / 0.08)'}
-            onMouseLeave={e => e.currentTarget.style.boxShadow = isFeatured 
-                ? '0 2px 12px hsl(38 92% 50% / 0.1), 0 1px 3px hsl(220 20% 15% / 0.04)' 
-                : '0 1px 3px hsl(220 20% 15% / 0.04)'}
+            onMouseEnter='0 4px 14px hsl(220 20% 15% / 0.08)'
+            onMouseLeave='0 1px 3px hsl(220 20% 15% / 0.04)'
         >
             {/* Status strip */}
             <div style={{ 
                 height: 3, 
-                background: isFeatured 
-                    ? 'linear-gradient(90deg, hsl(38 92% 50%), hsl(28 90% 45%))' 
-                    : property.status === 'approved' || property.status === 'active' 
+                background: property.status === 'approved' || property.status === 'active' 
                         ? 'hsl(152 60% 40%)' 
                         : property.status === 'pending' 
                             ? 'hsl(38 92% 50%)' 
                             : 'hsl(220 15% 60%)',
-                opacity: isFeatured ? 1 : 0.7,
+                opacity: 0.7,
             }} />
 
             {/* Card body */}
@@ -209,7 +199,7 @@ const ListingCard = ({ property, onView, onEdit, onDelete }) => {
                             }}>
                                 {property.title || 'Untitled Property'}
                             </h3>
-                            <StatusBadge status={property.status} /> {isFeatured && <FeaturedBadge />} {isSold && <SoldBadge />}
+                            <StatusBadge status={property.status} />
                         </div>
                         <p style={{ 
                             margin: '0.15rem 0 0', fontSize: '0.7rem', color: 'hsl(220 15% 50%)',
@@ -362,7 +352,6 @@ const ListingsTab = ({
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
     const [typeFilter, setTypeFilter] = useState('all');
-    const [featuredFilter, setFeaturedFilter] = useState('all');
     const [currentPage, setCurrentPage] = useState(1);
 
     // Map filter values to actual data fields
@@ -398,13 +387,9 @@ const ListingsTab = ({
             // Type filter
             const matchesType = typeFilter === 'all' || property.purpose === typeFilter;
             
-            // Featured filter
-            const matchesFeatured = featuredFilter === 'all' || 
-                (featuredFilter === 'featured' ? toBool(property.is_featured) : !toBool(property.is_featured));
-            
-            return matchesSearch && matchesStatus && matchesType && matchesFeatured;
+            return matchesSearch && matchesStatus && matchesType;
         });
-    }, [listings, searchTerm, statusFilter, typeFilter, featuredFilter]);
+    }, [listings, searchTerm, statusFilter, typeFilter]);
 
     // Reset page when any filter changes
     const handleFilterChange = (setter) => (e) => {
@@ -554,24 +539,6 @@ const ListingsTab = ({
                     <option value="sale">For Sale</option>
                     <option value="rent">For Rent</option>
                 </select>
-
-                {/* Featured filter */}
-                <select value={featuredFilter} onChange={handleFilterChange(setFeaturedFilter)}
-                    style={{
-                        padding: '0.65rem 1rem', borderRadius: '0.625rem',
-                        border: '1px solid hsl(220 15% 88%)',
-                        backgroundColor: 'white',
-                        fontSize: '0.8rem', color: 'hsl(220 25% 15%)',
-                        fontFamily: 'inherit', minWidth: '130px',
-                        outline: 'none', cursor: 'pointer',
-                    }}
-                    onFocus={e => e.currentTarget.style.borderColor = 'hsl(174 62% 40%)'}
-                    onBlur={e => e.currentTarget.style.borderColor = 'hsl(220 15% 88%)'}
-                >
-                    <option value="all">All</option>
-                    <option value="featured">Featured</option>
-                    <option value="not-featured">Not Featured</option>
-                </select>
             </div>
 
             {/* Results info */}
@@ -676,14 +643,14 @@ const ListingsTab = ({
                         fontSize: '0.95rem', fontWeight: 800, 
                         color: 'hsl(220 25% 15%)', margin: '0 0 0.35rem' 
                     }}>
-                        {searchTerm || statusFilter !== 'all' || typeFilter !== 'all' || featuredFilter !== 'all' ? 'No Listings Found' : 'No Listings Yet'}
+                        {searchTerm || statusFilter !== 'all' || typeFilter !== 'all' ? 'No Listings Found' : 'No Listings Yet'}
                     </h3>
                     <p style={{ color: 'hsl(220 15% 52%)', fontSize: '0.82rem', margin: '0 0 1.25rem' }}>
-                        {(searchTerm || statusFilter !== 'all' || typeFilter !== 'all' || featuredFilter !== 'all')
+                        {(searchTerm || statusFilter !== 'all' || typeFilter !== 'all')
                             ? 'No listings match your search criteria. Try different filters.'
                             : 'Add the first listing to get started.'}
                     </p>
-                    {!searchTerm && statusFilter === 'all' && typeFilter === 'all' && featuredFilter === 'all' && (
+                    {!searchTerm && statusFilter === 'all' && typeFilter === 'all' && (
                         <button
                             onClick={onAddListing}
                             style={{

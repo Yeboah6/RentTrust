@@ -97,29 +97,10 @@ const Gift = ({ style }) => (
   </svg>
 );
 
-// Plan badge for agent cards
-// const PlanBadge = ({ plan }) => {
-//   const slug = plan?.slug ?? 'free';
-//   const label = plan?.name ?? slug.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-//   const configs = {
-//     pro:      { bg: 'hsl(174 62% 32%)',   text: 'white' },
-//     verified: { bg: 'hsl(214 100% 50%)',  text: 'white' },
-//     elite:    { bg: 'hsl(174 62% 32%)',   text: 'white' },
-//     free:     { bg: 'hsl(40 20% 88%)',    text: 'hsl(200 25% 35%)' },
-//   };
-//   const c = configs[slug] ?? configs.free;
-//   return (
-//     <span style={{ display: 'inline-block', padding: '0.15rem 0.5rem', borderRadius: '9999px', fontSize: '0.68rem', fontWeight: '700', backgroundColor: c.bg, color: c.text, letterSpacing: '0.03em' }}>
-//       {label}
-//     </span>
-//   );
-// };
-
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, agentVerifications, listingVerifications, totalVerifications, totalPendingVerifications, plans, locations, propertyTypes, amenities, views, totalViews, inquiries, subscriptions, viewCount, subsCount }) => {
   const { auth } = usePage().props;
-  // const findPlan = (packageSlug) => plans?.find(p => p.slug === packageSlug) ?? null;
   const [activeTab, setActiveTab] = useState("overview");
   const [selectedAgent, setSelectedAgent] = useState(null);
   const [showDialog, setShowDialog] = useState(false);
@@ -133,13 +114,6 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, agent
   // Grant subscription modal state
   const [grantTarget, setGrantTarget] = useState(null);
   const [showGrantModal, setShowGrantModal] = useState(false);
-  // const [agentsFilter, setAgentsFilter] = useState('');
-  // const [listingsFilter, setListingsFilter] = useState('');
-  // const [listingsStatusFilter, setListingsStatusFilter] = useState('all');
-  // const [reportsFilter, setReportsFilter] = useState('');
-  // const [reportsStatusFilter, setReportsStatusFilter] = useState('all');
-  // const [reviewsFilter, setReviewsFilter] = useState('');
-  // const [reviewsRatingFilter, setReviewsRatingFilter] = useState('all');
   const [toast, setToast] = useState(null);
 
   const showToast = (title, description, variant = "success") => {
@@ -161,13 +135,6 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, agent
   const agents  = agentData || [];
   const properties = rentals || [];
 
-
-  // ── Handlers ──────────────────────────────────────────────────────────────
-  // const handleVerifyClick = (agentId) => {
-  //   setSelectedAgent(agents.find(a => a.id === agentId));
-  //   setShowDialog(true);
-  // };
-
   const handleViewClick = (rental) => {
     setSelectedRental(rentals.find(r => r.id === rental.id));
     setShowViewModal(true);
@@ -177,11 +144,6 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, agent
     setSelectedAgent(agentData?._original ?? agentData);
     setShowAgentProfile(true);
   };
-
-  // const handleEditAgent = (agentData) => {
-  //   setSelectedAgent(agentData?._original ?? agentData);
-  //   setShowEditAgentModal(true);
-  // };
 
   const handleEditClick = (rental) => {
     setSelectedRental(rentals.find(r => r.id === rental.id));
@@ -202,29 +164,6 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, agent
     });
   };
 
-  // const handleSuspendAgent = (agentId) => {
-  //   const a = agents.find(a => a.id === agentId);
-  //   if (!a) return;
-  //   const isSuspended = a.status === 'suspended';
-  //   const newStatus   = isSuspended ? 'unverified' : 'suspended';
-  //   const action      = isSuspended ? 'unsuspend' : 'suspend';
-  //   if (!confirm(`Are you sure you want to ${action} ${a.fullName}?`)) return;
-  //   router.put(`/admin/agents/${agentId}/suspend`, { status: newStatus }, {
-  //     onSuccess: () => showToast(isSuspended ? 'Agent Unsuspended' : 'Agent Suspended', `${a.fullName} has been ${action}ed.`),
-  //     onError: () => showToast('Failed', `Unable to ${action} agent.`, 'error'),
-  //   });
-  // };
-
-  // const handleApproveToggle = (property) => {
-  //   const isApproved = property.status === 'approved';
-  //   const action     = isApproved ? 'revert to pending' : 'approve';
-  //   if (!confirm(`Are you sure you want to ${action} "${property.title}"?`)) return;
-  //   router.put(`/admin/listings/${property.id}/toggle-approval`, {}, {
-  //     onSuccess: () => showToast(isApproved ? 'Reverted to Pending' : 'Listing Approved', `${property.title} updated.`),
-  //     onError: () => showToast('Action Failed', `Unable to ${action}.`, 'error'),
-  //   });
-  // };
-
   const handleDeleteListing = (property) => {
     if (!confirm(`Are you sure you want to delete "${property.title}"?`)) return;
     router.delete(`/admin/listings/${property.id}`, {
@@ -232,19 +171,6 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, agent
       onError: () => showToast('Failed', 'Unable to delete listing.', 'error'),
     });
   };
-
-  // const handleResendInvitation = (agentItem) => {
-  //   if (!confirm(`Resend invitation email to ${agentItem.name}?`)) return;
-  //   router.post(`/admin/agents/${agentItem.id}/resend-invitation`, {}, {
-  //     onSuccess: () => showToast('Invitation Sent', `Invitation email sent to ${agentItem.email}`),
-  //     onError: () => showToast('Failed', 'Unable to resend invitation.', 'error'),
-  //   });
-  // };
-
-  // const renderStars = (rating) =>
-  //   Array.from({ length: 5 }).map((_, i) => (
-  //     <Star key={i} style={{ height: '1rem', width: '1rem', color: i < rating ? 'hsl(38 92% 50%)' : 'hsl(200 15% 45%)', fill: i < rating ? 'hsl(38 92% 50%)' : 'none' }} />
-  //   ));
 
   const getStatusBadge = (status) => {
     status = status || '';
@@ -266,166 +192,6 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, agent
       </span>
     );
   };
-
-  // const matchesFilter = (value, query) => {
-  //   if (!query) return true;
-  //   return value?.toString().toLowerCase().includes(query.trim().toLowerCase());
-  // };
-
-  // const filteredAgents = agents.filter(agentItem => {
-  //   const query = agentsFilter.trim().toLowerCase();
-  //   if (!query) return true;
-  //   return [agentItem.name, agentItem.email, agentItem.company, agentItem.status, agentItem.package]
-  //     .filter(Boolean)
-  //     .some(value => matchesFilter(value, query));
-  // });
-
-  // const filteredListings = properties.filter(property => {
-  //   const query = listingsFilter.trim().toLowerCase();
-  //   const matchesSearch = !query || [property.title, property.address, property.city, property.agent_name, property.status, property.purpose]
-  //     .filter(Boolean)
-  //     .some(value => matchesFilter(value, query));
-  //   const matchesStatus = listingsStatusFilter === 'all' || property.status === listingsStatusFilter;
-  //   return matchesSearch && matchesStatus;
-  // });
-
-  // const filteredReports = reports.filter(report => {
-  //   const query = reportsFilter.trim().toLowerCase();
-  //   const matchesSearch = !query || [report.full_name, report.email, report.report_type, report.report_description, report.status]
-  //     .filter(Boolean)
-  //     .some(value => matchesFilter(value, query));
-  //   const matchesStatus = reportsStatusFilter === 'all' || report.status === reportsStatusFilter;
-  //   return matchesSearch && matchesStatus;
-  // });
-
-  // const filteredReviews = reviews.filter(review => {
-  //   const query = reviewsFilter.trim().toLowerCase();
-  //   const matchesSearch = !query || [review.full_name, review.comments, review.review_type, review.rental_id?.toString(), review.response]
-  //     .filter(Boolean)
-  //     .some(value => matchesFilter(value, query));
-  //   const matchesRating = reviewsRatingFilter === 'all' || review.overall_rating?.toString() === reviewsRatingFilter;
-  //   return matchesSearch && matchesRating;
-  // });
-
-  {/* ─── AdminListingSection ─────────────────────────────────────────────────── */}
- 
-  // const AdminListingSection = ({ title, emoji, count, accentColor, accentBg, borderColor, children }) => (
-  //     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-      
-  //         {/* Section heading strip */}
-  //         <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', padding: '0.5rem 0.875rem', borderRadius: '0.5rem', backgroundColor: accentBg, border: `1px solid ${borderColor}` }}>
-  //             <span style={{ fontSize: '1rem', lineHeight: 1 }}>{emoji}</span>
-  //             <h3 style={{ margin: 0, fontSize: '0.9rem', fontWeight: '700', color: accentColor }}>
-  //                 {title}
-  //             </h3>
-  //             <span style={{ marginLeft: 'auto', fontSize: '0.72rem', fontWeight: '700', color: accentColor, backgroundColor: 'white', border: `1px solid ${borderColor}`, padding: '0.1rem 0.5rem', borderRadius: '999px' }}>
-  //                 {count}
-  //             </span>
-  //         </div>
-  
-  //         {/* Card grid */}
-  //         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
-  //             {children}
-  //         </div>
-  //     </div>
-  // );
-  
-  
-  {/* ─── AdminListingCard ────────────────────────────────────────────────────── */}
-  // const AdminListingCard = ({ property, onView, onEdit, onApproveToggle, onDelete, getStatusBadge }) => {
-  //     const isRent     = property.purpose === 'rent';
-  //     const isApproved = property.status === 'approved';
-  
-  //     const priceStr = isRent
-  //         ? `GH₵${property.rent_min?.toLocaleString() ?? '—'} – GH₵${property.rent_max?.toLocaleString() ?? '—'} / yr`
-  //         : `GH₵${property.sale_price?.toLocaleString() ?? '—'}`;
-  
-  //     const priceColor = isRent ? 'hsl(174 55% 28%)' : 'hsl(36 75% 30%)';
-  
-  //     return (
-  //         <div style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.75rem', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
-          
-  //             {/* Property info */}
-  //             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.75rem' }}>
-  //                 <div style={{ flex: 1, minWidth: 0 }}>
-  //                     <h3 style={{ margin: '0 0 0.2rem', fontWeight: '600', color: 'hsl(200 25% 15%)', fontSize: '0.9375rem', wordBreak: 'break-word' }}>
-  //                         {property.title}
-  //                     </h3>
-  //                     <p style={{ margin: '0 0 0.15rem', fontSize: '0.8rem', color: 'hsl(200 15% 48%)', wordBreak: 'break-word' }}>
-  //                         {[property.address, property.city].filter(Boolean).join(', ')}
-  //                     </p>
-  //                     <p style={{ margin: '0 0 0.3rem', fontSize: '0.75rem', color: 'hsl(200 15% 52%)' }}>
-  //                         Agent: <strong style={{ color: 'hsl(200 25% 25%)', fontWeight: '600' }}>{property.agent_name ?? '—'}</strong>
-  //                     </p>
-  //                     <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: '600', color: priceColor }}>
-  //                         {priceStr}
-  //                     </p>
-  //                 </div>
-  //                 <div style={{ flexShrink: 0 }}>
-  //                     {getStatusBadge(property.status)}
-  //                 </div>
-  //             </div>
-      
-  //             {/* Divider */}
-  //             <div style={{ height: '1px', backgroundColor: 'hsl(40 20% 92%)' }} />
-      
-  //             {/* Action buttons */}
-  //             <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-  //                 <ActionBtn label="View"   onClick={() => onView(property)}
-  //                     bg="white" color="hsl(174 55% 28%)" border="1px solid hsl(40 20% 88%)"
-  //                     hoverBg="hsl(174 62% 32% / 0.07)" />
-  
-  //                 <ActionBtn label="Edit"   onClick={() => onEdit(property)}
-  //                     bg="white" color="hsl(200 25% 28%)" border="1px solid hsl(40 20% 88%)"
-  //                     hoverBg="hsl(220 15% 95%)" />
-  
-  //                 <ActionBtn
-  //                     label={isApproved ? 'Revert' : 'Approve'}
-  //                     onClick={() => onApproveToggle(property)}
-  //                     bg={isApproved
-  //                         ? 'linear-gradient(135deg, hsl(300 70% 50%), hsl(300 60% 40%))'
-  //                         : 'linear-gradient(135deg, hsl(152 60% 40%), hsl(152 50% 35%))'}
-  //                     color="white" border="none"
-  //                     hoverFilter="brightness(0.9)" />
-  
-  //                 <ActionBtn label="Delete" onClick={() => onDelete(property)}
-  //                     bg="white" color="hsl(0 65% 48%)" border="1px solid hsl(0 65% 82%)"
-  //                     hoverBg="hsl(0 65% 97%)" />
-  //             </div>
-  //         </div>
-  //     );
-  // };
-  
-  
-  {/* ─── ActionBtn (shared button atom) ─────────────────────────────────────── */}
-  
-  // const ActionBtn = ({ label, onClick, bg, color, border, hoverBg, hoverFilter }) => {
-  //   const [hovered, setHovered] = useState(false);
-  //   return (
-  //       <button
-  //           onClick={onClick}
-  //           onMouseEnter={() => setHovered(true)}
-  //           onMouseLeave={() => setHovered(false)}
-  //           style={{
-  //               padding: '0.375rem 0.75rem',
-  //               borderRadius: '0.375rem',
-  //               border: border ?? 'none',
-  //               background: hovered && hoverBg ? hoverBg : bg,
-  //               color,
-  //               fontSize: '0.8125rem',
-  //               fontWeight: '500',
-  //               cursor: 'pointer',
-  //               fontFamily: 'inherit',
-  //               filter: hovered && hoverFilter ? hoverFilter : 'none',
-  //               transition: 'background-color 0.15s, filter 0.15s',
-  //           }}>
-  //           {label}
-  //       </button>
-  //   );
-  // };
-
-  // Check if agent can be upgraded (not already on Pro)
-  // const canUpgrade = (agentItem) => (agentItem.package ?? 'free') !== 'pro';
 
   return (
     <>

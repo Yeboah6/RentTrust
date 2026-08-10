@@ -67,7 +67,7 @@ class UpdateListingRequest extends FormRequest
         if ($purpose === 'rent') {
             $rules['rentMin']         = 'required|numeric|min:0';
             $rules['rentMax']         = 'required|numeric|min:0|gte:rentMin';
-            $rules['advanceDuration'] = 'required|integer|min:1|max:5';
+            $rules['advanceDuration'] = 'required|integer|min:1|max:9';
             $rules['salePrice']       = 'prohibited';
         } else {
             $rules['salePrice']       = 'required|numeric|min:0';

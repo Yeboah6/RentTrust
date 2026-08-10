@@ -1170,6 +1170,10 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData, locations
                           <span style={{ color: 'hsl(200 15% 45%)' }}>Location:</span>
                           <span style={{ color: 'hsl(200 25% 15%)', textAlign: 'right' }}>{data.area}, {data.city}</span>
                         </div>
+                        <div className="flex justify-between gap-2">
+                          <span style={{ color: 'hsl(200 15% 45%)' }}>Address:</span>
+                          <span style={{ color: 'hsl(200 25% 15%)', textAlign: 'right' }}>{data.address}</span>
+                        </div>
                       </div>
                     </div>
 

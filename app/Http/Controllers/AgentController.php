@@ -17,14 +17,16 @@ class AgentController extends Controller
 
     public function agent()
     {
-        $agents = User::where('role', 'agent')
-            ->orWhere('role', 'landlord')
-            ->whereIn('status', 'verified')
+        $agents = User::where(function ($query) {
+                $query->where('role', 'agent')
+                      ->orWhere('role', 'landlord');
+            })
+            ->where('status', 'verified')
             ->withCount('rentals')
             ->withCount('reviews')
             ->withAvg('reviews', 'overall_rating')
             ->get();
-
+    
         return inertia('AgentsPage', [
             'agents' => $agents,
         ]);

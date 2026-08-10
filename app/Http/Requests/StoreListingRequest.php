@@ -49,7 +49,7 @@ class StoreListingRequest extends FormRequest
         } else {
             $rules['rentMin']         = 'required|numeric|min:0';
             $rules['rentMax']         = 'required|numeric|min:0|gte:rentMin';
-            $rules['advanceDuration'] = 'required|in:1,2,3,4,5';
+            $rules['advanceDuration'] = 'required|in:1,2,3,4,5,6,7,8,9';
             $rules['salePrice']       = 'prohibited';
         }
 

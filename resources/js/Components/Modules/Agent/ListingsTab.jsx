@@ -25,6 +25,8 @@ const Icons = {
     x:          <Ico d="M6 18L18 6M6 6l12 12" size="0.8rem" />,
     tag:        <Ico d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />,
     chevronLeft:  <Ico d="M15 19l-7-7 7-7" />,
+    bed:        <Ico d="M2 4v16M2 8h20M2 8l2-4h16l2 4M6 12v4m4-4v4m4-4v4m4-4v4M2 20h20" size="0.78rem" />,
+    bath:       <Ico d="M4 4v5a3 3 0 003 3h0M9 12v5a3 3 0 01-3 3M5 4h14M5 4l1-2h12l1 2M7 12h10v5a3 3 0 01-3 3h0a3 3 0 01-3-3v-5z" size="0.78rem" />,
     chevronRight: <Ico d="M9 5l7 7-7 7" />,
     empty:      <Ico d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" size="2.5rem" sw={1.2} />,
 };
@@ -74,35 +76,6 @@ const VerificationBadge = ({ status }) => {
         </span>
     );
 };
-
-
-const SoldBadge = () => (
-    <span style={{
-        display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
-        padding: '0.18rem 0.55rem', borderRadius: 999,
-        fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.04em',
-        backgroundColor: 'hsl(0 70% 45% / 0.12)',
-        color: 'hsl(0 70% 45%)',
-        border: '1px solid hsl(0 70% 45% / 0.3)',
-        flexShrink: 0,
-    }}>
-        {Icons.tag} Sold
-    </span>
-);
-
-const RentedBadge = () => (
-    <span style={{
-        display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
-        padding: '0.18rem 0.55rem', borderRadius: 999,
-        fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.04em',
-        backgroundColor: 'hsl(0 70% 45% / 0.12)',
-        color: 'hsl(0 70% 45%)',
-        border: '1px solid hsl(0 70% 45% / 0.3)',
-        flexShrink: 0,
-    }}>
-        {Icons.tag} Rented
-    </span>
-);
 
 // ─── Pagination ───────────────────────────────────────────────────────────────
 const Pagination = ({ currentPage, totalPages, onPageChange }) => {
@@ -193,10 +166,11 @@ const buildLatestVerificationMap = (records = []) => {
 };
 
 // ─── Listing Card ─────────────────────────────────────────────────────────────
-const ListingCard = ({ property, onView, onEdit, onVerify, getVerificationButtonText, isVerificationButtonDisabled, onFeatureRequest }) => {
+const ListingCard = ({ property, onView, onEdit, onVerify, getVerificationButtonText, isVerificationButtonDisabled }) => {
     const price = fmtPrice(property);
-    const isSold = toBool(property.is_sold);
     const [requesting, setRequesting] = useState(false);
+
+    console.log(property)
 
     return (
         <>
@@ -209,28 +183,22 @@ const ListingCard = ({ property, onView, onEdit, onVerify, getVerificationButton
                 display: 'flex', flexDirection: 'column',
                 transition: 'box-shadow 0.15s, border-color 0.15s',
             }}
-                onMouseEnter={e => e.currentTarget.style.boxShadow = isFeatured
-                    ? '0 4px 20px hsl(38 92% 50% / 0.18), 0 4px 14px hsl(220 20% 15% / 0.08)'
-                    : '0 4px 14px hsl(220 20% 15% / 0.08)'}
-                onMouseLeave={e => e.currentTarget.style.boxShadow = isFeatured
-                    ? '0 2px 12px hsl(38 92% 50% / 0.1), 0 1px 3px hsl(220 20% 15% / 0.04)'
-                    : '0 1px 3px hsl(220 20% 15% / 0.04)'}
+                onMouseEnter='0 4px 14px hsl(220 20% 15% / 0.08)'
+                onMouseLeave='0 1px 3px hsl(220 20% 15% / 0.04)'
             >
                 {/* Status strip */}
                 <div style={{
-                    height: 3,
-                    background: isFeatured
-                        ? 'linear-gradient(90deg, hsl(38 92% 50%), hsl(28 90% 45%))'
-                        : property.effective_listing_status === 'active'
-                            ? 'hsl(152 60% 40%)'
-                            : property.verification_request_status === 'pending'
-                                ? 'hsl(38 92% 50%)'
+                    height: 3, 
+                    background: property.status === 'approved' || property.status === 'active' 
+                            ? 'hsl(152 60% 40%)' 
+                            : property.status === 'pending' 
+                                ? 'hsl(38 92% 50%)' 
                                 : 'hsl(220 15% 60%)',
                     opacity: 0.7,
                 }} />
 
                 <div style={{ padding: '1rem', flex: 1, display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: '0.5rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.5rem' }}>
                         <div style={{ minWidth: 0, flex: 1 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem', flexWrap: 'wrap' }}>
                                 <h3 style={{
@@ -242,7 +210,6 @@ const ListingCard = ({ property, onView, onEdit, onVerify, getVerificationButton
                                 </h3>
                                 <AvailabilityBadge status={property.effective_listing_status} />
                                 <VerificationBadge status={property.verification_request_status || 'unverified'} />
-                                {isSold && <SoldBadge />}
                             </div>
                             <p style={{ margin: '0 0 0.35rem', fontSize: '0.7rem', color: 'hsl(220 15% 50%)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                                 {Icons.mapPin} {property.address}, {property.city}
@@ -250,16 +217,6 @@ const ListingCard = ({ property, onView, onEdit, onVerify, getVerificationButton
                         </div>
                     </div>
 
-                    {/* <div style={{
-                        padding: '0.65rem 0.75rem',
-                        backgroundColor: isFeatured ? 'hsl(38 92% 50% / 0.04)' : 'hsl(220 15% 97%)',
-                        borderRadius: '0.5rem',
-                        border: isFeatured ? '1px solid hsl(38 92% 50% / 0.15)' : '1px solid hsl(220 15% 93%)',
-                        display: 'flex', alignItems: 'baseline', gap: '0.25rem',
-                    }}>
-                        <span style={{ fontSize: '1rem', fontWeight: 800, color: price.color }}>{price.text}</span>
-                        {price.sub && <span style={{ fontSize: '0.68rem', color: 'hsl(220 15% 50%)', fontWeight: 600 }}>{price.sub}</span>}
-                    </div> */}
                 </div>
 
                 <div style={{ borderTop: '1px solid hsl(220 15% 93%)', padding: '0.6rem 1rem', backgroundColor: 'hsl(220 15% 98.5%)', display: 'flex', gap: '0.4rem', flexWrap: 'wrap', alignItems: 'center' }}>
@@ -287,7 +244,6 @@ const ListingsTab = ({
     onView,
     onEdit,
     onVerify,
-    onFeatureRequest,
     verificationData = [],
     getVerificationButtonText,
     isVerificationButtonDisabled,
@@ -295,7 +251,6 @@ const ListingsTab = ({
     const [searchTerm, setSearchTerm] = useState('');
     const [availabilityFilter, setAvailabilityFilter] = useState('all');
     const [verificationFilter, setVerificationFilter] = useState('all');
-    const [featuredFilter, setFeaturedFilter] = useState('all');
     const [currentPage, setCurrentPage] = useState(1);
 
     const latestVerificationByListing = useMemo(
@@ -324,11 +279,10 @@ const ListingsTab = ({
             );
             const matchesAvailability = availabilityFilter === 'all' || property.effective_listing_status === availabilityFilter;
             const matchesVerification = verificationFilter === 'all' || (property.verification_request_status || 'unverified') === verificationFilter;
-            const matchesFeatured = featuredFilter === 'all' ||
-                (featuredFilter === 'featured' ? toBool(property.is_featured) : !toBool(property.is_featured));
-            return matchesSearch && matchesAvailability && matchesVerification && matchesFeatured;
+
+            return matchesSearch && matchesAvailability && matchesVerification;
         });
-    }, [liveProperties, searchTerm, availabilityFilter, verificationFilter, featuredFilter]);
+    }, [liveProperties, searchTerm, availabilityFilter, verificationFilter]);
 
     const rentals = filteredProperties.filter(p => p.purpose !== 'sale');
     const sales = filteredProperties.filter(p => p.purpose === 'sale');
@@ -357,20 +311,14 @@ const ListingsTab = ({
         setCurrentPage(1);
     };
 
-    // const handleFeaturedChange = (e) => {
-    //     setFeaturedFilter(e.target.value);
-    //     setCurrentPage(1);
-    // };
-
     const clearFilters = () => {
         setSearchTerm('');
         setAvailabilityFilter('all');
         setVerificationFilter('all');
-        setFeaturedFilter('all');
         setCurrentPage(1);
     };
 
-    const hasFilters = searchTerm.trim() !== '' || availabilityFilter !== 'all' || verificationFilter !== 'all' || featuredFilter !== 'all';
+    const hasFilters = searchTerm.trim() !== '' || availabilityFilter !== 'all' || verificationFilter !== 'all';
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -457,25 +405,6 @@ const ListingsTab = ({
                     ))}
                 </select>
 
-                {/* <select
-                    value={featuredFilter}
-                    onChange={handleFeaturedChange}
-                    style={{
-                        padding: '0.65rem 1rem', borderRadius: '0.625rem',
-                        border: '1px solid hsl(220 15% 88%)',
-                        backgroundColor: 'white',
-                        fontSize: '0.8rem', color: 'hsl(220 25% 15%)',
-                        fontFamily: 'inherit', minWidth: '140px',
-                        outline: 'none', cursor: 'pointer',
-                    }}
-                    onFocus={e => e.currentTarget.style.borderColor = 'hsl(174 62% 40%)'}
-                    onBlur={e => e.currentTarget.style.borderColor = 'hsl(220 15% 88%)'}
-                >
-                    <option value="all">All</option>
-                    <option value="featured">Featured</option>
-                    <option value="not-featured">Not Featured</option>
-                </select> */}
-
                 {hasFilters && (
                     <button onClick={clearFilters}
                         style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', padding: '0.35rem 0.7rem', borderRadius: '0.5rem', border: '1px solid hsl(220 15% 86%)', backgroundColor: 'hsl(220 15% 96%)', color: 'hsl(220 15% 44%)', fontSize: '0.73rem', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
@@ -505,7 +434,6 @@ const ListingsTab = ({
                                 onView={onView}
                                 onEdit={onEdit}
                                 onVerify={onVerify}
-                                onFeatureRequest={onFeatureRequest}
                                 getVerificationButtonText={getVerificationButtonText}
                                 isVerificationButtonDisabled={isVerificationButtonDisabled}
                             />
@@ -535,7 +463,6 @@ const ListingsTab = ({
                                 onView={onView}
                                 onEdit={onEdit}
                                 onVerify={onVerify}
-                                onFeatureRequest={onFeatureRequest}
                                 getVerificationButtonText={getVerificationButtonText}
                                 isVerificationButtonDisabled={isVerificationButtonDisabled}
                             />

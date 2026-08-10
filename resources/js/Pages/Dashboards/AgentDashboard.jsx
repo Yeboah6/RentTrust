@@ -124,7 +124,6 @@ const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views
             variant: "success"
           });
           setTimeout(() => setShowToast(null), 3000);
-          // Optionally refresh the page or update the listing status
           window.location.reload();
         },
         onError: (errors) => {
@@ -177,8 +176,10 @@ const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views
       total_reviews: rental.reviews_count || 0,
       views: rental.views_count || 0,
       inquiries: rental.inquiries_count || 0,
-      is_featured: rental.is_featured,
       is_sold: rental.is_sold,
+      bedrooms: rental.bedrooms || 0,
+      bathrooms: rental.bathrooms || 0,
+      property_type: rental.property_type || "Unknown",
     }))
     : [];
 
