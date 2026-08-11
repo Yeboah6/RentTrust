@@ -7,6 +7,7 @@ import EditRentals from "@/Components/Modules/EditRentals";
 import ViewRentals from "@/Components/Modules/ViewRental";
 import PricingModal from "@/Components/Modules/PricingModal";
 import VerificationRequestModal from "@/Components/Modules/Agent/VerificationRequestModal";
+import ListingCard from "@/Components/Modules/FreeTier/ListingCard";
 
 // Icon components (unchanged)
 const Home = ({ style }) => (
@@ -179,6 +180,9 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
         rent_min: rental.rent_min || 0,
         rent_max: rental.rent_max || 0,
         sale_price: rental.sale_price || 0,
+        bedrooms: rental.bedrooms ?? null,
+        bathrooms: rental.bathrooms ?? null,
+        imageUrl: rental.images?.[0] ? `/storage/rental_images/${rental.images[0]}` : null,
         listing_status: rental?.status ? rental.status : "unverified",
         views: rental.views_count || 0,
         inquiries: rental.inquiries_count || 0,
@@ -889,110 +893,13 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
                       </h3>
                       <div className="listing-grid">
                         {properties.filter(p => p.purpose === 'rent').map((property) => (
-                          <div key={property.id} style={{
-                            backgroundColor: 'white',
-                            border: '1px solid hsl(40 20% 88%)',
-                            borderRadius: 'clamp(0.5rem, 2vw, 0.75rem)',
-                            padding: 'clamp(0.75rem, 2vw, 1rem)',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: 'clamp(0.75rem, 2vw, 1rem)'
-                          }}>
-                            <div style={{
-                              display: 'flex',
-                              justifyContent: 'space-between',
-                              alignItems: 'start',
-                              gap: 'clamp(0.5rem, 2vw, 1rem)'
-                            }}>
-                              <div style={{ flex: 1, minWidth: 0 }}>
-                                <h3 style={{
-                                  color: 'hsl(200 25% 15%)',
-                                  marginBottom: 'clamp(0.125rem, 1vw, 0.25rem)',
-                                  fontSize: 'clamp(0.875rem, 2.5vw, 1rem)',
-                                  fontWeight: '600',
-                                  wordBreak: 'break-word'
-                                }}>
-                                  {property.title}
-                                </h3>
-                                <p style={{
-                                  fontSize: 'clamp(0.75rem, 2vw, 0.875rem)',
-                                  color: 'hsl(200 15% 45%)',
-                                  marginBottom: 'clamp(0.25rem, 1vw, 0.5rem)',
-                                  wordBreak: 'break-word'
-                                }}>
-                                  {property.address}, {property.city}
-                                </p>
-                                <p style={{
-                                  fontSize: 'clamp(0.75rem, 2vw, 0.875rem)',
-                                  color: 'hsl(174 62% 32%)',
-                                  fontWeight: '500'
-                                }}>
-                                  GH₵{Math.round(property.rent_min).toLocaleString()} – GH₵{Math.round(property.rent_max).toLocaleString()} / month
-                                </p>
-                              </div>
-                                {getStatusBadge(property.listing_status)}
-                                {getVerificationBadge(property.verification_status)}
-                            </div>
-                            <div style={{
-                              display: 'grid',
-                              gridTemplateColumns: '1fr 1fr',
-                              gap: 'clamp(0.375rem, 1.5vw, 0.5rem)'
-                            }}>
-                              <button
-                                onClick={() => handleViewClick(property)}
-                                className="action-button"
-                                style={{
-                                  padding: 'clamp(0.375rem, 2vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem)',
-                                  border: '1px solid hsl(40 20% 88%)',
-                                  borderRadius: 'clamp(0.25rem, 1.5vw, 0.375rem)',
-                                  backgroundColor: 'white',
-                                  color: 'hsl(174 62% 32%)',
-                                  fontSize: 'clamp(0.75rem, 2vw, 0.875rem)',
-                                  fontWeight: '500',
-                                  cursor: 'pointer',
-                                  textAlign: 'center'
-                                }}>
-                                View
-                              </button>
-                              <button
-                                onClick={() => handleEditClick(property)}
-                                className="action-button"
-                                style={{
-                                  padding: 'clamp(0.375rem, 2vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem)',
-                                  border: '1px solid hsl(40 20% 88%)',
-                                  borderRadius: 'clamp(0.25rem, 1.5vw, 0.375rem)',
-                                  backgroundColor: 'white',
-                                  color: 'hsl(174 62% 32%)',
-                                  fontSize: 'clamp(0.75rem, 2vw, 0.875rem)',
-                                  fontWeight: '500',
-                                  cursor: 'pointer',
-                                  textAlign: 'center'
-                                }}>
-                                Edit
-                              </button>
-                              <button
-                                onClick={() => !isVerificationButtonDisabled(property.verification_status) && handleVerifyClick(property)}
-                                disabled={isVerificationButtonDisabled(property.verification_status)}
-                                className="action-button"
-                                style={{
-                                  width: '100%',
-                                  padding: 'clamp(0.5rem, 2vw, 0.5rem) clamp(0.75rem, 3vw, 1rem)',
-                                  border: '1px solid hsl(38 70% 70%)',
-                                  borderRadius: 'clamp(0.25rem, 1.5vw, 0.375rem)',
-                                  backgroundColor: 'white',
-                                  color: 'hsl(38 80% 38%)',
-                                  fontSize: 'clamp(0.75rem, 2vw, 0.875rem)',
-                                  fontWeight: '500',
-                                  cursor: isVerificationButtonDisabled(property.verification_status) ? 'default' : 'pointer',
-                                  opacity: isVerificationButtonDisabled(property.verification_status) ? 0.55 : 1,
-                                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.375rem',
-                                }}
-                              >
-                                <ShieldCheck style={{ height: '0.875rem', width: '0.875rem' }} />
-                                {getVerificationButtonText(property.verification_status)}
-                              </button>
-                            </div>
-                          </div>
+                          <ListingCard
+                            key={property.id}
+                            property={property}
+                            onView={handleViewClick}
+                            onEdit={handleEditClick}
+                            onVerify={handleVerifyClick}
+                          />
                         ))}
                       </div>
                     </div>
@@ -1011,110 +918,13 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
                       </h3>
                       <div className="listing-grid">
                         {properties.filter(p => p.purpose === 'sale').map((property) => (
-                          <div key={property.id} style={{
-                            backgroundColor: 'white',
-                            border: '1px solid hsl(40 20% 88%)',
-                            borderRadius: 'clamp(0.5rem, 2vw, 0.75rem)',
-                            padding: 'clamp(0.75rem, 2vw, 1rem)',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: 'clamp(0.75rem, 2vw, 1rem)'
-                          }}>
-                            <div style={{
-                              display: 'flex',
-                              justifyContent: 'space-between',
-                              alignItems: 'start',
-                              gap: 'clamp(0.5rem, 2vw, 1rem)'
-                            }}>
-                              <div style={{ flex: 1, minWidth: 0 }}>
-                                <h3 style={{
-                                  color: 'hsl(200 25% 15%)',
-                                  marginBottom: 'clamp(0.125rem, 1vw, 0.25rem)',
-                                  fontSize: 'clamp(0.875rem, 2.5vw, 1rem)',
-                                  fontWeight: '600',
-                                  wordBreak: 'break-word'
-                                }}>
-                                  {property.title}
-                                </h3>
-                                <p style={{
-                                  fontSize: 'clamp(0.75rem, 2vw, 0.875rem)',
-                                  color: 'hsl(200 15% 45%)',
-                                  marginBottom: 'clamp(0.25rem, 1vw, 0.5rem)',
-                                  wordBreak: 'break-word'
-                                }}>
-                                  {property.address}, {property.city}
-                                </p>
-                                <p style={{
-                                  fontSize: 'clamp(0.75rem, 2vw, 0.875rem)',
-                                  color: 'hsl(38 92% 50%)',
-                                  fontWeight: '500'
-                                }}>
-                                  GH₵{Math.round(property.sale_price).toLocaleString()}
-                                </p>
-                              </div>
-                                {getStatusBadge(property.listing_status)}
-                                {getVerificationBadge(property.verification_status)}
-                            </div>
-                            <div style={{
-                              display: 'grid',
-                              gridTemplateColumns: '1fr 1fr',
-                              gap: 'clamp(0.375rem, 1.5vw, 0.5rem)'
-                            }}>
-                              <button
-                                onClick={() => handleViewClick(property)}
-                                className="action-button"
-                                style={{
-                                  padding: 'clamp(0.375rem, 2vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem)',
-                                  border: '1px solid hsl(40 20% 88%)',
-                                  borderRadius: 'clamp(0.25rem, 1.5vw, 0.375rem)',
-                                  backgroundColor: 'white',
-                                  color: 'hsl(174 62% 32%)',
-                                  fontSize: 'clamp(0.75rem, 2vw, 0.875rem)',
-                                  fontWeight: '500',
-                                  cursor: 'pointer',
-                                  textAlign: 'center'
-                                }}>
-                                View
-                              </button>
-                              <button
-                                onClick={() => handleEditClick(property)}
-                                className="action-button"
-                                style={{
-                                  padding: 'clamp(0.375rem, 2vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem)',
-                                  border: '1px solid hsl(40 20% 88%)',
-                                  borderRadius: 'clamp(0.25rem, 1.5vw, 0.375rem)',
-                                  backgroundColor: 'white',
-                                  color: 'hsl(174 62% 32%)',
-                                  fontSize: 'clamp(0.75rem, 2vw, 0.875rem)',
-                                  fontWeight: '500',
-                                  cursor: 'pointer',
-                                  textAlign: 'center'
-                                }}>
-                                Edit
-                              </button>
-                              <button
-                                onClick={() => !isVerificationButtonDisabled(property.verification_status) && handleVerifyClick(property)}
-                                disabled={isVerificationButtonDisabled(property.verification_status)}
-                                className="action-button"
-                                style={{
-                                  width: '100%',
-                                  padding: 'clamp(0.5rem, 2vw, 0.5rem) clamp(0.75rem, 3vw, 1rem)',
-                                  border: '1px solid hsl(38 70% 70%)',
-                                  borderRadius: 'clamp(0.25rem, 1.5vw, 0.375rem)',
-                                  backgroundColor: 'white',
-                                  color: 'hsl(38 80% 38%)',
-                                  fontSize: 'clamp(0.75rem, 2vw, 0.875rem)',
-                                  fontWeight: '500',
-                                  cursor: isVerificationButtonDisabled(property.verification_status) ? 'default' : 'pointer',
-                                  opacity: isVerificationButtonDisabled(property.verification_status) ? 0.55 : 1,
-                                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.375rem',
-                                }}
-                              >
-                                <ShieldCheck style={{ height: '0.875rem', width: '0.875rem' }} />
-                                {getVerificationButtonText(property.verification_status)}
-                              </button>
-                            </div>
-                          </div>
+                          <ListingCard
+                            key={property.id}
+                            property={property}
+                            onView={handleViewClick}
+                            onEdit={handleEditClick}
+                            onVerify={handleVerifyClick}
+                          />
                         ))}
                       </div>
                     </div>
