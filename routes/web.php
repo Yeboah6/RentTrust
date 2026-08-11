@@ -153,6 +153,9 @@ Route::middleware(['auth','verified'])->group(function () {
     Route::post('/verification-requests', [ListingVerificationController::class, 'store'])
         ->name('verification-requests.store');
 
+    Route::delete('/rent/{rental}', [RentalController::class, 'destroy'])
+        ->name('rent.destroy');
+
     // ── Settings (protected + verified) ──────────────────────────────────────────
     Route::get('settings', [AuthController::class, 'settings'])->name('settings.page');
     Route::put('settings/profile/agent', [AuthController::class, 'updateAgentProfile'])->name('settings.agent.page');

@@ -115,26 +115,16 @@ const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views
     setShowViewModal(true);
   };
 
-  const handleFeatureClick = (property) => {
-    if (window.confirm(`Are you sure you want to feature this ${property.purpose === 'sale' ? 'sale' : 'rental'} listing?`)) {
-      router.post(`/api/listings/${property.id}/feature`, {}, {
-        onSuccess: (response) => {
-          setShowToast({
-            message: response.data.message || "Listing featured successfully!",
-            variant: "success"
-          });
-          setTimeout(() => setShowToast(null), 3000);
-          window.location.reload();
-        },
-        onError: (errors) => {
-          setShowToast({
-            message: errors.message || "Failed to feature listing. Please try again.",
-            variant: "error" 
-          });
-          setTimeout(() => setShowToast(null), 3000);
-        },
-      });
-    }
+  // const handleDeleteListing = (propertyId) => {
+  //     // Remove the property from state
+  //     setProperties(prevProperties => 
+  //         prevProperties.filter(property => property.id !== propertyId)
+  //     );
+  // };
+
+  const handleDeleteClick = (property) => {
+    if (!window.confirm(`Delete "${property.title}"? This can't be undone.`)) return;
+    router.delete(`/rent/${property.id}`, { preserveScroll: true });
   };
 
   const agent = {
@@ -429,6 +419,7 @@ const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views
                       onAddListing={() => setShowAddListingModal(true)}
                       onView={handleViewClick}
                       onEdit={handleEditClick}
+                      onDelete={handleDeleteClick} 
                       onVerify={(property) => {
                           setSelectedRentalForVerification(property);
                           setShowVerificationModal(true);

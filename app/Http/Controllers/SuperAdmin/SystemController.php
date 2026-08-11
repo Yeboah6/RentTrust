@@ -17,13 +17,6 @@ class SystemController extends Controller
         $this->middleware(['auth', 'verified', 'role:super_admin']);
     }
 
-    public function impersonate(User $user)
-    {
-        // store original id in session if needed
-        Auth::guard()->login($user);
-        return inertia('SuperAdmin/Support/Impersonate', ['user' => $user]);
-    }
-
     public function index(Request $request)
     {
         $query = AdminAuditLog::with('causer')

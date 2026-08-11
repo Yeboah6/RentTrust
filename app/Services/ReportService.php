@@ -30,6 +30,7 @@ class ReportService
             'agent_performance' => $this->getAgentPerformance($startDate, $endDate),
             'plan_distribution' => $this->getPlanDistribution(),
             'rent_vs_sale' => $this->getRentVsSaleStats($startDate, $endDate),
+            'agent_vs_listing' => $this->getAgentVsListingStats($startDate, $endDate),
             'location_insights' => $this->getLocationInsights($startDate, $endDate),
             'date_range' => [
                 'start' => $startDate->format('Y-m-d'),
@@ -49,11 +50,11 @@ class ReportService
             return [
                 'total_listings' => Rental::count(),
                 'active_rentals' => Rental::where('purpose', 'rent')
-                    // ->where('status', 'approved')
+                    ->where('status', 'active')
                     ->where('is_sold', false)
                     ->count(),
                 'active_sales' => Rental::where('purpose', 'sale')
-                    // ->where('status', 'approved')
+                    ->where('status', 'active')
                     ->where('is_sold', false)
                     ->count(),
                 'total_agents' => User::where('role', 'agent')->count(),
@@ -62,6 +63,7 @@ class ReportService
                 'total_views' => ListingView::where('created_at', '>=', $startDate)
                     ->where('created_at', '<=', $endDate)
                     ->count(),
+                'total_verifications' => User::where('status', 'verified')->count(),
             ];
         });
     }
@@ -242,6 +244,21 @@ class ReportService
             'sale_inquiries' => ListingInquiry::whereHas('rental', function($q) {
                 return $q->where('purpose', 'sale');
             })->count(),
+        ];
+    }
+
+    public function getAgentVsListingStats($startDate, $endDate)
+    {
+        return [
+            'agent_verified' => User::where('created_at', '>=', $startDate)
+                ->where('created_at', '<=', $endDate)
+                ->where('status', 'verified')
+                ->count(),
+
+            'listing_verified' => Rental::where('created_at', '>=', $startDate)
+                ->where('created_at', '<=', $endDate)
+                ->where('status', 'verified')
+                ->count(),
         ];
     }
 

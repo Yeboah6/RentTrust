@@ -34,8 +34,6 @@ Route::prefix('super-admin')
     Route::get('/reports', [ReportController::class, 'index'])
         ->name('reports.index');
     Route::get('/inquiries', [InquiriesController::class, 'index'])->name('inquiries.index');
-    // Route::get('/analytics', [ReportController::class, 'analytics'])
-    //     ->name('analytics.index');
 
     Route::get('/analytics', [AnalyticsController::class, 'index'])->name('analytics');
     
@@ -44,7 +42,6 @@ Route::prefix('super-admin')
         ->parameters(['plans' => 'plan']);
 
     // ── Subscriptions ─────────────────────────────────────────────────────────
-    // IMPORTANT: specific action routes must come before the wildcard show route
     Route::prefix('subscriptions')->name('subscriptions.')->group(function () {
         Route::get('/',             [SubscriptionController::class, 'index'])   ->name('index');
         Route::get('/{id}',         [SubscriptionController::class, 'show'])    ->name('show');
@@ -133,12 +130,6 @@ Route::prefix('super-admin')
 
     Route::get ('settings', [SettingsController::class, 'index'])  ->name('settings.index');
     Route::post('settings', [SettingsController::class, 'update']) ->name('settings.update');
-
-    Route::get ('features', [FeatureFlagController::class, 'index'])  ->name('features.index');
-    Route::post('features', [FeatureFlagController::class, 'update']) ->name('features.update');
-
-    // ── Support & system ──────────────────────────────────────────────────────
-    Route::get('impersonate/{user}', [SystemController::class, 'impersonate']) ->name('impersonate');
 
     // Audit log — specific routes before any wildcard patterns
     Route::get('audit-log/export', [SystemController::class, 'export']) ->name('audit-log.export');

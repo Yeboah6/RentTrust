@@ -197,6 +197,7 @@ const Reports = ({ analytics, filters }) => {
     const li  = analytics?.location_insights   ?? {};
     const lp  = analytics?.listing_performance ?? {};
     const dr  = analytics?.date_range          ?? {};
+    const avl = analytics?.agent_vs_listing    ?? {};
 
     const topByListings = ap.top_agents_by_listings ?? [];
     const topByViews    = ap.top_agents_by_views    ?? [];
@@ -269,6 +270,7 @@ const Reports = ({ analytics, filters }) => {
                         <Kpi label="Total Agents"     value={fmtNum(ov.total_agents)}     accent="hsl(270 55% 40%)"  iconBg="hsl(270 60% 95%)"  iconColor="hsl(270 55% 45%)" icon={Icons.agent}   bar="hsl(270 55% 50%)" />
                         <Kpi label="Total Views"      value={fmtNum(ov.total_views)}      accent="hsl(214 80% 44%)"  iconBg="hsl(214 100% 95%)" iconColor="hsl(214 80% 48%)" icon={Icons.eye}     bar="hsl(214 80% 52%)" />
                         <Kpi label="Total Inquiries"  value={fmtNum(ov.total_inquiries)}  accent="hsl(200 65% 36%)"  iconBg="hsl(200 60% 93%)"  iconColor="hsl(200 60% 40%)" icon={Icons.chat}    bar="hsl(200 65% 44%)" />
+                        <Kpi label="Total Verifications"   value={fmtNum(ov.total_listings)}   sub={`${fmtNum(ov.agent_verified)} agents · ${fmtNum(ov.listing_verified)} listings`} accent="hsl(220 25% 15%)"  iconBg="hsl(220 20% 93%)"   iconColor="hsl(220 25% 30%)" icon={Icons.home}    bar="hsl(220 25% 30%)" />
                     </div>
                 </div>
 
@@ -310,6 +312,55 @@ const Reports = ({ analytics, filters }) => {
                                     { label: 'Listings', value: fmtNum(rvs.sale_count) },
                                     { label: 'Views',    value: fmtNum(rvs.sale_views) },
                                     { label: 'Inquiries',value: fmtNum(rvs.sale_inquiries) },
+                                ].map(({ label, value }, i, arr) => (
+                                    <div key={label} style={{ padding: '1rem', textAlign: 'center', borderRight: i < arr.length - 1 ? '1px solid hsl(220 15% 93%)' : 'none' }}>
+                                        <div style={{ fontSize: '1.3rem', fontWeight: '900', color: 'hsl(214 80% 44%)', lineHeight: 1 }}>{value}</div>
+                                        <div style={{ fontSize: '0.63rem', fontWeight: '700', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'hsl(220 15% 52%)', marginTop: '0.25rem' }}>{label}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        </Card>
+                    </div>
+                </div>
+
+                {/* ═══════════════════════════════════════════════════════════
+                    VERIFICATIONS
+                ══════════════════════════════════════════════════════════════ */}
+                <div style={{ marginBottom: '1.75rem' }}>
+                    <SectionHead title="Agent vs Listing Verification" accent="hsl(152 55% 42%)" />
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+
+                        {/* Rent column */}
+                        <Card>
+                            <div style={{ padding: '0.875rem 1.25rem', borderBottom: '1px solid hsl(220 15% 94%)', display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'hsl(152 55% 98%)' }}>
+                                <div style={{ width: '3px', height: '1rem', borderRadius: '999px', backgroundColor: 'hsl(152 55% 42%)' }} />
+                                <p style={{ margin: 0, fontSize: '0.8rem', fontWeight: '800', color: 'hsl(152 55% 28%)' }}>Agent</p>
+                            </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 0 }}>
+                                {[
+                                    { label: 'Approved', value: fmtNum(rvs.rent_count) },
+                                    { label: 'Pending',    value: fmtNum(rvs.rent_views) },
+                                    { label: 'Rejected',value: fmtNum(rvs.rent_inquiries) },
+                                ].map(({ label, value }, i, arr) => (
+                                    <div key={label} style={{ padding: '1rem', textAlign: 'center', borderRight: i < arr.length - 1 ? '1px solid hsl(220 15% 93%)' : 'none' }}>
+                                        <div style={{ fontSize: '1.3rem', fontWeight: '900', color: 'hsl(152 55% 33%)', lineHeight: 1 }}>{value}</div>
+                                        <div style={{ fontSize: '0.63rem', fontWeight: '700', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'hsl(220 15% 52%)', marginTop: '0.25rem' }}>{label}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        </Card>
+
+                        {/* Sale column */}
+                        <Card>
+                            <div style={{ padding: '0.875rem 1.25rem', borderBottom: '1px solid hsl(220 15% 94%)', display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'hsl(214 80% 98%)' }}>
+                                <div style={{ width: '3px', height: '1rem', borderRadius: '999px', backgroundColor: 'hsl(214 80% 50%)' }} />
+                                <p style={{ margin: 0, fontSize: '0.8rem', fontWeight: '800', color: 'hsl(214 80% 32%)' }}>Listing</p>
+                            </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 0 }}>
+                                {[
+                                    { label: 'Approved', value: fmtNum(rvs.sale_count) },
+                                    { label: 'Pending',    value: fmtNum(rvs.sale_views) },
+                                    { label: 'Rejected',value: fmtNum(rvs.sale_inquiries) },
                                 ].map(({ label, value }, i, arr) => (
                                     <div key={label} style={{ padding: '1rem', textAlign: 'center', borderRight: i < arr.length - 1 ? '1px solid hsl(220 15% 93%)' : 'none' }}>
                                         <div style={{ fontSize: '1.3rem', fontWeight: '900', color: 'hsl(214 80% 44%)', lineHeight: 1 }}>{value}</div>

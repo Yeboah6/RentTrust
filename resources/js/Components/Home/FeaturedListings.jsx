@@ -68,7 +68,6 @@ const PropertyCard = ({
   const imagesArray = parseImages(images);
   const firstImage  = imagesArray.length > 0 ? resolveImageSrc(imagesArray[0]) : null;
   const linkHref    = purpose === 'sale' ? `/buy/${listingAreaSlug}/${listingSlug}` : `/rent/${listingAreaSlug}/${listingSlug}`;
-  // /rent/${listingAreaSlug}/${listingSlug}
 
   return (
     <Link

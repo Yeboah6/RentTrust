@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Rental;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Log, Storage;
 use Illuminate\Support\Str;
 use App\Services\Seo\SeoService;
 
@@ -15,24 +15,24 @@ class RentalSearchController extends Controller
      * Display rental listings
      */
     public function listings()
-{
-    $listings = Rental::where('purpose', 'rent')
-        ->orderByRaw("
-            CASE status
-                WHEN 'active' THEN 0
-                WHEN 'rented' THEN 1
-                WHEN 'inactive' THEN 2
-                WHEN 'sold' THEN 3
-                ELSE 4
-            END
-        ")
-        ->latest()
-        ->paginate(8);
+    {
+        $listings = Rental::where('purpose', 'rent')
+            ->orderByRaw("
+                CASE status
+                    WHEN 'active' THEN 0
+                    WHEN 'rented' THEN 1
+                    WHEN 'inactive' THEN 2
+                    WHEN 'sold' THEN 3
+                    ELSE 4
+                END
+            ")
+            ->latest()
+            ->paginate(8);
 
-    return inertia('RentalListingsPage', [
-        'listings' => $listings
-    ]);
-}
+        return inertia('RentalListingsPage', [
+            'listings' => $listings
+        ]);
+    }
 
 /**
  * Get more rental listings (AJAX)
@@ -364,6 +364,44 @@ public function getMore(Request $request)
             'properties' => $properties,
             'seo' => app(SeoService::class)->areaMeta($areaSlug, 'rent'),
         ]);
+    }
+
+    public function destroy(Rental $rental)
+    {
+        $user = Auth::user();
+    
+        $isOwner = $rental->user_id === $user->id || $rental->agent_id === $user->id;
+        $isAdmin = in_array($user->role, ['admin', 'super_admin']);
+    
+        if (!$isOwner && !$isAdmin) {
+            abort(403, 'You are not authorized to delete this listing.');
+        }
+    
+        try {
+            // Remove uploaded images from storage before the row is gone
+            if (!empty($rental->images)) {
+                foreach ($rental->images as $image) {
+                    Storage::disk('public')->delete('rental_images/' . $image);
+                }
+            }
+    
+            $title = $rental->title;
+            $rental->delete();
+    
+            if ($isAdmin) {
+                AdminAuditLog::record('listing', 'Listing deleted', [
+                    'affected_user' => $user->name,
+                    'affected_id'   => $rental->id,
+                    'notes'         => "Admin deleted listing \"{$title}\".",
+                ]);
+            }
+    
+            return redirect()->back()->with('success', 'Listing deleted successfully.');
+    
+        } catch (\Exception $e) {
+            Log::error('Failed to delete listing: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to delete listing. Please try again.');
+        }
     }
 
 }

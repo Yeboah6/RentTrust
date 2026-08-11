@@ -15,23 +15,22 @@ const Icons = {
     search:     <Ico d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />,
     eye:        <Ico d={['M15 12a3 3 0 11-6 0 3 3 0 016 0z','M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z']} />,
     edit:       <Ico d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />,
+    trash:      <Ico d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />,
     check:      <Ico d="M5 13l4 4L19 7" />,
     clock:      <Ico d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />,
     alert:      <Ico d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />,
     mapPin:     <Ico d={['M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z','M15 11a3 3 0 11-6 0 3 3 0 016 0z']} size="0.78rem" />,
-    dollar:     <Ico d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />,
     verify:     <Ico d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />,
-    sparkles:   <Ico d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />,
     x:          <Ico d="M6 18L18 6M6 6l12 12" size="0.8rem" />,
     tag:        <Ico d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />,
-    chevronLeft:  <Ico d="M15 19l-7-7 7-7" />,
     bed:        <Ico d="M2 4v16M2 8h20M2 8l2-4h16l2 4M6 12v4m4-4v4m4-4v4m4-4v4M2 20h20" size="0.78rem" />,
     bath:       <Ico d="M4 4v5a3 3 0 003 3h0M9 12v5a3 3 0 01-3 3M5 4h14M5 4l1-2h12l1 2M7 12h10v5a3 3 0 01-3 3h0a3 3 0 01-3-3v-5z" size="0.78rem" />,
+    chevronLeft:  <Ico d="M15 19l-7-7 7-7" />,
     chevronRight: <Ico d="M9 5l7 7-7 7" />,
     empty:      <Ico d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" size="2.5rem" sw={1.2} />,
 };
 
-// ─── Availability Badge ─────────────────────────────────────────────────────────
+// ─── Availability Badge ────────────────────────────────────────────────────────
 const AVAILABILITY_CFG = {
     active:   { bg: 'hsl(152 60% 93%)', color: 'hsl(152 60% 35%)', icon: Icons.check, label: 'Active' },
     inactive: { bg: 'hsl(220 15% 93%)', color: 'hsl(220 15% 45%)', icon: Icons.alert, label: 'Inactive' },
@@ -54,7 +53,7 @@ const AvailabilityBadge = ({ status }) => {
     );
 };
 
-// ─── Verification Badge ──────────────────────────────────────────────────────
+// ─── Verification Badge ────────────────────────────────────────────────────────
 const VERIFICATION_CFG = {
     approved:   { bg: 'hsl(152 60% 93%)', color: 'hsl(152 60% 35%)', icon: Icons.check, label: 'Approved' },
     pending:    { bg: 'hsl(38 92% 93%)',  color: 'hsl(38 92% 40%)',  icon: Icons.clock, label: 'Pending Review' },
@@ -77,7 +76,7 @@ const VerificationBadge = ({ status }) => {
     );
 };
 
-// ─── Pagination ───────────────────────────────────────────────────────────────
+// ─── Pagination ─────────────────────────────────────────────────────────────────
 const Pagination = ({ currentPage, totalPages, onPageChange }) => {
     if (totalPages <= 1) return null;
 
@@ -137,8 +136,6 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
 
 const ITEMS_PER_PAGE = 9;
 
-const toBool = (v) => v === true || v === 1 || v === '1';
-
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const fmtPrice = (property) => {
     if (property.purpose === 'sale') {
@@ -165,77 +162,199 @@ const buildLatestVerificationMap = (records = []) => {
     return map;
 };
 
-// ─── Listing Card ─────────────────────────────────────────────────────────────
-const ListingCard = ({ property, onView, onEdit, onVerify, getVerificationButtonText, isVerificationButtonDisabled }) => {
-    const price = fmtPrice(property);
-    const [requesting, setRequesting] = useState(false);
+const PURPOSE_TABS = [
+    { key: 'rent', label: 'Rentals', emoji: '🏠', accent: 'hsl(174 55% 28%)', accentBg: 'hsl(174 62% 32% / 0.08)' },
+    { key: 'sale', label: 'Sales',   emoji: '🏷️', accent: 'hsl(36 75% 30%)',  accentBg: 'hsl(38 92% 50% / 0.08)' },
+];
 
-    console.log(property)
+// ─── Listing Card ─────────────────────────────────────────────────────────────
+const ListingCard = ({ property, onView, onEdit, onDelete, onVerify, getVerificationButtonText, isVerificationButtonDisabled }) => {
+    const [hovered, setHovered] = useState(false);
+    const price = fmtPrice(property);
+    const purposeAccent = property.purpose === 'sale' ? 'hsl(36 75% 30%)' : 'hsl(174 55% 28%)';
+
+    const statusStripColor = (AVAILABILITY_CFG[property.effective_listing_status] || AVAILABILITY_CFG.inactive).color;
+    const verifyDisabled = isVerificationButtonDisabled?.(property.effective_listing_status, property.verification_status);
 
     return (
-        <>
-            <div style={{
+        <div
+            style={{
                 backgroundColor: 'white',
-                border: '1px solid hsl(220 15% 91%)',
+                border: '1px solid',
+                borderColor: hovered ? 'hsl(220 15% 82%)' : 'hsl(220 15% 91%)',
                 borderRadius: '0.875rem',
                 overflow: 'hidden',
-                boxShadow: '0 1px 3px hsl(220 20% 15% / 0.04)',
+                boxShadow: hovered ? '0 4px 14px hsl(220 20% 15% / 0.08)' : '0 1px 3px hsl(220 20% 15% / 0.04)',
                 display: 'flex', flexDirection: 'column',
                 transition: 'box-shadow 0.15s, border-color 0.15s',
             }}
-                onMouseEnter='0 4px 14px hsl(220 20% 15% / 0.08)'
-                onMouseLeave='0 1px 3px hsl(220 20% 15% / 0.04)'
-            >
-                {/* Status strip */}
-                <div style={{
-                    height: 3, 
-                    background: property.status === 'approved' || property.status === 'active' 
-                            ? 'hsl(152 60% 40%)' 
-                            : property.status === 'pending' 
-                                ? 'hsl(38 92% 50%)' 
-                                : 'hsl(220 15% 60%)',
-                    opacity: 0.7,
-                }} />
+            onMouseEnter={() => setHovered(true)}
+            onMouseLeave={() => setHovered(false)}
+        >
 
-                <div style={{ padding: '1rem', flex: 1, display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.5rem' }}>
-                        <div style={{ minWidth: 0, flex: 1 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem', flexWrap: 'wrap' }}>
-                                <h3 style={{
-                                    margin: 0, fontSize: '0.85rem', fontWeight: 700,
-                                    color: 'hsl(220 25% 12%)', letterSpacing: '-0.01em',
-                                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                                }}>
-                                    {property.title || 'Untitled Property'}
-                                </h3>
-                                <AvailabilityBadge status={property.effective_listing_status} />
-                                <VerificationBadge status={property.verification_request_status || 'unverified'} />
-                            </div>
-                            <p style={{ margin: '0 0 0.35rem', fontSize: '0.7rem', color: 'hsl(220 15% 50%)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                                {Icons.mapPin} {property.address}, {property.city}
-                            </p>
-                        </div>
+            {/* Card body */}
+            <div style={{ padding: '0.875rem 1rem', flex: 1, display: 'flex', flexDirection: 'column', gap: '0.6rem', }}>
+
+                <div style={{ minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.3rem', flexWrap: 'wrap' }}>
+                        <h3 style={{
+                            margin: 0, fontSize: '0.85rem', fontWeight: 700,
+                            color: 'hsl(220 25% 12%)', letterSpacing: '-0.01em',
+                            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                        }}>
+                            {property.title || 'Untitled Property'}
+                        </h3>
                     </div>
-
+                    <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap', marginBottom: '0.4rem' }}>
+                        <AvailabilityBadge status={property.effective_listing_status} />
+                        <VerificationBadge status={property.verification_request_status || 'unverified'} />
+                    </div>
+                    <p style={{ margin: 0, fontSize: '0.7rem', color: 'hsl(220 15% 50%)', display: 'flex', alignItems: 'center', gap: '0.3rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {Icons.mapPin}
+                        {[property.address, property.city].filter(Boolean).join(', ') || 'No location'}
+                    </p>
                 </div>
 
-                <div style={{ borderTop: '1px solid hsl(220 15% 93%)', padding: '0.6rem 1rem', backgroundColor: 'hsl(220 15% 98.5%)', display: 'flex', gap: '0.4rem', flexWrap: 'wrap', alignItems: 'center' }}>
-                    <button onClick={() => onView(property)} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', padding: '0.35rem 0.7rem', borderRadius: '0.4rem', border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white', color: 'hsl(174 62% 30%)', fontSize: '0.7rem', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
-                        {Icons.eye} View
-                    </button>
-                    <button onClick={() => onEdit(property)} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', padding: '0.35rem 0.7rem', borderRadius: '0.4rem', border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white', color: 'hsl(220 25% 35%)', fontSize: '0.7rem', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
-                        {Icons.edit} Edit
-                    </button>
+                {/* Property details */}
+                <div style={{
+                    display: 'flex', gap: '0.75rem', flexWrap: 'wrap',
+                    fontSize: '0.68rem', color: 'hsl(220 15% 50%)',
+                }}>
+                    {property.bedrooms != null && (
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                            {Icons.bed} {property.bedrooms} Beds
+                        </span>
+                    )}
+                    {property.bathrooms != null && (
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                            {Icons.bath} {property.bathrooms} Baths
+                        </span>
+                    )}
+                    {property.property_type && (
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', textTransform: 'capitalize' }}>
+                            {Icons.tag} {property.property_type}
+                        </span>
+                    )}
+                </div>
 
-                    <button onClick={() => !isVerificationButtonDisabled(property.effective_listing_status, property.verification_status) && onVerify(property)}
-                        style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', padding: '0.35rem 0.7rem', borderRadius: '0.4rem', border: '1px solid hsl(38 92% 70%)', backgroundColor: 'white', color: 'hsl(38 92% 40%)', fontSize: '0.7rem', fontWeight: 700, cursor: isVerificationButtonDisabled(property.effective_listing_status, property.verification_status) ? 'default' : 'pointer', fontFamily: 'inherit', opacity: isVerificationButtonDisabled(property.effective_listing_status, property.verification_status) ? 0.5 : 1, marginLeft: 'auto' }}>
-                        {Icons.verify} {getVerificationButtonText(property.effective_listing_status, property.verification_status)}
-                    </button>
+                {/* Price */}
+                <div style={{
+                    padding: '0.65rem 0.75rem',
+                    backgroundColor: 'hsl(220 15% 97%)',
+                    borderRadius: '0.5rem',
+                    border: '1px solid hsl(220 15% 93%)',
+                    display: 'flex', alignItems: 'baseline', gap: '0.25rem',
+                }}>
+                    <span style={{ fontSize: '1rem', fontWeight: 800, color: price.color }}>
+                        {price.text}
+                    </span>
+                    {price.sub && (
+                        <span style={{ fontSize: '0.68rem', color: 'hsl(220 15% 50%)', fontWeight: 600 }}>
+                            {price.sub}
+                        </span>
+                    )}
                 </div>
             </div>
-        </>
+
+            {/* Footer actions */}
+            <div style={{ borderTop: '1px solid hsl(220 15% 93%)', padding: '0.6rem 1rem', backgroundColor: 'hsl(220 15% 98.5%)', display: 'flex', gap: '0.4rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                <button onClick={() => onView?.(property)} style={{
+                    display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
+                    padding: '0.35rem 0.7rem', borderRadius: '0.4rem',
+                    border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white',
+                    color: 'hsl(174 62% 30%)', fontSize: '0.7rem', fontWeight: 700,
+                    cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.12s',
+                }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = 'hsl(174 62% 40%)'; e.currentTarget.style.backgroundColor = 'hsl(174 40% 97%)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = 'hsl(220 15% 88%)'; e.currentTarget.style.backgroundColor = 'white'; }}
+                >
+                    {Icons.eye} View
+                </button>
+                <button onClick={() => onEdit?.(property)} style={{
+                    display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
+                    padding: '0.35rem 0.7rem', borderRadius: '0.4rem',
+                    border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white',
+                    color: 'hsl(220 25% 35%)', fontSize: '0.7rem', fontWeight: 700,
+                    cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.12s',
+                }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = 'hsl(220 15% 55%)'; e.currentTarget.style.backgroundColor = 'hsl(220 15% 95%)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = 'hsl(220 15% 88%)'; e.currentTarget.style.backgroundColor = 'white'; }}
+                >
+                    {Icons.edit} Edit
+                </button>
+                <button onClick={() => onDelete?.(property)} style={{
+                    display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
+                    padding: '0.35rem 0.7rem', borderRadius: '0.4rem',
+                    border: '1px solid hsl(0 72% 70%)', backgroundColor: 'white',
+                    color: 'hsl(0 72% 48%)', fontSize: '0.7rem', fontWeight: 700,
+                    cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.12s',
+                }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = 'hsl(0 72% 50%)'; e.currentTarget.style.backgroundColor = 'hsl(0 72% 97%)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = 'hsl(0 72% 70%)'; e.currentTarget.style.backgroundColor = 'white'; }}
+                >
+                    {Icons.trash} Delete
+                </button>
+                <button
+                    onClick={() => !verifyDisabled && onVerify?.(property)}
+                    disabled={verifyDisabled}
+                    style={{
+                        display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
+                        padding: '0.35rem 0.7rem', borderRadius: '0.4rem',
+                        border: '1px solid hsl(38 92% 70%)', backgroundColor: 'white',
+                        color: 'hsl(38 92% 40%)', fontSize: '0.7rem', fontWeight: 700,
+                        cursor: verifyDisabled ? 'default' : 'pointer',
+                        fontFamily: 'inherit', opacity: verifyDisabled ? 0.5 : 1,
+                        marginLeft: 'auto', transition: 'all 0.12s',
+                    }}
+                    onMouseEnter={e => { if (!verifyDisabled) e.currentTarget.style.backgroundColor = 'hsl(38 92% 97%)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'white'; }}
+                >
+                    {Icons.verify} {getVerificationButtonText?.(property.effective_listing_status, property.verification_status)}
+                </button>
+            </div>
+        </div>
     );
 };
+
+// ─── Purpose Tabs ─────────────────────────────────────────────────────────────
+const PurposeTabs = ({ active, onChange, rentalCount, saleCount }) => (
+    <div style={{ display: 'flex', gap: '0.25rem', borderBottom: '1px solid hsl(220 15% 90%)' }}>
+        {PURPOSE_TABS.map(tab => {
+            const isActive = active === tab.key;
+            const count = tab.key === 'rent' ? rentalCount : saleCount;
+            return (
+                <button
+                    key={tab.key}
+                    onClick={() => onChange(tab.key)}
+                    style={{
+                        display: 'inline-flex', alignItems: 'center', gap: '0.45rem',
+                        padding: '0.65rem 0.9rem',
+                        marginBottom: '-1px',
+                        border: 'none',
+                        borderBottom: `2px solid ${isActive ? tab.accent : 'transparent'}`,
+                        backgroundColor: 'transparent',
+                        color: isActive ? tab.accent : 'hsl(220 15% 50%)',
+                        fontSize: '0.82rem', fontWeight: 700,
+                        cursor: 'pointer', fontFamily: 'inherit',
+                        transition: 'color 0.15s, border-color 0.15s',
+                    }}
+                >
+                    <span style={{ fontSize: '0.95rem', lineHeight: 1 }}>{tab.emoji}</span>
+                    {tab.label}
+                    <span style={{
+                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                        minWidth: '1.25rem', padding: '0.05rem 0.4rem', borderRadius: 999,
+                        fontSize: '0.68rem', fontWeight: 700,
+                        backgroundColor: isActive ? tab.accentBg : 'hsl(220 15% 93%)',
+                        color: isActive ? tab.accent : 'hsl(220 15% 45%)',
+                    }}>
+                        {count}
+                    </span>
+                </button>
+            );
+        })}
+    </div>
+);
 
 // ─── Main Listings Tab ────────────────────────────────────────────────────────
 const ListingsTab = ({
@@ -243,6 +362,7 @@ const ListingsTab = ({
     onAddListing,
     onView,
     onEdit,
+    onDelete,
     onVerify,
     verificationData = [],
     getVerificationButtonText,
@@ -251,6 +371,7 @@ const ListingsTab = ({
     const [searchTerm, setSearchTerm] = useState('');
     const [availabilityFilter, setAvailabilityFilter] = useState('all');
     const [verificationFilter, setVerificationFilter] = useState('all');
+    const [activePurpose, setActivePurpose] = useState('rent');
     const [currentPage, setCurrentPage] = useState(1);
 
     const latestVerificationByListing = useMemo(
@@ -286,15 +407,12 @@ const ListingsTab = ({
 
     const rentals = filteredProperties.filter(p => p.purpose !== 'sale');
     const sales = filteredProperties.filter(p => p.purpose === 'sale');
+    const activeList = activePurpose === 'rent' ? rentals : sales;
+    const activeTabCfg = PURPOSE_TABS.find(t => t.key === activePurpose);
 
-    const rentalTotalPages = Math.ceil(rentals.length / ITEMS_PER_PAGE);
-    const paginatedRentals = rentals.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
-
-    const salesTotalPages = Math.ceil(sales.length / ITEMS_PER_PAGE);
-    const paginatedSales = sales.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
-
-    const maxTotalPages = Math.max(rentalTotalPages, salesTotalPages, 1);
-    const safePage = Math.min(currentPage, maxTotalPages);
+    const totalPages = Math.ceil(activeList.length / ITEMS_PER_PAGE);
+    const safePage = Math.min(currentPage, Math.max(totalPages, 1));
+    const paginatedList = activeList.slice((safePage - 1) * ITEMS_PER_PAGE, safePage * ITEMS_PER_PAGE);
 
     const handleSearchChange = (e) => {
         setSearchTerm(e.target.value);
@@ -308,6 +426,11 @@ const ListingsTab = ({
 
     const handleVerificationChange = (e) => {
         setVerificationFilter(e.target.value);
+        setCurrentPage(1);
+    };
+
+    const handleTabChange = (key) => {
+        setActivePurpose(key);
         setCurrentPage(1);
     };
 
@@ -341,6 +464,14 @@ const ListingsTab = ({
                 </button>
             </div>
 
+            {/* Rental / Sale tabs */}
+            <PurposeTabs
+                active={activePurpose}
+                onChange={handleTabChange}
+                rentalCount={rentals.length}
+                saleCount={sales.length}
+            />
+
             {/* Search & Filter */}
             <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
                 <div style={{ position: 'relative', flex: '1 1 260px' }}>
@@ -351,7 +482,7 @@ const ListingsTab = ({
                         type="search"
                         value={searchTerm}
                         onChange={handleSearchChange}
-                        placeholder="Search by title, address, city..."
+                        placeholder={`Search ${activeTabCfg.label.toLowerCase()} by title, address, city...`}
                         style={{
                             width: '100%', padding: '0.65rem 1rem 0.65rem 2.5rem',
                             borderRadius: '0.625rem',
@@ -413,71 +544,33 @@ const ListingsTab = ({
                 )}
             </div>
 
-            {/* Rental Listings */}
-            {rentals.length > 0 && (
-                <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.875rem', padding: '0.5rem 0.75rem', backgroundColor: 'hsl(174 62% 32% / 0.07)', borderRadius: '0.5rem', border: '1px solid hsl(174 50% 80%)' }}>
-                        <span>🏠</span>
-                        <h3 style={{ margin: 0, fontSize: '0.82rem', fontWeight: 700, color: 'hsl(174 55% 28%)' }}>Rental Listings</h3>
-                        <span style={{ marginLeft: 'auto', fontSize: '0.68rem', fontWeight: 700, color: 'hsl(174 55% 28%)', backgroundColor: 'white', padding: '0.1rem 0.5rem', borderRadius: 999, border: '1px solid hsl(174 50% 80%)' }}>{rentals.length}</span>
-                    </div>
-                    {rentals.length > 0 && (
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.72rem', color: 'hsl(220 15% 50%)', fontWeight: 500, marginBottom: '0.5rem' }}>
-                            <span>Showing {((safePage - 1) * ITEMS_PER_PAGE) + 1}–{Math.min(safePage * ITEMS_PER_PAGE, rentals.length)} of {rentals.length} rentals</span>
-                        </div>
-                    )}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.875rem' }}>
-                        {paginatedRentals.map(property => (
+            {/* Results info */}
+            {activeList.length > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.72rem', color: 'hsl(220 15% 50%)', fontWeight: 500 }}>
+                    <span>Showing {((safePage - 1) * ITEMS_PER_PAGE) + 1}–{Math.min(safePage * ITEMS_PER_PAGE, activeList.length)} of {activeList.length} {activeTabCfg.label.toLowerCase()}</span>
+                </div>
+            )}
+
+            {/* Grid or empty state */}
+            {activeList.length > 0 ? (
+                <div key={activePurpose} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', animation: 'slideDown 0.2s ease-out' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '0.875rem' }}>
+                        {paginatedList.map(property => (
                             <ListingCard
                                 key={property.id}
                                 property={property}
                                 onView={onView}
                                 onEdit={onEdit}
+                                onDelete={onDelete}
                                 onVerify={onVerify}
                                 getVerificationButtonText={getVerificationButtonText}
                                 isVerificationButtonDisabled={isVerificationButtonDisabled}
                             />
                         ))}
                     </div>
+                    <Pagination currentPage={safePage} totalPages={totalPages} onPageChange={setCurrentPage} />
                 </div>
-            )}
-
-            {/* Sale Listings */}
-            {sales.length > 0 && (
-                <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.875rem', padding: '0.5rem 0.75rem', backgroundColor: 'hsl(38 92% 50% / 0.07)', borderRadius: '0.5rem', border: '1px solid hsl(38 80% 78%)' }}>
-                        <span>🏷️</span>
-                        <h3 style={{ margin: 0, fontSize: '0.82rem', fontWeight: 700, color: 'hsl(36 75% 30%)' }}>Sale Listings</h3>
-                        <span style={{ marginLeft: 'auto', fontSize: '0.68rem', fontWeight: 700, color: 'hsl(36 75% 30%)', backgroundColor: 'white', padding: '0.1rem 0.5rem', borderRadius: 999, border: '1px solid hsl(38 80% 78%)' }}>{sales.length}</span>
-                    </div>
-                    {sales.length > 0 && (
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.72rem', color: 'hsl(220 15% 50%)', fontWeight: 500, marginBottom: '0.5rem' }}>
-                            <span>Showing {((safePage - 1) * ITEMS_PER_PAGE) + 1}–{Math.min(safePage * ITEMS_PER_PAGE, sales.length)} of {sales.length} sales</span>
-                        </div>
-                    )}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.875rem' }}>
-                        {paginatedSales.map(property => (
-                            <ListingCard
-                                key={property.id}
-                                property={property}
-                                onView={onView}
-                                onEdit={onEdit}
-                                onVerify={onVerify}
-                                getVerificationButtonText={getVerificationButtonText}
-                                isVerificationButtonDisabled={isVerificationButtonDisabled}
-                            />
-                        ))}
-                    </div>
-                </div>
-            )}
-
-            {/* Pagination */}
-            {filteredProperties.length > 0 && (
-                <Pagination currentPage={safePage} totalPages={maxTotalPages} onPageChange={setCurrentPage} />
-            )}
-
-            {/* Empty state */}
-            {properties.length === 0 ? (
+            ) : properties.length === 0 ? (
                 <div style={{ backgroundColor: 'white', border: '1px solid hsl(220 15% 91%)', borderRadius: '0.875rem', padding: '3rem', textAlign: 'center', boxShadow: '0 1px 3px hsl(220 20% 15% / 0.04)' }}>
                     <div style={{ color: 'hsl(220 15% 68%)', margin: '0 auto 1rem', display: 'flex', justifyContent: 'center' }}>{Icons.empty}</div>
                     <h3 style={{ fontSize: '0.95rem', fontWeight: 800, color: 'hsl(220 25% 15%)', margin: '0 0 0.35rem' }}>No Listings Yet</h3>
@@ -486,18 +579,24 @@ const ListingsTab = ({
                         {Icons.plus} Add First Listing
                     </button>
                 </div>
-            ) : filteredProperties.length === 0 && hasFilters ? (
+            ) : (
                 <div style={{ backgroundColor: 'white', border: '1px solid hsl(220 15% 91%)', borderRadius: '0.875rem', padding: '3rem', textAlign: 'center', boxShadow: '0 1px 3px hsl(220 20% 15% / 0.04)' }}>
                     <div style={{ color: 'hsl(220 15% 68%)', margin: '0 auto 1rem', display: 'flex', justifyContent: 'center' }}>{Icons.empty}</div>
-                    <h3 style={{ fontSize: '0.95rem', fontWeight: 800, color: 'hsl(220 25% 15%)', margin: '0 0 0.35rem' }}>No Listings Match Filters</h3>
+                    <h3 style={{ fontSize: '0.95rem', fontWeight: 800, color: 'hsl(220 25% 15%)', margin: '0 0 0.35rem' }}>
+                        {hasFilters ? `No ${activeTabCfg.label} Match Filters` : `No ${activeTabCfg.label} Yet`}
+                    </h3>
                     <p style={{ color: 'hsl(220 15% 52%)', fontSize: '0.82rem', margin: 0 }}>
-                        Try adjusting your search or status filter.
+                        {hasFilters ? 'Try adjusting your search or filters.' : `Add the first ${activePurpose === 'rent' ? 'rental' : 'sale'} listing to get started.`}
                     </p>
                 </div>
-            ) : null}
+            )}
 
             {/* Animations */}
             <style>{`
+                @keyframes slideDown {
+                    from { opacity: 0; transform: translateY(-6px); }
+                    to   { opacity: 1; transform: translateY(0); }
+                }
                 @keyframes leModalIn {
                     from { opacity: 0; transform: scale(0.95) translateY(5px); }
                     to { opacity: 1; transform: scale(1) translateY(0); }

@@ -311,6 +311,11 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
     setShowVerifyModal(true);
   };
 
+  const handleDeleteClick = (property) => {
+    if (!window.confirm(`Delete "${property.title}"? This can't be undone.`)) return;
+    router.delete(`/rent/${property.id}`, { preserveScroll: true });
+  };
+
   return (
     <>
     <Head>
@@ -899,6 +904,7 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
                             onView={handleViewClick}
                             onEdit={handleEditClick}
                             onVerify={handleVerifyClick}
+                            onDelete={handleDeleteClick}
                           />
                         ))}
                       </div>
@@ -924,6 +930,7 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
                             onView={handleViewClick}
                             onEdit={handleEditClick}
                             onVerify={handleVerifyClick}
+                            onDelete={handleDeleteClick}
                           />
                         ))}
                       </div>
