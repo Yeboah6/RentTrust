@@ -229,65 +229,65 @@ const InquiryCard = ({ inquiry }) => {
             borderRadius: '0.875rem', overflow: 'hidden',
             boxShadow: '0 1px 3px hsl(220 20% 15% / 0.04)',
             transition: 'box-shadow 0.15s',
+            display: 'flex', flexDirection: 'column',
         }}
             onMouseEnter={e => e.currentTarget.style.boxShadow = '0 4px 12px hsl(220 20% 15% / 0.08)'}
             onMouseLeave={e => e.currentTarget.style.boxShadow = '0 1px 3px hsl(220 20% 15% / 0.04)'}
         >
             {/* Card header */}
-            <div style={{ padding: '0.875rem 1.25rem', borderBottom: `1px solid ${T.borderSub}`, backgroundColor: T.headBg, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', flexWrap: 'wrap' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', minWidth: 0 }}>
-                    <div style={{ color: T.blue }}>{I.home}</div>
-                    <div style={{ minWidth: 0 }}>
-                        <p style={{ margin: 0, fontSize: '0.82rem', fontWeight: 800, color: T.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{inquiry.rental_title}</p>
-                        <p style={{ margin: '0.1rem 0 0', fontSize: '0.68rem', color: T.textSub, display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                            <span style={{ color: T.textDim }}>{I.pin}</span>
-                            {inquiry.rental_city || '—'}
-                            {inquiry.rental_address && ` · ${inquiry.rental_address}`}
-                        </p>
-                    </div>
+            <div style={{ padding: '0.8rem 1rem', borderBottom: `1px solid ${T.borderSub}`, backgroundColor: T.headBg, display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0 }}>
+                    <div style={{ color: T.blue, flexShrink: 0 }}>{I.home}</div>
+                    <p style={{ margin: 0, fontSize: '0.82rem', fontWeight: 800, color: T.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{inquiry.rental_title}</p>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
+                    <p style={{ margin: 0, fontSize: '0.68rem', color: T.textSub, display: 'flex', alignItems: 'center', gap: '0.3rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>
+                        <span style={{ color: T.textDim, flexShrink: 0 }}>{I.pin}</span>
+                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {inquiry.rental_city || '—'}{inquiry.rental_address && ` · ${inquiry.rental_address}`}
+                        </span>
+                    </p>
                     <TypeBadge type={inquiry.type} />
-                    <span style={{ fontSize: '0.68rem', color: T.textDim, whiteSpace: 'nowrap' }}>
-                        {fmtDate(inquiry.created_at)}
-                        <span style={{ display: 'block', textAlign: 'right' }}>{fmtTime(inquiry.created_at)}</span>
-                    </span>
                 </div>
             </div>
 
             {/* Body */}
-            <div style={{ padding: '1rem 1.25rem', display: 'flex', gap: '1.25rem', flexWrap: 'wrap' }}>
+            <div style={{ padding: '0.9rem 1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', flex: 1 }}>
 
                 {/* Tenant */}
-                <div style={{ flex: 1, minWidth: '200px', display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
+                <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'flex-start' }}>
                     <Avatar name={inquiry.tenant_name || 'Guest'} color={avatarColor} bg={avatarBg} />
-                    <div style={{ minWidth: 0 }}>
+                    <div style={{ minWidth: 0, flex: 1 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.1rem' }}>
-                            <p style={{ margin: 0, fontSize: '0.85rem', fontWeight: 700, color: T.text }}>
+                            <p style={{ margin: 0, fontSize: '0.82rem', fontWeight: 700, color: T.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                 {inquiry.tenant_name || 'Anonymous Tenant'}
                             </p>
                             {isGuest && (
-                                <span style={{ fontSize: '0.6rem', fontWeight: 800, padding: '0.1rem 0.4rem', borderRadius: 999, backgroundColor: T.amberDim, color: T.amber, letterSpacing: '0.04em' }}>GUEST</span>
+                                <span style={{ fontSize: '0.58rem', fontWeight: 800, padding: '0.1rem 0.35rem', borderRadius: 999, backgroundColor: T.amberDim, color: T.amber, letterSpacing: '0.04em', flexShrink: 0 }}>GUEST</span>
                             )}
                         </div>
-                        <p style={{ margin: '0.15rem 0 0', fontSize: '0.75rem', color: T.textSub }}>{inquiry.tenant_email || 'No email'}</p>
-                        <p style={{ margin: '0.1rem 0 0', fontSize: '0.75rem', color: T.textSub }}>{inquiry.tenant_phone || 'No phone'}</p>
+                        <p style={{ margin: '0.1rem 0 0', fontSize: '0.73rem', color: T.textSub, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{inquiry.tenant_email || 'No email'}</p>
+                        <p style={{ margin: '0.1rem 0 0', fontSize: '0.73rem', color: T.textSub }}>{inquiry.tenant_phone || 'No phone'}</p>
                     </div>
                 </div>
 
                 {/* Divider */}
-                <div style={{ width: 1, backgroundColor: T.borderSub, alignSelf: 'stretch', flexShrink: 0 }} />
+                <div style={{ height: 1, backgroundColor: T.borderSub }} />
 
                 {/* Agent */}
-                <div style={{ flex: 1, minWidth: '200px', display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
+                <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'flex-start' }}>
                     <Avatar name={inquiry.agent_name || 'A'} color={T.blue} bg={T.blueDim} />
-                    <div style={{ minWidth: 0 }}>
-                        <p style={{ margin: 0, fontSize: '0.72rem', fontWeight: 700, color: T.textSub, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.15rem' }}>Agent</p>
-                        <p style={{ margin: 0, fontSize: '0.85rem', fontWeight: 700, color: T.text }}>{inquiry.agent_name || '—'}</p>
-                        {inquiry.agent_company && <p style={{ margin: '0.1rem 0 0', fontSize: '0.75rem', color: T.textSub }}>{inquiry.agent_company}</p>}
-                        <p style={{ margin: '0.1rem 0 0', fontSize: '0.75rem', color: T.textSub }}>{inquiry.agent_email || '—'}</p>
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                        <p style={{ margin: 0, fontSize: '0.68rem', fontWeight: 700, color: T.textSub, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.1rem' }}>Agent</p>
+                        <p style={{ margin: 0, fontSize: '0.82rem', fontWeight: 700, color: T.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{inquiry.agent_name || '—'}</p>
+                        {inquiry.agent_company && <p style={{ margin: '0.1rem 0 0', fontSize: '0.73rem', color: T.textSub, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{inquiry.agent_company}</p>}
                     </div>
                 </div>
+            </div>
+
+            {/* Footer meta row */}
+            <div style={{ padding: '0.5rem 1rem', borderTop: `1px solid ${T.borderSub}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: '0.68rem', color: T.textDim }}>{fmtDate(inquiry.created_at)} · {fmtTime(inquiry.created_at)}</span>
             </div>
 
             {/* Message (collapsible) */}
@@ -295,17 +295,17 @@ const InquiryCard = ({ inquiry }) => {
                 <div style={{ borderTop: `1px solid ${T.borderSub}` }}>
                     <button
                         onClick={() => setExpanded(e => !e)}
-                        style={{ width: '100%', padding: '0.6rem 1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
+                        style={{ width: '100%', padding: '0.55rem 1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
                     >
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.75rem', fontWeight: 700, color: T.textSub }}>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.73rem', fontWeight: 700, color: T.textSub }}>
                             {I.message} Message
                         </span>
                         <span style={{ color: T.textDim, transform: expanded ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>{I.chevDown}</span>
                     </button>
                     {expanded && (
-                        <div style={{ padding: '0 1.25rem 1rem' }}>
-                            <div style={{ backgroundColor: 'hsl(40 33% 98%)', border: `1px solid hsl(40 25% 90%)`, borderRadius: '0.5rem', padding: '0.875rem 1rem' }}>
-                                <p style={{ margin: 0, fontSize: '0.83rem', color: T.text, lineHeight: 1.6, fontStyle: 'italic' }}>"{inquiry.message}"</p>
+                        <div style={{ padding: '0 1rem 0.9rem' }}>
+                            <div style={{ backgroundColor: 'hsl(40 33% 98%)', border: `1px solid hsl(40 25% 90%)`, borderRadius: '0.5rem', padding: '0.75rem 0.875rem' }}>
+                                <p style={{ margin: 0, fontSize: '0.8rem', color: T.text, lineHeight: 1.6, fontStyle: 'italic' }}>"{inquiry.message}"</p>
                             </div>
                         </div>
                     )}
@@ -471,7 +471,7 @@ const InquiriesIndex = ({ inquiries, summary, filters, cities, agents }) => {
                 {data.length === 0 ? (
                     <Empty />
                 ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '0.875rem' }}>
                         {data.map(inquiry => (
                             <InquiryCard key={inquiry.id} inquiry={inquiry} />
                         ))}

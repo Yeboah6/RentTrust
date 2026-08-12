@@ -137,7 +137,7 @@ class RentController extends Controller
         $totalAreas = Rental::distinct('area')->count('area');
         $platformRating = Review::avg('overall_rating');
 
-        return inertia('About', [
+        return inertia('Static/About', [
             'totalListings' => $totalListings,
             'totalVerifiedAgents' => $totalVerifiedAgents,
             'totalAreas' => $totalAreas,
@@ -697,11 +697,19 @@ class RentController extends Controller
 
         // Notify the agent about the new inquiry
         $emailSent = false;
-        $agent = $rent->agent;          // may be null if no agent assigned
+
+        $agent = User::whereIn('id', collect([$rent->agent_id, $rent->user_id])->filter()->unique())
+            ->select('id', 'name', 'email', 'phone', 'company', 'bio', 'status', 'fee', 'role')
+            ->get()
+            ->keyBy('id')
+            ->first(fn ($u, $id) => $id === $rent->agent_id) 
+            ?? null;
+
+        $agentId = $rent->agent_id ?? $rent->user_id;
+        $agent = $agentId ? User::find($agentId) : null;
+ 
         $tenant = Auth::user();
         $typeLabel = ucfirst($data['type']);
-
-        // dd($agent->email, $agent->name);
 
         if ($agent && filter_var($agent->email, FILTER_VALIDATE_EMAIL)) {
             $dashboardUrl = url('/agent-dashboard/');
@@ -902,7 +910,7 @@ class RentController extends Controller
             ];
         });
 
-        return inertia('PricingPage', [
+        return inertia('Static/PricingPage', [
             'plans' => $plans,
         ]);
     }

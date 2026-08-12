@@ -4,7 +4,6 @@ namespace App\Mail;
 
 use App\Models\User;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
@@ -39,6 +38,11 @@ class AgentAccountUpdated extends Mailable
     {
         return new Content(
             view: 'emails.account-updated',
+            with: [
+                'agent' => $this->agent,
+                'changedFields' => $this->changedFields,
+                'updatedBy' => $this->updatedBy,
+            ]
         );
     }
 

@@ -1,6 +1,6 @@
 import { Link, Head } from '@inertiajs/react';
-import Header from '../Components/Layouts/Header';
-import Footer from '../Components/Layouts/Footer';
+import Header from '../../Components/Layouts/Header';
+import Footer from '../../Components/Layouts/Footer';
 
 export default function AboutPage({ totalListings = 0, totalVerifiedAgents = 0, totalAreas = 0, platformRating = null }) {
 

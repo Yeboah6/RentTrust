@@ -155,14 +155,14 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, agent
     setShowGrantModal(true);
   };
 
-  const handleDeleteAgent = (agent) => {
-    if (!confirm(`Are you sure you want to permanently delete ${agent.name}? This action cannot be undone.`)) return;
+  // const handleDeleteAgent = (agent) => {
+  //   if (!confirm(`Are you sure you want to permanently delete ${agent.name}? This action cannot be undone.`)) return;
     
-    router.delete(`/admin/agents/${agent.id}`, {
-        onSuccess: () => showToast('Agent Deleted', `${agent.name} has been permanently removed.`),
-        onError: () => showToast('Delete Failed', 'Unable to delete agent.', 'error'),
-    });
-  };
+  //   router.delete(`/admin/agents/${agent.id}`, {
+  //       onSuccess: () => showToast('Agent Deleted', `${agent.name} has been permanently removed.`),
+  //       onError: () => showToast('Delete Failed', 'Unable to delete agent.', 'error'),
+  //   });
+  // };
 
   const handleDeleteListing = (property) => {
     if (!confirm(`Are you sure you want to delete "${property.title}"?`)) return;
@@ -302,7 +302,7 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, agent
                         setSelectedAgent(agent);
                         setShowAgentProfile(true);
                     }}
-                    onDelete={handleDeleteAgent}
+                    // onDelete={handleDeleteAgent}
                     onEdit={(agent) => {
                         setSelectedAgent(agent);
                         setShowEditAgentModal(true);

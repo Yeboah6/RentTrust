@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, usePage, Head } from '@inertiajs/react';
-import Header from '../Components/Layouts/Header';
-import Footer from '../Components/Layouts/Footer';
+import Header from '../../Components/Layouts/Header';
+import Footer from '../../Components/Layouts/Footer';
 
 export default function ContactPage() {
     const { props } = usePage();

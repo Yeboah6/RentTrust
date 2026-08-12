@@ -212,17 +212,79 @@ const I = {
   briefcase:<Ico d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />,
   warn:     <Ico d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />,
   download: <Ico d={["M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"]} />,
+  shield: <Ico d={["M12 2l8 3v6c0 5-3.5 9-8 11-4.5-2-8-6-8-11V5l8-3z"]} />,
 };
 
 // ─── Download CSV ─────────────────────────────────────────────────────────────
 const downloadCSV = (D) => {
   const rows = [`# RentTrustGH Analytics — ${D.from} to ${D.to}\n`];
+
   rows.push("# Monthly Revenue\nMonth,Revenue,Transactions");
   (D.monthly_revenue || []).forEach(r => rows.push(`${r.month},${r.revenue},${r.transactions}`));
+
+  rows.push("\n# Revenue by Provider\nProvider,Total,Count");
+  (D.provider_split || []).forEach(r => rows.push(`${r.provider},${r.total},${r.count}`));
+
+  rows.push("\n# Payment Status Breakdown\nStatus,Count,Total");
+  Object.entries(D.status_breakdown || {}).forEach(([status, v]) => rows.push(`${status},${v.count},${v.total}`));
+
+  rows.push("\n# Subscription Summary\nStatus,Count");
+  Object.entries(D.subscription_summary || {}).forEach(([status, count]) => rows.push(`${status},${count}`));
+
+  rows.push("\n# New Subscriptions / Month\nMonth,Count");
+  (D.monthly_new_subs || []).forEach(r => rows.push(`${r.month},${r.count}`));
+
   rows.push("\n# User Growth\nMonth,New Users");
   (D.user_growth || []).forEach(r => rows.push(`${r.month},${r.count}`));
+
+  rows.push("\n# Users by Role\nRole,Count");
+  (D.users_by_role || []).forEach(r => rows.push(`${r.role},${r.count}`));
+
+  rows.push("\n# Users by Package\nPackage,Count");
+  (D.users_by_package || []).forEach(r => rows.push(`${r.package},${r.count}`));
+
+  rows.push("\n# Listing Stats\nMetric,Count");
+  Object.entries(D.listing_stats || {}).forEach(([metric, count]) => rows.push(`${metric},${count}`));
+
+  rows.push("\n# Listings by Type\nType,Count");
+  (D.listings_by_type || []).forEach(r => rows.push(`${r.property_type},${r.count}`));
+
+  rows.push("\n# Listings by City\nCity,Count");
+  (D.listings_by_city || []).forEach(r => rows.push(`${r.city},${r.count}`));
+
+  rows.push("\n# Listings by Purpose\nPurpose,Count");
+  (D.listings_by_purpose || []).forEach(r => rows.push(`${r.purpose},${r.count}`));
+
+  rows.push("\n# New Listings / Month\nMonth,Count");
+  (D.listing_growth || []).forEach(r => rows.push(`${r.month},${r.count}`));
+
   rows.push("\n# Views Over Time\nMonth,Views,Unique");
   (D.views_over_time || []).forEach(r => rows.push(`${r.month},${r.views},${r.unique_viewers}`));
+
+  rows.push("\n# Top Listings by Views\nTitle,City,Type,Views,Unique Views");
+  (D.top_listings || []).forEach(r => rows.push(`"${(r.title || '').replace(/"/g, '""')}",${r.city},${r.property_type},${r.views},${r.unique_views}`));
+
+  rows.push("\n# Inquiries Summary\nMetric,Count");
+  Object.entries(D.inquiries_summary || {}).forEach(([metric, count]) => rows.push(`${metric},${count}`));
+
+  rows.push("\n# Inquiries by Type\nType,Count");
+  (D.inquiries_by_type || []).forEach(r => rows.push(`${r.type},${r.count}`));
+
+  rows.push("\n# Inquiries Over Time\nMonth,Count");
+  (D.inquiries_over_time || []).forEach(r => rows.push(`${r.month},${r.count}`));
+
+  rows.push("\n# Agent Verifications\nStatus,Count");
+  Object.entries(D.verifications?.agent || {}).forEach(([status, count]) => rows.push(`${status},${count}`));
+
+  rows.push("\n# Listing Verifications\nStatus,Count");
+  Object.entries(D.verifications?.listing || {}).forEach(([status, count]) => rows.push(`${status},${count}`));
+
+  rows.push("\n# Agent Verifications / Month\nMonth,Count");
+  (D.verifications?.agent_growth || []).forEach(r => rows.push(`${r.month},${r.count}`));
+
+  rows.push("\n# Listing Verifications / Month\nMonth,Count");
+  (D.verifications?.listing_growth || []).forEach(r => rows.push(`${r.month},${r.count}`));
+
   const blob = new Blob([rows.join("\n")], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a"); a.href = url;
@@ -234,7 +296,7 @@ const downloadCSV = (D) => {
 const RANGES = ["7D","30D","3M","6M","12M","All"];
 
 // ─── Tabs ─────────────────────────────────────────────────────────────────────
-const TABS = ["Overview","Revenue","Listings","Users","Engagement"];
+const TABS = ["Overview","Revenue","Listings","Users","Engagement","Verifications"];
 
 // ─── Top listings table ───────────────────────────────────────────────────────
 const TopTable = ({ data }) => (
@@ -318,6 +380,26 @@ export default function AnalyticsDashboard() {
   const successPmts = sb.success?.count || 0;
   const successRate = pct(successPmts, totalPmts);
 
+  const av = D.verifications?.agent   || {};
+  const lv = D.verifications?.listing || {};
+
+  const agentVerDonut = [
+    { label: "Approved", value: av.approved || 0, color: T.chart3 },
+    { label: "Pending",  value: av.pending  || 0, color: T.chart4 },
+    { label: "Rejected", value: av.rejected || 0, color: T.chart5 },
+  ];
+  const listingVerDonut = [
+    { label: "Approved", value: lv.approved || 0, color: T.chart3 },
+    { label: "Pending",  value: lv.pending  || 0, color: T.chart4 },
+    { label: "Rejected", value: lv.rejected || 0, color: T.chart5 },
+  ];
+
+  const agentVerGrowthData   = (D.verifications?.agent_growth   || []).map(m => ({ label: fmtMonth(m.month), value: m.count }));
+  const listingVerGrowthData = (D.verifications?.listing_growth || []).map(m => ({ label: fmtMonth(m.month), value: m.count }));
+
+  const agentVerTotal   = (av.approved || 0) + (av.pending || 0) + (av.rejected || 0);
+  const listingVerTotal = (lv.approved || 0) + (lv.pending || 0) + (lv.rejected || 0);
+
   // ── Styles ──────────────────────────────────────────────────────────────────
   const s = {
     page: { minHeight: "100vh", backgroundColor: T.bg, fontFamily: "system-ui, -apple-system, sans-serif", color: T.text },
@@ -398,7 +480,6 @@ export default function AnalyticsDashboard() {
               <StatCard label="Active Subs"     value={fmt(ss.active)}            sub={`${fmt(ss.cancelled)} cancelled`}             accent={T.chart1} iconBg="hsl(214 100% 95%)" iconColor={T.chart1} icon={I.check}  bar={T.chart1} />
               <StatCard label="Success Rate"    value={`${successRate}%`}         sub={`${fmt(successPmts)} successful`}             accent={T.chart3} iconBg="hsl(142 55% 93%)" iconColor={T.chart3} icon={I.check}  bar={T.chart3} />
               <StatCard label="Inquiries"       value={fmtK(is.total)}            sub={`${fmt(is.from_users)} registered`}           accent={T.chart4} iconBg="hsl(40 90% 93%)" iconColor={T.chart4} icon={I.chat}    bar={T.chart4} />
-              <StatCard label="Featured"        value={fmt(ls.featured)}          sub={`${fmt(ls.boosted)} boosted`}                 accent={T.chart4} iconBg="hsl(40 90% 93%)" iconColor={T.chart4} icon={I.star}    bar={T.chart4} />
             </KpiGrid>
             <ChartGrid>
               <ChartCard title="Monthly Revenue (GH₵)"><BarChart data={mrrData} color={T.chart1} valueFormat={fmtC} /></ChartCard>
@@ -436,12 +517,11 @@ export default function AnalyticsDashboard() {
         {tab === "Listings" && (
           <>
             <KpiGrid>
-              <StatCard label="Total"       value={fmt(ls.total)}                                                    accent={T.chart1}         iconBg="hsl(214 100% 95%)" iconColor={T.chart1}            icon={I.home}      bar={T.chart1} />
+              <StatCard label="Total"       value={fmt(ls.total)}                                                   accent={T.chart1}         iconBg="hsl(214 100% 95%)" iconColor={T.chart1}            icon={I.home}      bar={T.chart1} />
               <StatCard label="Active"      value={fmt(ls.active)}  sub={`${pct(ls.active, ls.total)}% of total`}   accent={T.chart3}         iconBg="hsl(142 55% 93%)" iconColor={T.chart3}             icon={I.check}     bar={T.chart3} />
-              <StatCard label="Pending"     value={fmt(ls.pending)}                                                  accent={T.chart4}         iconBg="hsl(40 90% 93%)"  iconColor={T.chart4}             icon={I.warn}      bar={T.chart4} />
-              <StatCard label="Featured"    value={fmt(ls.featured)} sub={`${fmt(ls.boosted)} boosted`}              accent={T.chart4}         iconBg="hsl(40 90% 93%)"  iconColor={T.chart4}             icon={I.star}      bar={T.chart4} />
-              <StatCard label="Rented Out"  value={fmt(ls.rented)}                                                   accent={T.chart6}         iconBg="hsl(270 60% 95%)" iconColor={T.chart6}             icon={I.key}       bar={T.chart6} />
-              <StatCard label="Sold"        value={fmt(ls.sold)}                                                     accent="hsl(200 65% 36%)" iconBg="hsl(200 60% 93%)" iconColor="hsl(200 65% 36%)"    icon={I.briefcase} bar="hsl(200 65% 36%)" />
+              <StatCard label="Inactive"     value={fmt(ls.pending)}                                                accent={T.chart4}         iconBg="hsl(40 90% 93%)"  iconColor={T.chart4}             icon={I.warn}      bar={T.chart4} />
+              <StatCard label="Rented Out"  value={fmt(ls.rented)}                                                  accent={T.chart6}         iconBg="hsl(270 60% 95%)" iconColor={T.chart6}             icon={I.key}       bar={T.chart6} />
+              <StatCard label="Sold"        value={fmt(ls.sold)}                                                    accent="hsl(200 65% 36%)" iconBg="hsl(200 60% 93%)" iconColor="hsl(200 65% 36%)"    icon={I.briefcase} bar="hsl(200 65% 36%)" />
             </KpiGrid>
             <SH>Growth</SH>
             <ChartGrid>
@@ -495,6 +575,30 @@ export default function AnalyticsDashboard() {
             </ChartGrid>
             <SH>Top Performing Listings</SH>
             <TopTable data={D.top_listings} />
+          </>
+        )}
+
+        {/* ═══ VERIFICATIONS ══════════════════════════════════════════════════ */}
+        {tab === "Verifications" && (
+          <>
+            <KpiGrid>
+              <StatCard label="Agent Approved"   value={fmt(av.approved)} sub={`${pct(av.approved, agentVerTotal)}% of ${fmt(agentVerTotal)}`} accent={T.chart3} iconBg="hsl(142 55% 93%)" iconColor={T.chart3} icon={I.check} bar={T.chart3} />
+              <StatCard label="Agent Pending"    value={fmt(av.pending)}  accent={T.chart4} iconBg="hsl(40 90% 93%)"  iconColor={T.chart4} icon={I.warn}  bar={T.chart4} />
+              <StatCard label="Agent Rejected"   value={fmt(av.rejected)} accent={T.chart5} iconBg="hsl(0 65% 95%)"   iconColor={T.chart5} icon={I.warn}  bar={T.chart5} />
+              <StatCard label="Listing Approved" value={fmt(lv.approved)} sub={`${pct(lv.approved, listingVerTotal)}% of ${fmt(listingVerTotal)}`} accent={T.chart3} iconBg="hsl(142 55% 93%)" iconColor={T.chart3} icon={I.check} bar={T.chart3} />
+              <StatCard label="Listing Pending"  value={fmt(lv.pending)}  accent={T.chart4} iconBg="hsl(40 90% 93%)"  iconColor={T.chart4} icon={I.warn}  bar={T.chart4} />
+              <StatCard label="Listing Rejected" value={fmt(lv.rejected)} accent={T.chart5} iconBg="hsl(0 65% 95%)"   iconColor={T.chart5} icon={I.warn}  bar={T.chart5} />
+            </KpiGrid>
+            <SH>Status Breakdown</SH>
+            <ChartGrid>
+              <ChartCard title="Agent Verifications"><DonutChart data={agentVerDonut} centerLabel="Agents" /></ChartCard>
+              <ChartCard title="Listing Verifications"><DonutChart data={listingVerDonut} centerLabel="Listings" /></ChartCard>
+            </ChartGrid>
+            <SH>Submissions Over Time</SH>
+            <ChartGrid>
+              <ChartCard title="Agent Verifications / Month"><BarChart data={agentVerGrowthData} color={T.chart1} /></ChartCard>
+              <ChartCard title="Listing Verifications / Month"><BarChart data={listingVerGrowthData} color={T.chart2} /></ChartCard>
+            </ChartGrid>
           </>
         )}
 

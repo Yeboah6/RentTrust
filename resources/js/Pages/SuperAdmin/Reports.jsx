@@ -264,13 +264,37 @@ const Reports = ({ analytics, filters }) => {
                 <div style={{ marginBottom: '1.75rem' }}>
                     <SectionHead title="Overview" accent="hsl(214 80% 50%)" />
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '0.875rem' }}>
-                        <Kpi label="Total Listings"   value={fmtNum(ov.total_listings)}   sub={`${fmtNum(ov.active_rentals)} rental · ${fmtNum(ov.active_sales)} sale`} accent="hsl(220 25% 15%)"  iconBg="hsl(220 20% 93%)"   iconColor="hsl(220 25% 30%)" icon={Icons.home}    bar="hsl(220 25% 30%)" />
-                        <Kpi label="Active Rentals"   value={fmtNum(ov.active_rentals)}   accent="hsl(152 55% 33%)"  iconBg="hsl(152 55% 92%)"  iconColor="hsl(152 55% 35%)" icon={Icons.home}    bar="hsl(152 55% 42%)" />
-                        <Kpi label="Active Sales"     value={fmtNum(ov.active_sales)}     accent="hsl(40 80% 36%)"   iconBg="hsl(40 90% 93%)"   iconColor="hsl(40 80% 40%)"  icon={Icons.home}    bar="hsl(40 80% 48%)" />
-                        <Kpi label="Total Agents"     value={fmtNum(ov.total_agents)}     accent="hsl(270 55% 40%)"  iconBg="hsl(270 60% 95%)"  iconColor="hsl(270 55% 45%)" icon={Icons.agent}   bar="hsl(270 55% 50%)" />
-                        <Kpi label="Total Views"      value={fmtNum(ov.total_views)}      accent="hsl(214 80% 44%)"  iconBg="hsl(214 100% 95%)" iconColor="hsl(214 80% 48%)" icon={Icons.eye}     bar="hsl(214 80% 52%)" />
-                        <Kpi label="Total Inquiries"  value={fmtNum(ov.total_inquiries)}  accent="hsl(200 65% 36%)"  iconBg="hsl(200 60% 93%)"  iconColor="hsl(200 60% 40%)" icon={Icons.chat}    bar="hsl(200 65% 44%)" />
-                        <Kpi label="Total Verifications"   value={fmtNum(ov.total_listings)}   sub={`${fmtNum(ov.agent_verified)} agents · ${fmtNum(ov.listing_verified)} listings`} accent="hsl(220 25% 15%)"  iconBg="hsl(220 20% 93%)"   iconColor="hsl(220 25% 30%)" icon={Icons.home}    bar="hsl(220 25% 30%)" />
+                        <Kpi 
+                            label="Total Listings"   
+                            value={fmtNum(ov.total_listings)}   
+                            sub={`${fmtNum(ov.active_rentals)} rental · ${fmtNum(ov.active_sales)} sale`} 
+                            accent="hsl(220 25% 15%)"  iconBg="hsl(220 20% 93%)"   iconColor="hsl(220 25% 30%)" icon={Icons.home}    bar="hsl(220 25% 30%)" />
+                        <Kpi 
+                            label="Active Rentals"   
+                            value={fmtNum(ov.active_rentals)}   
+                            accent="hsl(152 55% 33%)"  iconBg="hsl(152 55% 92%)"  iconColor="hsl(152 55% 35%)" icon={Icons.home}    bar="hsl(152 55% 42%)" />
+                        <Kpi 
+                            label="Active Sales"     
+                            value={fmtNum(ov.active_sales)}     
+                            accent="hsl(40 80% 36%)"   iconBg="hsl(40 90% 93%)"   iconColor="hsl(40 80% 40%)"  icon={Icons.home}    bar="hsl(40 80% 48%)" />
+                        <Kpi 
+                            label="Total Agents"     
+                            value={fmtNum(ov.total_agents)}     
+                            accent="hsl(270 55% 40%)"  iconBg="hsl(270 60% 95%)"  iconColor="hsl(270 55% 45%)" icon={Icons.agent}   bar="hsl(270 55% 50%)" />
+                        <Kpi 
+                            label="Total Views"      
+                            value={fmtNum(ov.total_views)}      
+                            accent="hsl(214 80% 44%)"  iconBg="hsl(214 100% 95%)" iconColor="hsl(214 80% 48%)" icon={Icons.eye}     bar="hsl(214 80% 52%)" />
+                        <Kpi 
+                            label="Total Inquiries"  
+                            value={fmtNum(ov.total_inquiries)}  
+                            accent="hsl(200 65% 36%)"  iconBg="hsl(200 60% 93%)"  iconColor="hsl(200 60% 40%)" icon={Icons.chat}    bar="hsl(200 65% 44%)" />
+                        <Kpi
+                            label="Total Verifications"
+                            value={fmtNum(ov.total_verifications)}
+                            sub={`${fmtNum(avl.agent?.approved)} agents · ${fmtNum(avl.listing?.approved)} listings`}
+                            accent="hsl(220 25% 15%)" iconBg="hsl(220 20% 93%)" iconColor="hsl(220 25% 30%)" icon={Icons.home} bar="hsl(220 25% 30%)"
+                        />
                     </div>
                 </div>
 
@@ -338,9 +362,9 @@ const Reports = ({ analytics, filters }) => {
                             </div>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 0 }}>
                                 {[
-                                    { label: 'Approved', value: fmtNum(rvs.rent_count) },
-                                    { label: 'Pending',    value: fmtNum(rvs.rent_views) },
-                                    { label: 'Rejected',value: fmtNum(rvs.rent_inquiries) },
+                                    { label: 'Approved', value: fmtNum(avl.agent?.approved) },
+                                    { label: 'Pending',  value: fmtNum(avl.agent?.pending) },
+                                    { label: 'Rejected', value: fmtNum(avl.agent?.rejected) },
                                 ].map(({ label, value }, i, arr) => (
                                     <div key={label} style={{ padding: '1rem', textAlign: 'center', borderRight: i < arr.length - 1 ? '1px solid hsl(220 15% 93%)' : 'none' }}>
                                         <div style={{ fontSize: '1.3rem', fontWeight: '900', color: 'hsl(152 55% 33%)', lineHeight: 1 }}>{value}</div>
@@ -358,9 +382,9 @@ const Reports = ({ analytics, filters }) => {
                             </div>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 0 }}>
                                 {[
-                                    { label: 'Approved', value: fmtNum(rvs.sale_count) },
-                                    { label: 'Pending',    value: fmtNum(rvs.sale_views) },
-                                    { label: 'Rejected',value: fmtNum(rvs.sale_inquiries) },
+                                    { label: 'Approved', value: fmtNum(avl.listing?.approved) },
+                                    { label: 'Pending',  value: fmtNum(avl.listing?.pending) },
+                                    { label: 'Rejected', value: fmtNum(avl.listing?.rejected) },
                                 ].map(({ label, value }, i, arr) => (
                                     <div key={label} style={{ padding: '1rem', textAlign: 'center', borderRight: i < arr.length - 1 ? '1px solid hsl(220 15% 93%)' : 'none' }}>
                                         <div style={{ fontSize: '1.3rem', fontWeight: '900', color: 'hsl(214 80% 44%)', lineHeight: 1 }}>{value}</div>

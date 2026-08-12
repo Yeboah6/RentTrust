@@ -27,7 +27,7 @@ class AgentController extends Controller
             ->withAvg('reviews', 'overall_rating')
             ->get();
     
-        return inertia('AgentsPage', [
+        return inertia('Static/AgentsPage', [
             'agents' => $agents,
         ]);
     }

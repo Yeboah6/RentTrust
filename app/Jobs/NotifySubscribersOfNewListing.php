@@ -9,8 +9,8 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\{Log, Mail};
+use App\Mail\NewListingMail;
 use Illuminate\Support\Str;
 
 class NotifySubscribersOfNewListing implements ShouldQueue
@@ -31,8 +31,10 @@ class NotifySubscribersOfNewListing implements ShouldQueue
             return;
         }
 
-        $listingUrl = route('rent.property.show', [
-            'areaSlug' => $this->rental->area_slug,
+        $routeName = $this->rental->purpose === 'sale' ? 'buy.property.show' : 'rent.property.show';
+
+        $listingUrl = route($routeName, [
+            'areaSlug' => Str::slug($this->rental->area ?: 'area'),
             'propertySlug' => $this->rental->slug,
         ]);
 
@@ -43,9 +45,7 @@ class NotifySubscribersOfNewListing implements ShouldQueue
         $body = $this->buildEmailBody($listingUrl, $priceLabel);
 
         foreach ($emails as $email) {
-            Mail::raw($body, function ($message) use ($email) {
-                $message->to($email)->subject("New listing: {$this->rental->title}");
-            });
+          Mail::to($email)->queue(new NewListingMail($this->rental, $body));
         }
     }
 

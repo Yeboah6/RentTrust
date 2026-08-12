@@ -10,6 +10,8 @@ use App\Mail\AgentInvitation;
 use App\Models\AgentVerification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\{Hash, Log, DB, Mail, Auth, Storage};
+use App\Mail\AgentAccountUpdated;
+use App\Mail\AgentSuspended;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Str;
 use App\Http\Controllers\Controller;
@@ -17,34 +19,12 @@ use Illuminate\Http\Request;
 
 class AgentsController extends Controller
 {
-    // public function verifyAgent(Request $request, $id)
-    // {
-    //     $validated = $request->validate([
-    //         'status' => 'required|in:verified,rejected,request_info',
-    //     ]);
-
-    //     $verify = User::findOrFail($id);
-    //     $oldStatus = $verify->status;
-    //     $verify->update([
-    //         'status' => $validated['status'],
-    //         'updated_at' => now(),
-    //     ]);
-
-    //     // Audit log
-    //     AdminAuditLog::record('verification', "Agent verification status changed to {$validated['status']}", [
-    //         'affected_user' => $verify->name,
-    //         'affected_id' => $verify->id,
-    //         'notes' => "Status changed from {$oldStatus} to {$validated['status']}",
-    //         'properties' => ['old_status' => $oldStatus, 'new_status' => $validated['status']],
-    //     ]);
-
-    //     return redirect()->back()->with('success', 'Agent status updated successfully');
-    // }
 
     public function suspendAgent(Request $request, $id)
     {
         $validated = $request->validate([
             'status' => 'required|in:suspended,unverified',
+            'reason' => 'nullable|string|max:500',
         ]);
 
         $agent = User::findOrFail($id);
@@ -61,6 +41,11 @@ class AgentsController extends Controller
             'notes' => "Agent status changed from {$oldStatus} to {$validated['status']}",
             'properties' => ['old_status' => $oldStatus, 'new_status' => $validated['status']],
         ]);
+
+        // Notify agent (suspension or reactivation)
+        Mail::to($agent->email)->send(
+            new AgentSuspended($agent, auth()->user(), $validated['status'], $validated['reason'] ?? null)
+        );
 
         return redirect()->back()->with('success', 'Agent status updated successfully');
     }
@@ -149,40 +134,49 @@ class AgentsController extends Controller
         }
     }
 
-    public function updateAgentByAdmin(Request $request, $id) {
+    public function updateAgentByAdmin(Request $request, $id)
+    {
         $validated = $request->validate([
-            'name'=>'nullable|string|max:255',
-            'email' => 'nullable|email|unique:users,email,' . $id,
-            'phone'=>'nullable|string|max:15|unique:users,phone,' . $id,
-            'bio'=>'nullable|string|max:500',
-            'company'=>'nullable|string|max:255',
-            'fee'=>'nullable|numeric|min:0',
-            'location'=>'nullable|string|max:255',
-            'role' => ['nullable', Rule::in(['agent', 'landlord'])],
+            'name'    => 'nullable|string|max:255',
+            'email'   => 'nullable|email|unique:users,email,' . $id,
+            'phone'   => 'nullable|string|max:15|unique:users,phone,' . $id,
+            'bio'     => 'nullable|string|max:500',
+            'company' => 'nullable|string|max:255',
+            'fee'     => 'nullable|numeric|min:0',
+            'location'=> 'nullable|string|max:255',
+            'role'    => ['nullable', Rule::in(['agent', 'landlord'])],
         ]);
 
         $agent = User::where('id', $id)
-            ->where('role', 'agent')
-            ->orWhere('role', 'landlord')
+            ->whereIn('role', ['agent', 'landlord'])
             ->firstOrFail();
 
+        $before = $agent->only(['name', 'email', 'phone', 'bio', 'company', 'fee', 'location', 'role']);
+
         $agent->update([
-            'name' => $validated['name'] ?? $agent->name,
-            'email' => $validated['email'] ?? $agent->email,
-            'phone' => $validated['phone'] ?? $agent->phone,
-            'bio' => $validated['bio'] ?? $agent->bio,
-            'company' => $validated['company'] ?? $agent->company,
-            'fee' => $validated['fee'] ?? $agent->fee,
+            'name'     => $validated['name'] ?? $agent->name,
+            'email'    => $validated['email'] ?? $agent->email,
+            'phone'    => $validated['phone'] ?? $agent->phone,
+            'bio'      => $validated['bio'] ?? $agent->bio,
+            'company'  => $validated['company'] ?? $agent->company,
+            'fee'      => $validated['fee'] ?? $agent->fee,
             'location' => $validated['location'] ?? $agent->location,
-            'role' => $validated['role'] ?? $agent->role,
+            'role'     => $validated['role'] ?? $agent->role,
         ]);
+
+        $after = $agent->only(['name', 'email', 'phone', 'bio', 'company', 'fee', 'location', 'role']);
+        $changedFields = array_diff_assoc($after, $before);
 
         AdminAuditLog::record('user', 'Agent updated', [
             'affected_user' => $agent->name,
-            'affected_id' => $agent->id,
-            'notes' => 'Admin updated agent details.',
-            'properties' => $request->only(['name', 'email', 'phone', 'company', 'bio', 'fee', 'location']),
+            'affected_id'   => $agent->id,
+            'notes'         => 'Admin updated agent details.',
+            'properties'    => $changedFields,
         ]);
+
+        if (!empty($changedFields)) {
+            Mail::to($agent->email)->send(new AgentAccountUpdated($agent, $changedFields, auth()->user()));
+        }
 
         return redirect()->back()->with('success', 'Agent updated successfully');
     }
@@ -196,15 +190,15 @@ class AgentsController extends Controller
 
         $user = User::findOrFail($userId);
         $plan = Plan::findOrFail($request->plan_id);
+        $months = (int) $request->duration_months;
 
-        DB::transaction(function () use ($user, $plan, $request) {
+        DB::transaction(function () use ($user, $plan, $request, $months) {
             // Cancel existing active subscription
             Subscription::where('user_id', $user->id)
                 ->where('status', 'active')
                 ->update(['status' => 'cancelled']);
 
-            $months = (int) $request->duration_months;
-            $now    = now();
+            $now = now();
 
             // Create the complimentary subscription
             Subscription::create([
@@ -234,23 +228,38 @@ class AgentsController extends Controller
             'target_user_id'  => $userId,
             'plan_id'         => $plan->id,
             'plan_slug'       => $plan->slug,
-            'duration_months' => $request->duration_months,
+            'duration_months' => $months,
             'admin_id'        => auth()->id(),
         ]);
 
         AdminAuditLog::record('subscription', 'Subscription granted', [
             'affected_user' => $user->name,
             'affected_id' => $user->id,
-            'notes' => "Admin granted {$plan->name} plan for {$request->duration_months} month(s).",
+            'notes' => "Admin granted {$plan->name} plan for {$months} month(s).",
             'properties' => [
                 'plan_id' => $plan->id,
                 'plan_slug' => $plan->slug,
-                'duration_months' => $request->duration_months,
+                'duration_months' => $months,
                 'granted_by' => auth()->id(),
             ],
         ]);
 
-        return back()->with('success', "Granted {$plan->name} plan to {$user->name} for {$request->duration_months} month(s).");
+        // Notify the user
+        $expiresOn = now()->addMonths($months)->format('F j, Y');
+        Mail::raw(
+            "Hi {$user->name},\n\n" .
+            "Great news — your account has been upgraded to the {$plan->name} plan by our team.\n\n" .
+            "Duration: {$months} month(s)\n" .
+            "Expires on: {$expiresOn}\n\n" .
+            "You can now enjoy all the benefits of your new plan on RentTrustGH.\n\n" .
+            "Best,\nThe RentTrustGH Team",
+            function ($message) use ($user, $plan) {
+                $message->to($user->email)
+                    ->subject("You've Been Upgraded to {$plan->name} — RentTrustGH");
+            }
+        );
+
+        return back()->with('success', "Granted {$plan->name} plan to {$user->name} for {$months} month(s).");
     }
 
     public function resendInvitation($id)
@@ -265,7 +274,7 @@ class AgentsController extends Controller
         $expiresAt = now()->addDays(7)->toDateTimeString();
 
         // Send invitation email
-        Mail::to($agent->email)->queue(new AgentInvitation(
+        Mail::to($agent->email)->send(new AgentInvitation(
             $agent->name,
             $agent->email,
             $setupUrl,
@@ -391,8 +400,6 @@ class AgentsController extends Controller
             abort(404, 'Document not found');
         }
     
-        // NOTE: adjust this to whatever folder your store()/resubmit() actually
-        // saves agent verification uploads into — flagged as an assumption below.
         $filePath = 'agent_verification_documents/' . basename($foundFile);
     
         if (!Storage::disk('public')->exists($filePath)) {

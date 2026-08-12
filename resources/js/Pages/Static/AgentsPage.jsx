@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Link, usePage, Head } from "@inertiajs/react";
-import Header from "../Components/Layouts/Header";
-import Footer from "../Components/Layouts/Footer";
-import AgentProfileModal from '../Components/Modules/AgentProfileModal';
+import Header from "../../Components/Layouts/Header";
+import Footer from "../../Components/Layouts/Footer";
+import AgentProfileModal from '../../Components/Modules/AgentProfileModal';
 
 // Icon components
 const Search = ({ className, style }) => (

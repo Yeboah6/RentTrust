@@ -6,6 +6,8 @@ use App\Models\Rental;
 use App\Models\User;
 use App\Models\ListingInquiry;
 use App\Models\ListingView;
+use App\Models\AgentVerification;
+use App\Models\ListingVerification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\{Cache, DB};
 
@@ -63,7 +65,7 @@ class ReportService
                 'total_views' => ListingView::where('created_at', '>=', $startDate)
                     ->where('created_at', '<=', $endDate)
                     ->count(),
-                'total_verifications' => User::where('status', 'verified')->count(),
+                'total_verifications' => User::where('status', 'verified')->where('role', 'agent')->count(),
             ];
         });
     }
@@ -250,15 +252,28 @@ class ReportService
     public function getAgentVsListingStats($startDate, $endDate)
     {
         return [
-            'agent_verified' => User::where('created_at', '>=', $startDate)
-                ->where('created_at', '<=', $endDate)
-                ->where('status', 'verified')
-                ->count(),
-
-            'listing_verified' => Rental::where('created_at', '>=', $startDate)
-                ->where('created_at', '<=', $endDate)
-                ->where('status', 'verified')
-                ->count(),
+            'agent' => [
+                'approved' => AgentVerification::where('created_at', '>=', $startDate)
+                    ->where('created_at', '<=', $endDate)
+                    ->where('status', 'approved')->count(),
+                'pending' => AgentVerification::where('created_at', '>=', $startDate)
+                    ->where('created_at', '<=', $endDate)
+                    ->where('status', 'pending')->count(),
+                'rejected' => AgentVerification::where('created_at', '>=', $startDate)
+                    ->where('created_at', '<=', $endDate)
+                    ->where('status', 'rejected')->count(),
+            ],
+            'listing' => [
+                'approved' => ListingVerification::where('created_at', '>=', $startDate)
+                    ->where('created_at', '<=', $endDate)
+                    ->where('status', 'approved')->count(),
+                'pending' => ListingVerification::where('created_at', '>=', $startDate)
+                    ->where('created_at', '<=', $endDate)
+                    ->where('status', 'pending')->count(),
+                'rejected' => ListingVerification::where('created_at', '>=', $startDate)
+                    ->where('created_at', '<=', $endDate)
+                    ->where('status', 'rejected')->count(),
+            ],
         ];
     }
 

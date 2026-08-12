@@ -4,26 +4,30 @@ namespace App\Mail;
 
 use App\Models\User;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class AgentSuspended extends Mailable implements ShouldQueue
+class AgentSuspended extends Mailable
 {
     use Queueable, SerializesModels;
 
     public function __construct(
         public readonly User $agent,
         public readonly User $suspendedBy,
+        public readonly string $status,
         public readonly ?string $reason = null,
     ) {
     }
 
     public function envelope(): Envelope
     {
-        return new Envelope(subject: 'Your Agent Account Has Been Suspended');
+        return new Envelope(
+            subject: $this->status === 'suspended'
+                ? 'Your Agent Account Has Been Suspended'
+                : 'Your Agent Account Has Been Reactivated',
+        );
     }
 
     public function content(): Content
@@ -33,6 +37,7 @@ class AgentSuspended extends Mailable implements ShouldQueue
             with: [
                 'agent' => $this->agent,
                 'suspendedBy' => $this->suspendedBy,
+                'status' => $this->status,
                 'reason' => $this->reason,
             ]
         );

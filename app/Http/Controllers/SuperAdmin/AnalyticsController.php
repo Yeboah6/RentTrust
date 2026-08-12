@@ -9,6 +9,8 @@ use App\Models\Payment;
 use App\Models\Subscription;
 use App\Models\ListingView;
 use App\Models\ListingInquiry;
+use App\Models\AgentVerification;
+use App\Models\ListingVerification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -169,10 +171,15 @@ class AnalyticsController extends Controller
         // ── Listings ──────────────────────────────────────────────────────────
 
         $totalListings   = Rental::count();
-        $activeListings  = Rental::where('status', 'approved')->where('is_sold', false)->count();
-        $pendingListings = Rental::where('status', 'pending')->count();
+        $activeListings  = Rental::where('status', 'active')->where('is_sold', false)->count();
+        $soldStatusListings = Rental::where('status', 'sold')->count();
+        $rentedStatusListings = Rental::where('status', 'rented')->count();
+        $inactiveListings = Rental::where('status', 'inactive')->count();
+        $pendingListings = $soldStatusListings +  $rentedStatusListings + $inactiveListings;
         $soldListings    = Rental::where('is_sold', true)->count();
         $rentedListings  = Rental::where('purpose', 'rent')->where('status', 'rented')->count();
+
+
 
         $listingStats = [
             'total'    => $totalListings,
@@ -285,6 +292,35 @@ class AnalyticsController extends Controller
             ->get()
             ->map(fn ($r) => ['month' => $r->month, 'count' => (int) $r->count]);
 
+        // ── Verifications ────────────────────────────────────────────────────
+
+        $verMonthFmt = $this->monthFormat('created_at');
+
+        $agentVerBase   = AgentVerification::whereBetween('created_at', [$from, $to]);
+        $listingVerBase = ListingVerification::whereBetween('created_at', [$from, $to]);
+
+        $agentVerStats = [
+            'approved' => (clone $agentVerBase)->where('status', 'approved')->count(),
+            'pending'  => (clone $agentVerBase)->where('status', 'pending')->count(),
+            'rejected' => (clone $agentVerBase)->where('status', 'rejected')->count(),
+        ];
+
+        $listingVerStats = [
+            'approved' => (clone $listingVerBase)->where('status', 'approved')->count(),
+            'pending'  => (clone $listingVerBase)->where('status', 'pending')->count(),
+            'rejected' => (clone $listingVerBase)->where('status', 'rejected')->count(),
+        ];
+
+        $agentVerGrowth = (clone $agentVerBase)
+            ->select(DB::raw("{$verMonthFmt} as month"), DB::raw('COUNT(*) as count'))
+            ->groupBy('month')->orderBy('month')->get()
+            ->map(fn ($r) => ['month' => $r->month, 'count' => (int) $r->count]);
+
+        $listingVerGrowth = (clone $listingVerBase)
+            ->select(DB::raw("{$verMonthFmt} as month"), DB::raw('COUNT(*) as count'))
+            ->groupBy('month')->orderBy('month')->get()
+            ->map(fn ($r) => ['month' => $r->month, 'count' => (int) $r->count]);
+
         // ── Assemble and return ───────────────────────────────────────────────
 
         return Inertia::render('SuperAdmin/Analytics/Index', [
@@ -332,6 +368,14 @@ class AnalyticsController extends Controller
                 ],
                 'inquiries_by_type'   => $inquiriesByType,
                 'inquiries_over_time' => $inquiriesOverTime,
+
+                // Verifications
+                'verifications' => [
+                    'agent'          => $agentVerStats,
+                    'listing'        => $listingVerStats,
+                    'agent_growth'   => $agentVerGrowth,
+                    'listing_growth' => $listingVerGrowth,
+                ],
             ],
         ]);
     }

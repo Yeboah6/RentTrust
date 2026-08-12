@@ -438,7 +438,7 @@ const AgentCard = ({ agent, onViewDetails, onEdit, onSuspend, onUpgrade, onResen
                 )}
 
                 {/* Delete button - pushed to the right */}
-                <button
+                {/* <button
                     onClick={() => onDelete?.(agent)}
                     style={{
                         display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
@@ -453,7 +453,7 @@ const AgentCard = ({ agent, onViewDetails, onEdit, onSuspend, onUpgrade, onResen
                 >
                     <Ico d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" size="0.7rem" />
                     Delete
-                </button>
+                </button> */}
             </div>
         </div>
     );
@@ -468,7 +468,7 @@ const AgentsTab = ({
     onSuspend,
     onUpgrade,
     onResendInvite,
-    onDelete,
+    // onDelete,
 }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
@@ -617,7 +617,6 @@ const AgentsTab = ({
                                 onSuspend={onSuspend}
                                 onUpgrade={onUpgrade}
                                 onResendInvite={onResendInvite}
-                                onDelete={onDelete}
                             />
                         ))}
                     </div>
