@@ -12,7 +12,6 @@ use App\Http\Controllers\SuperAdmin\PropertyTypeController;
 use App\Http\Controllers\SuperAdmin\LocationController;
 use App\Http\Controllers\SuperAdmin\AmenityController;
 use App\Http\Controllers\SuperAdmin\SettingsController;
-use App\Http\Controllers\SuperAdmin\FeatureFlagController;
 use App\Http\Controllers\SuperAdmin\SystemController;
 use App\Http\Controllers\SuperAdmin\TenantController;
 use App\Http\Controllers\SuperAdmin\ProfileController;
@@ -111,6 +110,9 @@ Route::prefix('super-admin')
     
     Route::patch('/verifications/{verification}/reject', [ListingController::class, 'verificationReject'])
         ->name('verifications.reject');
+
+    Route::get('/admin/documents', [ListingController::class, 'showDownload'])->name('admin.documents.show');
+    Route::get('/admin/documents/download', [ListingController::class, 'download'])->name('admin.documents.download');
 
     // ── Admin accounts ───────────────────────────────────────────────────────
     Route::resource('admins', AdminController::class)

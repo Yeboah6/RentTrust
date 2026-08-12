@@ -115,13 +115,6 @@ const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views
     setShowViewModal(true);
   };
 
-  // const handleDeleteListing = (propertyId) => {
-  //     // Remove the property from state
-  //     setProperties(prevProperties => 
-  //         prevProperties.filter(property => property.id !== propertyId)
-  //     );
-  // };
-
   const handleDeleteClick = (property) => {
     if (!window.confirm(`Delete "${property.title}"? This can't be undone.`)) return;
     router.delete(`/rent/${property.id}`, { preserveScroll: true });

@@ -29,6 +29,7 @@ const Icons = {
     chevL:    () => <Ico d="M15 19l-7-7 7-7" size="0.8rem" />,
     chevR:    () => <Ico d="M9 5l7 7-7 7" size="0.8rem" />,
     external:  () => <Ico d={["M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6","M15 3h6v6M10 14L21 3"]} size="0.8rem" />,
+    download:  () => <Ico d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" size="0.75rem" />,
     spinner:  () => (
         <svg style={{ width: '0.95rem', height: '0.95rem', animation: 'lvSpin 0.75s linear infinite', flexShrink: 0 }} fill="none" viewBox="0 0 24 24">
             <circle style={{ opacity: 0.2 }} cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -65,7 +66,10 @@ const fmtDate = (v) => {
 
 const avatarHue = (s = '') => [...s].reduce((a, c) => a + c.charCodeAt(0), 0) % 360;
 
-const isImageUrl = (url = '') => /\.(png|jpe?g|gif|webp|bmp)(\?.*)?$/i.test(url);
+const isImageUrl = (path = '') => /\.(png|jpe?g|gif|webp|bmp)(\?.*)?$/i.test(path);
+
+const docUrl = (path) => `/super-admin/admin/documents?path=${encodeURIComponent(path)}`;
+const docDownloadUrl = (path) => `/super-admin/admin/documents/download?path=${encodeURIComponent(path)}`;
 
 const docCount = (v) =>
     (v.ownership_documents?.length || 0) + (v.photos?.length || 0) + (v.other_documents?.length || 0);
@@ -169,21 +173,33 @@ const DocumentsModal = ({ verification, onClose }) => {
                                     <p style={{ margin: 0, fontSize: '0.78rem', color: 'hsl(220 15% 60%)', fontStyle: 'italic' }}>None submitted</p>
                                 ) : (
                                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(96px, 1fr))', gap: '0.6rem' }}>
-                                        {files.map((url, i) => (
-                                            <a key={i} href={url} target="_blank" rel="noopener noreferrer"
-                                                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.3rem', textDecoration: 'none', border: '1px solid hsl(220 15% 90%)', borderRadius: '0.55rem', padding: '0.4rem', backgroundColor: 'hsl(220 15% 98%)' }}>
-                                                {isImageUrl(url) ? (
-                                                    <img src={url} alt="" style={{ width: '100%', height: '72px', objectFit: 'cover', borderRadius: '0.4rem' }} />
-                                                ) : (
-                                                    <div style={{ width: '100%', height: '72px', borderRadius: '0.4rem', backgroundColor: 'hsl(220 15% 93%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'hsl(220 15% 50%)' }}>
-                                                        <Icons.doc />
+                                        {files.map((path, i) => {
+                                            const view = docUrl(path);
+                                            const download = docDownloadUrl(path);
+                                            return (
+                                                <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.3rem', border: '1px solid hsl(220 15% 90%)', borderRadius: '0.55rem', padding: '0.4rem', backgroundColor: 'hsl(220 15% 98%)' }}>
+                                                    <a href={view} target="_blank" rel="noopener noreferrer" style={{ display: 'block', width: '100%', textDecoration: 'none' }}>
+                                                        {isImageUrl(path) ? (
+                                                            <img src={view} alt="" style={{ width: '100%', height: '72px', objectFit: 'cover', borderRadius: '0.4rem' }} />
+                                                        ) : (
+                                                            <div style={{ width: '100%', height: '72px', borderRadius: '0.4rem', backgroundColor: 'hsl(220 15% 93%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'hsl(220 15% 50%)' }}>
+                                                                <Icons.doc />
+                                                            </div>
+                                                        )}
+                                                    </a>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                        <a href={view} target="_blank" rel="noopener noreferrer"
+                                                            style={{ fontSize: '0.62rem', color: 'hsl(214 80% 44%)', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.2rem', textDecoration: 'none' }}>
+                                                            View <Icons.external />
+                                                        </a>
+                                                        <a href={download}
+                                                            style={{ fontSize: '0.62rem', color: 'hsl(220 15% 50%)', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.2rem', textDecoration: 'none' }}>
+                                                            <Icons.download />
+                                                        </a>
                                                     </div>
-                                                )}
-                                                <span style={{ fontSize: '0.62rem', color: 'hsl(214 80% 44%)', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                                                    View <Icons.external />
-                                                </span>
-                                            </a>
-                                        ))}
+                                                </div>
+                                            );
+                                        })}
                                     </div>
                                 )}
                             </div>
@@ -369,9 +385,15 @@ const VerificationsIndex = ({ verifications: raw = [], metrics: serverMetrics = 
     const confirmReview = (adminNotes) => {
         const { verification, action } = reviewModal;
         setProcessing(true);
-        const url = `/super-admin/verifications/${verification.id}/${action}`;
+        // Listing verifications live on their own route, distinct from the
+        // agent-identity verification endpoints — same "approve"/"reject" verbs,
+        // different resource. Also POST (matching the controllers), not PATCH.
+        const url = `/super-admin/listing-verifications/${verification.id}/${action}`;
+        const payload = action === 'approve'
+            ? { admin_notes: adminNotes }
+            : { rejection_reason: adminNotes };
 
-        router.patch(url, { admin_notes: adminNotes }, {
+        router.post(url, payload, {
             preserveScroll: true,
             onSuccess: () => {
                 showToast(`Verification ${action === 'approve' ? 'approved' : 'rejected'}.`);

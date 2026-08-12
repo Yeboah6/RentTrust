@@ -153,8 +153,8 @@ Route::middleware(['auth','verified'])->group(function () {
     Route::post('/verification-requests', [ListingVerificationController::class, 'store'])
         ->name('verification-requests.store');
 
-    Route::delete('/rent/{rental}', [RentalController::class, 'destroy'])
-        ->name('rent.destroy');
+    // Route::delete('/rent/{rental}', [RentalController::class, 'destroy'])
+    //     ->name('rent.destroy');
 
     // ── Settings (protected + verified) ──────────────────────────────────────────
     Route::get('settings', [AuthController::class, 'settings'])->name('settings.page');
@@ -198,9 +198,8 @@ Route::middleware(['auth','verified','throttle:60,1','role:admin'])->group(funct
     Route::post('/admin/agent-verifications/{agentVerification}/approve', [AgentsController::class, 'approveAgentVerification']);
     Route::post('/admin/agent-verifications/{agentVerification}/reject', [AgentsController::class, 'rejectAgentVerification']);
 
-    Route::put('/admin/listing-verifications/{listingVerification}/approve', [ListingController::class, 'approveListingVerification']);
-
-    Route::put('/admin/listing-verifications/{listingVerification}/reject', [ListingController::class, 'rejectListingVerification']);
+    Route::post('/admin/listing-verifications/{listingVerification}/approve', [ListingController::class, 'approveListingVerification']);
+    Route::post('/admin/listing-verifications/{listingVerification}/reject', [ListingController::class, 'rejectListingVerification']);
 });
 
 Route::middleware('guest')->group(function () {
