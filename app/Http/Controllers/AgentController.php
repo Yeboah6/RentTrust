@@ -18,9 +18,9 @@ class AgentController extends Controller
     public function agent()
     {
         $agents = User::where(function ($query) {
-                $query->where('role', 'agent')
-                      ->orWhere('role', 'landlord');
-            })
+            $query->where('role', 'agent')
+                  ->orWhere('role', 'landlord');
+        })
             ->where('status', 'verified')
             ->withCount('rentals')
             ->withCount('reviews')
@@ -56,7 +56,7 @@ class AgentController extends Controller
         Auth::login($agent);
 
         try {
-            Mail::to($agent->email)->queue(new AgentRegistration(
+            Mail::to($agent->email)->send(new AgentRegistration(
                 agentName: $agent->name,
                 agentEmail: $agent->email,
                 agentType: $agent->type ?? 'Agent',

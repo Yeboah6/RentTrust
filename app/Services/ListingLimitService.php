@@ -9,6 +9,9 @@ use Illuminate\Database\Eloquent\Collection;
 
 class ListingLimitService
 {
+    private const RENTAL_SLOT_STATUSES = ['active', 'inactive', 'rented'];
+    private const SALE_SLOT_STATUSES   = ['active', 'inactive', 'sold'];
+
     /**
      * Get the active subscription for a user
      */
@@ -27,7 +30,7 @@ class ListingLimitService
     public function getUserPlan(User $user)
     {
         $subscription = $this->getActiveSubscription($user);
-        
+
         if ($subscription) {
             return $subscription->plan;
         }
@@ -36,30 +39,33 @@ class ListingLimitService
         return \App\Models\Plan::where('slug', 'free')->first();
     }
 
+    private function scopeOwnedBy($query, User $user)
+    {
+        return $query->where(function ($q) use ($user) {
+            $q->where('user_id', $user->id)
+              ->orWhere('agent_id', $user->id);
+        });
+    }
+
     /**
-     * Count active rental listings for a user
+     * Count rental listings that currently occupy a plan slot for this user
      */
     public function countActiveRentals(User $user): int
     {
-        return Rental::where(function ($q) use ($user) {
-                $q->where('user_id', $user->id)
-                  ->orWhere('agent_id', $user->id);
-            })
+        return $this->scopeOwnedBy(Rental::query(), $user)
             ->where('purpose', 'rent')
-            ->whereIn('status', ['approved', 'pending'])
-            ->where('is_rented', false)
+            ->whereIn('status', self::RENTAL_SLOT_STATUSES)
             ->count();
     }
-    
+
+    /**
+     * Count sale listings that currently occupy a plan slot for this user
+     */
     public function countActiveSales(User $user): int
     {
-        return Rental::where(function ($q) use ($user) {
-                $q->where('user_id', $user->id)
-                  ->orWhere('agent_id', $user->id);
-            })
+        return $this->scopeOwnedBy(Rental::query(), $user)
             ->where('purpose', 'sale')
-            ->whereIn('status', ['approved', 'pending'])
-            ->where('is_sold', false)
+            ->whereIn('status', self::SALE_SLOT_STATUSES)
             ->count();
     }
 
@@ -69,7 +75,7 @@ class ListingLimitService
     public function canCreateRental(User $user): bool
     {
         $plan = $this->getUserPlan($user);
-        
+
         // If no limit (unlimited)
         if (is_null($plan->rental_limit)) {
             return true;
@@ -84,7 +90,7 @@ class ListingLimitService
     public function canCreateSale(User $user): bool
     {
         $plan = $this->getUserPlan($user);
-        
+
         // If no limit (unlimited)
         if (is_null($plan->sale_limit)) {
             return true;
@@ -115,7 +121,7 @@ class ListingLimitService
     public function getRemainingRentals(User $user): ?int
     {
         $limit = $this->getRentalLimit($user);
-        
+
         if (is_null($limit)) {
             return null; // unlimited
         }
@@ -130,7 +136,7 @@ class ListingLimitService
     public function getRemainingSales(User $user): ?int
     {
         $limit = $this->getSaleLimit($user);
-        
+
         if (is_null($limit)) {
             return null; // unlimited
         }
@@ -139,9 +145,6 @@ class ListingLimitService
         return max(0, $limit - $active);
     }
 
-    /**
-     * Get limit status for user (for UI display)
-     */
     public function getLimitStatus(User $user): array
     {
         $plan = $this->getUserPlan($user);
@@ -149,15 +152,8 @@ class ListingLimitService
         $rentalLimit = $this->getRentalLimit($user);
         $saleLimit   = $this->getSaleLimit($user);
 
-        $activeRentals = Rental::where('user_id', $user->id)
-        ->where('purpose', 'rent')
-        ->whereIn('status',['active', 'inactive', 'rented'])
-        ->count();
-
-        $activeSales = Rental::where('user_id', $user->id)
-            ->where('purpose', 'sale')
-            ->whereIn('status',['active', 'inactive', 'sold'])
-            ->count();
+        $activeRentals = $this->countActiveRentals($user);
+        $activeSales   = $this->countActiveSales($user);
 
         return [
             'plan' => $plan ?? 'free',

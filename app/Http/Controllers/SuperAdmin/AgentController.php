@@ -8,16 +8,12 @@ use App\Models\User;
 use App\Models\Rental;
 use App\Models\AdminAuditLog;
 use App\Models\AgentVerification;
-use Illuminate\Support\Facades\{DB, Hash, Log, Storage};
+use Illuminate\Support\Facades\{DB, Hash, Log, Storage, Mail};
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use App\Mail\AgentInvitation;
-use App\Mail\AgentStatusChanged;
-use Illuminate\Support\Facades\Mail;
-use App\Mail\AgentAccountUpdated;
 use App\Mail\AgentSuspended;
 use App\Mail\AgentReactivated;
-use App\Mail\AgentDeleted;
 use Illuminate\Support\Str;
 
 class AgentController extends Controller
@@ -27,7 +23,7 @@ class AgentController extends Controller
         $agents = User::where('role', 'agent')
             ->withCount([
                 'rentals as listings_count',
-                'rentals as active_listings' => fn($q) => $q->where('status', 'approved')->where('is_sold', false),
+                'rentals as active_listings' => fn($q) => $q->where('status', 'active')->where('is_sold', false),
                 'rentals as sold_count'      => fn($q) => $q->where('is_sold', true),
                 'reviews as reviews_count',
             ])
@@ -101,7 +97,7 @@ class AgentController extends Controller
             'name'                   => $validated['name'],
             'email'                  => $validated['email'],
             'phone'                  => $validated['phone']   ?? null,
-            'fee'                   => $validated['fees']    ?? null,
+            'fee'                    => $validated['fees']    ?? null,
             'company'                => $validated['company'] ?? null,
             'type'                   => $validated['type']    ?? null,
             'bio'                    => $validated['bio']     ?? null,
@@ -116,7 +112,7 @@ class AgentController extends Controller
 
         $setupUrl = route('agent.setup', ['token' => $setupToken]);
 
-        Mail::to($agent->email)->queue(
+        Mail::to($agent->email)->send(
             new AgentInvitation(
                 agentName: $agent->name,
                 agentEmail: $agent->email,
@@ -138,13 +134,13 @@ class AgentController extends Controller
             ->route('super-admin.agents.index')
             ->with('success', "Agent \"{$agent->name}\" created. Invitation sent to {$agent->email}.");
 
-    } catch (\Throwable $e) {
-        DB::rollBack();
-        Log::error('Agent creation failed', ['error' => $e->getMessage()]);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error('Agent creation failed', ['error' => $e->getMessage()]);
 
-        return back()->withErrors(['email' => $e->getMessage()]);
+            return back()->withErrors(['email' => $e->getMessage()]);
+        }
     }
-}
 
 
     // ─── Show ─────────────────────────────────────────────────────────────────
@@ -297,7 +293,7 @@ class AgentController extends Controller
         ]);
 
         try {
-            Mail::to($agent->email)->queue(
+            Mail::to($agent->email)->send(
                 new AgentSuspended(
                     agent: $agent,
                     suspendedBy: auth()->user(),
@@ -347,7 +343,7 @@ class AgentController extends Controller
         ]);
 
         try {
-            Mail::to($agent->email)->queue(
+            Mail::to($agent->email)->send(
                 new AgentReactivated(
                     agent: $agent,
                     reactivatedBy: auth()->user(),
@@ -417,13 +413,23 @@ class AgentController extends Controller
         ]);
 
         try {
-            Mail::to($email)->queue(
-                new AgentDeleted(
-                    agentName: $name,
-                    agentEmail: $email,
-                    deletedBy: auth()->user()?->name ?? 'System',
-                )
-            );
+            Mail::raw(
+            "Hi {$name},\n\n" .
+            "Good news — your RentTrustGH agent verification has been approved. " .
+            "Your account is now marked as verified and your listings will show the verified badge.\n\n" .
+            "RentTrustGH",
+            function ($message) use ($verification) {
+                $message->to($email)
+                    ->subject('You\'re verified on RentTrustGH');
+            }
+        );
+            // Mail::to($email)->send(
+            //     new AgentDeleted(
+            //         agentName: $name,
+            //         agentEmail: $email,
+            //         deletedBy: auth()->user()?->name ?? 'System',
+            //     )
+            // );
         } catch (\Throwable $e) {
             Log::warning('Failed to send agent deletion email', [
                 'agent_email' => $email,

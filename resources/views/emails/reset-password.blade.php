@@ -5,15 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="light dark">
 <title>Reset your RentTrustGh password</title>
-<!--[if mso]>
-<noscript>
-<xml>
-<o:OfficeDocumentSettings>
-<o:PixelsPerInch>96</o:PixelsPerInch>
-</o:OfficeDocumentSettings>
-</xml>
-</noscript>
-<![endif]-->
 <style>
   body, table, td { -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; }
   table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
@@ -53,21 +44,6 @@
     <!-- Card -->
     <tr>
       <td class="email-padding" style="background-color:#0f0e0c; border: 1px solid #262220; border-radius: 6px; padding: 44px 40px;">
-
-        <!-- Icon -->
-        {{-- <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin-bottom: 24px;">
-          <tr>
-            <td width="52" height="52" align="center" valign="middle" style="background: linear-gradient(135deg, #d9932f, #e0a838); border-radius: 8px;">
-              <!--[if mso]><span style="font-family: Arial, sans-serif; font-size:22px; color:#0a0908;">&#128274;</span><![endif]-->
-              <!--[if !mso]><!-->
-              {{-- <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0a0908" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-              {{-- </svg> 
-              <!--<![endif]-->
-            </td>
-          </tr>
-        </table> --}}
 
         <!-- Heading -->
         <h1 style="margin: 0 0 8px; text-align: center; font-family: Georgia, 'Times New Roman', serif; font-size: 24px; font-weight: 700; color: #f5efe6;">

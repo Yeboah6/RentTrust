@@ -2,6 +2,39 @@ import React, { useState, useEffect } from 'react';
 import { useForm, usePage } from '@inertiajs/react';
 import { Home, MapPin, DollarSign, Calendar, Image, FileText, CheckCircle2, AlertCircle, Upload, X } from 'lucide-react';
 
+// Which step each backend-validated field lives on — used to jump the wizard
+// to the first step that actually contains a server-side validation error,
+// since submission only happens from step 4 and errors on earlier steps
+// would otherwise be invisible.
+const STEP_FIELDS = {
+  1: ['title', 'propertyType', 'city', 'area', 'address'],
+  2: ['rentMin', 'rentMax', 'advanceDuration', 'salePrice', 'bedrooms', 'bathrooms', 'amenities', 'images'],
+  3: ['agentName', 'agentPhone', 'agentEmail'],
+};
+
+const FIELD_LABELS = {
+  title: 'Property Title',
+  propertyType: 'Property Type',
+  city: 'Region',
+  area: 'Area/Neighborhood',
+  address: 'Address',
+  rentMin: 'Rent Minimum',
+  rentMax: 'Rent Maximum',
+  advanceDuration: 'Advance Duration',
+  salePrice: 'Sale Price',
+  bedrooms: 'Bedrooms',
+  bathrooms: 'Bathrooms',
+  amenities: 'Amenities',
+  images: 'Images',
+  agentName: 'Your Name',
+  agentPhone: 'Phone Number',
+  agentEmail: 'Email Address',
+};
+
+// Truthy checks reject valid `0` values (e.g. 0 bedrooms) — this only
+// treats empty/null/undefined as "not filled in".
+const isFilled = (v) => v !== '' && v !== null && v !== undefined;
+
 const AddRentalPage = ({ agentData, setShowAddListingModal, adminData, locations = [], propertyTypes = [], amenities = [] }) => {
 
   const { data, setData, post, transform, processing, errors, reset } = useForm({
@@ -96,18 +129,21 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData, locations
 
   const validateStep = (step) => {
     if (step === 1) {
-      return data.title && data.propertyType && data.city && data.area;
+      return isFilled(data.title) && isFilled(data.propertyType) && isFilled(data.city) && isFilled(data.area);
     } else if (step === 2) {
       if (data.purpose === 'rent') {
-        return data.rentMin && data.rentMax && data.bedrooms && data.advanceDuration;
+        return isFilled(data.rentMin) && isFilled(data.rentMax) && isFilled(data.bedrooms) && isFilled(data.advanceDuration);
       }
       // sale
-      return data.salePrice && data.bedrooms;
+      return isFilled(data.salePrice) && isFilled(data.bedrooms);
     } else if (step === 3) {
-      return data.agentName && data.agentPhone && data.agentEmail;
+      return isFilled(data.agentName) && isFilled(data.agentPhone) && isFilled(data.agentEmail);
     }
     return true;
   };
+
+  // True if any field belonging to this step currently has a server error
+  const stepHasError = (step) => STEP_FIELDS[step].some((field) => Boolean(errors[field]));
 
   const handleNext = (e) => {
     e.preventDefault();
@@ -124,6 +160,11 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData, locations
     setCurrentStep(prev => Math.max(prev - 1, 1));
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };  
+
+  const goToStep = (step) => {
+    setCurrentStep(step);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -167,9 +208,19 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData, locations
           if (setShowAddListingModal) setShowAddListingModal(false);
         }, 1500);
       },
-      onError: (errors) => {
-        console.error('Submission errors:', errors);
-        showToast("Submission Failed", "Please correct the errors and try again.", "error");
+      onError: (errs) => {
+        console.error('Submission errors:', errs);
+        // Jump to the earliest step that actually contains an invalid field
+        // — without this, an error on step 1 or 2 would be silently
+        // unreachable since submission only happens from step 4.
+        const failingStep = [1, 2, 3].find((step) =>
+          STEP_FIELDS[step].some((field) => Boolean(errs[field]))
+        );
+        if (failingStep) {
+          setCurrentStep(failingStep);
+        }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        showToast("Submission Failed", "Please fix the highlighted fields below and try again.", "error");
       },
     });
   };
@@ -180,6 +231,9 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData, locations
     { number: 3, title: 'Contact Information', icon: FileText },
     { number: 4, title: 'Review & Submit', icon: CheckCircle2 }
   ];
+
+  const errorEntries = Object.entries(errors || {});
+  const purposeAccent = data.purpose === 'sale' ? 'hsl(38 92% 50%)' : 'hsl(174 62% 32%)';
 
   return (
     <>
@@ -371,20 +425,35 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData, locations
             padding: 'clamp(0.75rem, 3vw, 1.5rem) clamp(0.75rem, 3vw, 1rem)'
           }}>
             <div className="steps-wrapper flex items-center max-w-3xl mx-auto">
-              {steps.map((step, index) => (
+              {steps.map((step, index) => {
+                const hasError = step.number !== 4 && stepHasError(step.number);
+                return (
                 <React.Fragment key={step.number}>
-                  <div className="flex flex-col items-center flex-shrink-0" style={{ gap: 'clamp(0.25rem, 1vw, 0.5rem)' }}>
-                    <div 
+                  <button
+                    type="button"
+                    onClick={() => goToStep(step.number)}
+                    className="flex flex-col items-center flex-shrink-0"
+                    style={{ gap: 'clamp(0.25rem, 1vw, 0.5rem)', border: 'none', background: 'transparent', cursor: 'pointer', padding: 0 }}
+                  >
+                    <div
                       className="step-icon rounded-full flex items-center justify-center font-semibold transition-all duration-300"
                       style={{
+                        position: 'relative',
                         width: 'clamp(2.25rem, 10vw, 3rem)',
                         height: 'clamp(2.25rem, 10vw, 3rem)',
-                        backgroundColor: currentStep >= step.number ? 'hsl(174 62% 32%)' : 'hsl(40 30% 94%)',
-                        color: currentStep >= step.number ? 'white' : 'hsl(200 15% 45%)',
+                        backgroundColor: hasError
+                          ? 'hsl(0 72% 51%)'
+                          : currentStep >= step.number ? 'hsl(174 62% 32%)' : 'hsl(40 30% 94%)',
+                        color: hasError || currentStep >= step.number ? 'white' : 'hsl(200 15% 45%)',
                         fontSize: 'clamp(0.75rem, 2.5vw, 1rem)'
                       }}
                     >
-                      {currentStep > step.number ? (
+                      {hasError ? (
+                        <AlertCircle style={{
+                          height: 'clamp(1.125rem, 4vw, 1.5rem)',
+                          width: 'clamp(1.125rem, 4vw, 1.5rem)'
+                        }} />
+                      ) : currentStep > step.number ? (
                         <CheckCircle2 style={{ 
                           height: 'clamp(1.125rem, 4vw, 1.5rem)', 
                           width: 'clamp(1.125rem, 4vw, 1.5rem)' 
@@ -399,13 +468,13 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData, locations
                     <span 
                       className="step-title font-medium text-center leading-tight"
                       style={{ 
-                        color: currentStep >= step.number ? 'hsl(174 62% 32%)' : 'hsl(200 15% 45%)',
+                        color: hasError ? 'hsl(0 72% 51%)' : currentStep >= step.number ? 'hsl(174 62% 32%)' : 'hsl(200 15% 45%)',
                         fontSize: 'clamp(0.625rem, 2vw, 0.75rem)'
                       }}
                     >
                       {step.title}
                     </span>
-                  </div>
+                  </button>
                   {index < steps.length - 1 && (
                     <div 
                       className="step-connector h-1 rounded transition-all duration-300"
@@ -418,7 +487,7 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData, locations
                     />
                   )}
                 </React.Fragment>
-              ))}
+              )})}
             </div>
           </div>
         </div>
@@ -432,6 +501,44 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData, locations
               borderColor: 'hsl(40 20% 88%)',
               padding: 'clamp(1rem, 4vw, 2rem)'
             }}>
+
+              {/* Error summary — always visible regardless of which step is
+                  showing, so a server error on a hidden step is never silently lost */}
+              {errorEntries.length > 0 && (
+                <div style={{
+                  marginBottom: 'clamp(1rem, 3vw, 1.5rem)',
+                  padding: 'clamp(0.75rem, 3vw, 1rem)',
+                  borderRadius: '0.625rem',
+                  backgroundColor: 'hsl(0 72% 51% / 0.06)',
+                  border: '1px solid hsl(0 72% 51% / 0.25)',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.625rem' }}>
+                    <AlertCircle style={{ width: '1.125rem', height: '1.125rem', color: 'hsl(0 72% 51%)', flexShrink: 0, marginTop: '0.125rem' }} />
+                    <div style={{ flex: 1 }}>
+                      <p style={{ margin: 0, fontWeight: 600, color: 'hsl(0 72% 45%)', fontSize: 'clamp(0.8125rem, 2.5vw, 0.875rem)' }}>
+                        {errorEntries.length === 1 ? '1 issue needs your attention' : `${errorEntries.length} issues need your attention`}
+                      </p>
+                      <ul style={{ margin: '0.375rem 0 0', paddingLeft: '1.1rem', display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                        {errorEntries.map(([field, message]) => {
+                          const step = [1, 2, 3].find((s) => STEP_FIELDS[s].includes(field));
+                          return (
+                            <li key={field} style={{ fontSize: 'clamp(0.75rem, 2vw, 0.8125rem)', color: 'hsl(200 25% 20%)' }}>
+                              <button
+                                type="button"
+                                onClick={() => step && goToStep(step)}
+                                style={{ background: 'none', border: 'none', padding: 0, cursor: step ? 'pointer' : 'default', color: 'inherit', textDecoration: step ? 'underline' : 'none', font: 'inherit' }}
+                              >
+                                <strong>{FIELD_LABELS[field] || field}:</strong> {message}
+                              </button>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <form onSubmit={handleSubmit}>
               {/* Step 1: Property Details */}
               {currentStep === 1 && (
@@ -441,14 +548,30 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData, locations
                       <button
                         type="button"
                         onClick={() => handlePurposeChange('rent')}
-                        className={`px-4 py-2 rounded-lg font-medium transition-all ${data.purpose === 'rent' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700'}`}
+                        className="font-medium transition-all"
+                        style={{
+                          padding: '0.5rem 1rem',
+                          borderRadius: '0.5rem',
+                          border: 'none',
+                          cursor: 'pointer',
+                          backgroundColor: data.purpose === 'rent' ? 'hsl(174 62% 32%)' : 'hsl(40 30% 94%)',
+                          color: data.purpose === 'rent' ? 'white' : 'hsl(200 25% 15%)',
+                        }}
                       >
                         For Rent
                       </button>
                       <button
                         type="button"
                         onClick={() => handlePurposeChange('sale')}
-                        className={`px-4 py-2 rounded-lg font-medium transition-all ${data.purpose === 'sale' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700'}`}
+                        className="font-medium transition-all"
+                        style={{
+                          padding: '0.5rem 1rem',
+                          borderRadius: '0.5rem',
+                          border: 'none',
+                          cursor: 'pointer',
+                          backgroundColor: data.purpose === 'sale' ? 'hsl(38 92% 50%)' : 'hsl(40 30% 94%)',
+                          color: data.purpose === 'sale' ? 'hsl(200 25% 10%)' : 'hsl(200 25% 15%)',
+                        }}
                       >
                         For Sale
                       </button>
@@ -518,7 +641,6 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData, locations
                         }}
                       >
                         <option value="">Select type</option>
-                        {/* <option value={PropertyNames}>{PropertyNames}</option> */}
                         {PropertyNames.map(type => (
                           <option key={type} value={type}>{type}</option>
                         ))}
@@ -622,11 +744,19 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData, locations
                       rows={3}
                       className="w-full border rounded-lg focus:ring-2 transition-all resize-none"
                       style={{ 
-                        borderColor: 'hsl(40 20% 88%)',
+                        borderColor: errors.address ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)',
                         padding: 'clamp(0.625rem, 2vw, 0.75rem) clamp(0.75rem, 3vw, 1rem)',
                         fontSize: 'clamp(0.875rem, 2.5vw, 1rem)'
                       }}
                     />
+                    {errors.address && (
+                      <p className="mt-1 flex items-center gap-1" style={{ 
+                        color: 'hsl(0 72% 51%)',
+                        fontSize: 'clamp(0.75rem, 2vw, 0.875rem)'
+                      }}>
+                        <AlertCircle style={{ height: '1rem', width: '1rem' }} /> {errors.address}
+                      </p>
+                    )}
                   </div>
                 </div>
               )}
@@ -755,7 +885,7 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData, locations
                             onChange={(e) => setData('advanceDuration', e.target.value)}
                             className="w-full border rounded-lg focus:ring-2 transition-all appearance-none"
                             style={{ 
-                              borderColor: 'hsl(40 20% 88%)',
+                              borderColor: errors.advanceDuration ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)',
                               paddingLeft: 'clamp(2.25rem, 8vw, 2.5rem)',
                               paddingRight: 'clamp(0.75rem, 3vw, 1rem)',
                               paddingTop: 'clamp(0.625rem, 2vw, 0.75rem)',
@@ -763,6 +893,7 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData, locations
                               fontSize: 'clamp(0.875rem, 2.5vw, 1rem)'
                             }}
                           >
+                            {/* Matches StoreListingRequest's advanceDuration rule: in:1,2,3,4,5,6,7,8,9 */}
                             <option value="1">1 month</option>
                             <option value="2">2 months</option>
                             <option value="3">3 months</option>
@@ -770,8 +901,18 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData, locations
                             <option value="5">5 months</option>
                             <option value="6">6 months</option>
                             <option value="7">7 months</option>
+                            <option value="8">8 months</option>
+                            <option value="9">9 months</option>
                           </select>
                         </div>
+                        {errors.advanceDuration && (
+                          <p className="mt-1 flex items-center gap-1" style={{ 
+                            color: 'hsl(0 72% 51%)',
+                            fontSize: 'clamp(0.75rem, 2vw, 0.875rem)'
+                          }}>
+                            <AlertCircle style={{ height: '1rem', width: '1rem' }} /> {errors.advanceDuration}
+                          </p>
+                        )}
                       </div>
                     </>
                   ) : (
@@ -859,11 +1000,19 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData, locations
                         min="0"
                         className="w-full border rounded-lg focus:ring-2 transition-all"
                         style={{ 
-                          borderColor: 'hsl(40 20% 88%)',
+                          borderColor: errors.bathrooms ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)',
                           padding: 'clamp(0.625rem, 2vw, 0.75rem) clamp(0.75rem, 3vw, 1rem)',
                           fontSize: 'clamp(0.875rem, 2.5vw, 1rem)'
                         }}
                       />
+                      {errors.bathrooms && (
+                        <p className="mt-1 flex items-center gap-1" style={{ 
+                          color: 'hsl(0 72% 51%)',
+                          fontSize: 'clamp(0.75rem, 2vw, 0.875rem)'
+                        }}>
+                          <AlertCircle style={{ height: '1rem', width: '1rem' }} /> {errors.bathrooms}
+                        </p>
+                      )}
                     </div>
                   </div>
 
@@ -898,6 +1047,14 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData, locations
                         </button>
                       ))}
                     </div>
+                    {errors.amenities && (
+                      <p className="mt-1 flex items-center gap-1" style={{ 
+                        color: 'hsl(0 72% 51%)',
+                        fontSize: 'clamp(0.75rem, 2vw, 0.875rem)'
+                      }}>
+                        <AlertCircle style={{ height: '1rem', width: '1rem' }} /> {errors.amenities}
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -914,11 +1071,19 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData, locations
                       rows={5}
                       className="w-full border rounded-lg focus:ring-2 transition-all resize-none"
                       style={{ 
-                        borderColor: 'hsl(40 20% 88%)',
+                        borderColor: errors.description ? 'hsl(0 72% 51%)' : 'hsl(40 20% 88%)',
                         padding: 'clamp(0.625rem, 2vw, 0.75rem) clamp(0.75rem, 3vw, 1rem)',
                         fontSize: 'clamp(0.875rem, 2.5vw, 1rem)'
                       }}
                     />
+                    {errors.description && (
+                      <p className="mt-1 flex items-center gap-1" style={{ 
+                        color: 'hsl(0 72% 51%)',
+                        fontSize: 'clamp(0.75rem, 2vw, 0.875rem)'
+                      }}>
+                        <AlertCircle style={{ height: '1rem', width: '1rem' }} /> {errors.description}
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -998,6 +1163,14 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData, locations
                             </div>
                           ))}
                         </div>
+                      )}
+                      {errors.images && (
+                        <p className="flex items-center gap-1" style={{ 
+                          color: 'hsl(0 72% 51%)',
+                          fontSize: 'clamp(0.75rem, 2vw, 0.875rem)'
+                        }}>
+                          <AlertCircle style={{ height: '1rem', width: '1rem' }} /> {errors.images}
+                        </p>
                       )}
                     </div>
                   </div>
@@ -1371,7 +1544,8 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData, locations
                     disabled={processing}
                     className="action-button rounded-lg font-semibold text-white transition-all duration-200 active:scale-95"
                     style={{ 
-                      backgroundColor: 'hsl(174 62% 32%)',
+                      backgroundColor: purposeAccent,
+                      color: data.purpose === 'sale' ? 'hsl(200 25% 10%)' : 'white',
                       padding: 'clamp(0.625rem, 2vw, 0.75rem) clamp(1rem, 3vw, 1.5rem)',
                       fontSize: 'clamp(0.8125rem, 2.5vw, 0.875rem)',
                       touchAction: 'manipulation'

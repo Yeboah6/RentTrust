@@ -3,7 +3,6 @@
 <html>
 <head>
     <meta charset="utf-8">
-    {{-- <title>RentTrustGh Admin Invitation</title> --}}
     <title>RentTrustGh | Ghana's Trusted Property Marketplace</title>
 </head>
 

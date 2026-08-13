@@ -12,15 +12,7 @@ use App\Models\AdminAuditLog;
 use App\Models\ListingVerification;
 use App\Models\Location;
 use Illuminate\Support\Facades\{DB, Log, Storage, Validator, Mail};
-use Symfony\Component\HttpFoundation\StreamedResponse;
-// use App\Models\ListingVerification;
-// use Illuminate\Support\Facades\Log;
-// use Illuminate\Support\Facades\Storage;
-// use Illuminate\Support\Facades\Validator;
 use App\Mail\ListingUpdatedMail;
-use App\Mail\ListingApproved;
-use App\Mail\ListingRejected;
-// use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 use Illuminate\Support\Str;
 

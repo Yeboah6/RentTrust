@@ -50,7 +50,6 @@
                     </span>
                 </td>
             </tr>
-            <tr><td>Featured</td><td>{{ $listing->is_featured ? 'Yes' : 'No' }}</td></tr>
             <tr><td>Verified</td><td>{{ $listing->is_verified ? 'Yes' : 'No' }}</td></tr>
         </table>
 

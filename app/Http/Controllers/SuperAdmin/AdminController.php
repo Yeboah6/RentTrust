@@ -65,7 +65,7 @@ class AdminController extends Controller
 
             $setupUrl = route('admin.setup', ['token' => $setupToken]); // plain token in URL
 
-            Mail::to($admin->email)->queue(
+            Mail::to($admin->email)->send(
                 new AdminInvitation(
                     adminName:  $admin->name,
                     adminEmail: $admin->email,
@@ -109,7 +109,7 @@ class AdminController extends Controller
 
             $setupUrl = route('admin.setup', ['token' => $setupToken]);
 
-            Mail::to($user->email)->queue(
+            Mail::to($user->email)->send(
                 new AdminInvitation(
                     adminName:  $user->name,
                     adminEmail: $user->email,
@@ -173,7 +173,7 @@ class AdminController extends Controller
 
             // Send notification email to the admin about the change
             try {
-                Mail::to($user->email)->queue(new \App\Mail\AdminUpdated(
+                Mail::to($user->email)->send(new \App\Mail\AdminUpdated(
                     adminName: $user->name,
                     adminEmail: $user->email,
                     updatedBy: auth()->user()?->name ?? 'System',
@@ -273,7 +273,7 @@ class AdminController extends Controller
             ]);
     
             // Send password reset email
-            Mail::to($admin->email)->queue(new AdminInvitation(
+            Mail::to($admin->email)->send(new AdminInvitation(
                 adminName: $admin->name,
                 adminEmail: $admin->email,
                 temporaryPassword: $temporaryPassword,
