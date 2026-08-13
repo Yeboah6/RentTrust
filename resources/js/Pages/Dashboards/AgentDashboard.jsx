@@ -154,7 +154,8 @@ const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views
       rent_min: rental.rent_min || 0,
       rent_max: rental.rent_max || 0,
       sale_price: rental.sale_price || 0,
-      effective_listing_status: rental.status || 'unverified',
+      effective_listing_status: rental.status || 'inactive',
+      // effective_listing_verification_status: rental.verification_status || 'unverified',
       verification_status: rental.verification_status || null,
       total_reviews: rental.reviews_count || 0,
       views: rental.views_count || 0,
@@ -246,23 +247,19 @@ const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views
   };
 
   const getVerificationButtonText = (listingStatus, verificationStatus) => {
-    if (verificationStatus === 'pending') {
-      return '⏳ Verification Pending';
-    }
+    const normalizedStatus = verificationStatus === 'approved' ? 'verified' : (verificationStatus || 'pending');
 
-    if (listingStatus === 'pending') {
-      return 'Request Verification';
-    }
-
-    if ((listingStatus === 'approved' || listingStatus === 'verified') && verificationStatus === 'verified') {
-      return 'Approved';
+    if (normalizedStatus === 'verified') {
+      return 'Verified';
     }
 
     return 'Request Verification';
   };
 
   const isVerificationButtonDisabled = (listingStatus, verificationStatus) => {
-    return verificationStatus === 'pending' || ((listingStatus === 'approved' || listingStatus === 'verified') && verificationStatus === 'verified');
+    const normalizedStatus = verificationStatus === 'approved' ? 'verified' : (verificationStatus || 'pending');
+
+    return normalizedStatus === 'verified';
   };
 
   return (

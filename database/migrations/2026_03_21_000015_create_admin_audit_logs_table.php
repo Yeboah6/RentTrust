@@ -13,26 +13,32 @@ return new class extends Migration
             $table->uuid('admin_audit_log_id')->unique();
 
             // Who performed the action
-            $table->foreignId('causer_id')->nullable()->constrained('users')->nullOnDelete();
-            $table->string('causer_name',  120)->nullable(); 
+            $table->foreignId('causer_id')
+                ->nullable()
+                ->constrained('users')
+                ->nullOnDelete();
+
+            $table->string('causer_name', 120)->nullable();
             $table->string('causer_email', 180)->nullable();
 
             // What happened
-            $table->string('action',        200);
-            $table->string('type',           40)->index();
+            $table->string('action', 200);
+            $table->string('type', 40)->index();
             $table->string('affected_user', 160)->nullable();
-            $table->unsignedBigInteger('affected_id')->nullable()->change();
+            $table->unsignedBigInteger('affected_id')->nullable();
 
             // Context
             $table->text('notes')->nullable();
             $table->string('ip_address', 45)->nullable();
             $table->json('properties')->nullable();
 
-            $table->timestamp('created_at')->useCurrent()->index();
+            $table->timestamp('created_at')
+                ->useCurrent()
+                ->index();
 
-            // Useful composite indexes
-            $table->index(['causer_id',   'created_at']);
-            $table->index(['type',        'created_at']);
+            // Composite indexes
+            $table->index(['causer_id', 'created_at']);
+            $table->index(['type', 'created_at']);
             $table->index(['affected_id', 'created_at']);
         });
     }

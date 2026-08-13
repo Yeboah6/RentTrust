@@ -19,7 +19,7 @@ class ReviewController extends Controller
 
         $appReviews = Review::where('review_type', 'app')->get();
 
-        return inertia('ReviewsPage',
+        return inertia('Static/ReviewsPage',
             [
                 'reviews' => $reviews,
                 'reports' => $reports,

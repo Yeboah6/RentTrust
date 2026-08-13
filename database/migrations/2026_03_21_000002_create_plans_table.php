@@ -19,8 +19,6 @@ return new class extends Migration
             $table->string('currency')->default('GHS');
             $table->string('interval')->default('monthly');
             $table->integer('listing_limit')->nullable();
-            $table->integer('boost_limit')->default(0);
-            $table->integer('lead_limit')->default(0);
             $table->boolean('verified_badge')->default(false);
             $table->boolean('priority_ranking')->default(false);
             $table->boolean('analytics_access')->default(false);

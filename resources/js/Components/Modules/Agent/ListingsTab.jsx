@@ -55,15 +55,22 @@ const AvailabilityBadge = ({ status }) => {
 
 // ─── Verification Badge ────────────────────────────────────────────────────────
 const VERIFICATION_CFG = {
-    approved:   { bg: 'hsl(152 60% 93%)', color: 'hsl(152 60% 35%)', icon: Icons.check, label: 'Approved' },
-    pending:    { bg: 'hsl(38 92% 93%)',  color: 'hsl(38 92% 40%)',  icon: Icons.clock, label: 'Pending Review' },
-    rejected:   { bg: 'hsl(0 72% 93%)',   color: 'hsl(0 72% 45%)',   icon: Icons.alert, label: 'Rejected' },
-    unverified: { bg: 'hsl(220 15% 93%)', color: 'hsl(220 15% 45%)', icon: Icons.alert, label: 'Unverified' },
+    verified:  { bg: 'hsl(152 60% 93%)', color: 'hsl(152 60% 35%)', icon: Icons.check, label: 'Verified' },
+    pending:   { bg: 'hsl(38 92% 93%)', color: 'hsl(38 92% 40%)', icon: Icons.clock, label: 'Pending Review' },
+    rejected:  { bg: 'hsl(0 72% 93%)', color: 'hsl(0 72% 45%)', icon: Icons.alert, label: 'Rejected' },
+    unverified:{ bg: 'hsl(220 15% 93%)', color: 'hsl(220 15% 45%)', icon: Icons.alert, label: 'Unverified' },
 };
-const VERIFICATION_STATUSES = ['all', 'pending', 'approved', 'rejected', 'unverified'];
+const VERIFICATION_STATUSES = ['all', 'pending', 'verified', 'unverified'];
 
 const VerificationBadge = ({ status }) => {
-    const cfg = VERIFICATION_CFG[status] || VERIFICATION_CFG.unverified;
+    const normalizedStatus = status === 'approved' || status === 'verified'
+        ? 'verified'
+        : status === 'rejected'
+            ? 'rejected'
+            : status === 'pending'
+                ? 'pending'
+                : 'unverified';
+    const cfg = VERIFICATION_CFG[normalizedStatus] || VERIFICATION_CFG.unverified;
     return (
         <span style={{
             display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
@@ -382,11 +389,18 @@ const ListingsTab = ({
     const liveProperties = useMemo(() => {
         return properties.map((property) => {
             const record = latestVerificationByListing.get(property.id);
-            if (!record) return property;
+            const verificationStatus = record
+                ? (record.status === 'approved' ? 'verified' : record.status === 'rejected' ? 'rejected' : record.status === 'pending' ? 'pending' : 'unverified')
+                : (property.verification_status === 'approved' || property.verification_status === 'verified'
+                    ? 'verified'
+                    : property.verification_status === 'rejected'
+                        ? 'rejected'
+                        : 'unverified');
+
             return {
                 ...property,
-                verification_request_status: record.status,
-                verification_status: record.status === 'approved' ? 'verified' : record.status,
+                verification_request_status: verificationStatus,
+                verification_status: verificationStatus,
             };
         });
     }, [properties, latestVerificationByListing]);
@@ -399,7 +413,7 @@ const ListingsTab = ({
                 (property.city || '').toLowerCase().includes(searchTerm.toLowerCase())
             );
             const matchesAvailability = availabilityFilter === 'all' || property.effective_listing_status === availabilityFilter;
-            const matchesVerification = verificationFilter === 'all' || (property.verification_request_status || 'unverified') === verificationFilter;
+            const matchesVerification = verificationFilter === 'all' || (property.verification_request_status || 'pending') === verificationFilter;
 
             return matchesSearch && matchesAvailability && matchesVerification;
         });

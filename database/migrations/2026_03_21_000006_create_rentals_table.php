@@ -46,6 +46,7 @@ return new class extends Migration
             $table->timestamp('sold_at')->nullable();
             $table->timestamp('rented_at')->nullable();
             $table->timestamp('verification_rejected_at')->nullable();
+            $table->timestamp('verified_at')->nullable();
             $table->text('verification_rejection_reason')->nullable();
             $table->timestamps();
 

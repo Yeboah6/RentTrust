@@ -336,9 +336,10 @@ const VerificationRequestModal = ({ isOpen, onClose, agentData, selectedRental, 
     error: { backgroundColor: "hsl(0 72% 51%)", borderColor: "hsl(0 72% 40%)", color: "white" },
   };
 
-  // Pending/approved always render the status view instead — so this form (and
-  // therefore handleSubmit) is simply unreachable while a request is pending.
-  const showForm = verificationStatus !== "pending" && verificationStatus !== "approved";
+  // Only a verified/approved listing is considered locked for verification.
+  // A pending status is still treated as a requestable default state, so the agent
+  // can open the form and submit when needed.
+  const showForm = verificationStatus !== "approved" && verificationStatus !== "verified";
   const isResubmitFlow = verificationStatus === "rejected";
 
   return (

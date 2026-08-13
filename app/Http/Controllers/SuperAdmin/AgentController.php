@@ -378,14 +378,16 @@ class AgentController extends Controller
  
     public function destroy(User $agent)
     {
-        $name     = $agent->name;
-        $email    = $agent->email;
-        $agentId  = $agent->id; // capture before delete
+        $name    = $agent->name;
+        $email   = $agent->email;
+        $agentId = $agent->id;
 
-        DB::transaction(function () use ($agent, $name, $email) {
+        DB::transaction(function () use ($agent) {
             if ($agent->avatar && !str_starts_with($agent->avatar, 'http')) {
                 Storage::disk('public')->delete($agent->avatar);
             }
+
+            $agent->payments()->delete();
 
             $listings = Rental::where('agent_id', $agent->id)->get();
             foreach ($listings as $listing) {
@@ -414,22 +416,15 @@ class AgentController extends Controller
 
         try {
             Mail::raw(
-            "Hi {$name},\n\n" .
-            "Good news — your RentTrustGH agent verification has been approved. " .
-            "Your account is now marked as verified and your listings will show the verified badge.\n\n" .
-            "RentTrustGH",
-            function ($message) use ($verification) {
-                $message->to($email)
-                    ->subject('You\'re verified on RentTrustGH');
-            }
-        );
-            // Mail::to($email)->send(
-            //     new AgentDeleted(
-            //         agentName: $name,
-            //         agentEmail: $email,
-            //         deletedBy: auth()->user()?->name ?? 'System',
-            //     )
-            // );
+                "Hi {$name},\n\n" .
+                "Your RentTrustGH agent account has been permanently deleted by an administrator.\n\n" .
+                "Any associated data tied to this account has also been removed.\n\n" .
+                "RentTrustGH",
+                function ($message) use ($email, $name) {
+                    $message->to($email, $name)
+                        ->subject('Your RentTrustGH agent account has been deleted');
+                }
+            );
         } catch (\Throwable $e) {
             Log::warning('Failed to send agent deletion email', [
                 'agent_email' => $email,
@@ -445,6 +440,58 @@ class AgentController extends Controller
         return redirect()
             ->route('super-admin.agents.index')
             ->with('success', "Agent \"{$name}\" and all their data have been permanently deleted.");
+    }
+
+    public function sendMessage(Request $request)
+    {
+        $validated = $request->validate([
+            'agent_ids'   => ['required', 'array', 'min:1'],
+            'agent_ids.*' => ['integer', 'exists:users,id'],
+            'subject'     => ['required', 'string', 'max:150'],
+            'message'     => ['required', 'string', 'max:5000'],
+        ]);
+    
+        $agents = User::whereIn('id', $validated['agent_ids'])
+            ->where('role', 'agent')
+            ->get();
+    
+        $sentCount   = 0;
+        $failedNames = [];
+    
+        foreach ($agents as $agent) {
+            if (empty($agent->email)) {
+                $failedNames[] = $agent->name;
+                continue;
+            }
+    
+            try {
+                Mail::raw($validated['message'], function ($mail) use ($agent, $validated) {
+                    $mail->to($agent->email, $agent->name)
+                         ->subject($validated['subject']);
+                });
+                $sentCount++;
+            } catch (\Throwable $e) {
+                Log::warning("Failed to send admin message to agent #{$agent->id}: " . $e->getMessage());
+                $failedNames[] = $agent->name;
+            }
+        }
+    
+        AdminAuditLog::record('agent', 'message_agents', [
+            'agent_ids'   => $validated['agent_ids'],
+            'subject'     => $validated['subject'],
+            'sent_count'  => $sentCount,
+            'failed'      => $failedNames,
+        ]);
+    
+        if ($sentCount === 0) {
+            return back()->withErrors(['message' => 'Could not send to any of the selected agents.']);
+        }
+    
+        $note = count($failedNames)
+            ? "Message sent to {$sentCount} agent(s). Failed for: " . implode(', ', $failedNames) . '.'
+            : "Message sent to {$sentCount} agent(s).";
+    
+        return back()->with('success', $note);
     }
 
     public function verification() {

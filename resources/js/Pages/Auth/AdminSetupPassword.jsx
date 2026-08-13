@@ -439,7 +439,7 @@ const AdminSetup = ({ token, name, email }) => {
                         fontSize: '0.75rem', color: 'hsl(220 15% 45%)', lineHeight: 1.6,
                     }}>
                         This link is single-use and will expire after activation.<br />
-                        Need help? Contact <span style={{ color: 'hsl(220 60% 65%)', fontWeight: 600 }}>support@renttrustgh.com</span>
+                        Need help? Contact <span style={{ color: 'hsl(220 60% 65%)', fontWeight: 600 }}>renttrust2026@gmail.com</span>
                     </p>
                 </div>
             </div>

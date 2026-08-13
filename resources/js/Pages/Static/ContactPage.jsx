@@ -19,7 +19,7 @@ export default function ContactPage() {
     const handleSubmit = (e) => {
         e.preventDefault();
         setSubmitting(true);
-        axios.post(route('contact.send'), form)
+        axios.post("/contact", form)
             .then(() => {
                 setSuccess("Thank you for reaching out! We'll get back to you within 24 hours.");
                 setForm({ name: '', email: '', phone: '', subject: '', message: '' });
@@ -44,6 +44,8 @@ export default function ContactPage() {
         transition: 'all 0.2s ease',
         fontFamily: 'inherit',
         boxShadow: focused === field ? '0 0 0 3px hsl(174 62% 32% / 0.1)' : 'none',
+        minHeight: '48px',
+        touchAction: 'manipulation',
     });
 
     const labelStyle = {
@@ -263,6 +265,9 @@ export default function ContactPage() {
                     position: relative;
                     overflow: hidden;
                     transition: transform 0.15s, box-shadow 0.15s;
+                    min-height: 50px;
+                    touch-action: manipulation;
+                    -webkit-tap-highlight-color: transparent;
                 }
                 .submit-btn:hover:not(:disabled) {
                     transform: translateY(-1px);
@@ -299,29 +304,70 @@ export default function ContactPage() {
 
                 select option { background: white; }
 
+                .social-link {
+                    min-height: 40px;
+                    display: inline-flex;
+                    align-items: center;
+                    touch-action: manipulation;
+                    -webkit-tap-highlight-color: transparent;
+                }
+
+                .name-email-row,
+                .phone-subject-row {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+                    gap: 1rem;
+                }
+
+                .hero-mosaic {
+                    position: absolute; right: 0; top: 0; bottom: 0; width: 56%; z-index: 1;
+                    display: grid; grid-template-columns: repeat(3, 1fr);
+                    grid-template-rows: repeat(3, 1fr); gap: 4px;
+                }
+
+                /* ── Tablet / small laptop ── */
+                @media (max-width: 900px) {
+                    .hero-mosaic { width: 44%; }
+                }
+
+                /* ── Mobile: stack the two-column layout, tame the hero ── */
                 @media (max-width: 768px) {
-                    .contact-grid { flex-direction: column !important; }
-                    .hero-pattern { display: none !important; }
+                    input, textarea, select { font-size: 16px !important; } /* stop iOS auto-zoom */
+                    .contact-grid { flex-direction: column !important; gap: 1.5rem !important; }
+                    .contact-info { flex: 1 1 auto !important; width: 100%; }
+                    .hero-mosaic { display: none !important; }
+                    .hero-content { max-width: 100% !important; }
+                }
+
+                /* ── Small phones ── */
+                @media (max-width: 480px) {
+                    .name-email-row,
+                    .phone-subject-row {
+                        grid-template-columns: 1fr;
+                    }
+                    .contact-card, .contact-detail-item, .faq-card, .social-card {
+                        padding-left: 1.25rem !important;
+                        padding-right: 1.25rem !important;
+                    }
+                    .social-link {
+                        flex: 1 1 auto;
+                        justify-content: center;
+                    }
                 }
             `}</style>
 
-            <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'hsl(40 33% 98%)' }}>
+            <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'hsl(40 33% 98%)', overflowX: 'hidden' }}>
                 <Header />
 
                 <main style={{ flex: 1 }}>
-                    {/* ── Hero Banner ── */}
                     {/* ── Hero Banner — mosaic background ── */}
-                    <div style={{ position: 'relative', overflow: 'hidden', minHeight: '360px', display: 'flex', alignItems: 'center' }}>
+                    <div style={{ position: 'relative', overflow: 'hidden', minHeight: 'clamp(260px, 56vw, 360px)', display: 'flex', alignItems: 'center' }}>
 
                         {/* Base gradient */}
                         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, hsl(174 62% 22%) 0%, hsl(174 55% 32%) 60%, hsl(174 45% 38%) 100%)', zIndex: 0 }} />
 
-                        {/* Property mosaic — right 52% */}
-                        <div style={{
-                            position: 'absolute', right: 0, top: 0, bottom: 0, width: '56%', zIndex: 1,
-                            display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)',
-                            gridTemplateRows: 'repeat(3, 1fr)', gap: '4px',
-                          }}>
+                        {/* Property mosaic — right side, hidden on mobile via .hero-mosaic media query */}
+                        <div className="hero-mosaic">
                             {/* Tall cell spanning 2 rows */}
                             <div style={{ gridRow: '1 / 3', background: 'hsl(174 25% 22%)', overflow: 'hidden' }}>
                               <img src="/images/download 2.jfif" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.75 }} />
@@ -357,16 +403,16 @@ export default function ContactPage() {
                         <div style={{ position: 'absolute', inset: 0, zIndex: 2, background: 'linear-gradient(to right, hsl(174 60% 22% / 0.98) 0%, hsl(174 58% 22% / 0.88) 38%, hsl(174 55% 22% / 0.45) 70%, hsl(174 55% 22% / 0.15) 100%)' }} />
                         
                         {/* Content */}
-                        <div style={{ position: 'relative', zIndex: 3, padding: 'clamp(2.5rem, 7vw, 4.5rem) clamp(1rem, 4vw, 2.5rem)', maxWidth: '560px' }}>
-                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '5px 14px', borderRadius: '999px', background: 'rgba(255,255,255,0.14)', border: '1px solid rgba(255,255,255,0.22)', color: 'rgba(255,255,255,0.9)', fontSize: '13px', fontWeight: '600', marginBottom: '1.25rem' }}>
+                        <div className="hero-content" style={{ position: 'relative', zIndex: 3, padding: 'clamp(2rem, 7vw, 4.5rem) clamp(1rem, 4vw, 2.5rem)', maxWidth: '560px' }}>
+                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '5px 14px', borderRadius: '999px', background: 'rgba(255,255,255,0.14)', border: '1px solid rgba(255,255,255,0.22)', color: 'rgba(255,255,255,0.9)', fontSize: 'clamp(0.7rem, 2vw, 13px)', fontWeight: '600', marginBottom: '1.25rem' }}>
                                 <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'hsl(152 70% 60%)', animation: 'pulse 2s ease infinite', flexShrink: 0 }} />
                                 We typically respond within 24 hours
                             </div>
-                            <h1 style={{ color: 'white', fontSize: 'clamp(2rem, 5vw, 3.25rem)', fontWeight: '800', lineHeight: '1.1', marginBottom: '1rem', letterSpacing: '-0.02em' }}>
+                            <h1 style={{ color: 'white', fontSize: 'clamp(1.75rem, 7vw, 3.25rem)', fontWeight: '800', lineHeight: '1.1', marginBottom: '1rem', letterSpacing: '-0.02em' }}>
                                 Let's talk about<br />
                                 <span style={{ color: 'hsl(40 90% 70%)' }}>your property.</span>
                             </h1>
-                            <p style={{ color: 'rgba(255,255,255,0.72)', fontSize: 'clamp(0.9rem, 2.2vw, 1.1rem)', lineHeight: '1.6', maxWidth: '420px' }}>
+                            <p style={{ color: 'rgba(255,255,255,0.72)', fontSize: 'clamp(0.875rem, 2.5vw, 1.1rem)', lineHeight: '1.6', maxWidth: '420px' }}>
                                 Whether you're listing a property, need help with verification, or just have a question — we're here for you.
                             </p>
                         </div>
@@ -375,26 +421,27 @@ export default function ContactPage() {
                     {/* ── Main Content ── */}
                     <div className="container mx-auto" style={{
                         maxWidth: '1080px',
-                        padding: 'clamp(2rem, 6vw, 4rem) clamp(0.75rem, 3vw, 1rem)',
+                        padding: 'clamp(1.5rem, 6vw, 4rem) clamp(0.75rem, 3vw, 1rem)',
                     }}>
                         <div className="contact-grid" style={{ display: 'flex', gap: 'clamp(1.5rem, 4vw, 3rem)', alignItems: 'flex-start' }}>
 
                             {/* ── Form Card ── */}
                             <div className="contact-card" style={{
                                 flex: '1 1 0',
+                                minWidth: 0,
                                 backgroundColor: 'white',
                                 borderRadius: '1.25rem',
                                 border: '1px solid hsl(40 20% 88%)',
-                                padding: 'clamp(1.5rem, 4vw, 2.5rem)',
+                                padding: 'clamp(1.25rem, 4vw, 2.5rem)',
                                 boxShadow: '0 4px 32px hsl(200 25% 15% / 0.07)',
                             }}>
                                 <h2 style={{
-                                    fontSize: 'clamp(1.25rem, 3vw, 1.5rem)',
+                                    fontSize: 'clamp(1.125rem, 3vw, 1.5rem)',
                                     fontWeight: '700',
                                     color: 'hsl(200 25% 15%)',
                                     marginBottom: '0.375rem',
                                 }}>Send us a message</h2>
-                                <p style={{ color: 'hsl(200 15% 50%)', fontSize: '0.9rem', marginBottom: '2rem' }}>
+                                <p style={{ color: 'hsl(200 15% 50%)', fontSize: '0.875rem', marginBottom: 'clamp(1.5rem, 4vw, 2rem)' }}>
                                     Fill in the form and our team will be in touch shortly.
                                 </p>
 
@@ -409,7 +456,7 @@ export default function ContactPage() {
                                         display: 'flex',
                                         gap: '0.75rem',
                                         alignItems: 'flex-start',
-                                        fontSize: '0.9rem',
+                                        fontSize: '0.875rem',
                                         fontWeight: '500',
                                     }}>
                                         <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" style={{ flexShrink: 0, marginTop: '0.05rem' }}>
@@ -421,7 +468,7 @@ export default function ContactPage() {
 
                                 <form onSubmit={handleSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                                     {/* Name + Email row */}
-                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
+                                    <div className="name-email-row">
                                         <div>
                                             <label htmlFor="name" style={labelStyle}>Full Name *</label>
                                             <input
@@ -449,7 +496,7 @@ export default function ContactPage() {
                                     </div>
 
                                     {/* Phone + Subject row */}
-                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
+                                    <div className="phone-subject-row">
                                         <div>
                                             <label htmlFor="phone" style={labelStyle}>Phone Number</label>
                                             <input
@@ -541,7 +588,7 @@ export default function ContactPage() {
                                 gap: '1.5rem',
                             }}>
                                 {/* Contact Details */}
-                                <div style={{
+                                <div className="faq-card" style={{
                                     backgroundColor: 'white',
                                     borderRadius: '1.25rem',
                                     border: '1px solid hsl(40 20% 88%)',
@@ -570,9 +617,9 @@ export default function ContactPage() {
                                                 }}>
                                                     {icon}
                                                 </div>
-                                                <div>
+                                                <div style={{ minWidth: 0 }}>
                                                     <p style={{ fontSize: '0.75rem', fontWeight: '600', color: 'hsl(200 15% 50%)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '0.125rem' }}>{label}</p>
-                                                    <p style={{ fontSize: '0.875rem', color: 'hsl(200 25% 20%)', fontWeight: '500' }}>{value}</p>
+                                                    <p style={{ fontSize: '0.875rem', color: 'hsl(200 25% 20%)', fontWeight: '500', wordBreak: 'break-word' }}>{value}</p>
                                                 </div>
                                             </div>
                                         ))}
@@ -580,7 +627,7 @@ export default function ContactPage() {
                                 </div>
 
                                 {/* FAQ */}
-                                <div style={{
+                                <div className="faq-card" style={{
                                     backgroundColor: 'white',
                                     borderRadius: '1.25rem',
                                     border: '1px solid hsl(40 20% 88%)',
@@ -603,7 +650,7 @@ export default function ContactPage() {
                                 </div>
 
                                 {/* Social / CTA */}
-                                <div style={{
+                                <div className="social-card" style={{
                                     borderRadius: '1.25rem',
                                     background: 'linear-gradient(135deg, hsl(174 62% 22%) 0%, hsl(174 50% 32%) 100%)',
                                     padding: '1.5rem',
@@ -613,14 +660,15 @@ export default function ContactPage() {
                                     <p style={{ fontSize: '0.8125rem', color: 'rgba(255,255,255,0.7)', marginBottom: '1rem' }}>
                                         Stay updated on new listings and tips.
                                     </p>
-                                    <div style={{ display: 'flex', gap: '0.625rem' }}>
+                                    <div style={{ display: 'flex', gap: '0.625rem', flexWrap: 'wrap' }}>
                                         {[
                                             { name: 'Instagram', url: 'https://www.instagram.com/renttrustgh' },
                                             { name: 'TikTok', url: 'https://www.tiktok.com/@renttrustgh' }
                                         ].map(social => (
                                             <a 
                                                 key={social.name} 
-                                                href={social.url} 
+                                                href={social.url}
+                                                className="social-link"
                                                 style={{
                                                     padding: '0.4rem 0.75rem',
                                                     borderRadius: '0.375rem',

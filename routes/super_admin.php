@@ -61,6 +61,7 @@ Route::prefix('super-admin')
     Route::post('agents/{agent}/verify',     [AgentController::class, 'verify'])     ->name('agents.verify');
     Route::post('agents/{agent}/suspend',    [AgentController::class, 'suspend'])    ->name('agents.suspend');
     Route::post('agents/{agent}/reactivate', [AgentController::class, 'reactivate']) ->name('agents.reactivate');
+    Route::post('/agents/message',           [AgentController::class, 'sendMessage'])->name('agents.message');
 
     // Resource routes after specific routes
     Route::resource('agents', AgentController::class)

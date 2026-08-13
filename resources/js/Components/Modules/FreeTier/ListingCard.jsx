@@ -51,7 +51,7 @@ const AvailabilityBadge = ({ status }) => {
 // ─── Verification Badge (agent_verifications / listing_verifications state) ──
 const VERIFICATION_CFG = {
     approved:   { color: 'hsl(152 60% 35%)', icon: Icons.check, label: 'Verified' },
-    pending:    { color: 'hsl(38 92% 40%)',  icon: Icons.clock, label: 'In Review' },
+    pending:    { color: 'hsl(38 92% 40%)',  icon: Icons.clock, label: 'Pending Review' },
     rejected:   { color: 'hsl(0 72% 45%)',   icon: Icons.alert, label: 'Rejected' },
     unverified: { color: 'hsl(220 15% 45%)', icon: Icons.shield, label: 'Unverified' },
 };

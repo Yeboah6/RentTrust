@@ -241,6 +241,20 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData, locations
         * {
           font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
         }
+
+        /* Hide scrollbars but keep scrolling enabled */
+        .add-rental-page,
+        .add-rental-page * {
+          scrollbar-width: none;        /* Firefox */
+          -ms-overflow-style: none;     /* IE / old Edge */
+        }
+
+        .add-rental-page::-webkit-scrollbar,
+        .add-rental-page *::-webkit-scrollbar {
+          display: none;                /* Chrome, Safari, Edge */
+          width: 0;
+          height: 0;
+        }
         
         input:focus, textarea:focus, select:focus {
           outline: none;
@@ -249,8 +263,7 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData, locations
         }
 
         @media (max-width: 768px) {
-          .modal-content { 
-            max-height: 85vh !important; 
+          .modal-content {  
             margin: 0.5rem !important; 
             max-width: 95% !important;
           }
@@ -259,6 +272,13 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData, locations
             padding: clamp(0.75rem, 3vw, 1rem) clamp(0.5rem, 2vw, 1rem) !important;
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
+
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+          }
+
+          .steps-container::-webkit-scrollbar {
+            display: none;
           }
           
           .step-icon { 
@@ -339,10 +359,6 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData, locations
         }
 
         @media (max-height: 600px) and (orientation: landscape) {
-          .modal-content { 
-            max-height: 75vh !important;
-          }
-          
           .steps-container { 
             padding: clamp(0.5rem, 2vw, 0.75rem) !important;
           }
@@ -417,7 +433,7 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData, locations
         </div>
       )}
 
-      <div className="min-h-screen" style={{ backgroundColor: 'hsl(40 33% 98%)' }}>
+      <div className="min-h-screen add-rental-page" style={{ backgroundColor: 'hsl(40 33% 98%)' }}>
 
         {/* Progress Steps */}
         <div className="bg-white shadow-sm">

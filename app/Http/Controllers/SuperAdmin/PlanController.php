@@ -32,8 +32,6 @@ class PlanController extends Controller
             'listing_limit'      => 'nullable|integer|min:0',
             'rental_limit'       => 'nullable|integer|min:0',
             'sale_limit'         => 'nullable|integer|min:0',
-            'boost_limit'        => 'nullable|integer|min:0',
-            'lead_limit'         => 'nullable|integer|min:0',
             'verified_badge'     => 'boolean',
             'priority_ranking'   => 'boolean',
             'analytics_access'   => 'boolean',
@@ -72,8 +70,6 @@ class PlanController extends Controller
             'listing_limit'      => 'nullable|integer|min:0',
             'rental_limit'       => 'nullable|integer|min:0',
             'sale_limit'         => 'nullable|integer|min:0',
-            'boost_limit'        => 'nullable|integer|min:0',
-            'lead_limit'         => 'nullable|integer|min:0',
             'verified_badge'     => 'boolean',
             'priority_ranking'   => 'boolean',
             'analytics_access'   => 'boolean',
@@ -106,7 +102,7 @@ class PlanController extends Controller
     public function destroy(Plan $plan)
     {
         $name = $plan->name;
-        $id   = $plan->plan_id;
+        $id   = $plan->id;
     
         $plan->delete();
     

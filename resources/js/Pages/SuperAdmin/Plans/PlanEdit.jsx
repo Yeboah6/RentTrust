@@ -523,25 +523,17 @@ const PlanEdit = ({ plan, inline = false, onClose } = {}) => {
                                 {/* ── Usage limits ── */}
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                                     <p style={{ margin: 0, fontSize: '0.7rem', fontWeight: '800', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'hsl(220 15% 52%)', paddingBottom: '0.4rem', borderBottom: '1px solid hsl(220 15% 94%)' }}>Usage Limits</p>
-                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.875rem' }}>
                                         <FField label="Listing Limit" hint="Blank = unlimited">
                                             <PlanInput type="number" value={data.listing_limit} onChange={e => setData('listing_limit', e.target.value)} placeholder="Unlimited" min="0" />
+                                        </FField>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.875rem' }}>
+                                        <FField label="Sale Limit" hint="Blank = unlimited">
+                                            <PlanInput type="number" value={data.sale_limit} onChange={e => setData('sale_limit', e.target.value)} placeholder="Unlimited" min="0" />
                                         </FField>
                                         <FField label="Rental Limit" hint="Blank = unlimited">
                                             <PlanInput type="number" value={data.rental_limit} onChange={e => setData('rental_limit', e.target.value)} placeholder="Unlimited" min="0" />
                                         </FField>
                                     </div>
-                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.875rem' }}>
-                                        <FField label="Sale Limit" hint="Blank = unlimited">
-                                            <PlanInput type="number" value={data.sale_limit} onChange={e => setData('sale_limit', e.target.value)} placeholder="Unlimited" min="0" />
-                                        </FField>
-                                        <FField label="Boost Limit" hint="Blank = unlimited">
-                                            <PlanInput type="number" value={data.boost_limit} onChange={e => setData('boost_limit', e.target.value)} placeholder="Unlimited" min="0" />
-                                        </FField>
-                                    </div>
-                                    <FField label="Lead Limit" hint="Blank = unlimited">
-                                        <PlanInput type="number" value={data.lead_limit} onChange={e => setData('lead_limit', e.target.value)} placeholder="Unlimited" min="0" />
-                                    </FField>
                                 </div>
 
                                 {/* ── Plan Features ── */}

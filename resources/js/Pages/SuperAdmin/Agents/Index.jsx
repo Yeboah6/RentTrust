@@ -30,6 +30,7 @@ const Icons = {
     alert:    () => <Ico d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />,
     impersonate: () => <Ico d={["M15 12a3 3 0 11-6 0 3 3 0 016 0z","M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"]} size="0.8rem" />,
     mail:     () => <Ico d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" size="0.8rem" />,
+    send:     () => <Ico d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" size="0.85rem" />,
     chevD:    () => <Ico d="M19 9l-7 7-7-7" size="0.8rem" />,
     chevU:    () => <Ico d="M5 15l7-7 7 7" size="0.8rem" />,
     chevL:    () => <Ico d="M15 19l-7-7 7-7" size="0.8rem" />,
@@ -62,6 +63,7 @@ const TIER_CFG = {
 
 const STATUSES = ['all', 'active', 'pending', 'verified', 'suspended', 'rejected', 'inactive'];
 const PAGE_SIZE = 12;
+const MESSAGE_MAX = 5000;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -154,6 +156,16 @@ const Toast = ({ toast }) => toast ? (
         {toast.msg}
     </div>
 ) : null;
+
+const Checkbox = ({ checked, onChange, style }) => (
+    <input
+        type="checkbox"
+        checked={checked}
+        onClick={e => e.stopPropagation()}
+        onChange={e => { e.stopPropagation(); onChange(e.target.checked); }}
+        style={{ width: '1rem', height: '1rem', cursor: 'pointer', accentColor: 'hsl(220 25% 20%)', ...style }}
+    />
+);
 
 // ─── Pagination ───────────────────────────────────────────────────────────────
 
@@ -248,19 +260,193 @@ const ActionModal = ({ agent, action, onConfirm, onClose, processing }) => {
     );
 };
 
+// ─── Message Agents modal ──────────────────────────────────────────────────────
+
+const MessageAgentsModal = ({ agents, initialSelected, onClose, onSent }) => {
+    const [pickerSearch, setPickerSearch] = useState('');
+    const [recipients, setRecipients]     = useState(() => new Set(initialSelected));
+    const [subject, setSubject]           = useState('');
+    const [message, setMessage]           = useState('');
+    const [processing, setProcessing]     = useState(false);
+    const [error, setError]               = useState('');
+
+    const pickerList = useMemo(() => {
+        const q = pickerSearch.toLowerCase();
+        if (!q) return agents;
+        return agents.filter(a =>
+            a.name.toLowerCase().includes(q) ||
+            a.email.toLowerCase().includes(q) ||
+            (a.agency ?? '').toLowerCase().includes(q)
+        );
+    }, [agents, pickerSearch]);
+
+    const toggle = (id) => setRecipients(prev => {
+        const next = new Set(prev);
+        next.has(id) ? next.delete(id) : next.add(id);
+        return next;
+    });
+
+    const selectAllVisible = () => setRecipients(prev => {
+        const next = new Set(prev);
+        pickerList.forEach(a => next.add(a._id));
+        return next;
+    });
+
+    const clearAll = () => setRecipients(new Set());
+
+    const selectedAgents = agents.filter(a => recipients.has(a._id));
+
+    const handleSend = () => {
+        setError('');
+        if (recipients.size === 0) { setError('Select at least one agent.'); return; }
+        if (!subject.trim())        { setError('Subject is required.'); return; }
+        if (!message.trim())        { setError('Message body is required.'); return; }
+
+        setProcessing(true);
+        router.post('/super-admin/agents/message', {
+            agent_ids: [...recipients],
+            subject: subject.trim(),
+            message: message.trim(),
+        }, {
+            preserveScroll: true,
+            onSuccess: () => {
+                onSent(`Message sent to ${recipients.size} agent${recipients.size !== 1 ? 's' : ''}.`);
+                onClose();
+            },
+            onError: (errs) => {
+                setError(Object.values(errs)[0] ?? 'Failed to send message.');
+            },
+            onFinish: () => setProcessing(false),
+        });
+    };
+
+    return (
+        <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'hsl(222 28% 8% / 0.6)', backdropFilter: 'blur(5px)', padding: '1rem' }}>
+            <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: '640px', maxHeight: '90vh', display: 'flex', flexDirection: 'column', backgroundColor: 'white', borderRadius: '1.15rem', overflow: 'hidden', boxShadow: '0 40px 100px hsl(220 28% 6% / 0.28)', animation: 'agModalIn 0.22s cubic-bezier(0.16,1,0.3,1)' }}>
+                <div style={{ height: '4px', background: 'linear-gradient(90deg, hsl(214 80% 50%), hsl(214 80% 50% / 0.5))', flexShrink: 0 }} />
+
+                <div style={{ padding: '1.5rem 1.75rem 0', flexShrink: 0 }}>
+                    <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start', marginBottom: '1.1rem' }}>
+                        <div style={{ width: '2.6rem', height: '2.6rem', borderRadius: '0.75rem', backgroundColor: 'hsl(214 100% 95%)', color: 'hsl(214 80% 42%)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Icons.mail /></div>
+                        <div style={{ flex: 1 }}>
+                            <h3 style={{ margin: '0 0 0.1rem', fontSize: '1rem', fontWeight: '800', color: 'hsl(220 25% 14%)' }}>Message Agents</h3>
+                            <p style={{ margin: 0, fontSize: '0.73rem', color: 'hsl(220 15% 50%)' }}>Sends an email to each selected agent</p>
+                        </div>
+                        <button onClick={onClose} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '1.8rem', height: '1.8rem', borderRadius: '0.5rem', border: 'none', backgroundColor: 'hsl(220 15% 95%)', color: 'hsl(220 15% 45%)', cursor: 'pointer' }}><Icons.x /></button>
+                    </div>
+                </div>
+
+                <div style={{ padding: '0 1.75rem', overflowY: 'auto', flex: 1 }}>
+                    {/* Recipient picker */}
+                    <div style={{ marginBottom: '1rem' }}>
+                        <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: '800', letterSpacing: '0.05em', textTransform: 'uppercase', color: 'hsl(220 15% 48%)', marginBottom: '0.4rem' }}>
+                            Recipients {recipients.size > 0 && <span style={{ color: 'hsl(214 80% 44%)' }}>· {recipients.size} selected</span>}
+                        </label>
+
+                        {selectedAgents.length > 0 && (
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem', marginBottom: '0.5rem' }}>
+                                {selectedAgents.map(a => (
+                                    <span key={a._id} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', padding: '0.2rem 0.3rem 0.2rem 0.55rem', borderRadius: '999px', backgroundColor: 'hsl(214 100% 95%)', color: 'hsl(214 80% 40%)', fontSize: '0.72rem', fontWeight: '700' }}>
+                                        {a.name}
+                                        <button onClick={() => toggle(a._id)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '1rem', height: '1rem', borderRadius: '50%', border: 'none', backgroundColor: 'hsl(214 80% 88%)', color: 'hsl(214 80% 30%)', cursor: 'pointer', padding: 0 }}>
+                                            <Icons.x />
+                                        </button>
+                                    </span>
+                                ))}
+                            </div>
+                        )}
+
+                        <div style={{ border: '1px solid hsl(220 15% 88%)', borderRadius: '0.65rem', overflow: 'hidden' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.65rem', borderBottom: '1px solid hsl(220 15% 92%)', backgroundColor: 'hsl(220 15% 98%)' }}>
+                                <span style={{ color: 'hsl(220 15% 55%)', display: 'flex' }}><Icons.search /></span>
+                                <input type="text" placeholder="Search agents to add…" value={pickerSearch} onChange={e => setPickerSearch(e.target.value)}
+                                    style={{ flex: 1, border: 'none', outline: 'none', fontSize: '0.8rem', backgroundColor: 'transparent', fontFamily: 'inherit', color: 'hsl(220 25% 20%)' }} />
+                                <button onClick={selectAllVisible} style={{ fontSize: '0.68rem', fontWeight: '700', color: 'hsl(214 80% 44%)', background: 'none', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: 'inherit' }}>Select all</button>
+                                {recipients.size > 0 && <button onClick={clearAll} style={{ fontSize: '0.68rem', fontWeight: '700', color: 'hsl(220 15% 50%)', background: 'none', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: 'inherit' }}>Clear</button>}
+                            </div>
+                            <div style={{ maxHeight: '10.5rem', overflowY: 'auto' }}>
+                                {pickerList.length === 0 ? (
+                                    <div style={{ padding: '1rem', textAlign: 'center', fontSize: '0.78rem', color: 'hsl(220 15% 55%)' }}>No agents match.</div>
+                                ) : pickerList.map(a => {
+                                    const hue = avatarHue(a.name);
+                                    const checked = recipients.has(a._id);
+                                    return (
+                                        <div key={a._id} onClick={() => toggle(a._id)}
+                                            style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.5rem 0.65rem', cursor: 'pointer', backgroundColor: checked ? 'hsl(214 100% 97%)' : 'white', borderBottom: '1px solid hsl(220 15% 95%)' }}>
+                                            <Checkbox checked={checked} onChange={() => toggle(a._id)} />
+                                            {a.avatar ? (
+                                                <img src={a.avatar} alt="" style={{ width: '1.75rem', height: '1.75rem', borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+                                            ) : (
+                                                <div style={{ width: '1.75rem', height: '1.75rem', borderRadius: '50%', backgroundColor: `hsl(${hue} 50% 88%)`, color: `hsl(${hue} 50% 30%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.62rem', fontWeight: '800', flexShrink: 0 }}>
+                                                    {a.name.split(' ').map(w => w[0]).slice(0, 2).join('')}
+                                                </div>
+                                            )}
+                                            <div style={{ minWidth: 0, flex: 1 }}>
+                                                <div style={{ fontSize: '0.8rem', fontWeight: '700', color: 'hsl(220 25% 18%)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.name}</div>
+                                                <div style={{ fontSize: '0.68rem', color: 'hsl(220 15% 52%)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.email}</div>
+                                            </div>
+                                            <StatusBadge sk={a.status_key} />
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Subject */}
+                    <div style={{ marginBottom: '1rem' }}>
+                        <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: '800', letterSpacing: '0.05em', textTransform: 'uppercase', color: 'hsl(220 15% 48%)', marginBottom: '0.4rem' }}>Subject</label>
+                        <input type="text" value={subject} onChange={e => setSubject(e.target.value)} placeholder="e.g. Update to your listing policy" maxLength={150}
+                            style={{ width: '100%', padding: '0.6rem 0.75rem', border: '1px solid hsl(220 15% 88%)', borderRadius: '0.55rem', fontSize: '0.85rem', color: 'hsl(220 25% 18%)', outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit' }} />
+                    </div>
+
+                    {/* Message */}
+                    <div style={{ marginBottom: '0.5rem' }}>
+                        <label style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', fontWeight: '800', letterSpacing: '0.05em', textTransform: 'uppercase', color: 'hsl(220 15% 48%)', marginBottom: '0.4rem' }}>
+                            <span>Message</span>
+                            <span style={{ fontWeight: '600', letterSpacing: 'normal', textTransform: 'none', color: message.length > MESSAGE_MAX ? 'hsl(0 65% 48%)' : 'hsl(220 15% 60%)' }}>{message.length}/{MESSAGE_MAX}</span>
+                        </label>
+                        <textarea value={message} onChange={e => setMessage(e.target.value.slice(0, MESSAGE_MAX))} rows={6} placeholder="Write your message to the agent(s)…"
+                            style={{ width: '100%', padding: '0.65rem 0.75rem', border: '1px solid hsl(220 15% 88%)', borderRadius: '0.55rem', fontSize: '0.85rem', color: 'hsl(220 25% 18%)', outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit', resize: 'vertical', lineHeight: 1.5 }} />
+                    </div>
+
+                    {error && (
+                        <div style={{ padding: '0.6rem 0.8rem', borderRadius: '0.5rem', backgroundColor: 'hsl(0 70% 96%)', border: '1px solid hsl(0 65% 88%)', fontSize: '0.76rem', color: 'hsl(0 65% 40%)', marginBottom: '0.5rem', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                            <Icons.alert /> {error}
+                        </div>
+                    )}
+                </div>
+
+                <div style={{ padding: '1.1rem 1.75rem 1.5rem', display: 'flex', gap: '0.65rem', flexShrink: 0, borderTop: '1px solid hsl(220 15% 95%)', marginTop: '0.5rem' }}>
+                    <button onClick={onClose} style={{ flex: 1, padding: '0.625rem', borderRadius: '0.6rem', border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white', fontSize: '0.85rem', fontWeight: '600', color: 'hsl(220 25% 30%)', cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
+                    <button onClick={handleSend} disabled={processing}
+                        style={{ flex: 2, padding: '0.625rem', borderRadius: '0.6rem', border: 'none', backgroundColor: processing ? 'hsl(220 15% 70%)' : 'hsl(214 80% 46%)', color: 'white', fontSize: '0.85rem', fontWeight: '700', cursor: processing ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.45rem', fontFamily: 'inherit' }}>
+                        {processing ? <><Icons.spinner /> Sending…</> : <><Icons.send /> Send{recipients.size > 0 ? ` to ${recipients.size}` : ''}</>}
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 // ─── Agent card ───────────────────────────────────────────────────────────────
 
-const AgentCard = ({ agent: a, index, onAction }) => {
+const AgentCard = ({ agent: a, index, onAction, selected, onToggleSelect }) => {
     const [hov, setHov] = useState(false);
     const hue    = avatarHue(a.name);
     const stCfg  = STATUS_CFG[a.status_key] ?? STATUS_CFG.inactive;
 
     return (
         <div onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
-            style={{ backgroundColor: 'white', border: `1.5px solid ${hov ? stCfg.dot : 'hsl(220 15% 91%)'}`, borderRadius: '1rem', overflow: 'hidden', transition: 'all 0.22s ease', transform: hov ? 'translateY(-3px)' : 'none', boxShadow: hov ? '0 16px 40px hsl(220 20% 15% / 0.1)' : '0 1px 4px hsl(220 20% 15% / 0.05)', display: 'flex', flexDirection: 'column', animation: `agCardIn 0.35s ease ${Math.min(index, 15) * 0.04}s both` }}>
+            style={{ position: 'relative', backgroundColor: 'white', border: `1.5px solid ${selected ? 'hsl(214 80% 55%)' : hov ? stCfg.dot : 'hsl(220 15% 91%)'}`, borderRadius: '1rem', overflow: 'hidden', transition: 'all 0.22s ease', transform: hov ? 'translateY(-3px)' : 'none', boxShadow: selected ? '0 0 0 3px hsl(214 80% 55% / 0.15)' : hov ? '0 16px 40px hsl(220 20% 15% / 0.1)' : '0 1px 4px hsl(220 20% 15% / 0.05)', display: 'flex', flexDirection: 'column', animation: `agCardIn 0.35s ease ${Math.min(index, 15) * 0.04}s both` }}>
 
             {/* Status bar */}
             <div style={{ height: '3px', background: `linear-gradient(90deg, ${stCfg.dot}, ${stCfg.dot}55)` }} />
+
+            {/* Select checkbox */}
+            <div style={{ position: 'absolute', top: '0.6rem', left: '0.6rem', zIndex: 2, opacity: (hov || selected) ? 1 : 0, transition: 'opacity 0.15s', backgroundColor: 'white', borderRadius: '0.35rem', padding: '0.2rem', boxShadow: '0 1px 4px hsl(220 20% 15% / 0.15)' }}>
+                <Checkbox checked={selected} onChange={() => onToggleSelect(a._id)} />
+            </div>
 
             <div style={{ padding: '1.1rem', flex: 1, display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
                 {/* Avatar + name */}
@@ -337,6 +523,14 @@ const AgentCard = ({ agent: a, index, onAction }) => {
                     <Icons.edit />
                 </Link>
 
+                <button onClick={() => onToggleSelect(a._id, true)}
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '1.9rem', height: '1.9rem', borderRadius: '0.45rem', border: 'none', backgroundColor: 'hsl(214 100% 95%)', color: 'hsl(214 80% 42%)', cursor: 'pointer', transition: 'filter 0.15s', flexShrink: 0 }}
+                    onMouseEnter={e => e.currentTarget.style.filter = 'brightness(0.9)'}
+                    onMouseLeave={e => e.currentTarget.style.filter = 'none'}
+                    title="Message this agent">
+                    <Icons.mail />
+                </button>
+
                 {!a.is_verified && a.has_verification_submission && (
                     <Link href={`/super-admin/verifications/agents?search=${encodeURIComponent(a.email)}`}
                         style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem', height: '1.9rem', borderRadius: '0.45rem', border: 'none', backgroundColor: 'hsl(214 100% 95%)', color: 'hsl(214 80% 40%)', fontSize: '0.72rem', fontWeight: '700', textDecoration: 'none', fontFamily: 'inherit', transition: 'filter 0.15s' }}
@@ -377,13 +571,18 @@ const AgentCard = ({ agent: a, index, onAction }) => {
 
 // ─── Agent row (list view) ────────────────────────────────────────────────────
 
-const AgentRow = ({ agent: a, index, onAction }) => {
+const AgentRow = ({ agent: a, index, onAction, selected, onToggleSelect }) => {
     const [hov, setHov] = useState(false);
     const hue = avatarHue(a.name);
 
     return (
         <div onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
-            style={{ position: 'relative', display: 'grid', gridTemplateColumns: '3rem minmax(0,1fr) 11rem 8rem 9rem 9rem 7rem', alignItems: 'center', gap: '0.75rem', padding: '0.875rem 1.25rem', borderBottom: '1px solid hsl(220 15% 95%)', backgroundColor: hov ? 'hsl(220 20% 98.5%)' : 'white', transition: 'background-color 0.12s', animation: `agRowIn 0.3s ease ${Math.min(index, 15) * 0.025}s both` }}>
+            style={{ position: 'relative', display: 'grid', gridTemplateColumns: '1.75rem 3rem minmax(0,1fr) 11rem 8rem 9rem 9rem 7rem', alignItems: 'center', gap: '0.75rem', padding: '0.875rem 1.25rem', borderBottom: '1px solid hsl(220 15% 95%)', backgroundColor: selected ? 'hsl(214 100% 98%)' : hov ? 'hsl(220 20% 98.5%)' : 'white', transition: 'background-color 0.12s', animation: `agRowIn 0.3s ease ${Math.min(index, 15) * 0.025}s both` }}>
+
+            {/* Select checkbox */}
+            <div>
+                <Checkbox checked={selected} onChange={() => onToggleSelect(a._id)} />
+            </div>
 
             {/* Avatar */}
             <div style={{ position: 'relative', flexShrink: 0 }}>
@@ -467,6 +666,13 @@ const AgentRow = ({ agent: a, index, onAction }) => {
                     onMouseLeave={e => e.currentTarget.style.filter = 'none'}>
                     <Icons.edit />
                 </Link>
+                <button onClick={() => onToggleSelect(a._id, true)}
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.38rem 0.5rem', borderRadius: '0.45rem', border: 'none', backgroundColor: 'hsl(214 100% 95%)', color: 'hsl(214 80% 42%)', cursor: 'pointer', fontFamily: 'inherit', transition: 'filter 0.15s' }}
+                    onMouseEnter={e => e.currentTarget.style.filter = 'brightness(0.9)'}
+                    onMouseLeave={e => e.currentTarget.style.filter = 'none'}
+                    title="Message this agent">
+                    <Icons.mail />
+                </button>
                 {!a.is_verified && a.has_verification_submission && (
                     <Link href={`/super-admin/verifications/agents?search=${encodeURIComponent(a.email)}`}
                         style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', padding: '0.38rem 0.55rem', borderRadius: '0.45rem', border: 'none', backgroundColor: 'hsl(214 100% 95%)', color: 'hsl(214 80% 40%)', fontSize: '0.72rem', fontWeight: '700', textDecoration: 'none', fontFamily: 'inherit', transition: 'filter 0.15s' }}
@@ -502,6 +708,22 @@ const AgentRow = ({ agent: a, index, onAction }) => {
     );
 };
 
+// ─── Selection bar ─────────────────────────────────────────────────────────────
+
+const SelectionBar = ({ count, onMessage, onClear }) => (
+    <div style={{ position: 'fixed', bottom: '1.5rem', left: '50%', transform: 'translateX(-50%)', zIndex: 90, display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.65rem 0.7rem 0.65rem 1.1rem', borderRadius: '999px', backgroundColor: 'hsl(220 25% 14%)', color: 'white', boxShadow: '0 12px 32px hsl(220 25% 8% / 0.35)', animation: 'agSlideUp 0.2s ease' }}>
+        <span style={{ fontSize: '0.83rem', fontWeight: '700' }}>{count} agent{count !== 1 ? 's' : ''} selected</span>
+        <button onClick={onMessage}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.45rem 0.9rem', borderRadius: '999px', border: 'none', backgroundColor: 'hsl(214 80% 50%)', color: 'white', fontSize: '0.8rem', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit' }}>
+            <Icons.mail /> Message
+        </button>
+        <button onClick={onClear}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '1.9rem', height: '1.9rem', borderRadius: '50%', border: 'none', backgroundColor: 'hsl(220 20% 24%)', color: 'hsl(220 15% 75%)', cursor: 'pointer' }}>
+            <Icons.x />
+        </button>
+    </div>
+);
+
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 const AgentsIndex = ({ agents: rawAgents = [], listings_count }) => {
@@ -520,11 +742,26 @@ const AgentsIndex = ({ agents: rawAgents = [], listings_count }) => {
     const [refreshing,   refresh]   = useRefresh(['agents', 'listings_count']);
     const toastTimer = useRef(null);
 
+    // Agent messaging
+    const [selectedIds,   setSelectedIds]   = useState(() => new Set());
+    const [messageModal,  setMessageModal]  = useState(false);
+
     const showToast = (msg, type = 'success') => {
         clearTimeout(toastTimer.current);
         setToast({ msg, type });
         toastTimer.current = setTimeout(() => setToast(null), 3500);
     };
+
+    const toggleSelect = (id, forceOpenModal = false) => {
+        setSelectedIds(prev => {
+            const next = new Set(prev);
+            next.has(id) ? next.delete(id) : next.add(id);
+            return next;
+        });
+        if (forceOpenModal) setMessageModal(true);
+    };
+
+    const clearSelection = () => setSelectedIds(new Set());
 
     const allTiers = useMemo(() => [...new Set(agents.map(a => a.tier).filter(Boolean))].sort(), [agents]);
 
@@ -606,6 +843,21 @@ const AgentsIndex = ({ agents: rawAgents = [], listings_count }) => {
                     processing={processing}
                 />
             )}
+            {messageModal && (
+                <MessageAgentsModal
+                    agents={agents}
+                    initialSelected={selectedIds}
+                    onClose={() => setMessageModal(false)}
+                    onSent={(msg) => { showToast(msg); clearSelection(); }}
+                />
+            )}
+            {selectedIds.size > 0 && !messageModal && (
+                <SelectionBar
+                    count={selectedIds.size}
+                    onMessage={() => setMessageModal(true)}
+                    onClear={clearSelection}
+                />
+            )}
 
             <div>
                 {/* ── Header ── */}
@@ -617,6 +869,12 @@ const AgentsIndex = ({ agents: rawAgents = [], listings_count }) => {
                         </p>
                     </div>
                     <div style={{ display: 'flex', gap: '0.65rem', flexShrink: 0 }}>
+                        <button onClick={() => setMessageModal(true)}
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.6rem 1rem', borderRadius: '0.65rem', border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white', color: 'hsl(220 25% 28%)', fontWeight: '600', fontSize: '0.83rem', cursor: 'pointer', fontFamily: 'inherit', transition: 'background-color 0.15s' }}
+                            onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'hsl(220 15% 96%)'; }}
+                            onMouseLeave={e => e.currentTarget.style.backgroundColor = 'white'}>
+                            <Icons.mail /> Message Agents
+                        </button>
                         <Link href="/super-admin/verifications/agents"
                             style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.6rem 1rem', borderRadius: '0.65rem', border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white', color: 'hsl(220 25% 28%)', fontWeight: '600', fontSize: '0.83rem', textDecoration: 'none', transition: 'background-color 0.15s' }}
                             onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'hsl(220 15% 96%)'; }}
@@ -725,7 +983,10 @@ const AgentsIndex = ({ agents: rawAgents = [], listings_count }) => {
                 ) : viewMode === 'grid' ? (
                     <>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
-                            {paginated.map((a, i) => <AgentCard key={a._id} agent={a} index={i} onAction={handleAction} />)}
+                            {paginated.map((a, i) => (
+                                <AgentCard key={a._id} agent={a} index={i} onAction={handleAction}
+                                    selected={selectedIds.has(a._id)} onToggleSelect={toggleSelect} />
+                            ))}
                         </div>
                         <div style={{ marginTop: '1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                             <p style={{ margin: 0, fontSize: '0.78rem', color: 'hsl(220 15% 50%)' }}>Page <strong>{page}</strong> of <strong>{totalPages}</strong></p>
@@ -735,7 +996,8 @@ const AgentsIndex = ({ agents: rawAgents = [], listings_count }) => {
 
                 ) : (
                     <div style={{ backgroundColor: 'white', border: '1px solid hsl(220 15% 91%)', borderRadius: '1rem', overflow: 'hidden', boxShadow: '0 1px 4px hsl(220 20% 15% / 0.05)' }}>
-                        <div style={{ display: 'grid', gridTemplateColumns: '3rem minmax(0,1fr) 11rem 8rem 9rem 9rem 7rem auto', alignItems: 'center', gap: '0.75rem', padding: '0.65rem 1.25rem', backgroundColor: 'hsl(220 15% 97.5%)', borderBottom: '1px solid hsl(220 15% 92%)' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1.75rem 3rem minmax(0,1fr) 11rem 8rem 9rem 9rem 7rem auto', alignItems: 'center', gap: '0.75rem', padding: '0.65rem 1.25rem', backgroundColor: 'hsl(220 15% 97.5%)', borderBottom: '1px solid hsl(220 15% 92%)' }}>
+                            <div />
                             <div />
                             <div><SortBtn col="name"           label="Agent" /></div>
                             <div><SortBtn col="location"       label="Location" /></div>
@@ -745,7 +1007,10 @@ const AgentsIndex = ({ agents: rawAgents = [], listings_count }) => {
                             <div><SortBtn col="joined_at"      label="Joined" /></div>
                             <div style={{ fontSize: '0.68rem', fontWeight: '800', letterSpacing: '0.07em', textTransform: 'uppercase', color: 'hsl(220 15% 48%)' }}>Actions</div>
                         </div>
-                        {paginated.map((a, i) => <AgentRow key={a._id} agent={a} index={i} onAction={handleAction} />)}
+                        {paginated.map((a, i) => (
+                            <AgentRow key={a._id} agent={a} index={i} onAction={handleAction}
+                                selected={selectedIds.has(a._id)} onToggleSelect={toggleSelect} />
+                        ))}
                         <div style={{ padding: '0.875rem 1.25rem', borderTop: '1px solid hsl(220 15% 93%)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'hsl(220 15% 98.5%)' }}>
                             <p style={{ margin: 0, fontSize: '0.78rem', color: 'hsl(220 15% 50%)' }}>Page <strong style={{ color: 'hsl(220 25% 22%)' }}>{page}</strong> of <strong style={{ color: 'hsl(220 25% 22%)' }}>{totalPages}</strong> · {filtered.length.toLocaleString()} result{filtered.length !== 1 ? 's' : ''}</p>
                             <Pagination page={page} total={totalPages} onChange={setPage} />
@@ -757,6 +1022,7 @@ const AgentsIndex = ({ agents: rawAgents = [], listings_count }) => {
             <style>{`
                 @keyframes agSpin    { to { transform: rotate(360deg); } }
                 @keyframes agSlideIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
+                @keyframes agSlideUp { from { opacity:0; transform:translate(-50%, 10px); } to { opacity:1; transform:translate(-50%, 0); } }
                 @keyframes agModalIn { from { opacity:0; transform:scale(0.96) translateY(10px); } to { opacity:1; transform:scale(1) translateY(0); } }
                 @keyframes agCardIn  { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
                 @keyframes agRowIn   { from { opacity:0; transform:translateX(-4px); } to { opacity:1; transform:translateX(0); } }

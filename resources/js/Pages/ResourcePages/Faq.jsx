@@ -230,7 +230,7 @@ export default function FaqPage() {
                                     {[
                                         { q:'Is RentTrustGh free to use?', a:'Free to browse and enquire. Pro plans unlock unlimited listings for agents.' },
                                         { q:'How do you verify listings?', a:'Our team physically confirms each property before it goes live on the platform.' },
-                                        { q:'What areas do you cover?', a:'We cover all major cities in Ghana including Accra, Kumasi, Takoradi and Tamale.' },
+                                        { q:'What areas do you cover?', a:"At the moment we're covering areas in Accra." },
                                     ].map(({q,a}) => <FaqItemSide key={q} q={q} a={a} />)}
                                 </SmallCard>
 

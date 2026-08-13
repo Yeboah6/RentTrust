@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useForm, Head } from '@inertiajs/react';
-import Header from '../Components/Layouts/Header';
-import Footer from '../Components/Layouts/Footer';
+import Header from '../../Components/Layouts/Header';
+import Footer from '../../Components/Layouts/Footer';
 
 // ── Icons ─────────────────────────────────────────────────────────────────────
 const Shield = ({ style }) => (

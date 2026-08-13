@@ -35,19 +35,17 @@ class ContactController extends Controller
                 ? "[RentTrustGh Contact] {$data['subject']}"
                 : '[RentTrustGh Contact] New Message';
     
-            Mail::send([], [], function ($message) use ($data, $recipient, $subject) {
+            $body = "Name:    {$data['name']}\n" .
+                    "Email:   {$data['email']}\n" .
+                    "Phone:   " . ($data['phone'] ?? 'Not provided') . "\n" .
+                    "Subject: " . ($data['subject'] ?? 'General Enquiry') . "\n" .
+                    str_repeat('-', 40) . "\n\n" .
+                    $data['message'];
+    
+            Mail::raw($body, function ($message) use ($data, $recipient, $subject) {
                 $message->to($recipient)
                         ->replyTo($data['email'], $data['name'])
-                        ->subject($subject)
-                        ->setBody(
-                            "Name:    {$data['name']}\n" .
-                            "Email:   {$data['email']}\n" .
-                            "Phone:   " . ($data['phone'] ?? 'Not provided') . "\n" .
-                            "Subject: " . ($data['subject'] ?? 'General Enquiry') . "\n" .
-                            str_repeat('-', 40) . "\n\n" .
-                            $data['message'],
-                            'text/plain'
-                        );
+                        ->subject($subject);
             });
         }
     

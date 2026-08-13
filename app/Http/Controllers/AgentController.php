@@ -12,7 +12,7 @@ class AgentController extends Controller
 {
     public function becomeAgent()
     {
-        return inertia('BecomeAgentPage');
+        return inertia('Static/BecomeAgentPage');
     }
 
     public function agent()
