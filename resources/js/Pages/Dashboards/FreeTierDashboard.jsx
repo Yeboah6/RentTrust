@@ -342,24 +342,38 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
           gap: clamp(0.75rem, 3vw, 1.25rem);
         }
 
+        /* ---------- Tabs ---------- */
         .tabs-grid {
           display: flex;
-          flex-wrap: nowrap;
-          overflow-x: auto;
-          -webkit-overflow-scrolling: touch;
-          scrollbar-width: none;
-          gap: clamp(0.25rem, 1vw, 0.5rem);
+          flex-direction: column; /* Stack vertically by default (mobile first) */
+          gap: clamp(0.375rem, 1vw, 0.5rem);
           background-color: hsl(40 30% 94%);
-          padding: clamp(0.25rem, 1vw, 0.25rem);
+          padding: clamp(0.375rem, 1vw, 0.5rem);
           border-radius: clamp(0.375rem, 2vw, 0.5rem);
           margin-bottom: clamp(1.5rem, 4vw, 2rem);
         }
-        .tabs-grid::-webkit-scrollbar {
-          display: none;
-        }
+              
         .tabs-grid > button {
-          flex: 0 0 auto;
+          flex: 1 1 auto;
           min-width: max-content;
+          justify-content: center;
+          padding: clamp(0.5rem, 2vw, 0.75rem) clamp(0.75rem, 3vw, 1.5rem);
+          width: 100%; /* Full width on mobile */
+        }
+              
+        /* Tablet and above - horizontal layout */
+        @media (min-width: 640px) {
+          .tabs-grid {
+            flex-direction: row; /* Switch to horizontal on larger screens */
+            flex-wrap: wrap;
+            gap: clamp(0.5rem, 2vw, 1rem);
+            padding: clamp(0.5rem, 1.5vw, 0.75rem);
+          }
+          .tabs-grid > button {
+            flex: 1 1 0;
+            width: auto; /* Reset width for horizontal layout */
+            padding: clamp(0.5rem, 2vw, 0.75rem) clamp(1rem, 3vw, 1.5rem);
+          }
         }
 
         .review-grid {
@@ -866,7 +880,7 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
                     justifyContent: 'space-between',
                     alignItems: 'center',
                     flexWrap: 'wrap',
-                    gap: 'clamp(0.75rem, 2vw, 1rem)'
+                    gap: 'clamp(1rem, 3vw, 1.5rem)' // Increased from previous value
                   }}>
                     <h2 style={{
                       color: 'hsl(200 25% 15%)',

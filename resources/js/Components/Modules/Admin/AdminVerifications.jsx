@@ -95,10 +95,11 @@ const StatusBadge = ({ status }) => {
   return null;
 };
 
+// DocumentSection with responsive truncation
 const DocumentSection = ({ title, documents, downloadBase }) => {
   if (!documents || documents.length === 0) {
     return (
-      <div style={{ marginBottom: '1rem' }}>
+      <div style={{ marginBottom: '1rem', minWidth: 0 }}>
         <p style={{ fontSize: '0.75rem', fontWeight: '600', color: 'hsl(200 15% 45%)', marginBottom: '0.5rem' }}>
           {title}
         </p>
@@ -110,11 +111,11 @@ const DocumentSection = ({ title, documents, downloadBase }) => {
   }
 
   return (
-    <div style={{ marginBottom: '1rem' }}>
+    <div style={{ marginBottom: '1rem', minWidth: 0 }}>
       <p style={{ fontSize: '0.75rem', fontWeight: '600', color: 'hsl(200 15% 45%)', marginBottom: '0.5rem' }}>
         {title}
       </p>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', minWidth: 0 }}>
         {documents.map((doc, idx) => {
           const rawPath = doc.url || doc.path || (typeof doc === 'string' ? doc : '');
           const filename = rawPath.split('/').pop();
@@ -127,18 +128,31 @@ const DocumentSection = ({ title, documents, downloadBase }) => {
               href={href}
               target="_blank"
               rel="noopener noreferrer"
+              title={label} // Show full name on hover
               style={{
                 display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem',
                 backgroundColor: 'hsl(40 30% 97%)', borderRadius: '0.375rem',
                 border: '1px solid hsl(40 20% 88%)', textDecoration: 'none',
                 color: 'hsl(174 62% 32%)', fontSize: '0.875rem', fontWeight: '500',
-                transition: 'all 0.2s'
+                transition: 'all 0.2s',
+                minWidth: 0,
+                width: '100%',
+                boxSizing: 'border-box',
               }}
               onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'hsl(174 62% 32% / 0.05)'}
               onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'hsl(40 30% 97%)'}
             >
-              <Download style={{ height: '0.875rem', width: '0.875rem' }} />
-              {label}
+              <Download style={{ height: '0.875rem', width: '0.875rem', flexShrink: 0 }} />
+              <span style={{
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                flex: 1,
+                minWidth: 0,
+                fontSize: 'clamp(0.75rem, 2.5vw, 0.875rem)',
+              }}>
+                {label}
+              </span>
             </a>
           );
         })}
@@ -569,6 +583,7 @@ const ListingVerificationsList = ({ items, showToast }) => {
 };
 
 // ---- Main component ----
+// ---- Main component ----
 const ViewAgentVerifications = ({ agentVerifications = [], listingVerifications = [] }) => {
   const [activeTab, setActiveTab] = useState("agents");
   const [toast, setToast] = useState(null);
@@ -582,7 +597,7 @@ const ViewAgentVerifications = ({ agentVerifications = [], listingVerifications 
   const pendingListingCount = listingVerifications.filter(v => v.status === 'pending').length;
 
   return (
-    <div style={{ width: '100%' }}>
+    <div style={{ width: '100%', minWidth: 0 }}>
       <style>{`
         @keyframes slideIn {
           from { max-height: 0; opacity: 0; }
@@ -595,23 +610,31 @@ const ViewAgentVerifications = ({ agentVerifications = [], listingVerifications 
           display: grid;
           grid-template-columns: 1fr;
           gap: 1rem;
+          min-width: 0;
         }
         .verification-card-header {
           flex-wrap: wrap;
           gap: 0.5rem;
+          min-width: 0;
         }
         .verification-header-right {
           margin-left: auto;
+          flex-shrink: 0;
         }
         .documents-grid {
           display: grid;
           grid-template-columns: 1fr;
           gap: 1rem;
+          min-width: 0;
         }
         .info-grid {
           display: grid;
           grid-template-columns: 1fr;
           gap: 1rem;
+          min-width: 0;
+        }
+        .verification-card {
+          min-width: 0;
         }
 
         @media (min-width: 600px) {
@@ -628,6 +651,70 @@ const ViewAgentVerifications = ({ agentVerifications = [], listingVerifications 
             grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
           }
         }
+
+        /* Mobile-specific styles */
+        @media (max-width: 640px) {
+          .verification-card-header {
+            padding: 0.75rem !important;
+          }
+          .verification-card-header > div:first-child {
+            gap: 0.5rem !important;
+          }
+          .verification-header-right {
+            gap: 0.5rem !important;
+          }
+          .verification-header-right .status-badge {
+            font-size: 0.65rem !important;
+            padding: 0.3rem 0.6rem !important;
+          }
+          .documents-grid {
+            gap: 0.75rem !important;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .verification-card-header {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+          }
+          .verification-header-right {
+            margin-left: 0 !important;
+            width: 100%;
+            justify-content: space-between;
+          }
+          .info-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
+
+        /* Tab switcher mobile styles */
+        .verification-tabs {
+          display: flex;
+          gap: 0.5rem;
+          margin-bottom: 1.5rem;
+          border-bottom: 2px solid hsl(200 15% 90%);
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+        }
+        .verification-tabs::-webkit-scrollbar {
+          display: none;
+        }
+        .verification-tabs button {
+          flex: 0 0 auto;
+          white-space: nowrap;
+        }
+        @media (max-width: 480px) {
+          .verification-tabs {
+            gap: 0.25rem;
+          }
+          .verification-tabs button {
+            padding: 0.75rem 0.75rem !important;
+            font-size: 0.8125rem !important;
+            gap: 0.25rem !important;
+          }
+        }
       `}</style>
 
       {toast && (
@@ -637,38 +724,35 @@ const ViewAgentVerifications = ({ agentVerifications = [], listingVerifications 
                            toast.type === 'error' ? 'hsl(0 70% 50%)' : 'hsl(40 80% 50%)',
           color: 'white', padding: '1rem 1.5rem', borderRadius: '0.5rem', zIndex: 50,
           boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)', fontWeight: '500',
-          maxWidth: '90vw', margin: '0 auto'
+          maxWidth: '90vw', margin: '0 auto',
+          fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)'
         }}>
           <p style={{ margin: 0, fontWeight: '600', marginBottom: '0.25rem' }}>{toast.title}</p>
-          <p style={{ margin: 0, fontSize: '0.875rem' }}>{toast.message}</p>
+          <p style={{ margin: 0, fontSize: 'clamp(0.75rem, 2vw, 0.875rem)' }}>{toast.message}</p>
         </div>
       )}
 
       {/* Tab switcher */}
-      <div style={{
-        display: 'flex', gap: '0.5rem', marginBottom: '1.5rem',
-        borderBottom: '2px solid hsl(200 15% 90%)',
-        overflowX: 'auto', WebkitOverflowScrolling: 'touch',
-        scrollbarWidth: 'none',
-        msOverflowStyle: 'none'
-      }}>
+      <div className="verification-tabs">
         <button
           onClick={() => setActiveTab("agents")}
           style={{
             padding: '0.75rem 1.25rem', border: 'none', background: 'none', cursor: 'pointer',
-            fontSize: '0.9375rem', fontWeight: '600',
+            fontSize: 'clamp(0.8125rem, 2.5vw, 0.9375rem)', fontWeight: '600',
             color: activeTab === 'agents' ? 'hsl(174 62% 32%)' : 'hsl(200 15% 45%)',
             borderBottom: activeTab === 'agents' ? '2px solid hsl(174 62% 32%)' : '2px solid transparent',
             marginBottom: '-2px', display: 'flex', alignItems: 'center', gap: '0.5rem',
-            whiteSpace: 'nowrap'
+            whiteSpace: 'nowrap',
+            minHeight: '44px',
           }}
         >
-          <ShieldCheck style={{ height: '1rem', width: '1rem' }} />
+          <ShieldCheck style={{ height: '1rem', width: '1rem', flexShrink: 0 }} />
           Agent Verifications
           {pendingAgentCount > 0 && (
             <span style={{
               backgroundColor: 'hsl(40 80% 50%)', color: 'white', borderRadius: '9999px',
-              fontSize: '0.6875rem', padding: '0.125rem 0.5rem', fontWeight: '700'
+              fontSize: '0.6875rem', padding: '0.125rem 0.5rem', fontWeight: '700',
+              flexShrink: 0
             }}>
               {pendingAgentCount}
             </span>
@@ -678,19 +762,21 @@ const ViewAgentVerifications = ({ agentVerifications = [], listingVerifications 
           onClick={() => setActiveTab("listings")}
           style={{
             padding: '0.75rem 1.25rem', border: 'none', background: 'none', cursor: 'pointer',
-            fontSize: '0.9375rem', fontWeight: '600',
+            fontSize: 'clamp(0.8125rem, 2.5vw, 0.9375rem)', fontWeight: '600',
             color: activeTab === 'listings' ? 'hsl(38 92% 40%)' : 'hsl(200 15% 45%)',
             borderBottom: activeTab === 'listings' ? '2px solid hsl(38 92% 50%)' : '2px solid transparent',
             marginBottom: '-2px', display: 'flex', alignItems: 'center', gap: '0.5rem',
-            whiteSpace: 'nowrap'
+            whiteSpace: 'nowrap',
+            minHeight: '44px',
           }}
         >
-          <Home style={{ height: '1rem', width: '1rem' }} />
+          <Home style={{ height: '1rem', width: '1rem', flexShrink: 0 }} />
           Listing Verifications
           {pendingListingCount > 0 && (
             <span style={{
               backgroundColor: 'hsl(40 80% 50%)', color: 'white', borderRadius: '9999px',
-              fontSize: '0.6875rem', padding: '0.125rem 0.5rem', fontWeight: '700'
+              fontSize: '0.6875rem', padding: '0.125rem 0.5rem', fontWeight: '700',
+              flexShrink: 0
             }}>
               {pendingListingCount}
             </span>

@@ -102,7 +102,7 @@ const StatCard = ({ icon, value, label, accent = 'hsl(220 25% 15%)', accentBg = 
     </div>
 );
 
-// ─── Attention Card — clickable tile for items needing admin action ──────────
+// ─── Attention Card ───────────────────────────────────────────────────────────
 const AttentionCard = ({ icon, count, label, accent, accentBg, onClick }) => (
     <button
         onClick={onClick}
@@ -113,6 +113,7 @@ const AttentionCard = ({ icon, count, label, accent, accentBg, onClick }) => (
             border: '1px solid hsl(220 15% 91%)', backgroundColor: 'white',
             cursor: onClick ? 'pointer' : 'default', textAlign: 'left',
             fontFamily: 'inherit', width: '100%', transition: 'box-shadow 0.15s, border-color 0.15s',
+            minHeight: '60px',
         }}
         onMouseEnter={e => { if (!onClick) return; e.currentTarget.style.boxShadow = '0 4px 14px hsl(220 20% 15% / 0.08)'; e.currentTarget.style.borderColor = accent; }}
         onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.borderColor = 'hsl(220 15% 91%)'; }}
@@ -128,11 +129,11 @@ const AttentionCard = ({ icon, count, label, accent, accentBg, onClick }) => (
             <p style={{ margin: 0, fontSize: '1.15rem', fontWeight: 800, color: 'hsl(220 25% 12%)', lineHeight: 1 }}>{count}</p>
             <p style={{ margin: '0.2rem 0 0', fontSize: '0.76rem', color: 'hsl(220 15% 50%)', fontWeight: 600 }}>{label}</p>
         </div>
-        {onClick && <span style={{ color: accent, display: 'flex' }}>{Icons.arrow}</span>}
+        {onClick && <span style={{ color: accent, display: 'flex', flexShrink: 0 }}>{Icons.arrow}</span>}
     </button>
 );
 
-// ─── View-all link button (re-used across sections) ──────────────────────────
+// ─── View-all link button ────────────────────────────────────────────────────
 const ViewAllButton = ({ onClick, children = 'View all' }) => (
     <button
         onClick={onClick}
@@ -142,6 +143,7 @@ const ViewAllButton = ({ onClick, children = 'View all' }) => (
             border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white',
             color: 'hsl(220 25% 25%)', fontSize: '0.72rem', fontWeight: 700,
             cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.12s',
+            whiteSpace: 'nowrap',
         }}
         onMouseEnter={e => { e.currentTarget.style.borderColor = 'hsl(220 25% 40%)'; e.currentTarget.style.backgroundColor = 'hsl(220 15% 97%)'; }}
         onMouseLeave={e => { e.currentTarget.style.borderColor = 'hsl(220 15% 88%)'; e.currentTarget.style.backgroundColor = 'white'; }}
@@ -162,8 +164,8 @@ const RecentListingCard = ({ listing }) => (
         onMouseEnter={e => e.currentTarget.style.boxShadow = '0 2px 8px hsl(220 20% 15% / 0.06)'}
         onMouseLeave={e => e.currentTarget.style.boxShadow = 'none'}
     >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '0.5rem', gap: '0.5rem' }}>
-            <h3 style={{ margin: 0, fontSize: '0.82rem', fontWeight: 700, color: 'hsl(220 25% 12%)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '0.5rem', gap: '0.5rem', flexWrap: 'wrap' }}>
+            <h3 style={{ margin: 0, fontSize: '0.82rem', fontWeight: 700, color: 'hsl(220 25% 12%)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
                 {listing.title}
             </h3>
             <StatusBadge status={listing.status} />
@@ -192,8 +194,9 @@ const VerificationRow = ({ v, kind = 'listing' }) => {
         <div style={{
             display: 'flex', alignItems: 'center', gap: '0.75rem',
             padding: '0.7rem 0', borderBottom: '1px solid hsl(220 15% 93%)',
+            flexWrap: 'wrap',
         }}>
-            <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ flex: 1, minWidth: '150px' }}>
                 <p style={{ margin: 0, fontSize: '0.8rem', fontWeight: 700, color: 'hsl(220 25% 14%)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {primary}
                 </p>
@@ -332,6 +335,80 @@ const AdminOverview = ({
                         grid-template-columns: repeat(2, 1fr);
                     }
                 }
+
+                /* Verification section specific improvements */
+                .verification-section {
+                    transition: all 0.2s ease;
+                }
+                .verification-section:hover {
+                    box-shadow: 0 4px 14px hsl(220 20% 15% / 0.08);
+                }
+                .verification-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: flex-start;
+                    margin-bottom: 0.5rem;
+                    gap: 0.5rem;
+                    flex-wrap: wrap;
+                }
+                .verification-title {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                    flex-wrap: wrap;
+                    min-width: 0;
+                }
+                .verification-title h2 {
+                    font-size: clamp(0.8rem, 2vw, 0.9rem);
+                    font-weight: 800;
+                    color: hsl(220 25% 12%);
+                    margin: 0;
+                    line-height: 1.3;
+                }
+                .verification-list {
+                    margin-top: 0.5rem;
+                }
+                .verification-row {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.75rem;
+                    padding: 0.7rem 0;
+                    border-bottom: 1px solid hsl(220 15% 93%);
+                    flex-wrap: wrap;
+                }
+                .verification-row:last-child {
+                    border-bottom: none;
+                }
+                .verification-row-content {
+                    flex: 1;
+                    min-width: 150px;
+                }
+                .verification-row-title {
+                    margin: 0;
+                    font-size: 0.8rem;
+                    font-weight: 700;
+                    color: hsl(220 25% 14%);
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                }
+                .verification-row-subtitle {
+                    margin: 0.1rem 0 0;
+                    font-size: 0.7rem;
+                    color: hsl(220 15% 52%);
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                }
+                @media (max-width: 640px) {
+                    .verification-header {
+                        flex-direction: column;
+                        align-items: stretch;
+                    }
+                    .verification-header .view-all-btn {
+                        align-self: flex-start;
+                    }
+                }
             `}</style>
 
             {/* Platform totals */}
@@ -380,7 +457,7 @@ const AdminOverview = ({
                 backgroundColor: 'white', border: '1px solid hsl(220 15% 91%)', borderRadius: '0.875rem',
                 padding: '1.25rem', boxShadow: '0 1px 3px hsl(220 20% 15% / 0.04)',
             }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         <div style={{ width: 3, height: '1rem', borderRadius: 999, backgroundColor: 'hsl(220 25% 15%)' }} />
                         <h2 style={{ margin: 0, fontSize: '0.9rem', fontWeight: 800, color: 'hsl(220 25% 12%)' }}>Recent Listings</h2>
@@ -403,21 +480,33 @@ const AdminOverview = ({
             <div className="ao-grid-verifications">
                         
                 {/* Agent Verifications — teal */}
-                <div style={{
+                <div className="verification-section" style={{
                     backgroundColor: 'white', border: '1px solid hsl(220 15% 91%)', borderRadius: '0.875rem',
                     padding: '1.25rem', boxShadow: '0 1px 3px hsl(220 20% 15% / 0.04)',
                 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.25rem' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <div style={{ width: 3, height: '1rem', borderRadius: 999, backgroundColor: 'hsl(174 62% 32%)' }} />
-                            <h2 style={{ margin: 0, fontSize: '0.9rem', fontWeight: 800, color: 'hsl(220 25% 12%)' }}>Recent Agent Verification Requests</h2>
+                    <div className="verification-header">
+                        <div className="verification-title">
+                            <div style={{ width: 3, height: '1rem', borderRadius: 999, backgroundColor: 'hsl(174 62% 32%)', flexShrink: 0 }} />
+                            <h2>Agent Verification Requests</h2>
                         </div>
                         <ViewAllButton onClick={onViewAllVerifications} />
                     </div>
             
                     {recentAgentVerifications.length > 0 ? (
-                        <div>
-                            {recentAgentVerifications.map(v => <VerificationRow key={v.id} v={v} kind="agent" />)}
+                        <div className="verification-list">
+                            {recentAgentVerifications.map(v => (
+                                <div key={v.id} className="verification-row">
+                                    <div className="verification-row-content">
+                                        <p className="verification-row-title">
+                                            {v.agent_name ?? v.agent?.name ?? v.name ?? 'Unknown agent'}
+                                        </p>
+                                        <p className="verification-row-subtitle">
+                                            {v.email ?? v.agent?.email ?? '—'} · {fmtDate(v.created_at)}
+                                        </p>
+                                    </div>
+                                    <StatusBadge status={v.status} />
+                                </div>
+                            ))}
                         </div>
                     ) : (
                         <div style={{ textAlign: 'center', padding: '1.5rem', color: 'hsl(220 15% 52%)', fontSize: '0.82rem' }}>
@@ -427,21 +516,33 @@ const AdminOverview = ({
                 </div>
                 
                 {/* Listing Verifications — amber */}
-                <div style={{
+                <div className="verification-section" style={{
                     backgroundColor: 'white', border: '1px solid hsl(220 15% 91%)', borderRadius: '0.875rem',
                     padding: '1.25rem', boxShadow: '0 1px 3px hsl(220 20% 15% / 0.04)',
                 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.25rem' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <div style={{ width: 3, height: '1rem', borderRadius: 999, backgroundColor: 'hsl(38 92% 50%)' }} />
-                            <h2 style={{ margin: 0, fontSize: '0.9rem', fontWeight: 800, color: 'hsl(220 25% 12%)' }}>Recent Listing Verification Requests</h2>
+                    <div className="verification-header">
+                        <div className="verification-title">
+                            <div style={{ width: 3, height: '1rem', borderRadius: 999, backgroundColor: 'hsl(38 92% 50%)', flexShrink: 0 }} />
+                            <h2>Listing Verification Requests</h2>
                         </div>
                         <ViewAllButton onClick={onViewAllVerifications} />
                     </div>
             
                     {recentListingVerifications.length > 0 ? (
-                        <div>
-                            {recentListingVerifications.map(v => <VerificationRow key={v.id} v={v} kind="listing" />)}
+                        <div className="verification-list">
+                            {recentListingVerifications.map(v => (
+                                <div key={v.id} className="verification-row">
+                                    <div className="verification-row-content">
+                                        <p className="verification-row-title">
+                                            {v.rental?.title ?? v.property_title ?? 'Untitled Listing'}
+                                        </p>
+                                        <p className="verification-row-subtitle">
+                                            {v.agent?.name ?? v.agent_name ?? 'Unknown agent'} · {fmtDate(v.created_at)}
+                                        </p>
+                                    </div>
+                                    <StatusBadge status={v.status} />
+                                </div>
+                            ))}
                         </div>
                     ) : (
                         <div style={{ textAlign: 'center', padding: '1.5rem', color: 'hsl(220 15% 52%)', fontSize: '0.82rem' }}>

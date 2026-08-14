@@ -23,6 +23,9 @@ return new class extends Migration
             $table->integer('retry_count')->default(0);
             $table->timestamp('last_retry_at')->nullable();
             $table->json('meta')->nullable();
+            $table->timestamp('notified_15_day_at')->nullable();
+            $table->timestamp('notified_7_day_at')->nullable();
+            $table->timestamp('notified_1_day_at')->nullable();
             $table->timestamps();
 
             $table->index(['user_id', 'status']);

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Shield, Bell, Lock, User, Mail, Globe, Save, Eye, EyeOff, Check, Upload, FileText, Clock, XCircle, CheckCircle2, MessageSquare } from "lucide-react";
+import { Shield, Bell, Lock, User, Mail, Globe, Save, Eye, EyeOff, Check, Upload, FileText, Clock, XCircle, CheckCircle2, MessageSquare, AlertTriangle, Trash2 } from "lucide-react";
 import Header from "../../Components/Layouts/Header";
 import Footer from "../../Components/Layouts/Footer";
 import { usePage, useForm, router, Head } from "@inertiajs/react";
@@ -27,9 +27,7 @@ const AdminSettingsPage = () => {
   const userFee = auth?.agent?.fee || auth?.super?.fee || "";
   const userStatus = auth?.agent?.status || auth?.super?.status || "";
 
-  // Existing verification record, if any (assumes controller passes this under auth.agent.verification)
-  // const verification = auth?.agent?.verification || null;
-  const verificationStatus = verification?.status || null; // 'pending' | 'approved' | 'rejected' | null
+  const verificationStatus = verification?.status || null;
   const verificationLocked = verificationStatus === "pending" || verificationStatus === "approved";
 
   // Separate forms for agent and admin
@@ -57,7 +55,6 @@ const AdminSettingsPage = () => {
   // Use the appropriate form based on user type
   const { data, setData, errors, put, processing } = userAgent ? agentForm : adminForm;
 
-  // Verification form (matches agent_verifications table)
   const verificationForm = useForm({
     agent_name: verification?.agent_name || userFullName,
     email: verification?.email || userEmail,
@@ -147,10 +144,38 @@ const AdminSettingsPage = () => {
     });
   };
 
+  const deleteForm = useForm({
+    password: "",
+  });
+
+  const handleDeleteAccount = () => {
+    if (!deleteForm.data.password) {
+      showToast("Error", "Please enter your password to confirm", "error");
+      return;
+    }
+
+    if (!window.confirm("Are you sure you want to delete your account? This action is permanent and cannot be undone — all your listings, inquiries, and data will be removed.")) {
+      return;
+    }
+
+    router.post('/settings/account', {
+      _method: 'DELETE',
+      password: deleteForm.data.password,
+    }, {
+      onSuccess: () => {
+        showToast("Account deleted", "Your account has been removed.");
+      },
+      onError: () => {
+        showToast("Error", "Failed to delete account. Please check your password.", "error");
+      },
+    });
+  };
+
   const tabs = [
     { id: "profile", label: "Profile", icon: User },
     ...(userAgent ? [{ id: "verification", label: "Verification", icon: Shield }] : []),
     { id: "security", label: "Security", icon: Lock },
+    { id: "danger", label: "Danger Zone", icon: AlertTriangle },
   ];
 
   const statusBadge = (() => {
@@ -580,39 +605,6 @@ const AdminSettingsPage = () => {
                         {verificationForm.errors.phone_number && <p style={errorTextStyle}>{verificationForm.errors.phone_number}</p>}
                       </div>
 
-                      {/* Resubmission Note - shown only when rejected */}
-                      {/* {verificationStatus === "rejected" && (
-                        <div>
-                          <label style={{
-                            ...fieldLabelStyle,
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.5rem'
-                          }}>
-                            <MessageSquare size={16} />
-                            Response Note (optional)
-                          </label>
-                          <textarea
-                            value={verificationForm.data.resubmission_note}
-                            onChange={(e) => verificationForm.setData('resubmission_note', e.target.value)}
-                            placeholder="Add a note addressing the rejection reason or explaining your resubmission..."
-                            rows={3}
-                            style={{
-                              ...inputStyle,
-                              resize: 'vertical',
-                              fontFamily: 'inherit',
-                              borderColor: '#d1d5db'
-                            }}
-                          />
-                          {verificationForm.errors.resubmission_note && (
-                            <p style={errorTextStyle}>{verificationForm.errors.resubmission_note}</p>
-                          )}
-                          <p style={{ color: '#6b7280', fontSize: '0.75rem', marginTop: '0.25rem' }}>
-                            This note will be visible to the reviewer when they process your new submission
-                          </p>
-                        </div>
-                      )} */}
-
                       {/* Government ID */}
                       <div>
                         <label style={fieldLabelStyle}>Government ID (required)</label>
@@ -864,6 +856,71 @@ const AdminSettingsPage = () => {
                   </div>
                 </div>
               )}
+
+              {activeTab === "danger" && (
+              <div>
+                <h2 style={{
+                  fontSize: 'clamp(1.125rem, 3vw, 1.5rem)',
+                  fontWeight: '600',
+                  color: '#111827',
+                  marginBottom: '0.5rem'
+                }}>
+                  Danger Zone
+                </h2>
+                <p style={{ fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)', color: '#6b7280', marginBottom: 'clamp(1.5rem, 3vw, 2rem)' }}>
+                  Irreversible actions. Proceed with caution.
+                </p>
+              
+                <div style={{
+                  border: '1px solid #fecaca',
+                  borderRadius: '0.5rem',
+                  padding: 'clamp(1rem, 3vw, 1.5rem)',
+                  backgroundColor: '#fef2f2'
+                }}>
+                  <h3 style={{ fontSize: '1rem', fontWeight: '600', color: '#991b1b', marginBottom: '0.5rem' }}>
+                    Delete Account
+                  </h3>
+                  <p style={{ fontSize: '0.8125rem', color: '#991b1b', marginBottom: '1.25rem' }}>
+                    Once you delete your account, there is no going back. All your listings, inquiries, reviews, and personal data will be permanently removed.
+                  </p>
+              
+                  <div style={{ marginBottom: '1rem' }}>
+                    <label style={fieldLabelStyle}>Enter your password to confirm</label>
+                    <input
+                      type="password"
+                      value={deleteForm.data.password}
+                      onChange={(e) => deleteForm.setData('password', e.target.value)}
+                      style={inputStyle}
+                      placeholder="••••••••"
+                    />
+                    {deleteForm.errors.password && <p style={errorTextStyle}>{deleteForm.errors.password}</p>}
+                  </div>
+              
+                  <button
+                    onClick={handleDeleteAccount}
+                    disabled={deleteForm.processing}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.5rem',
+                      padding: 'clamp(0.625rem, 2vw, 0.75rem) clamp(1rem, 3vw, 1.5rem)',
+                      backgroundColor: deleteForm.processing ? '#9ca3af' : '#dc2626',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '0.375rem',
+                      fontWeight: '500',
+                      cursor: deleteForm.processing ? 'not-allowed' : 'pointer',
+                      fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)',
+                      width: '100%'
+                    }}
+                  >
+                    <Trash2 size={16} />
+                    {deleteForm.processing ? "Deleting..." : "Delete My Account"}
+                  </button>
+                </div>
+              </div>
+            )}
             </div>
           </div>
         </div>

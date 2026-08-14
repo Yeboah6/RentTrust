@@ -23,6 +23,9 @@ class Subscription extends Model
         'retry_count', 
         'last_retry_at', 
         'meta',
+        'notified_15_day_at',
+        'notified_7_day_at',
+        'notified_1_day_at',
     ];
 
     protected static function boot()
@@ -42,6 +45,9 @@ class Subscription extends Model
         'grace_ends_at'  => 'datetime',
         'last_retry_at'  => 'datetime',
         'meta'           => 'array',
+        'notified_15_day_at'  => 'datetime',
+        'notified_7_day_at'   => 'datetime',
+        'notified_1_day_at'   => 'datetime',
     ];
 
     public function user(): BelongsTo

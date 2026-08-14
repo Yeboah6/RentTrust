@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use App\Models\AdminAuditLog;
 use App\Models\Subscription;
+use App\Models\Payment;
 use App\Models\User;
 use App\Models\AgentVerification;
 use Illuminate\Support\Str;
@@ -251,5 +252,37 @@ class AuthController extends Controller
         $user->save();
 
         return back()->with('success', 'Password updated successfully.');
+    }
+
+    public function deleteAccount(Request $request)
+    {
+        $request->validate([
+            'password' => ['required', 'string'],
+        ]);
+
+        $user = Auth::user();
+
+        if (!$user || !Hash::check($request->password, $user->password)) {
+            return back()->withErrors(['password' => 'The password you entered is incorrect.']);
+        }
+
+        AdminAuditLog::record('user', 'Account deleted', [
+            'affected_user' => $user->name,
+            'affected_id' => $user->id,
+            'notes' => "Account deleted by {$user->name} ({$user->email})",
+            'causer_id' => $user->id,
+            'causer_name' => $user->name,
+            'causer_email' => $user->email,
+        ]);
+
+        $user->payments()->delete();
+
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        $user->delete();
+
+        return redirect('/sign-up')->with('status', 'Your account has been deleted.');
     }
 }
