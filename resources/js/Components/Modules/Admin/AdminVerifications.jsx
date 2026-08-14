@@ -54,7 +54,6 @@ const parseDocuments = (raw) => {
     const parsed = JSON.parse(raw);
     return Array.isArray(parsed) ? parsed : [parsed];
   } catch {
-    // Plain string path, not JSON
     return [{ url: raw, original_name: raw.split('/').pop() }];
   }
 };
@@ -184,10 +183,6 @@ const FilterBar = ({ filterStatus, setFilterStatus }) => (
   </div>
 );
 
-// Single notes field, reused for both actions — approve stores it as `admin_notes`,
-// reject stores the same text but the backend treats it as the rejection reason.
-// There's only one `admin_notes` column on either table, so a separate
-// "rejection reason" input would have nowhere distinct to be saved.
 const ReviewSection = ({ item, onApprove, onReject, reviewNotes, setReviewNotes }) => (
   <>
     {item.status === 'pending' && (
@@ -265,7 +260,7 @@ const ReviewSection = ({ item, onApprove, onReject, reviewNotes, setReviewNotes 
   </>
 );
 
-// ---- Agent Verifications tab ----
+// ---- Agent Verifications list ----
 
 const AgentVerificationsList = ({ items, showToast }) => {
   const [expandedId, setExpandedId] = useState(null);
@@ -311,13 +306,14 @@ const AgentVerificationsList = ({ items, showToast }) => {
       {filtered.length === 0 ? (
         <EmptyState icon={ShieldCheck} filterStatus={filterStatus} entityLabel="agent verifications" />
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))', flexDirection: 'column', gap: '1rem' }}>
+        <div className="verification-grid">
           {filtered.map((item) => (
             <div
               key={item.id}
               style={{ backgroundColor: 'white', border: '1px solid hsl(200 15% 90%)', borderRadius: '0.5rem', overflow: 'hidden' }}
             >
               <div
+                className="verification-card-header"
                 style={{
                   padding: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                   backgroundColor: 'hsl(40 30% 98%)', borderBottom: '1px solid hsl(200 15% 90%)', cursor: 'pointer'
@@ -341,7 +337,7 @@ const AgentVerificationsList = ({ items, showToast }) => {
                     </p>
                   </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <div className="verification-header-right" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                   <StatusBadge status={item.status} />
                   <ChevronDown style={{
                     height: '1.25rem', width: '1.25rem', color: 'hsl(200 15% 45%)',
@@ -351,7 +347,7 @@ const AgentVerificationsList = ({ items, showToast }) => {
               </div>
 
               <div style={{ padding: '1rem', borderBottom: '1px solid hsl(200 15% 90%)' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
+                <div className="info-grid">
                   <div>
                     <p style={{ fontSize: '0.75rem', fontWeight: '600', color: 'hsl(200 15% 45%)', marginBottom: '0.25rem' }}>Submitted</p>
                     <p style={{ fontSize: '0.875rem', color: 'hsl(200 25% 15%)', fontWeight: '500' }}>{formatDate(item.submitted_at)}</p>
@@ -379,7 +375,7 @@ const AgentVerificationsList = ({ items, showToast }) => {
                     <p style={{ fontSize: '0.875rem', fontWeight: '600', color: 'hsl(200 25% 15%)', marginBottom: '1rem' }}>
                       Uploaded Documents
                     </p>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem' }}>
+                    <div className="documents-grid">
                       <DocumentSection
                         title="Government ID"
                         documents={parseDocuments(item.gov_id)}
@@ -415,7 +411,7 @@ const AgentVerificationsList = ({ items, showToast }) => {
   );
 };
 
-// ---- Listing Verifications tab ----
+// ---- Listing Verifications list ----
 
 const ListingVerificationsList = ({ items, showToast }) => {
   const [expandedId, setExpandedId] = useState(null);
@@ -461,13 +457,14 @@ const ListingVerificationsList = ({ items, showToast }) => {
       {filtered.length === 0 ? (
         <EmptyState icon={Home} filterStatus={filterStatus} entityLabel="listing verifications" />
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))', flexDirection: 'column', gap: '1rem' }}>
+        <div className="verification-grid">
           {filtered.map((item) => (
             <div
               key={item.id}
               style={{ backgroundColor: 'white', border: '1px solid hsl(200 15% 90%)', borderRadius: '0.5rem', overflow: 'hidden' }}
             >
               <div
+                className="verification-card-header"
                 style={{
                   padding: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                   backgroundColor: 'hsl(40 30% 98%)', borderBottom: '1px solid hsl(200 15% 90%)', cursor: 'pointer'
@@ -491,7 +488,7 @@ const ListingVerificationsList = ({ items, showToast }) => {
                     </p>
                   </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <div className="verification-header-right" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                   <StatusBadge status={item.status} />
                   <ChevronDown style={{
                     height: '1.25rem', width: '1.25rem', color: 'hsl(200 15% 45%)',
@@ -501,7 +498,7 @@ const ListingVerificationsList = ({ items, showToast }) => {
               </div>
 
               <div style={{ padding: '1rem', borderBottom: '1px solid hsl(200 15% 90%)' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
+                <div className="info-grid">
                   <div>
                     <p style={{ fontSize: '0.75rem', fontWeight: '600', color: 'hsl(200 15% 45%)', marginBottom: '0.25rem' }}>Availability</p>
                     <p style={{ fontSize: '0.875rem', color: 'hsl(200 25% 15%)', fontWeight: '500', textTransform: 'capitalize' }}>
@@ -535,7 +532,7 @@ const ListingVerificationsList = ({ items, showToast }) => {
                     <p style={{ fontSize: '0.875rem', fontWeight: '600', color: 'hsl(200 25% 15%)', marginBottom: '1rem' }}>
                       Uploaded Documents
                     </p>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem' }}>
+                    <div className="documents-grid">
                       <DocumentSection
                         title="Ownership Documents"
                         documents={parseDocuments(item.ownership_documents)}
@@ -592,15 +589,55 @@ const ViewAgentVerifications = ({ agentVerifications = [], listingVerifications 
           to { max-height: 1000px; opacity: 1; }
         }
         .verification-details { animation: slideIn 0.3s ease-out; }
+
+        /* Responsive improvements */
+        .verification-grid {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 1rem;
+        }
+        .verification-card-header {
+          flex-wrap: wrap;
+          gap: 0.5rem;
+        }
+        .verification-header-right {
+          margin-left: auto;
+        }
+        .documents-grid {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 1rem;
+        }
+        .info-grid {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 1rem;
+        }
+
+        @media (min-width: 600px) {
+          .documents-grid {
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+          }
+          .info-grid {
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+          }
+        }
+
+        @media (min-width: 768px) {
+          .verification-grid {
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+          }
+        }
       `}</style>
 
       {toast && (
         <div style={{
-          position: 'fixed', top: '1rem', right: '1rem',
+          position: 'fixed', top: '1rem', right: '1rem', left: '1rem',
           backgroundColor: toast.type === 'success' ? 'hsl(152 60% 40%)' :
                            toast.type === 'error' ? 'hsl(0 70% 50%)' : 'hsl(40 80% 50%)',
           color: 'white', padding: '1rem 1.5rem', borderRadius: '0.5rem', zIndex: 50,
-          boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)', fontWeight: '500'
+          boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)', fontWeight: '500',
+          maxWidth: '90vw', margin: '0 auto'
         }}>
           <p style={{ margin: 0, fontWeight: '600', marginBottom: '0.25rem' }}>{toast.title}</p>
           <p style={{ margin: 0, fontSize: '0.875rem' }}>{toast.message}</p>
@@ -608,7 +645,13 @@ const ViewAgentVerifications = ({ agentVerifications = [], listingVerifications 
       )}
 
       {/* Tab switcher */}
-      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', borderBottom: '2px solid hsl(200 15% 90%)' }}>
+      <div style={{
+        display: 'flex', gap: '0.5rem', marginBottom: '1.5rem',
+        borderBottom: '2px solid hsl(200 15% 90%)',
+        overflowX: 'auto', WebkitOverflowScrolling: 'touch',
+        scrollbarWidth: 'none',
+        msOverflowStyle: 'none'
+      }}>
         <button
           onClick={() => setActiveTab("agents")}
           style={{
@@ -616,7 +659,8 @@ const ViewAgentVerifications = ({ agentVerifications = [], listingVerifications 
             fontSize: '0.9375rem', fontWeight: '600',
             color: activeTab === 'agents' ? 'hsl(174 62% 32%)' : 'hsl(200 15% 45%)',
             borderBottom: activeTab === 'agents' ? '2px solid hsl(174 62% 32%)' : '2px solid transparent',
-            marginBottom: '-2px', display: 'flex', alignItems: 'center', gap: '0.5rem'
+            marginBottom: '-2px', display: 'flex', alignItems: 'center', gap: '0.5rem',
+            whiteSpace: 'nowrap'
           }}
         >
           <ShieldCheck style={{ height: '1rem', width: '1rem' }} />
@@ -637,7 +681,8 @@ const ViewAgentVerifications = ({ agentVerifications = [], listingVerifications 
             fontSize: '0.9375rem', fontWeight: '600',
             color: activeTab === 'listings' ? 'hsl(38 92% 40%)' : 'hsl(200 15% 45%)',
             borderBottom: activeTab === 'listings' ? '2px solid hsl(38 92% 50%)' : '2px solid transparent',
-            marginBottom: '-2px', display: 'flex', alignItems: 'center', gap: '0.5rem'
+            marginBottom: '-2px', display: 'flex', alignItems: 'center', gap: '0.5rem',
+            whiteSpace: 'nowrap'
           }}
         >
           <Home style={{ height: '1rem', width: '1rem' }} />

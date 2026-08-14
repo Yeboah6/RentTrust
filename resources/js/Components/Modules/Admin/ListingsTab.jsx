@@ -171,8 +171,8 @@ const ListingCard = ({ property, onView, onEdit, onDelete }) => {
             display: 'flex', flexDirection: 'column',
             transition: 'box-shadow 0.15s, border-color 0.15s',
         }}
-            onMouseEnter='0 4px 14px hsl(220 20% 15% / 0.08)'
-            onMouseLeave='0 1px 3px hsl(220 20% 15% / 0.04)'
+            onMouseEnter={e => e.currentTarget.style.boxShadow = '0 4px 14px hsl(220 20% 15% / 0.08)'}
+            onMouseLeave={e => e.currentTarget.style.boxShadow = '0 1px 3px hsl(220 20% 15% / 0.04)'}
         >
             {/* Status strip */}
             <div style={{ 
@@ -419,9 +419,68 @@ const ListingsTab = ({
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            <style>{`
+                /* Responsive grids */
+                .listings-grid {
+                    display: grid;
+                    grid-template-columns: 1fr;
+                    gap: 0.875rem;
+                }
+                @media (min-width: 640px) {
+                    .listings-grid {
+                        grid-template-columns: repeat(2, 1fr);
+                    }
+                }
+                @media (min-width: 1024px) {
+                    .listings-grid {
+                        grid-template-columns: repeat(3, 1fr);
+                    }
+                }
+                /* Header responsiveness */
+                .listings-header {
+                    display: flex;
+                    flex-wrap: wrap;
+                    align-items: center;
+                    justify-content: space-between;
+                    gap: 0.75rem;
+                }
+                @media (max-width: 640px) {
+                    .listings-header {
+                        flex-direction: column;
+                        align-items: stretch;
+                    }
+                    .listings-header-actions {
+                        width: 100%;
+                        justify-content: flex-end;
+                    }
+                    .listings-add-btn {
+                        width: 100%;
+                        justify-content: center;
+                    }
+                }
+                .listings-filters {
+                    display: flex;
+                    flex-wrap: wrap;
+                    gap: 0.75rem;
+                }
+                .listings-filters > * {
+                    flex: 1 1 auto;
+                }
+                .listings-filters input[type="search"] {
+                    flex: 2 1 260px;
+                }
+                @media (max-width: 640px) {
+                    .listings-filters {
+                        flex-direction: column;
+                    }
+                    .listings-filters > * {
+                        width: 100%;
+                    }
+                }
+            `}</style>
 
             {/* Section heading + actions */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
+            <div className="listings-header">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
                     <div style={{ width: 3, height: '1.2rem', borderRadius: 999, backgroundColor: 'hsl(174 62% 32%)', flexShrink: 0 }} />
                     <h2 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 900, color: 'hsl(220 25% 12%)', letterSpacing: '-0.01em' }}>
@@ -433,7 +492,7 @@ const ListingsTab = ({
                 </div>
 
                 {/* Status pills + Add button */}
-                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                <div className="listings-header-actions" style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
                     {total > 0 && (
                         <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
                             {[
@@ -455,6 +514,7 @@ const ListingsTab = ({
                     
                     <button
                         onClick={onAddListing}
+                        className="listings-add-btn"
                         style={{
                             display: 'inline-flex', alignItems: 'center', gap: '0.35rem',
                             padding: '0.5rem 1rem', borderRadius: '0.5rem',
@@ -473,8 +533,8 @@ const ListingsTab = ({
             </div>
 
             {/* Search + Filters */}
-            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-                <div style={{ position: 'relative', flex: '1 1 260px' }}>
+            <div className="listings-filters">
+                <div style={{ position: 'relative' }}>
                     <div style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'hsl(220 15% 55%)', display: 'flex' }}>
                         {Icons.search}
                     </div>
@@ -568,11 +628,7 @@ const ListingsTab = ({
                                 accentBg="hsl(174 62% 32% / 0.07)" 
                                 borderColor="hsl(174 50% 80%)" 
                             />
-                            <div style={{
-                                display: 'grid',
-                                gridTemplateColumns: 'repeat(3, 1fr)',
-                                gap: '0.875rem',
-                            }}>
+                            <div className="listings-grid">
                                 {paginatedRentals.map(property => (
                                     <ListingCard
                                         key={property.id}
@@ -597,11 +653,7 @@ const ListingsTab = ({
                                 accentBg="hsl(38 92% 50% / 0.07)" 
                                 borderColor="hsl(38 80% 78%)" 
                             />
-                            <div style={{
-                                display: 'grid',
-                                gridTemplateColumns: 'repeat(3, 1fr)',
-                                gap: '0.875rem',
-                            }}>
+                            <div className="listings-grid">
                                 {paginatedSales.map(property => (
                                     <ListingCard
                                         key={property.id}
@@ -669,13 +721,6 @@ const ListingsTab = ({
                     )}
                 </div>
             )}
-
-            <style>{`
-                @keyframes slideDown {
-                    from { opacity: 0; transform: translateY(-6px); }
-                    to   { opacity: 1; transform: translateY(0); }
-                }
-            `}</style>
         </div>
     );
 };

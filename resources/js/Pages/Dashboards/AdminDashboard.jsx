@@ -207,26 +207,140 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, agent
         @media (min-width: 768px) {
           .md-grid-3 { grid-template-columns: repeat(3, 1fr) !important; }
         }
+
+        /* ---------- Mobile-first responsive styles ---------- */
+        .admin-tabs-container {
+          display: flex;
+          flex-wrap: nowrap;
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+          scrollbar-width: none;
+          gap: 0.25rem;
+          background-color: hsl(40 30% 94%);
+          padding: 0.25rem;
+          border-radius: 0.5rem;
+          margin-bottom: 2rem;
+        }
+        .admin-tabs-container::-webkit-scrollbar { display: none; }
+        .admin-tabs-container > button {
+          flex: 0 0 auto;
+          min-width: max-content;
+        }
+
+        .admin-profile-header {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 1rem;
+          margin-bottom: 2rem;
+        }
+        .admin-profile-header .avatar {
+          width: clamp(3rem, 10vw, 5rem);
+          height: clamp(3rem, 10vw, 5rem);
+          border-radius: 50%;
+          background-color: hsl(174 62% 32% / 0.1);
+          color: hsl(174 62% 32%);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: clamp(1.25rem, 4vw, 2rem);
+          font-weight: 600;
+          flex-shrink: 0;
+        }
+        .admin-profile-header .info {
+          flex: 1;
+          min-width: 0;
+        }
+        .admin-profile-header .stats {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.5rem 1rem;
+          font-size: clamp(0.75rem, 2vw, 0.875rem);
+          align-items: center;
+        }
+        .admin-profile-header .settings-btn {
+          align-self: flex-start;
+        }
+
+        @media (max-width: 640px) {
+          .admin-profile-header {
+            flex-direction: column;
+            align-items: stretch;
+          }
+          .admin-profile-header .settings-btn {
+            width: 100%;
+            justify-content: center;
+          }
+        }
+
+        /* ---------- Modals ---------- */
+        .admin-modal-overlay {
+          position: fixed;
+          inset: 0;
+          background-color: rgba(0,0,0,0.5);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 50;
+          padding: 1rem;
+        }
+        .admin-modal-content {
+          background-color: white;
+          border-radius: 1rem;
+          max-height: 90vh;
+          overflow: auto;
+          width: 100%;
+          position: relative;
+          max-width: 95%;
+          display: flex;
+          flex-direction: column;
+        }
+        .admin-modal-close {
+          align-self: flex-end;
+          position: sticky;
+          top: 0;
+          padding: 1rem;
+          border: none;
+          background: transparent;
+          font-size: 1.5rem;
+          cursor: pointer;
+          color: hsl(200 15% 45%);
+          z-index: 10;
+          min-height: 44px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        @media (min-width: 640px) {
+          .admin-modal-content { max-width: 90%; }
+        }
+        @media (min-width: 1024px) {
+          .admin-modal-content { max-width: 60%; }
+        }
+
+        .action-button {
+          min-height: 44px;
+          -webkit-tap-highlight-color: transparent;
+        }
       `}</style>
 
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'hsl(40 33% 98%)' }}>
         <Header />
 
-        <main style={{ flex: 1, padding: '2rem 1rem' }}>
+        <main style={{ flex: 1, padding: 'clamp(1rem, 3vw, 2rem) clamp(0.75rem, 2vw, 1rem)' }}>
           <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
 
             {/* Profile Header */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap', marginBottom: '2rem' }}>
-              <div style={{ width: '5rem', height: '5rem', borderRadius: '50%', backgroundColor: 'hsl(174 62% 32% / 0.1)', color: 'hsl(174 62% 32%)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', fontWeight: '600' }}>
+            <div className="admin-profile-header">
+              <div className="avatar">
                 {agent.name[0]}
               </div>
-              <div style={{ flex: 1 }}>
+              <div className="info">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem', flexWrap: 'wrap' }}>
-                  <h1 style={{ fontSize: '1.5rem', fontWeight: '700', color: 'hsl(200 25% 15%)' }}>{agent.name}</h1>
+                  <h1 style={{ fontSize: 'clamp(1.25rem, 4vw, 1.5rem)', fontWeight: '700', color: 'hsl(200 25% 15%)' }}>{agent.name}</h1>
                   {getStatusBadge(agent.status)}
                 </div>
-                <p style={{ color: 'hsl(200 15% 45%)', marginBottom: '0.5rem' }}>{agent.role}</p>
-                <div style={{ display: 'flex', gap: '1rem', fontSize: '0.875rem', flexWrap: 'wrap' }}>
+                <p style={{ color: 'hsl(200 15% 45%)', marginBottom: '0.5rem', fontSize: 'clamp(0.875rem, 2vw, 1rem)' }}>{agent.role}</p>
+                <div className="stats">
                   <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: 'hsl(200 15% 45%)' }}><Shield style={{ height: '1rem', width: '1rem' }} />{agent.total_agents} Agents</span>
                   <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: 'hsl(200 15% 45%)' }}><Home style={{ height: '1rem', width: '1rem' }} />{agent.total_listings} Listings</span>
                   <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: 'hsl(200 15% 45%)' }}><AlertCircle style={{ height: '1rem', width: '1rem' }} />{reports.length} Reports</span>
@@ -236,15 +350,36 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, agent
                   <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: 'hsl(200 15% 45%)' }}><Gift style={{ height: '1rem', width: '1rem' }} />{subsCount} Subscriptions</span>
                 </div>
               </div>
-              <Link href="/settings" style={{ padding: '0.5rem 1rem', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.5rem', backgroundColor: 'white', color: 'hsl(174 62% 32%)', fontWeight: '500', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none', alignSelf: 'flex-start' }}>
+              <Link href="/settings" className="settings-btn action-button" style={{ padding: '0.5rem 1rem', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.5rem', backgroundColor: 'white', color: 'hsl(174 62% 32%)', fontWeight: '500', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', textDecoration: 'none' }}>
                 <Settings style={{ height: '1rem', width: '1rem' }} />Settings
               </Link>
             </div>
 
             {/* Tabs */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '0.5rem', backgroundColor: 'hsl(40 30% 94%)', padding: '0.25rem', borderRadius: '0.5rem', marginBottom: '2rem' }}>
+            <div className="admin-tabs-container">
               {['overview', 'agents', 'listings', 'verifications', 'reports', 'reviews', 'inquiries', 'subscriptions', 'analytics'].map(tab => (
-                <button key={tab} onClick={() => setActiveTab(tab)} style={{ padding: '0.5rem 1rem', border: 'none', borderRadius: '0.375rem', backgroundColor: activeTab === tab ? 'white' : 'transparent', color: activeTab === tab ? 'hsl(200 25% 15%)' : 'hsl(200 15% 45%)', fontWeight: '500', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', transition: 'all 0.2s', boxShadow: activeTab === tab ? '0 1px 2px 0 hsl(200 25% 15% / 0.05)' : 'none', textTransform: 'capitalize' }}>
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className="action-button"
+                  style={{
+                    padding: '0.5rem 1rem',
+                    border: 'none',
+                    borderRadius: '0.375rem',
+                    backgroundColor: activeTab === tab ? 'white' : 'transparent',
+                    color: activeTab === tab ? 'hsl(200 25% 15%)' : 'hsl(200 15% 45%)',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.5rem',
+                    transition: 'all 0.2s',
+                    boxShadow: activeTab === tab ? '0 1px 2px 0 hsl(200 25% 15% / 0.05)' : 'none',
+                    textTransform: 'capitalize',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
                   {tab === 'overview' && <BarChart style={{ height: '1rem', width: '1rem' }} />}
                   {tab === 'agents' && <Shield style={{ height: '1rem', width: '1rem' }} />}
                   {tab === 'listings' && <Home style={{ height: '1rem', width: '1rem' }} />}
@@ -363,8 +498,8 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, agent
             {/* ── VERIFICATIONS TAB ────────────────────────────────────────── */}
             {activeTab === 'verifications' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <h2 style={{ fontSize: '1.125rem', fontWeight: '600', color: 'hsl(200 25% 15%)' }}>Verification Requests</h2>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+                  <h2 style={{ fontSize: 'clamp(1rem, 3vw, 1.125rem)', fontWeight: '600', color: 'hsl(200 25% 15%)' }}>Verification Requests</h2>
                   <span style={{ padding: '0.5rem 1rem', backgroundColor: 'hsl(174 62% 32% / 0.1)', color: 'hsl(174 62% 32%)', borderRadius: '0.375rem', fontSize: '0.875rem', fontWeight: '600' }}>
                     Total: {(agentVerifications?.length ?? 0) + (listingVerifications?.length ?? 0)}
                   </span>
@@ -440,9 +575,9 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, agent
         )}
 
         {showAddListingModal && (
-          <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: '1rem' }}>
-            <div style={{ backgroundColor: 'white', borderRadius: '1rem', maxHeight: '90vh', overflow: 'auto', maxWidth: '60%', width: '100%', position: 'relative' }}>
-              <button onClick={() => setShowAddListingModal(false)} style={{ position: 'sticky', top: 0, right: 0, padding: '1rem', border: 'none', background: 'transparent', fontSize: '1.5rem', cursor: 'pointer', color: 'hsl(200 15% 45%)', float: 'right', zIndex: 10 }}>✕</button>
+          <div className="admin-modal-overlay">
+            <div className="admin-modal-content">
+              <button onClick={() => setShowAddListingModal(false)} className="admin-modal-close action-button">✕</button>
               <AddRentalPage
                 agentData={agentData}
                 setShowAddListingModal={setShowAddListingModal}
@@ -456,9 +591,9 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, agent
         )}
 
         {showEditListingModal && selectedRental && (
-          <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: '1rem' }}>
-            <div style={{ backgroundColor: 'white', borderRadius: '1rem', maxHeight: '90vh', overflow: 'auto', maxWidth: '60%', width: '100%', position: 'relative' }}>
-              <button onClick={() => { setShowEditListingModal(false); setSelectedRental(null); }} style={{ position: 'sticky', top: 0, right: 0, padding: '1rem', border: 'none', background: 'transparent', fontSize: '1.5rem', cursor: 'pointer', color: 'hsl(200 15% 45%)', float: 'right', zIndex: 10 }}>✕</button>
+          <div className="admin-modal-overlay">
+            <div className="admin-modal-content">
+              <button onClick={() => { setShowEditListingModal(false); setSelectedRental(null); }} className="admin-modal-close action-button">✕</button>
               <EditRentals agentData={agentData} setShowEditListingModal={setShowEditListingModal} rental={selectedRental} locations={locations} propertyTypes={propertyTypes} amenities={amenities} userRole="admin" />
             </div>
           </div>
@@ -467,8 +602,9 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, agent
         {selectedAgent && <VerifyAgentDialog agentItem={selectedAgent} isOpen={showDialog} onClose={() => setShowDialog(false)} />}
 
         {showViewModal && selectedRental && (
-          <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: '1rem' }}>
-            <div style={{ backgroundColor: 'white', borderRadius: '1rem', maxHeight: '90vh', overflow: 'auto', maxWidth: '60%', width: '100%' }}>
+          <div className="admin-modal-overlay">
+            <div className="admin-modal-content">
+              <button onClick={() => setShowViewModal(false)} className="admin-modal-close action-button">✕</button>
               <ViewRentals rental={selectedRental} setShowViewModal={setShowViewModal} />
             </div>
           </div>
@@ -486,7 +622,7 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, agent
 
         {/* Toast */}
         {toast && (
-          <div style={{ position: 'fixed', top: '1rem', right: '1rem', backgroundColor: toast.variant === 'error' ? 'hsl(0 70% 50%)' : 'hsl(152 60% 40%)', color: 'white', padding: '1rem 1.5rem', borderRadius: '0.5rem', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', zIndex: 9999, maxWidth: '400px', animation: 'slideIn 0.3s ease-out' }}>
+          <div style={{ position: 'fixed', top: '1rem', right: '1rem', backgroundColor: toast.variant === 'error' ? 'hsl(0 70% 50%)' : 'hsl(152 60% 40%)', color: 'white', padding: '1rem 1.5rem', borderRadius: '0.5rem', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', zIndex: 9999, maxWidth: '90vw', animation: 'slideIn 0.3s ease-out' }}>
             <div style={{ fontWeight: '600', marginBottom: '0.25rem' }}>{toast.title}</div>
             <div style={{ fontSize: '0.875rem' }}>{toast.description}</div>
           </div>

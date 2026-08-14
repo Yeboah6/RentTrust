@@ -276,6 +276,58 @@ const ReviewForm = ({ rental, onSuccess, setShowAddReviewForm, auth }) => {
           from { transform: translateX(110%); opacity: 0; }
           to   { transform: translateX(0);    opacity: 1; }
         }
+
+        /* ---------- Mobile ---------- */
+        @media (max-width: 480px) {
+          .rf-overlay { padding: 0.5rem; align-items: flex-end; }
+
+          .rf-card { max-height: 92vh; }
+
+          .rf-header { padding: 1rem 1.125rem 0.875rem; }
+          .rf-title { font-size: 1.25rem; }
+          .rf-subtitle { font-size: 0.6875rem; }
+
+          .rf-property { margin: 0.875rem 1.125rem 0; padding: 0.625rem 0.875rem; }
+
+          .rf-body { padding: 1rem 1.125rem 1.25rem; gap: 1.125rem; }
+
+          /* iOS Safari zooms the viewport on focus for any input under 16px */
+          .rf-input, .rf-textarea { font-size: 16px; }
+
+          .rf-checks { grid-template-columns: 1fr; }
+
+          .rf-check { padding: 0.7rem 0.75rem; min-height: 44px; }
+
+          /* Enlarge tap targets without changing the visual star size */
+          .rf-star-btn {
+            padding: 10px;
+            margin: -10px;
+            min-width: 44px;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+
+          .rf-close {
+            width: 40px;
+            height: 40px;
+          }
+
+          .rf-submit { padding: 0.85rem; min-height: 44px; }
+
+          .rf-toast {
+            top: 0.75rem;
+            left: 0.75rem;
+            right: 0.75rem;
+            max-width: none;
+          }
+        }
+
+        @media (max-height: 600px) and (orientation: landscape) {
+          .rf-card { max-height: 96vh; }
+          .rf-overlay { padding: 0.5rem; align-items: center; }
+        }
       `}</style>
 
       <div className="rf-wrap">

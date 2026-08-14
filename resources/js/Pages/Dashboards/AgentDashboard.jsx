@@ -275,8 +275,6 @@ const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views
           .profile-header-container { flex-direction: column !important; align-items: flex-start !important; }
           .profile-avatar { margin-bottom: clamp(1rem, 3vw, 1rem) !important; }
           .settings-link { align-self: stretch !important; margin-top: 1rem !important; width: 100% !important; }
-          .tabs-grid { grid-template-columns: 1fr 1fr !important; gap: 0.5rem !important; }
-          .tabs-grid button { min-height: 44px !important; padding: 0.75rem !important; font-size: 0.875rem !important; }
           .listing-grid { grid-template-columns: 1fr !important; }
           .review-grid { grid-template-columns: 1fr !important; }
           .stats-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 0.75rem !important; }
@@ -325,6 +323,31 @@ const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views
         .toast-success { background-color: hsl(152 60% 40%); color: white; }
         .toast-error { background-color: hsl(0 72% 51%); color: white; }
         .action-button { min-height: 44px; -webkit-tap-highlight-color: transparent; }
+
+        /* Improved mobile tab bar: horizontally scrollable */
+        .tabs-grid {
+          display: flex;
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+          scrollbar-width: none;
+          gap: 0.25rem;
+          background-color: hsl(40 30% 94%);
+          padding: 0.25rem;
+          border-radius: 0.5rem;
+          margin-bottom: 1.5rem;
+        }
+        .tabs-grid::-webkit-scrollbar { display: none; }
+        .tabs-grid > button {
+          flex: 0 0 auto;
+          min-width: max-content;
+        }
+        @media (min-width: 769px) {
+          .tabs-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            overflow-x: visible;
+          }
+        }
       `}</style>
 
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'hsl(40 33% 98%)' }}>

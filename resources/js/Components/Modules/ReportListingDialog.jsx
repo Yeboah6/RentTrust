@@ -89,7 +89,7 @@ const ReportListingDialog = ({ setShowAddListingModal, rental, auth }) => {
   };
 
   return (
-    <>
+    <div className="rf-wrap">
       {/* Toast Notification */}
       {toast && (
         <div className={`rf-toast ${toast.variant}`}>
@@ -331,81 +331,46 @@ const ReportListingDialog = ({ setShowAddListingModal, rental, auth }) => {
           margin-bottom: 0.6rem;
         }
 
-        .rf-stars { display: flex; align-items: center; gap: 4px; }
-        .rf-star-btn {
-          background: none; border: none; padding: 2px;
-          cursor: pointer; line-height: 0;
-          transition: transform 0.12s;
-        }
-        .rf-star-btn:hover { transform: scale(1.15); }
-
-        .rf-rating-label {
-          font-size: 0.75rem;
-          color: #e8a020;
-          margin-left: 8px;
-          font-weight: 300;
-          min-width: 60px;
-          opacity: 0;
-          transition: opacity 0.2s;
-        }
-        .rf-rating-label.visible { opacity: 1; }
-
-        .rf-checks { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
-
-        .rf-check {
-          display: flex; align-items: center; gap: 0.6rem;
-          padding: 0.6rem 0.75rem;
-          border: 1px solid rgba(255,255,255,0.07);
-          border-radius: 2px;
-          cursor: pointer;
-          background: rgba(255,255,255,0.02);
-          transition: border-color 0.15s, background 0.15s;
-          user-select: none;
-        }
-        .rf-check:hover { border-color: rgba(232,160,32,0.3); background: rgba(232,160,32,0.04); }
-        .rf-check.checked { border-color: rgba(232,160,32,0.5); background: rgba(232,160,32,0.07); }
-
-        .rf-check-box {
-          width: 14px; height: 14px; flex-shrink: 0;
-          border: 1px solid rgba(255,255,255,0.2);
-          border-radius: 2px;
-          display: flex; align-items: center; justify-content: center;
-          transition: border-color 0.15s, background 0.15s;
-        }
-        .rf-check.checked .rf-check-box {
-          border-color: #e8a020;
-          background: #e8a020;
-        }
-        .rf-check-tick { font-size: 9px; color: #0f0e0c; font-weight: 700; line-height: 1; }
-        .rf-check-icon { font-size: 0.75rem; color: rgba(245,240,232,0.3); }
-        .rf-check.checked .rf-check-icon { color: rgba(232,160,32,0.7); }
-        .rf-check-label {
-          font-size: 0.75rem; font-weight: 400;
-          color: rgba(245,240,232,0.55);
-          line-height: 1.3;
-        }
-        .rf-check.checked .rf-check-label { color: rgba(245,240,232,0.9); }
-
-        .rf-input, .rf-textarea, .rf-select {
+        .rf-select {
           width: 100%;
-          background: rgba(255,255,255,0.03);
+          background: #00000008;
           border: 1px solid rgba(255,255,255,0.08);
           border-radius: 2px;
           padding: 0.6rem 0.75rem;
           font-size: 0.8125rem;
-          color: #f5f0e8;
+          color: #ffffff;
           font-family: 'DM Sans', sans-serif;
           font-weight: 300;
           outline: none;
           transition: border-color 0.15s;
         }
-        .rf-input::placeholder, .rf-textarea::placeholder, .rf-select::placeholder {
+
+        .rf-input, .rf-textarea {
+          width: 100%;
+          background: #fdfdfd08;
+          border: 1px solid rgba(255,255,255,0.08);
+          border-radius: 2px;
+          padding: 0.6rem 0.75rem;
+          font-size: 0.8125rem;
+          color: #ffffff;
+          font-family: 'DM Sans', sans-serif;
+          font-weight: 300;
+          outline: none;
+          transition: border-color 0.15s;
+        }
+        .rf-input::placeholder, .rf-textarea::placeholder {
           color: rgba(245,240,232,0.2);
         }
         .rf-input:focus, .rf-textarea:focus, .rf-select:focus {
           border-color: rgba(232,160,32,0.5);
           background: rgba(232,160,32,0.03);
         }
+
+        .rf-select:focus {
+          background: #050505e7;
+          border-color: rgba(232,160,32,0.5);
+        }
+
         .rf-textarea { resize: vertical; min-height: 72px; line-height: 1.5; }
         .rf-input.err, .rf-textarea.err, .rf-select.err { border-color: rgba(220,60,60,0.5); }
 
@@ -428,11 +393,6 @@ const ReportListingDialog = ({ setShowAddListingModal, rental, auth }) => {
         .rf-submit:hover:not(:disabled) { background: #f0b030; }
         .rf-submit:disabled { opacity: 0.45; cursor: not-allowed; }
 
-        .rf-divider {
-          height: 1px;
-          background: rgba(255,255,255,0.06);
-        }
-
         .rf-toast {
           position: fixed; top: 1.25rem; right: 1.25rem;
           padding: 0.875rem 1.125rem;
@@ -449,27 +409,6 @@ const ReportListingDialog = ({ setShowAddListingModal, rental, auth }) => {
         @keyframes rfSlide {
           from { transform: translateX(110%); opacity: 0; }
           to   { transform: translateX(0);    opacity: 1; }
-        }
-
-        .rf-select {
-          width: 100%;
-          background: #00000008;
-          border: 1px solid rgba(5, 5, 5, 0.08);
-          border-radius: 2px;
-          padding: 0.6rem 0.75rem;
-          font-size: 0.8125rem;
-          color: #f5f0e8;
-          font-family: 'DM Sans', sans-serif;
-          font-weight: 300;
-          outline: none;
-          transition: border-color 0.15s;
-        }
-        .rf-select:focus {
-          border-color: rgba(232,160,32,0.5);
-          background: #00000008;
-        }
-        .rf-select.err {
-          border-color: rgba(220,60,60,0.5);
         }
 
         .rf-upload {
@@ -514,8 +453,55 @@ const ReportListingDialog = ({ setShowAddListingModal, rental, auth }) => {
         .rf-file-item button:hover {
           color: #f5f0e8;
         }
+
+        /* ---------- Mobile ---------- */
+        @media (max-width: 480px) {
+          .rf-overlay { padding: 0.5rem; align-items: flex-end; }
+
+          .rf-card { max-height: 92vh; }
+
+          .rf-header { padding: 1rem 1.125rem 0.875rem; }
+          .rf-title { font-size: 1.25rem; }
+          .rf-subtitle { font-size: 0.6875rem; }
+
+          .rf-property { margin: 0.875rem 1.125rem 0; padding: 0.625rem 0.875rem; }
+
+          .rf-body { padding: 1rem 1.125rem 1.25rem; gap: 1.125rem; }
+
+          /* iOS Safari zooms the viewport on focus for any input under 16px */
+          .rf-input, .rf-textarea, .rf-select { font-size: 16px; }
+
+          .rf-close { width: 40px; height: 40px; }
+
+          .rf-upload { padding: 1.25rem 1rem; }
+
+          .rf-file-item { padding: 0.625rem 0.75rem; min-height: 44px; }
+          .rf-file-item button {
+            padding: 10px;
+            margin: -10px;
+            min-width: 44px;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+
+          .rf-submit { padding: 0.85rem; min-height: 44px; }
+
+          .rf-toast {
+            top: 0.75rem;
+            left: 0.75rem;
+            right: 0.75rem;
+            max-width: none;
+          }
+        }
+
+        @media (max-height: 600px) and (orientation: landscape) {
+          .rf-card { max-height: 96vh; }
+          .rf-overlay { padding: 0.5rem; align-items: center; }
+        }
       ` }} />
-    </>
+    </div>
   );
 };
 

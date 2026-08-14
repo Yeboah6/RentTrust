@@ -338,18 +338,28 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
 
         .stats-grid {
           display: grid;
-          grid-template-columns: repeat(2, 1fr);
+          grid-template-columns: 1fr;
           gap: clamp(0.75rem, 3vw, 1.25rem);
         }
 
         .tabs-grid {
-          display: grid;
-          grid-template-columns: 1fr;
+          display: flex;
+          flex-wrap: nowrap;
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+          scrollbar-width: none;
           gap: clamp(0.25rem, 1vw, 0.5rem);
           background-color: hsl(40 30% 94%);
           padding: clamp(0.25rem, 1vw, 0.25rem);
           border-radius: clamp(0.375rem, 2vw, 0.5rem);
           margin-bottom: clamp(1.5rem, 4vw, 2rem);
+        }
+        .tabs-grid::-webkit-scrollbar {
+          display: none;
+        }
+        .tabs-grid > button {
+          flex: 0 0 auto;
+          min-width: max-content;
         }
 
         .review-grid {
@@ -364,7 +374,7 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
             grid-template-columns: repeat(2, 1fr);
           }
           .stats-grid {
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(2, 1fr);
           }
           .review-grid {
             grid-template-columns: repeat(2, 1fr);
@@ -378,9 +388,6 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
           }
           .stats-grid {
             grid-template-columns: repeat(4, 1fr);
-          }
-          .tabs-grid {
-            grid-template-columns: repeat(3, 1fr);
           }
           .review-grid {
             grid-template-columns: repeat(3, 1fr);
@@ -400,6 +407,11 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
           .profile-header-container {
             flex-direction: column;
             align-items: flex-start;
+          }
+          .profile-header-container > button,
+          .profile-header-container > a.settings-link {
+            width: 100%;
+            justify-content: center;
           }
         }
 
@@ -426,6 +438,8 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
           width: 100%;
           position: relative;
           max-width: 95%; /* mobile first */
+          display: flex;
+          flex-direction: column;
         }
 
         @media (min-width: 640px) {
@@ -1017,16 +1031,15 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
                 onClick={() => setShowAddListingModal(false)}
                 className="action-button"
                 style={{
+                  alignSelf: 'flex-end',
                   position: 'sticky',
                   top: 0,
-                  right: 0,
                   padding: 'clamp(0.75rem, 2vw, 1rem)',
                   border: 'none',
                   background: 'transparent',
                   fontSize: 'clamp(1.25rem, 4vw, 1.5rem)',
                   cursor: 'pointer',
                   color: 'hsl(200 15% 45%)',
-                  float: 'right',
                   zIndex: 10
                 }}
               >
@@ -1041,7 +1054,7 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
         {showEditListingModal && selectedRental && (
           <div className="modal-overlay">
             <div className="modal-content">
-              <button onClick={() => { setShowEditListingModal(false); setSelectedRental(null); }} className="action-button" style={{ position: 'sticky', top: 0, right: 0, padding: 'clamp(0.75rem, 2vw, 1rem)', border: 'none', background: 'transparent', fontSize: 'clamp(1.25rem, 4vw, 1.5rem)', cursor: 'pointer', color: 'hsl(200 15% 45%)', float: 'right', zIndex: 10 }}>✕</button>
+              <button onClick={() => { setShowEditListingModal(false); setSelectedRental(null); }} className="action-button" style={{ alignSelf: 'flex-end', position: 'sticky', top: 0, padding: 'clamp(0.75rem, 2vw, 1rem)', border: 'none', background: 'transparent', fontSize: 'clamp(1.25rem, 4vw, 1.5rem)', cursor: 'pointer', color: 'hsl(200 15% 45%)', zIndex: 10 }}>✕</button>
               <EditRentals agentData={agentData} setShowEditListingModal={setShowEditListingModal} rental={selectedRental} locations={locations} propertyTypes={propertyTypes} amenities={amenities} />
             </div>
           </div>
@@ -1055,16 +1068,15 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
                 onClick={() => setShowViewModal(false)}
                 className="action-button"
                 style={{
+                  alignSelf: 'flex-end',
                   position: 'sticky',
                   top: 0,
-                  right: 0,
                   padding: 'clamp(0.75rem, 2vw, 1rem)',
                   border: 'none',
                   background: 'transparent',
                   fontSize: 'clamp(1.25rem, 4vw, 1.5rem)',
                   cursor: 'pointer',
                   color: 'hsl(200 15% 45%)',
-                  float: 'right',
                   zIndex: 10
                 }}
               >

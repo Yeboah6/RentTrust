@@ -280,8 +280,62 @@ const AdminOverview = ({
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
 
+            <style>{`
+                /* Responsive grids */
+                .ao-grid-stats-primary,
+                .ao-grid-stats-secondary {
+                    display: grid;
+                    grid-template-columns: 1fr;
+                    gap: 1rem;
+                }
+                .ao-grid-attention {
+                    display: grid;
+                    grid-template-columns: 1fr;
+                    gap: 0.875rem;
+                }
+                .ao-grid-recent-listings {
+                    display: grid;
+                    grid-template-columns: 1fr;
+                    gap: 0.875rem;
+                }
+                .ao-grid-verifications {
+                    display: grid;
+                    grid-template-columns: 1fr;
+                    gap: 1rem;
+                }
+
+                @media (min-width: 640px) {
+                    .ao-grid-stats-primary,
+                    .ao-grid-stats-secondary {
+                        grid-template-columns: repeat(2, 1fr);
+                    }
+                    .ao-grid-attention {
+                        grid-template-columns: repeat(2, 1fr);
+                    }
+                    .ao-grid-recent-listings {
+                        grid-template-columns: repeat(2, 1fr);
+                    }
+                }
+
+                @media (min-width: 1024px) {
+                    .ao-grid-stats-primary,
+                    .ao-grid-stats-secondary {
+                        grid-template-columns: repeat(4, 1fr);
+                    }
+                    .ao-grid-attention {
+                        grid-template-columns: repeat(3, 1fr);
+                    }
+                    .ao-grid-recent-listings {
+                        grid-template-columns: repeat(4, 1fr);
+                    }
+                    .ao-grid-verifications {
+                        grid-template-columns: repeat(2, 1fr);
+                    }
+                }
+            `}</style>
+
             {/* Platform totals */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem' }}>
+            <div className="ao-grid-stats-primary">
                 <StatCard icon={Icons.home}     value={stats.totalListings.toLocaleString()} label="Total Listings" />
                 <StatCard icon={Icons.users}    value={stats.totalAgents.toLocaleString()}   label="Total Agents" />
                 <StatCard icon={Icons.eye}      value={viewCount}          label="Total Views" />
@@ -289,7 +343,7 @@ const AdminOverview = ({
             </div>
 
             {/* Health / business metrics */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem' }}>
+            <div className="ao-grid-stats-secondary">
                 <StatCard icon={Icons.check}    value={stats.activeListings.toLocaleString()} label="Active Listings"  accent="hsl(152 60% 35%)" accentBg="hsl(152 60% 93%)" />
                 <StatCard icon={Icons.check}    value={stats.activeAgents.toLocaleString()}    label="Active Agents"    accent="hsl(152 60% 35%)" accentBg="hsl(152 60% 93%)" />
                 <StatCard icon={Icons.currency} value={subsCount}         label="Paid Subscribers" accent="hsl(38 92% 40%)"  accentBg="hsl(38 92% 93%)" />
@@ -305,7 +359,7 @@ const AdminOverview = ({
                     <div style={{ width: 3, height: '1rem', borderRadius: 999, backgroundColor: 'hsl(0 72% 50%)' }} />
                     <h2 style={{ margin: 0, fontSize: '0.9rem', fontWeight: 800, color: 'hsl(220 25% 12%)' }}>Needs Attention</h2>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.875rem' }}>
+                <div className="ao-grid-attention">
                     <AttentionCard
                         icon={Icons.clock} count={stats.pendingListings} label="Inactive, Sold & Rented Listings"
                         accent="hsl(38 92% 40%)" accentBg="hsl(38 92% 93%)" onClick={onViewAllListings}
@@ -335,7 +389,7 @@ const AdminOverview = ({
                 </div>
 
                 {recentListings.length > 0 ? (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.875rem' }}>
+                    <div className="ao-grid-recent-listings">
                         {recentListings.map(listing => <RecentListingCard key={listing.id} listing={listing} />)}
                     </div>
                 ) : (
@@ -346,7 +400,7 @@ const AdminOverview = ({
             </div>
 
             {/* Recent Verification Requests */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div className="ao-grid-verifications">
                         
                 {/* Agent Verifications — teal */}
                 <div style={{

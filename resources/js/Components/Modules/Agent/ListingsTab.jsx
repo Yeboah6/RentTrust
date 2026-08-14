@@ -105,6 +105,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
         <div style={{
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             gap: '0.25rem', padding: '1rem 0',
+            flexWrap: 'wrap',
         }}>
             <button onClick={() => onPageChange(currentPage - 1)} disabled={currentPage === 1}
                 style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '2rem', height: '2rem', borderRadius: '0.375rem', border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white', color: currentPage === 1 ? 'hsl(220 15% 70%)' : 'hsl(220 25% 35%)', cursor: currentPage === 1 ? 'default' : 'pointer', opacity: currentPage === 1 ? 0.5 : 1, transition: 'all 0.12s' }}>
@@ -198,10 +199,8 @@ const ListingCard = ({ property, onView, onEdit, onDelete, onVerify, getVerifica
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
         >
-
             {/* Card body */}
-            <div style={{ padding: '0.875rem 1rem', flex: 1, display: 'flex', flexDirection: 'column', gap: '0.6rem', }}>
-
+            <div style={{ padding: '0.875rem 1rem', flex: 1, display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
                 <div style={{ minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.3rem', flexWrap: 'wrap' }}>
                         <h3 style={{
@@ -325,7 +324,7 @@ const ListingCard = ({ property, onView, onEdit, onDelete, onVerify, getVerifica
 
 // ─── Purpose Tabs ─────────────────────────────────────────────────────────────
 const PurposeTabs = ({ active, onChange, rentalCount, saleCount }) => (
-    <div style={{ display: 'flex', gap: '0.25rem', borderBottom: '1px solid hsl(220 15% 90%)' }}>
+    <div style={{ display: 'flex', gap: '0.25rem', borderBottom: '1px solid hsl(220 15% 90%)', overflowX: 'auto', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
         {PURPOSE_TABS.map(tab => {
             const isActive = active === tab.key;
             const count = tab.key === 'rent' ? rentalCount : saleCount;
@@ -344,6 +343,8 @@ const PurposeTabs = ({ active, onChange, rentalCount, saleCount }) => (
                         fontSize: '0.82rem', fontWeight: 700,
                         cursor: 'pointer', fontFamily: 'inherit',
                         transition: 'color 0.15s, border-color 0.15s',
+                        whiteSpace: 'nowrap',
+                        flex: '0 0 auto',
                     }}
                 >
                     <span style={{ fontSize: '0.95rem', lineHeight: 1 }}>{tab.emoji}</span>
@@ -360,6 +361,7 @@ const PurposeTabs = ({ active, onChange, rentalCount, saleCount }) => (
                 </button>
             );
         })}
+        <style>{`.purpose-tabs::-webkit-scrollbar { display: none; }`}</style>
     </div>
 );
 
@@ -459,9 +461,60 @@ const ListingsTab = ({
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            <style>{`
+                /* Responsive for listings */
+                .listings-header {
+                    display: flex;
+                    flex-wrap: wrap;
+                    align-items: center;
+                    justify-content: space-between;
+                    gap: 0.75rem;
+                }
+                .listings-filters {
+                    display: flex;
+                    flex-wrap: wrap;
+                    gap: 0.75rem;
+                    align-items: center;
+                }
+                .listings-filters > * {
+                    flex: 1 1 auto;
+                }
+                .listings-filters .search-wrapper {
+                    position: relative;
+                    flex: 2 1 260px;
+                }
+                .listings-filters select {
+                    min-width: 150px;
+                }
+                .listings-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+                    gap: 0.875rem;
+                }
+                @media (max-width: 640px) {
+                    .listings-header {
+                        flex-direction: column;
+                        align-items: stretch;
+                    }
+                    .listings-filters {
+                        flex-direction: column;
+                    }
+                    .listings-filters > *,
+                    .listings-filters .search-wrapper {
+                        width: 100%;
+                        flex: none;
+                    }
+                    .listings-filters select {
+                        min-width: 100%;
+                    }
+                    .listings-grid {
+                        grid-template-columns: 1fr;
+                    }
+                }
+            `}</style>
 
             {/* Header */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
+            <div className="listings-header">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
                     <div style={{ width: 3, height: '1.2rem', borderRadius: 999, backgroundColor: 'hsl(174 62% 32%)', flexShrink: 0 }} />
                     <h2 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 900, color: 'hsl(220 25% 12%)' }}>
@@ -487,8 +540,8 @@ const ListingsTab = ({
             />
 
             {/* Search & Filter */}
-            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
-                <div style={{ position: 'relative', flex: '1 1 260px' }}>
+            <div className="listings-filters">
+                <div className="search-wrapper">
                     <div style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'hsl(220 15% 55%)', display: 'flex' }}>
                         {Icons.search}
                     </div>
@@ -568,7 +621,7 @@ const ListingsTab = ({
             {/* Grid or empty state */}
             {activeList.length > 0 ? (
                 <div key={activePurpose} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', animation: 'slideDown 0.2s ease-out' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '0.875rem' }}>
+                    <div className="listings-grid">
                         {paginatedList.map(property => (
                             <ListingCard
                                 key={property.id}
@@ -610,13 +663,6 @@ const ListingsTab = ({
                 @keyframes slideDown {
                     from { opacity: 0; transform: translateY(-6px); }
                     to   { opacity: 1; transform: translateY(0); }
-                }
-                @keyframes leModalIn {
-                    from { opacity: 0; transform: scale(0.95) translateY(5px); }
-                    to { opacity: 1; transform: scale(1) translateY(0); }
-                }
-                @keyframes spin {
-                    to { transform: rotate(360deg); }
                 }
             `}</style>
         </div>

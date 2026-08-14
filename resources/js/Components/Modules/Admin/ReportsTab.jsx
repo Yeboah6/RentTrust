@@ -571,9 +571,59 @@ const ReportsTab = ({ reports = [], onViewProperty, onStatusChange, showToast })
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            <style>{`
+                .reports-header {
+                    display: flex;
+                    flex-wrap: wrap;
+                    align-items: center;
+                    justify-content: space-between;
+                    gap: 0.75rem;
+                }
+                .reports-filters {
+                    display: flex;
+                    flex-wrap: wrap;
+                    gap: 0.75rem;
+                }
+                .reports-filters .search-wrapper {
+                    position: relative;
+                    flex: 1 1 260px;
+                }
+                .reports-filters select {
+                    min-width: 150px;
+                }
+                .reports-grid {
+                    display: grid;
+                    grid-template-columns: 1fr;
+                    gap: 0.875rem;
+                }
+                @media (min-width: 640px) {
+                    .reports-grid {
+                        grid-template-columns: repeat(2, 1fr);
+                    }
+                }
+                @media (min-width: 1024px) {
+                    .reports-grid {
+                        grid-template-columns: repeat(3, 1fr);
+                    }
+                }
+                @media (max-width: 640px) {
+                    .reports-header {
+                        flex-direction: column;
+                        align-items: stretch;
+                    }
+                    .reports-filters {
+                        flex-direction: column;
+                    }
+                    .reports-filters .search-wrapper,
+                    .reports-filters select {
+                        width: 100%;
+                        flex: none;
+                    }
+                }
+            `}</style>
 
             {/* Section heading + counts */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
+            <div className="reports-header">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
                     <div style={{ width: 3, height: '1.2rem', borderRadius: 999, backgroundColor: 'hsl(0 72% 48%)', flexShrink: 0 }} />
                     <h2 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 900, color: 'hsl(220 25% 12%)', letterSpacing: '-0.01em' }}>
@@ -607,8 +657,8 @@ const ReportsTab = ({ reports = [], onViewProperty, onStatusChange, showToast })
             </div>
 
             {/* Search + Filter */}
-            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-                <div style={{ position: 'relative', flex: '1 1 260px' }}>
+            <div className="reports-filters">
+                <div className="search-wrapper">
                     <div style={{ 
                         position: 'absolute', left: '0.75rem', top: '50%', 
                         transform: 'translateY(-50%)', color: 'hsl(220 15% 55%)',
@@ -672,11 +722,7 @@ const ReportsTab = ({ reports = [], onViewProperty, onStatusChange, showToast })
             {/* Grid or empty state */}
             {filteredTotal > 0 ? (
                 <>
-                    <div style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(3, 1fr)',
-                        gap: '0.875rem',
-                    }}>
+                    <div className="reports-grid">
                         {paginatedReports.map(report => (
                             <ReportCard
                                 key={report.id}
@@ -724,13 +770,6 @@ const ReportsTab = ({ reports = [], onViewProperty, onStatusChange, showToast })
                     </p>
                 </div>
             )}
-
-            <style>{`
-                @keyframes slideDown {
-                    from { opacity: 0; transform: translateY(-6px); }
-                    to   { opacity: 1; transform: translateY(0); }
-                }
-            `}</style>
         </div>
     );
 };

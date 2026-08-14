@@ -337,8 +337,8 @@ const VerifyModal = ({ verification, isOpen, onClose, onSubmit }) => {
                 </div>
             )}
 
-            <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: '1rem', backdropFilter: 'blur(4px)' }} onClick={onClose}>
-                <div style={{ width: '100%', maxWidth: '36rem', maxHeight: '90vh', overflowY: 'auto', backgroundColor: 'white', borderRadius: '1rem', boxShadow: '0 20px 60px rgba(0,0,0,0.2)', animation: 'fadeIn 0.2s ease' }} onClick={e => e.stopPropagation()}>
+            <div className="verify-modal-overlay" style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: '1rem', backdropFilter: 'blur(4px)' }} onClick={onClose}>
+                <div className="verify-modal-content" style={{ width: '100%', maxWidth: '36rem', maxHeight: '90vh', overflowY: 'auto', backgroundColor: 'white', borderRadius: '1rem', boxShadow: '0 20px 60px rgba(0,0,0,0.2)', animation: 'fadeIn 0.2s ease' }} onClick={e => e.stopPropagation()}>
                     
                     {/* Header */}
                     <div style={{ padding: '1.25rem', borderBottom: '1px solid hsl(220 15% 93%)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -362,7 +362,7 @@ const VerifyModal = ({ verification, isOpen, onClose, onSubmit }) => {
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                                 <div>
                                     <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.78rem', fontWeight: 700, color: 'hsl(220 25% 12%)' }}>Verification Status</label>
-                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
+                                    <div className="verify-status-options" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
                                         {[
                                             { value: 'verified', label: 'Approve', color: 'hsl(152 60% 40%)' },
                                             { value: 'rejected', label: 'Reject', color: 'hsl(0 72% 48%)' },
@@ -382,7 +382,7 @@ const VerifyModal = ({ verification, isOpen, onClose, onSubmit }) => {
                                     </div>
                                 </div>
 
-                                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                                <div className="verify-modal-actions" style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
                                     <button type="button" onClick={onClose} style={{ flex: 1, padding: '0.65rem', borderRadius: '0.5rem', border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white', color: 'hsl(220 25% 15%)', fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
                                     <button type="submit" disabled={processing || !data.status} style={{ flex: 1, padding: '0.65rem', borderRadius: '0.5rem', border: 'none', backgroundColor: processing || !data.status ? 'hsl(174 62% 32% / 0.5)' : 'hsl(174 62% 32%)', color: 'white', fontSize: '0.78rem', fontWeight: 700, cursor: processing || !data.status ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}>
                                         {processing ? 'Saving...' : 'Submit'}
@@ -397,6 +397,29 @@ const VerifyModal = ({ verification, isOpen, onClose, onSubmit }) => {
             <style>{`
                 @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
                 @keyframes slideIn { from { transform: translateX(400px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+                /* Responsive styles */
+                .verify-modal-overlay {
+                    align-items: flex-start;
+                    overflow-y: auto;
+                }
+                .verify-modal-content {
+                    margin: 0 auto;
+                    max-height: 95vh;
+                }
+                @media (max-width: 640px) {
+                    .verify-modal-overlay {
+                        padding: 0.5rem;
+                    }
+                    .verify-modal-content {
+                        border-radius: 0.75rem;
+                    }
+                    .verify-status-options {
+                        grid-template-columns: 1fr !important; /* stack on mobile */
+                    }
+                    .verify-modal-actions {
+                        flex-direction: column-reverse;
+                    }
+                }
             `}</style>
         </>
     );
@@ -463,9 +486,63 @@ const VerificationsTab = ({ verifications = [], showToast }) => {
     return (
         <>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                <style>{`
+                    /* Responsive styles for verification tab */
+                    .verify-header {
+                        display: flex;
+                        flex-wrap: wrap;
+                        align-items: center;
+                        justify-content: space-between;
+                        gap: 0.75rem;
+                    }
+                    .verify-filters {
+                        display: flex;
+                        flex-wrap: wrap;
+                        gap: 0.75rem;
+                    }
+                    .verify-filters .search-wrapper {
+                        position: relative;
+                        flex: 2 1 260px;
+                    }
+                    .verify-filters select {
+                        flex: 1 1 150px;
+                    }
+                    .verify-grid {
+                        display: grid;
+                        grid-template-columns: 1fr;
+                        gap: 0.875rem;
+                    }
+
+                    @media (max-width: 640px) {
+                        .verify-header {
+                            flex-direction: column;
+                            align-items: stretch;
+                        }
+                        .verify-filters {
+                            flex-direction: column;
+                        }
+                        .verify-filters .search-wrapper,
+                        .verify-filters select {
+                            width: 100%;
+                            flex: none;
+                        }
+                    }
+
+                    @media (min-width: 640px) {
+                        .verify-grid {
+                            grid-template-columns: repeat(2, 1fr);
+                        }
+                    }
+
+                    @media (min-width: 1024px) {
+                        .verify-grid {
+                            grid-template-columns: repeat(3, 1fr);
+                        }
+                    }
+                `}</style>
 
                 {/* Section heading + counts */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
+                <div className="verify-header">
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
                         <div style={{ width: 3, height: '1.2rem', borderRadius: 999, backgroundColor: 'hsl(174 62% 32%)', flexShrink: 0 }} />
                         <h2 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 900, color: 'hsl(220 25% 12%)', letterSpacing: '-0.01em' }}>
@@ -492,8 +569,8 @@ const VerificationsTab = ({ verifications = [], showToast }) => {
                 </div>
 
                 {/* Search + Filter */}
-                <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-                    <div style={{ position: 'relative', flex: '1 1 260px' }}>
+                <div className="verify-filters">
+                    <div className="search-wrapper">
                         <div style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'hsl(220 15% 55%)', display: 'flex' }}>
                             {Icons.search}
                         </div>
@@ -526,7 +603,7 @@ const VerificationsTab = ({ verifications = [], showToast }) => {
                 {/* Grid or empty */}
                 {filteredTotal > 0 ? (
                     <>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.875rem' }}>
+                        <div className="verify-grid">
                             {paginatedVerifications.map(verification => (
                                 <VerificationCard
                                     key={verification.id}
@@ -553,13 +630,6 @@ const VerificationsTab = ({ verifications = [], showToast }) => {
                 onClose={() => { setShowVerifyModal(false); setSelectedVerification(null); }}
                 onSubmit={handleSubmitVerification}
             />
-
-            <style>{`
-                @keyframes slideDown {
-                    from { opacity: 0; transform: translateY(-6px); }
-                    to   { opacity: 1; transform: translateY(0); }
-                }
-            `}</style>
         </>
     );
 };

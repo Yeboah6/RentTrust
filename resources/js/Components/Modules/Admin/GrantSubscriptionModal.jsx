@@ -88,15 +88,108 @@ const GrantSubscriptionModal = ({ agent, plans, onClose, onSuccess }) => {
 
   return (
     <div
+      className="grant-overlay"
       style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 60, padding: '1rem' }}
       onClick={onClose}
     >
+      <style>{`
+        .grant-overlay {
+          position: fixed;
+          inset: 0;
+          background-color: rgba(0,0,0,0.55);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 60;
+          padding: 1rem;
+        }
+        .grant-modal {
+          background-color: white;
+          border-radius: 1rem;
+          width: 100%;
+          max-width: 520px;
+          max-height: 90vh;
+          overflow: auto;
+          box-shadow: 0 24px 48px rgba(0,0,0,0.15);
+        }
+        .grant-modal-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 1.5rem;
+          border-bottom: 1px solid hsl(40 20% 88%);
+        }
+        .grant-modal-body {
+          padding: 1.5rem;
+          display: flex;
+          flex-direction: column;
+          gap: 1.25rem;
+        }
+        .grant-modal-footer {
+          padding: 1.25rem 1.5rem;
+          border-top: 1px solid hsl(40 20% 88%);
+          background-color: hsl(40 33% 99%);
+          display: flex;
+          justify-content: flex-end;
+          gap: 0.75rem;
+        }
+        .grant-plan-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 0.625rem;
+        }
+        .grant-duration-grid {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 0.5rem;
+        }
+        .grant-footer-buttons {
+          display: flex;
+          justify-content: flex-end;
+          gap: 0.75rem;
+        }
+
+        @media (max-width: 640px) {
+          .grant-overlay {
+            padding: 0.5rem;
+            align-items: flex-start;
+            overflow-y: auto;
+          }
+          .grant-modal {
+            max-height: 95vh;
+            border-radius: 0.75rem;
+          }
+          .grant-modal-header {
+            padding: 1rem 1rem 0.75rem;
+          }
+          .grant-modal-body {
+            padding: 1rem;
+            gap: 1rem;
+          }
+          .grant-modal-footer {
+            padding: 1rem;
+          }
+          .grant-plan-grid {
+            grid-template-columns: 1fr; /* stack plan buttons */
+          }
+          .grant-duration-grid {
+            grid-template-columns: repeat(4, 1fr); /* keep 4 columns but smaller */
+          }
+          .grant-footer-buttons {
+            flex-direction: column-reverse;
+          }
+          .grant-footer-buttons button {
+            width: 100%;
+          }
+        }
+      `}</style>
+
       <div
-        style={{ backgroundColor: 'white', borderRadius: '1rem', width: '100%', maxWidth: '520px', maxHeight: '90vh', overflow: 'auto', boxShadow: '0 24px 48px rgba(0,0,0,0.15)' }}
+        className="grant-modal"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.5rem', borderBottom: '1px solid hsl(40 20% 88%)' }}>
+        <div className="grant-modal-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <div style={{ width: '2.5rem', height: '2.5rem', borderRadius: '0.625rem', backgroundColor: 'hsl(271 76% 95%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Gift style={{ height: '1.25rem', width: '1.25rem', color: 'hsl(271 76% 53%)' }} />
@@ -111,7 +204,7 @@ const GrantSubscriptionModal = ({ agent, plans, onClose, onSuccess }) => {
           </button>
         </div>
 
-        <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+        <div className="grant-modal-body">
           {/* Agent info strip */}
           <div style={{ backgroundColor: 'hsl(40 33% 99%)', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.75rem', padding: '1rem', display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
             <div style={{ width: '2.75rem', height: '2.75rem', borderRadius: '50%', backgroundColor: 'hsl(174 62% 32% / 0.12)', color: 'hsl(174 62% 32%)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.125rem', fontWeight: '700', flexShrink: 0 }}>
@@ -131,7 +224,7 @@ const GrantSubscriptionModal = ({ agent, plans, onClose, onSuccess }) => {
           {/* Plan selector */}
           <div>
             <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: 'hsl(200 25% 15%)', marginBottom: '0.625rem' }}>Select Plan to Grant</label>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.625rem' }}>
+            <div className="grant-plan-grid">
               {grantablePlans.map(plan => {
                 const selected = Number(selectedPlanId) === plan.id;
                 const isUpgrade = PLAN_ORDER.indexOf(plan.slug) > currentIdx;
@@ -168,7 +261,7 @@ const GrantSubscriptionModal = ({ agent, plans, onClose, onSuccess }) => {
             <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: 'hsl(200 25% 15%)', marginBottom: '0.625rem' }}>
               Duration
             </label>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem' }}>
+            <div className="grant-duration-grid">
               {[1, 2, 3, 6].map(m => (
                 <button
                   key={m}
@@ -228,21 +321,23 @@ const GrantSubscriptionModal = ({ agent, plans, onClose, onSuccess }) => {
         </div>
 
         {/* Footer */}
-        <div style={{ padding: '1.25rem 1.5rem', borderTop: '1px solid hsl(40 20% 88%)', backgroundColor: 'hsl(40 33% 99%)', display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
-          <button
-            onClick={onClose}
-            style={{ padding: '0.625rem 1.25rem', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.5rem', backgroundColor: 'white', color: 'hsl(200 25% 15%)', fontSize: '0.875rem', fontWeight: '500', cursor: 'pointer', fontFamily: 'inherit' }}
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSubmit}
-            disabled={processing || !selectedPlanId || isFreeSelected}
-            style={{ padding: '0.625rem 1.25rem', border: 'none', borderRadius: '0.5rem', background: processing || !selectedPlanId || isFreeSelected ? 'hsl(200 15% 80%)' : 'linear-gradient(135deg, hsl(271 76% 53%) 0%, hsl(271 60% 45%) 100%)', color: 'white', fontSize: '0.875rem', fontWeight: '600', cursor: processing || !selectedPlanId || isFreeSelected ? 'not-allowed' : 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.5rem', fontFamily: 'inherit' }}
-          >
-            <Gift style={{ height: '1rem', width: '1rem' }} />
-            {processing ? 'Granting…' : 'Grant Plan'}
-          </button>
+        <div className="grant-modal-footer">
+          <div className="grant-footer-buttons">
+            <button
+              onClick={onClose}
+              style={{ padding: '0.625rem 1.25rem', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.5rem', backgroundColor: 'white', color: 'hsl(200 25% 15%)', fontSize: '0.875rem', fontWeight: '500', cursor: 'pointer', fontFamily: 'inherit' }}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSubmit}
+              disabled={processing || !selectedPlanId || isFreeSelected}
+              style={{ padding: '0.625rem 1.25rem', border: 'none', borderRadius: '0.5rem', background: processing || !selectedPlanId || isFreeSelected ? 'hsl(200 15% 80%)' : 'linear-gradient(135deg, hsl(271 76% 53%) 0%, hsl(271 60% 45%) 100%)', color: 'white', fontSize: '0.875rem', fontWeight: '600', cursor: processing || !selectedPlanId || isFreeSelected ? 'not-allowed' : 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.5rem', fontFamily: 'inherit' }}
+            >
+              <Gift style={{ height: '1rem', width: '1rem' }} />
+              {processing ? 'Granting…' : 'Grant Plan'}
+            </button>
+          </div>
         </div>
       </div>
     </div>

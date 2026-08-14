@@ -136,7 +136,6 @@ const AdminAnalyticsTab = ({
 
         let csv = headers.join(',') + '\n';
         rows.forEach(row => {
-            // Escape commas and quotes
             csv += row.map(val => `"${String(val).replace(/"/g, '""')}"`).join(',') + '\n';
         });
 
@@ -153,6 +152,50 @@ const AdminAnalyticsTab = ({
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            <style>{`
+                .analytics-grid-4 {
+                    display: grid;
+                    grid-template-columns: 1fr;
+                    gap: 0.875rem;
+                }
+                .analytics-grid-2 {
+                    display: grid;
+                    grid-template-columns: 1fr;
+                    gap: 0.875rem;
+                }
+
+                @media (min-width: 640px) {
+                    .analytics-grid-4 {
+                        grid-template-columns: repeat(2, 1fr);
+                    }
+                    .analytics-grid-2 {
+                        grid-template-columns: repeat(2, 1fr);
+                    }
+                }
+
+                @media (min-width: 1024px) {
+                    .analytics-grid-4 {
+                        grid-template-columns: repeat(4, 1fr);
+                    }
+                }
+
+                /* Table scroll container for mobile */
+                .table-scroll {
+                    overflow-x: auto;
+                    -webkit-overflow-scrolling: touch;
+                }
+                .analytics-table {
+                    min-width: 600px;
+                }
+                @media (max-width: 640px) {
+                    .table-scroll {
+                        border-radius: 0.5rem;
+                    }
+                    .analytics-table {
+                        font-size: 0.75rem;
+                    }
+                }
+            `}</style>
 
             {/* Header with download */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
@@ -181,14 +224,14 @@ const AdminAnalyticsTab = ({
             </div>
 
             {/* Overview Stats Grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.875rem' }}>
+            <div className="analytics-grid-4">
                 <StatCard icon={Icons.home}    value={totalListings.toLocaleString()} label="Total Listings" />
                 <StatCard icon={Icons.check}   value={activeListings.toLocaleString()} label="Active Listings" accent="hsl(152 60% 35%)" bg="hsl(152 60% 93%)" />
                 <StatCard icon={Icons.clock}   value={pendingListings.toLocaleString()} label="Pending Review" accent="hsl(38 92% 40%)" bg="hsl(38 92% 93%)" />
                 <StatCard icon={Icons.shield}    value={totalVerifications.toLocaleString()} label="Verifications" accent="hsl(40 80% 36%)" bg="hsl(40 90% 93%)" />
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.875rem' }}>
+            <div className="analytics-grid-4">
                 <StatCard icon={Icons.users}   value={totalAgents.toLocaleString()}   label="Total Agents" />
                 <StatCard icon={Icons.eye}     value={totalViews.toLocaleString()}    label="Total Views" accent="hsl(200 65% 36%)" bg="hsl(200 60% 93%)" />
                 <StatCard icon={Icons.star}    value={totalInquiries.toLocaleString()} label="Total Inquiries" accent="hsl(270 55% 40%)" bg="hsl(270 60% 95%)" />
@@ -196,7 +239,7 @@ const AdminAnalyticsTab = ({
             </div>
 
             {/* Paid Subscribers */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.875rem' }}>
+            <div className="analytics-grid-2">
                 <StatCard icon={Icons.dollar}  value={subscriptions.toLocaleString()} label="Paid Subscribers" accent="hsl(160 60% 35%)" bg="hsl(160 60% 93%)" />
                 <StatCard icon={Icons.users}   value={activeAgents.toLocaleString()}  label="Active Agents" accent="hsl(152 60% 35%)" bg="hsl(152 60% 93%)" />
             </div>
@@ -208,37 +251,32 @@ const AdminAnalyticsTab = ({
                     <h2 style={{ margin: 0, fontSize: '0.9rem', fontWeight: 800, color: 'hsl(220 25% 12%)' }}>Top 10 Most Viewed Listings</h2>
                 </div>
                 <div style={{ backgroundColor: 'white', border: '1px solid hsl(220 15% 91%)', borderRadius: '0.875rem', overflow: 'hidden', boxShadow: '0 1px 3px hsl(220 20% 15% / 0.04)' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
-                        <thead>
-                            <tr style={{ borderBottom: '2px solid hsl(220 15% 93%)', backgroundColor: 'hsl(220 15% 98.5%)' }}>
-                                <th style={{ padding: '0.65rem 1rem', textAlign: 'left', fontWeight: 700, color: 'hsl(220 15% 45%)', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>#</th>
-                                <th style={{ padding: '0.65rem 1rem', textAlign: 'left', fontWeight: 700, color: 'hsl(220 15% 45%)', fontSize: '0.7rem', textTransform: 'uppercase' }}>Listing</th>
-                                <th style={{ padding: '0.65rem 1rem', textAlign: 'left', fontWeight: 700, color: 'hsl(220 15% 45%)', fontSize: '0.7rem', textTransform: 'uppercase' }}>Type</th>
-                                <th style={{ padding: '0.65rem 1rem', textAlign: 'left', fontWeight: 700, color: 'hsl(220 15% 45%)', fontSize: '0.7rem', textTransform: 'uppercase' }}>Price</th>
-                                <th style={{ padding: '0.65rem 1rem', textAlign: 'center', fontWeight: 700, color: 'hsl(220 15% 45%)', fontSize: '0.7rem', textTransform: 'uppercase' }}>Views</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {topByViews.map((r, i) => (
-                                <tr key={r.id} style={{ borderBottom: '1px solid hsl(220 15% 94%)' }}>
-                                    <td style={{ padding: '0.65rem 1rem', color: 'hsl(220 15% 50%)' }}>{i + 1}</td>
-                                    <td style={{ padding: '0.65rem 1rem', fontWeight: 600, color: 'hsl(220 25% 15%)', maxWidth: '12rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.title}</td>
-                                    <td style={{ padding: '0.65rem 1rem', textTransform: 'capitalize', color: 'hsl(220 15% 50%)' }}>{r.purpose}</td>
-                                    <td style={{ padding: '0.65rem 1rem', fontWeight: 600, color: 'hsl(220 25% 15%)' }}>{fmtPrice(r)}</td>
-                                    <td style={{ padding: '0.65rem 1rem', textAlign: 'center', fontWeight: 700, color: 'hsl(200 65% 36%)' }}>{r.views.toLocaleString()}</td>
+                    <div className="table-scroll">
+                        <table className="analytics-table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
+                            <thead>
+                                <tr style={{ borderBottom: '2px solid hsl(220 15% 93%)', backgroundColor: 'hsl(220 15% 98.5%)' }}>
+                                    <th style={{ padding: '0.65rem 1rem', textAlign: 'left', fontWeight: 700, color: 'hsl(220 15% 45%)', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>#</th>
+                                    <th style={{ padding: '0.65rem 1rem', textAlign: 'left', fontWeight: 700, color: 'hsl(220 15% 45%)', fontSize: '0.7rem', textTransform: 'uppercase' }}>Listing</th>
+                                    <th style={{ padding: '0.65rem 1rem', textAlign: 'left', fontWeight: 700, color: 'hsl(220 15% 45%)', fontSize: '0.7rem', textTransform: 'uppercase' }}>Type</th>
+                                    <th style={{ padding: '0.65rem 1rem', textAlign: 'left', fontWeight: 700, color: 'hsl(220 15% 45%)', fontSize: '0.7rem', textTransform: 'uppercase' }}>Price</th>
+                                    <th style={{ padding: '0.65rem 1rem', textAlign: 'center', fontWeight: 700, color: 'hsl(220 15% 45%)', fontSize: '0.7rem', textTransform: 'uppercase' }}>Views</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                {topByViews.map((r, i) => (
+                                    <tr key={r.id} style={{ borderBottom: '1px solid hsl(220 15% 94%)' }}>
+                                        <td style={{ padding: '0.65rem 1rem', color: 'hsl(220 15% 50%)' }}>{i + 1}</td>
+                                        <td style={{ padding: '0.65rem 1rem', fontWeight: 600, color: 'hsl(220 25% 15%)', maxWidth: '12rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.title}</td>
+                                        <td style={{ padding: '0.65rem 1rem', textTransform: 'capitalize', color: 'hsl(220 15% 50%)' }}>{r.purpose}</td>
+                                        <td style={{ padding: '0.65rem 1rem', fontWeight: 600, color: 'hsl(220 25% 15%)' }}>{fmtPrice(r)}</td>
+                                        <td style={{ padding: '0.65rem 1rem', textAlign: 'center', fontWeight: 700, color: 'hsl(200 65% 36%)' }}>{r.views.toLocaleString()}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
-
-            <style>{`
-                @keyframes slideDown {
-                    from { opacity: 0; transform: translateY(-6px); }
-                    to   { opacity: 1; transform: translateY(0); }
-                }
-            `}</style>
         </div>
     );
 };

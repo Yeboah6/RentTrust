@@ -506,9 +506,60 @@ const AgentsTab = ({
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            <style>{`
+                /* Mobile-first responsive */
+                .agents-header {
+                    display: flex;
+                    flex-wrap: wrap;
+                    align-items: center;
+                    justify-content: space-between;
+                    gap: 0.75rem;
+                }
+                .agents-header-right {
+                    display: flex;
+                    gap: 0.5rem;
+                    flex-wrap: wrap;
+                    align-items: center;
+                }
+                .agents-grid {
+                    display: grid;
+                    grid-template-columns: 1fr;
+                    gap: 0.875rem;
+                }
+                .agents-add-btn {
+                    white-space: nowrap;
+                }
+
+                @media (max-width: 640px) {
+                    .agents-header {
+                        flex-direction: column;
+                        align-items: stretch;
+                    }
+                    .agents-header-right {
+                        width: 100%;
+                        justify-content: flex-end;
+                    }
+                    .agents-add-btn {
+                        width: 100%;
+                        justify-content: center;
+                    }
+                }
+
+                @media (min-width: 640px) {
+                    .agents-grid {
+                        grid-template-columns: repeat(2, 1fr);
+                    }
+                }
+
+                @media (min-width: 1024px) {
+                    .agents-grid {
+                        grid-template-columns: repeat(3, 1fr);
+                    }
+                }
+            `}</style>
 
             {/* Section heading + actions */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
+            <div className="agents-header">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
                     <div style={{ width: 3, height: '1.2rem', borderRadius: 999, backgroundColor: 'hsl(174 62% 32%)', flexShrink: 0 }} />
                     <h2 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 900, color: 'hsl(220 25% 12%)', letterSpacing: '-0.01em' }}>
@@ -520,7 +571,7 @@ const AgentsTab = ({
                 </div>
 
                 {/* Status pills + Add button */}
-                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                <div className="agents-header-right">
                     {total > 0 && (
                         <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
                             {[
@@ -542,6 +593,7 @@ const AgentsTab = ({
                     
                     <button
                         onClick={onAddAgent}
+                        className="agents-add-btn"
                         style={{
                             display: 'inline-flex', alignItems: 'center', gap: '0.35rem',
                             padding: '0.5rem 1rem', borderRadius: '0.5rem',
@@ -603,11 +655,7 @@ const AgentsTab = ({
             {/* Grid or empty state */}
             {filteredTotal > 0 ? (
                 <>
-                    <div style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(3, 1fr)',
-                        gap: '0.875rem',
-                    }}>
+                    <div className="agents-grid">
                         {paginatedAgents.map(agent => (
                             <AgentCard
                                 key={agent.id}

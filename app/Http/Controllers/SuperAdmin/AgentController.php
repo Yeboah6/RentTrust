@@ -417,7 +417,7 @@ class AgentController extends Controller
         try {
             Mail::raw(
                 "Hi {$name},\n\n" .
-                "Your RentTrustGH agent account has been permanently deleted by an administrator.\n\n" .
+                "Your RentTrustGH agent account has been permanently deleted by an RentTrustGh.\n\n" .
                 "Any associated data tied to this account has also been removed.\n\n" .
                 "RentTrustGH",
                 function ($message) use ($email, $name) {

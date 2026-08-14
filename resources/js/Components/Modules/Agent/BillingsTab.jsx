@@ -115,12 +115,12 @@ const CancelModal = ({ onConfirm, onDismiss, loading }) => (
             <p style={{ margin: '0 0 1.5rem', fontSize: '0.85rem', color: 'hsl(220 15% 50%)', lineHeight: 1.6 }}>
                 Your subscription will remain active until the end of the billing period. After that, your account will be downgraded to the Free plan and you'll lose access to premium features.
             </p>
-            <div style={{ display: 'flex', gap: '0.75rem' }}>
+            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
                 <button
                     onClick={onDismiss}
                     disabled={loading}
                     style={{ 
-                        flex: 1, padding: '0.7rem', borderRadius: '0.5rem',
+                        flex: 1, minWidth: '120px', padding: '0.7rem', borderRadius: '0.5rem',
                         border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white',
                         color: 'hsl(220 25% 35%)', fontSize: '0.82rem', fontWeight: 700,
                         cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
@@ -132,7 +132,7 @@ const CancelModal = ({ onConfirm, onDismiss, loading }) => (
                     onClick={onConfirm}
                     disabled={loading}
                     style={{ 
-                        flex: 1, padding: '0.7rem', borderRadius: '0.5rem',
+                        flex: 1, minWidth: '120px', padding: '0.7rem', borderRadius: '0.5rem',
                         border: 'none', backgroundColor: 'hsl(0 72% 48%)',
                         color: 'white', fontSize: '0.82rem', fontWeight: 700,
                         cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
@@ -206,7 +206,51 @@ const BillingTab = ({ billing, plans = [], onUpgrade }) => {
 
     return (
         <>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            <style>{`
+                /* Responsive adjustments for billing */
+                @media (max-width: 640px) {
+                    .billing-container {
+                        gap: 1rem !important;
+                    }
+                    .billing-plan-header {
+                        flex-direction: column !important;
+                        align-items: stretch !important;
+                        gap: 0.75rem !important;
+                    }
+                    .billing-plan-header .plan-title-section {
+                        flex-direction: column !important;
+                        align-items: flex-start !important;
+                        gap: 0.5rem !important;
+                    }
+                    .billing-plan-header .plan-actions {
+                        width: 100% !important;
+                        justify-content: flex-end !important;
+                    }
+                    .billing-plan-header .plan-actions button {
+                        width: 100% !important;
+                        justify-content: center !important;
+                    }
+                    .billing-billing-period {
+                        flex-direction: column !important;
+                        gap: 0.75rem !important;
+                    }
+                    .payment-history-table {
+                        display: block !important;
+                        overflow-x: auto !important;
+                        white-space: nowrap !important;
+                    }
+                }
+                @media (max-width: 480px) {
+                    .billing-plan-header .plan-actions button,
+                    .billing-cancel-button {
+                        min-height: 44px !important;
+                        width: 100% !important;
+                        justify-content: center !important;
+                    }
+                }
+            `}</style>
+
+            <div className="billing-container" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
 
                 {/* ── Current Plan Card ─────────────────────────────────────── */}
                 <div style={{
@@ -228,12 +272,12 @@ const BillingTab = ({ billing, plans = [], onUpgrade }) => {
                     <div style={{ padding: '1.5rem' }}>
                         
                         {/* Plan header */}
-                        <div style={{ 
+                        <div className="billing-plan-header" style={{ 
                             display: 'flex', justifyContent: 'space-between', 
                             alignItems: 'flex-start', flexWrap: 'wrap', 
                             gap: '1rem', marginBottom: '1.5rem',
                         }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                            <div className="plan-title-section" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                                 {/* Plan icon */}
                                 <div style={{
                                     width: '3rem', height: '3rem', borderRadius: '0.75rem',
@@ -243,6 +287,7 @@ const BillingTab = ({ billing, plans = [], onUpgrade }) => {
                                     color: isFree ? 'hsl(220 15% 45%)' : 'hsl(271 60% 45%)',
                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                                     fontSize: '1.25rem',
+                                    flexShrink: 0,
                                 }}>
                                     {isFree ? Icons.dollar : Icons.star}
                                 </div>
@@ -262,7 +307,7 @@ const BillingTab = ({ billing, plans = [], onUpgrade }) => {
                             </div>
 
                             {/* Status + Actions */}
-                            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                            <div className="plan-actions" style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
                                 {hasSub && sub?.status && (
                                     <StatusBadge status={sub.status} />
                                 )}
@@ -290,14 +335,14 @@ const BillingTab = ({ billing, plans = [], onUpgrade }) => {
 
                         {/* Billing period info */}
                         {hasSub && sub?.ends_at && (
-                            <div style={{ 
+                            <div className="billing-billing-period" style={{ 
                                 display: 'flex', gap: '1.5rem', flexWrap: 'wrap',
                                 padding: '1rem', backgroundColor: 'hsl(220 15% 97%)',
                                 borderRadius: '0.625rem', marginBottom: '1.25rem',
                                 border: '1px solid hsl(220 15% 93%)',
                             }}>
                                 {sub.starts_at && (
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: '1 1 auto' }}>
                                         <div style={{
                                             width: '2rem', height: '2rem', borderRadius: '0.5rem',
                                             backgroundColor: 'hsl(220 15% 90%)',
@@ -316,7 +361,7 @@ const BillingTab = ({ billing, plans = [], onUpgrade }) => {
                                         </div>
                                     </div>
                                 )}
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: '1 1 auto' }}>
                                     <div style={{
                                         width: '2rem', height: '2rem', borderRadius: '0.5rem',
                                         backgroundColor: isFree ? 'hsl(220 15% 90%)' : 'hsl(271 60% 50% / 0.1)',
@@ -405,6 +450,7 @@ const BillingTab = ({ billing, plans = [], onUpgrade }) => {
                                 display: 'flex', justifyContent: 'flex-end',
                             }}>
                                 <button
+                                    className="billing-cancel-button"
                                     onClick={() => setShowCancelModal(true)}
                                     style={{
                                         display: 'inline-flex', alignItems: 'center', gap: '0.35rem',
@@ -456,8 +502,8 @@ const BillingTab = ({ billing, plans = [], onUpgrade }) => {
                     </div>
 
                     {payments.length > 0 ? (
-                        <div style={{ overflowX: 'auto' }}>
-                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.78rem' }}>
+                        <div className="payment-history-table" style={{ overflowX: 'auto' }}>
+                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.78rem', minWidth: '600px' }}>
                                 <thead>
                                     <tr style={{ borderBottom: '2px solid hsl(220 15% 93%)' }}>
                                         {['Date', 'Reference', 'Amount', 'Provider', 'Status'].map(h => (

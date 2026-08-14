@@ -69,11 +69,77 @@ const AdminAddAgentModal = ({ isOpen, onClose, onSuccess }) => {
   //   : 'rgba(255,107,107,0.04)';
 
   return (
-    <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.58)', zIndex: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
-      <div style={{ width: '100%', maxWidth: '560px', borderRadius: '1rem', backgroundColor: '#0f0e0c', color: '#f5f0e8', boxShadow: '0 25px 80px rgba(0,0,0,0.35)', overflow: 'hidden', maxHeight: '90vh', overflowY: 'auto' }}>
+    <div className="admin-add-agent-overlay" style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.58)', zIndex: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+      <style>{`
+        .admin-add-agent-overlay {
+          align-items: flex-start; /* allow scrolling on small screens */
+        }
+        .admin-add-agent-modal {
+          width: 100%;
+          max-width: 560px;
+          border-radius: 1rem;
+          background-color: #0f0e0c;
+          color: #f5f0e8;
+          box-shadow: 0 25px 80px rgba(0,0,0,0.35);
+          overflow: hidden;
+          max-height: 90vh;
+          overflow-y: auto;
+          margin: 0 auto;
+        }
+        .admin-add-agent-modal-header {
+          padding: 1.5rem 1.5rem 0.75rem;
+          border-bottom: 1px solid rgba(255,255,255,0.08);
+          position: sticky;
+          top: 0;
+          background-color: #0f0e0c;
+          z-index: 1;
+        }
+        .admin-add-agent-form {
+          padding: 1.5rem;
+          display: grid;
+          gap: 1rem;
+        }
+        .admin-add-agent-grid-2 {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 1rem;
+        }
+        .admin-add-agent-buttons {
+          display: flex;
+          gap: 0.75rem;
+          justify-content: flex-end;
+          margin-top: 0.25rem;
+        }
+        @media (max-width: 640px) {
+          .admin-add-agent-overlay {
+            padding: 0.5rem;
+          }
+          .admin-add-agent-modal {
+            max-height: 95vh;
+            border-radius: 0.75rem;
+          }
+          .admin-add-agent-modal-header {
+            padding: 1rem 1rem 0.5rem;
+          }
+          .admin-add-agent-form {
+            padding: 1rem;
+          }
+          .admin-add-agent-grid-2 {
+            grid-template-columns: 1fr; /* stack on mobile */
+          }
+          .admin-add-agent-buttons {
+            flex-direction: column-reverse;
+            gap: 0.5rem;
+          }
+          .admin-add-agent-buttons button {
+            width: 100%;
+          }
+        }
+      `}</style>
 
+      <div className="admin-add-agent-modal">
         {/* Header */}
-        <div style={{ padding: '1.5rem 1.5rem 0.75rem', borderBottom: '1px solid rgba(255,255,255,0.08)', position: 'sticky', top: 0, backgroundColor: '#0f0e0c', zIndex: 1 }}>
+        <div className="admin-add-agent-modal-header">
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
             <div>
               <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700 }}>Add Agent</h2>
@@ -85,8 +151,7 @@ const AdminAddAgentModal = ({ isOpen, onClose, onSuccess }) => {
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} style={{ padding: '1.5rem', display: 'grid', gap: '1rem' }}>
-
+        <form onSubmit={handleSubmit} className="admin-add-agent-form">
           {/* Top-level error summary — shown when server returns errors */}
           {Object.keys(errors).length > 0 && (
             <div style={{ padding: '0.75rem 1rem', borderRadius: '0.65rem', border: '1px solid rgba(255,107,107,0.3)', backgroundColor: 'rgba(255,107,107,0.06)', display: 'flex', alignItems: 'flex-start', gap: '0.6rem' }}>
@@ -167,7 +232,7 @@ const AdminAddAgentModal = ({ isOpen, onClose, onSuccess }) => {
             )}
           </label>
 
-          <div style={{ display: 'grid', gap: '1rem', gridTemplateColumns: '1fr 1fr' }}>
+          <div className="admin-add-agent-grid-2">
             <label style={labelStyle}>
               Phone
               <input
@@ -202,7 +267,7 @@ const AdminAddAgentModal = ({ isOpen, onClose, onSuccess }) => {
             <ErrorMsg msg={errors.bio} />
           </label>
 
-          <div style={{ display: 'grid', gap: '1rem', gridTemplateColumns: '1fr 1fr' }}>
+          <div className="admin-add-agent-grid-2">
             <label style={labelStyle}>
               Fee %
               <input
@@ -240,7 +305,7 @@ const AdminAddAgentModal = ({ isOpen, onClose, onSuccess }) => {
             <ErrorMsg msg={errors.location} />
           </label>
 
-          <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '0.25rem' }}>
+          <div className="admin-add-agent-buttons">
             <button type="button" onClick={onClose} style={{ padding: '0.8rem 1.2rem', borderRadius: '0.65rem', border: '1px solid rgba(255,255,255,0.12)', backgroundColor: 'transparent', color: '#f5f0e8', cursor: 'pointer' }}>
               Cancel
             </button>

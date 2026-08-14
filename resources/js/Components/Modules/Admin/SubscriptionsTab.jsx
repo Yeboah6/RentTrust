@@ -479,8 +479,63 @@ const SubscriptionsTab = ({ agents = [], onViewAgent, onUpgrade }) => {
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
 
+            {/* Responsive styles */}
+            <style>{`
+                .subs-header {
+                    display: flex;
+                    flex-wrap: wrap;
+                    align-items: center;
+                    justify-content: space-between;
+                    gap: 0.75rem;
+                }
+                .subs-filters {
+                    display: flex;
+                    flex-wrap: wrap;
+                    gap: 0.75rem;
+                }
+                .subs-filters .search-wrapper {
+                    position: relative;
+                    flex: 2 1 260px;
+                }
+                .subs-filters select {
+                    flex: 1 1 150px;
+                }
+                .subs-grid {
+                    display: grid;
+                    grid-template-columns: 1fr;
+                    gap: 0.875rem;
+                }
+
+                @media (max-width: 640px) {
+                    .subs-header {
+                        flex-direction: column;
+                        align-items: stretch;
+                    }
+                    .subs-filters {
+                        flex-direction: column;
+                    }
+                    .subs-filters .search-wrapper,
+                    .subs-filters select {
+                        width: 100%;
+                        flex: none;
+                    }
+                }
+
+                @media (min-width: 640px) {
+                    .subs-grid {
+                        grid-template-columns: repeat(2, 1fr);
+                    }
+                }
+
+                @media (min-width: 1024px) {
+                    .subs-grid {
+                        grid-template-columns: repeat(3, 1fr);
+                    }
+                }
+            `}</style>
+
             {/* Section heading + stats */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
+            <div className="subs-header">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
                     <div style={{ width: 3, height: '1.2rem', borderRadius: 999, backgroundColor: 'hsl(271 60% 50%)', flexShrink: 0 }} />
                     <h2 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 900, color: 'hsl(220 25% 12%)', letterSpacing: '-0.01em' }}>
@@ -514,8 +569,8 @@ const SubscriptionsTab = ({ agents = [], onViewAgent, onUpgrade }) => {
             </div>
 
             {/* Search + Filter */}
-            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-                <div style={{ position: 'relative', flex: '1 1 260px' }}>
+            <div className="subs-filters">
+                <div className="search-wrapper">
                     <div style={{ 
                         position: 'absolute', left: '0.75rem', top: '50%', 
                         transform: 'translateY(-50%)', color: 'hsl(220 15% 55%)',
@@ -578,11 +633,7 @@ const SubscriptionsTab = ({ agents = [], onViewAgent, onUpgrade }) => {
             {/* Grid or empty state */}
             {filteredTotal > 0 ? (
                 <>
-                    <div style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(3, 1fr)',
-                        gap: '0.875rem',
-                    }}>
+                    <div className="subs-grid">
                         {paginatedAgents.map(agent => (
                             <SubscriptionCard
                                 key={agent.id}
@@ -630,13 +681,6 @@ const SubscriptionsTab = ({ agents = [], onViewAgent, onUpgrade }) => {
                     </p>
                 </div>
             )}
-
-            <style>{`
-                @keyframes slideDown {
-                    from { opacity: 0; transform: translateY(-6px); }
-                    to   { opacity: 1; transform: translateY(0); }
-                }
-            `}</style>
         </div>
     );
 };

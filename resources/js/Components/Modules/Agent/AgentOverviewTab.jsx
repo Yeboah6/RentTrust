@@ -158,18 +158,51 @@ const OverviewTab = ({
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            <style>{`
+                .overview-stats-grid {
+                    display: grid;
+                    grid-template-columns: 1fr;
+                    gap: 1rem;
+                }
+                .overview-limits-grid {
+                    display: grid;
+                    grid-template-columns: 1fr;
+                    gap: 1rem;
+                }
+                .overview-recent-grid {
+                    display: grid;
+                    grid-template-columns: 1fr;
+                    gap: 0.875rem;
+                }
+
+                @media (min-width: 640px) {
+                    .overview-stats-grid {
+                        grid-template-columns: repeat(2, 1fr);
+                    }
+                    .overview-limits-grid {
+                        grid-template-columns: repeat(2, 1fr);
+                    }
+                    .overview-recent-grid {
+                        grid-template-columns: repeat(2, 1fr);
+                    }
+                }
+
+                @media (min-width: 1024px) {
+                    .overview-stats-grid {
+                        grid-template-columns: repeat(4, 1fr);
+                    }
+                    .overview-recent-grid {
+                        grid-template-columns: repeat(3, 1fr);
+                    }
+                }
+            `}</style>
 
             {/* Stats Grid */}
-            <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(4, 1fr)',
-                gap: '1rem',
-            }}>
+            <div className="overview-stats-grid">
                 <StatCard 
                     icon={Icons.home} 
                     value={properties.length} 
                     label="Active Listings" 
-                    // label="Featured Listings"
                 />
                 <StatCard 
                     icon={Icons.eye} 
@@ -197,7 +230,7 @@ const OverviewTab = ({
                     padding: '1.25rem',
                     boxShadow: '0 1px 3px hsl(220 20% 15% / 0.04)',
                 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                             <div style={{ width: 3, height: '1rem', borderRadius: 999, backgroundColor: 'hsl(174 62% 32%)' }} />
                             <h2 style={{ margin: 0, fontSize: '0.9rem', fontWeight: 800, color: 'hsl(220 25% 12%)' }}>
@@ -209,16 +242,15 @@ const OverviewTab = ({
                             backgroundColor: 'hsl(220 15% 93%)', padding: '0.25rem 0.6rem',
                             borderRadius: 999,
                         }}>
-                            {limitStatus?.plan?.name || limitStatus?.plan || 'Free'}
+                            {typeof limitStatus?.plan === 'string' ? limitStatus.plan : (limitStatus?.plan?.name || 'Free')}
                         </span>
                     </div>
 
-                    {/* Uncaught Error: Objects are not valid as a React child (found: object with keys {active, limit, remaining, can_create}). If you meant to render a collection of children, use an array instead. */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
+                    <div className="overview-limits-grid">
                         <LimitCard 
                             icon={Icons.home}
                             label="Rental Listings"
-                            active={limitStatus?.rentals?.active || 0}
+                            active={limitStatus?.rentals?.active ?? 0}
                             limit={limitStatus?.rentals?.limit}
                             remaining={limitStatus?.rentals?.remaining}
                             canCreate={limitStatus?.rentals?.can_create}
@@ -227,7 +259,7 @@ const OverviewTab = ({
                         <LimitCard 
                             icon={<Ico d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />}
                             label="Sale Listings"
-                            active={limitStatus?.sales?.active || 0}
+                            active={limitStatus?.sales?.active ?? 0}
                             limit={limitStatus?.sales?.limit}
                             remaining={limitStatus?.sales?.remaining}
                             canCreate={limitStatus?.sales?.can_create}
@@ -256,7 +288,7 @@ const OverviewTab = ({
                 padding: '1.25rem',
                 boxShadow: '0 1px 3px hsl(220 20% 15% / 0.04)',
             }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         <div style={{ width: 3, height: '1rem', borderRadius: 999, backgroundColor: 'hsl(174 62% 32%)' }} />
                         <h2 style={{ margin: 0, fontSize: '0.9rem', fontWeight: 800, color: 'hsl(220 25% 12%)' }}>
@@ -280,7 +312,7 @@ const OverviewTab = ({
                 </div>
                 
                 {recentListings.length > 0 ? (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.875rem' }}>
+                    <div className="overview-recent-grid">
                         {recentListings.map(property => (
                             <RecentListingCard 
                                 key={property.id}

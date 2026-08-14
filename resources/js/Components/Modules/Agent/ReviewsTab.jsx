@@ -45,7 +45,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
     for (let i = start; i <= end; i++) pages.push(i);
 
     return (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem', padding: '1rem 0' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem', padding: '1rem 0', flexWrap: 'wrap' }}>
             <button onClick={() => onPageChange(currentPage - 1)} disabled={currentPage === 1}
                 style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '2rem', height: '2rem', borderRadius: '0.375rem', border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white', color: currentPage === 1 ? 'hsl(220 15% 70%)' : 'hsl(220 25% 35%)', cursor: currentPage === 1 ? 'default' : 'pointer', opacity: currentPage === 1 ? 0.5 : 1 }}>
                 {Icons.chevronLeft}
@@ -92,10 +92,11 @@ const Toast = ({ toast }) => {
 
     return (
         <div style={{
-            position: 'fixed', top: '1rem', right: '1rem',
+            position: 'fixed', top: '1rem', right: '1rem', left: 'auto',
             backgroundColor: bg, color: 'white', padding: '1rem 1.5rem',
             borderRadius: '0.5rem', zIndex: 50,
             boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)', fontWeight: 500,
+            maxWidth: 'min(400px, 90vw)',
         }}>
             <p style={{ margin: 0, fontWeight: 600, marginBottom: '0.25rem' }}>{toast.message}</p>
             <p style={{ margin: 0, fontSize: '0.875rem' }}>{toast.description}</p>
@@ -116,7 +117,7 @@ const ReviewCard = ({ review, onRespond, respondingTo, responseText, setResponse
             <div style={{ height: 3, backgroundColor: (review.overall_rating >= 4) ? 'hsl(152 60% 40%)' : (review.overall_rating >= 3) ? 'hsl(38 92% 50%)' : 'hsl(0 72% 48%)', opacity: 0.7 }} />
 
             <div style={{ padding: '1rem', flex: 1, display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.5rem', flexWrap: 'wrap' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', minWidth: 0 }}>
                         <div style={{ width: '2.25rem', height: '2.25rem', borderRadius: '0.5rem', flexShrink: 0, backgroundColor: `hsl(${hue(review.full_name)} 45% 90%)`, color: `hsl(${hue(review.full_name)} 45% 30%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem', fontWeight: 800 }}>{initial(review.full_name)}</div>
                         <div style={{ minWidth: 0 }}>
@@ -165,7 +166,7 @@ const ReviewCard = ({ review, onRespond, respondingTo, responseText, setResponse
                 )}
             </div>
 
-            <div style={{ borderTop: '1px solid hsl(220 15% 93%)', padding: '0.6rem 1rem', backgroundColor: 'hsl(220 15% 98.5%)', display: 'flex', gap: '0.4rem' }}>
+            <div style={{ borderTop: '1px solid hsl(220 15% 93%)', padding: '0.6rem 1rem', backgroundColor: 'hsl(220 15% 98.5%)', display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
                 <button onClick={() => onView?.(review)} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', padding: '0.35rem 0.7rem', borderRadius: '0.4rem', border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white', color: 'hsl(174 62% 30%)', fontSize: '0.7rem', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
                     onMouseEnter={e => { e.currentTarget.style.borderColor = 'hsl(174 62% 40%)'; e.currentTarget.style.backgroundColor = 'hsl(174 40% 97%)'; }}
                     onMouseLeave={e => { e.currentTarget.style.borderColor = 'hsl(220 15% 88%)'; e.currentTarget.style.backgroundColor = 'white'; }}>
@@ -184,8 +185,6 @@ const ReviewCard = ({ review, onRespond, respondingTo, responseText, setResponse
 };
 
 // ─── Reviews Tab Module ───────────────────────────────────────────────────────
-// respondingTo/responseText/isSubmitting/toast all live here now — the parent
-// only needs to pass `reviews`, `agentData`, `onView`, and `properties`.
 const ReviewsTab = ({ reviews = [], agentData, onView, properties = [] }) => {
     const [currentPage, setCurrentPage] = useState(1);
     const [respondingTo, setRespondingTo] = useState(null);
@@ -235,9 +234,45 @@ const ReviewsTab = ({ reviews = [], agentData, onView, properties = [] }) => {
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            <style>{`
+                /* Responsive grid */
+                .reviews-grid {
+                    display: grid;
+                    grid-template-columns: 1fr;
+                    gap: 0.875rem;
+                }
+                @media (min-width: 640px) {
+                    .reviews-grid {
+                        grid-template-columns: repeat(2, 1fr);
+                    }
+                }
+                @media (min-width: 1024px) {
+                    .reviews-grid {
+                        grid-template-columns: repeat(3, 1fr);
+                    }
+                }
+                /* Header responsiveness */
+                .reviews-header {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    flex-wrap: wrap;
+                    gap: 0.75rem;
+                }
+                @media (max-width: 640px) {
+                    .reviews-header {
+                        flex-direction: column;
+                        align-items: stretch;
+                    }
+                    .reviews-header > span {
+                        align-self: flex-start;
+                    }
+                }
+            `}</style>
+
             <Toast toast={toast} />
 
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
+            <div className="reviews-header">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
                     <div style={{ width: 3, height: '1.2rem', borderRadius: 999, backgroundColor: 'hsl(38 92% 50%)', flexShrink: 0 }} />
                     <h2 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 900, color: 'hsl(220 25% 12%)' }}>Tenant Reviews</h2>
@@ -249,14 +284,14 @@ const ReviewsTab = ({ reviews = [], agentData, onView, properties = [] }) => {
             </div>
 
             {filteredTotal > 0 && (
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.72rem', color: 'hsl(220 15% 50%)', fontWeight: 500 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.72rem', color: 'hsl(220 15% 50%)', fontWeight: 500, flexWrap: 'wrap', gap: '0.25rem' }}>
                     <span>Showing {((currentPage - 1) * ITEMS_PER_PAGE) + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, filteredTotal)} of {filteredTotal} review{filteredTotal !== 1 ? 's' : ''}</span>
                 </div>
             )}
 
             {total > 0 ? (
                 <>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.875rem' }}>
+                    <div className="reviews-grid">
                         {paginatedReviews.map(review => (
                             <ReviewCard
                                 key={review.id}
@@ -275,7 +310,7 @@ const ReviewsTab = ({ reviews = [], agentData, onView, properties = [] }) => {
                     <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
                 </>
             ) : (
-                <div style={{ backgroundColor: 'white', border: '1px solid hsl(220 15% 91%)', borderRadius: '0.875rem', padding: '3rem', textAlign: 'center', boxShadow: '0 1px 3px hsl(220 20% 15% / 0.04)' }}>
+                <div style={{ backgroundColor: 'white', border: '1px solid hsl(220 15% 91%)', borderRadius: '0.875rem', padding: 'clamp(2rem, 5vw, 3rem)', textAlign: 'center', boxShadow: '0 1px 3px hsl(220 20% 15% / 0.04)' }}>
                     <div style={{ color: 'hsl(220 15% 68%)', margin: '0 auto 1rem', display: 'flex', justifyContent: 'center' }}>{Icons.empty}</div>
                     <h3 style={{ fontSize: '0.95rem', fontWeight: 800, color: 'hsl(220 25% 15%)', margin: '0 0 0.35rem' }}>No Reviews Yet</h3>
                     <p style={{ color: 'hsl(220 15% 52%)', fontSize: '0.82rem', margin: 0 }}>You haven't received any reviews from tenants yet.</p>

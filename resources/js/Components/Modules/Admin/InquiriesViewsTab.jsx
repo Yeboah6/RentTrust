@@ -20,6 +20,7 @@ const Icons = {
     chevronLeft:  <Ico d="M15 19l-7-7 7-7" />,
     chevronRight: <Ico d="M9 5l7 7-7 7" />,
     inbox:    <Ico d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" size="2.5rem" sw={1.2} />,
+    trending:  <Ico d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />,
 };
 
 // ─── Status Badge ─────────────────────────────────────────────────────────────
@@ -437,8 +438,8 @@ const ViewsSection = ({ views, totalViews, onViewDetails }) => {
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ position: 'relative', flex: 1 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+                <div style={{ position: 'relative', flex: '1 1 200px', minWidth: 0 }}>
                     <div style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'hsl(220 15% 55%)' }}>{Icons.search}</div>
                     <input
                         type="search"
@@ -448,14 +449,14 @@ const ViewsSection = ({ views, totalViews, onViewDetails }) => {
                         style={{ width: '100%', padding: '0.65rem 1rem 0.65rem 2.5rem', borderRadius: '0.625rem', border: '1px solid hsl(220 15% 88%)', fontSize: '0.8rem', fontFamily: 'inherit' }}
                     />
                 </div>
-                <span style={{ fontSize: '0.72rem', color: 'hsl(220 15% 50%)', marginLeft: '1rem' }}>Total: {totalViews.toLocaleString()} views</span>
+                <span style={{ fontSize: '0.72rem', color: 'hsl(220 15% 50%)', whiteSpace: 'nowrap' }}>Total: {totalViews.toLocaleString()} views</span>
             </div>
 
             {filtered.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '2rem' }}>{Icons.empty}<p>No views found</p></div>
             ) : (
                 <>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.875rem' }}>
+                    <div className="responsive-card-grid">
                         {paginated.map(p => <ViewCard key={p.id} property={p} onViewDetails={onViewDetails} />)}
                     </div>
                     <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
@@ -477,7 +478,7 @@ const InquiriesSection = ({ inquiries, rentals, onViewProperty }) => {
                 <div style={{ textAlign: 'center', padding: '2rem' }}>{Icons.inbox}<p>No inquiries yet</p></div>
             ) : (
                 <>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.875rem' }}>
+                    <div className="responsive-card-grid">
                         {paginated.map(inq => (
                             <InquiryCard key={inq.id} inquiry={inq} rentals={rentals} onViewProperty={onViewProperty} />
                         ))}
@@ -495,8 +496,51 @@ const InquiriesViewsTab = ({ inquiries = [], views = [], totalViews = 0, rentals
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            <style>{`
+                .responsive-card-grid {
+                    display: grid;
+                    grid-template-columns: 1fr;
+                    gap: 0.875rem;
+                }
+                @media (min-width: 640px) {
+                    .responsive-card-grid {
+                        grid-template-columns: repeat(2, 1fr);
+                    }
+                }
+                @media (min-width: 1024px) {
+                    .responsive-card-grid {
+                        grid-template-columns: repeat(3, 1fr);
+                    }
+                }
+                .section-switcher {
+                    display: flex;
+                    gap: 0.5rem;
+                    border-bottom: 2px solid hsl(220 15% 92%);
+                    padding-bottom: 0.5rem;
+                    overflow-x: auto;
+                    -webkit-overflow-scrolling: touch;
+                    scrollbar-width: none;
+                }
+                .section-switcher::-webkit-scrollbar {
+                    display: none;
+                }
+                .section-switcher button {
+                    flex: 0 0 auto;
+                    white-space: nowrap;
+                }
+                @media (max-width: 640px) {
+                    .section-switcher {
+                        gap: 0;
+                    }
+                    .section-switcher button {
+                        flex: 1 1 auto;
+                        padding: 0.5rem 0.75rem;
+                    }
+                }
+            `}</style>
+
             {/* Section switcher */}
-            <div style={{ display: 'flex', gap: '0.5rem', borderBottom: '2px solid hsl(220 15% 92%)', paddingBottom: '0.5rem' }}>
+            <div className="section-switcher">
                 <button
                     onClick={() => setActiveSection('views')}
                     style={{
@@ -532,10 +576,6 @@ const InquiriesViewsTab = ({ inquiries = [], views = [], totalViews = 0, rentals
                     💬 Inquiries ({inquiries.length})
                 </button>
             </div>
-
-            {/* InquiriesViewsTab.jsx:260
- Uncaught ReferenceError: fmtPrice is not defined
-    at ViewCard ( */}
 
             {activeSection === 'views' ? (
                 <ViewsSection views={views} totalViews={totalViews} onViewDetails={onViewProperty} />

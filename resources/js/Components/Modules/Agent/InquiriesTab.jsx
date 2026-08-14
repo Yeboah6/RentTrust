@@ -68,6 +68,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
         <div style={{
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             gap: '0.25rem', padding: '1rem 0',
+            flexWrap: 'wrap',
         }}>
             <button onClick={() => onPageChange(currentPage - 1)} disabled={currentPage === 1}
                 style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '2rem', height: '2rem', borderRadius: '0.375rem', border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white', color: currentPage === 1 ? 'hsl(220 15% 70%)' : 'hsl(220 25% 35%)', cursor: currentPage === 1 ? 'default' : 'pointer', opacity: currentPage === 1 ? 0.5 : 1, transition: 'all 0.12s' }}>
@@ -194,9 +195,42 @@ const InquiriesTab = ({ inquiries = [], rentals = [], onView }) => {
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            <style>{`
+                .inquiries-header {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    flex-wrap: wrap;
+                    gap: 0.75rem;
+                }
+                .inquiries-grid {
+                    display: grid;
+                    grid-template-columns: 1fr;
+                    gap: 0.875rem;
+                }
+                @media (max-width: 640px) {
+                    .inquiries-header {
+                        flex-direction: column;
+                        align-items: stretch;
+                    }
+                    .inquiries-header > div:last-child {
+                        justify-content: flex-end;
+                    }
+                }
+                @media (min-width: 640px) {
+                    .inquiries-grid {
+                        grid-template-columns: repeat(2, 1fr);
+                    }
+                }
+                @media (min-width: 1024px) {
+                    .inquiries-grid {
+                        grid-template-columns: repeat(3, 1fr);
+                    }
+                }
+            `}</style>
 
             {/* Header + counts */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
+            <div className="inquiries-header">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
                     <div style={{ width: 3, height: '1.2rem', borderRadius: 999, backgroundColor: 'hsl(174 62% 32%)', flexShrink: 0 }} />
                     <h2 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 900, color: 'hsl(220 25% 12%)' }}>Property Inquiries</h2>
@@ -218,7 +252,7 @@ const InquiriesTab = ({ inquiries = [], rentals = [], onView }) => {
 
             {/* Results info */}
             {filteredTotal > 0 && (
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.72rem', color: 'hsl(220 15% 50%)', fontWeight: 500 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.72rem', color: 'hsl(220 15% 50%)', fontWeight: 500, flexWrap: 'wrap', gap: '0.25rem' }}>
                     <span>Showing {((currentPage - 1) * ITEMS_PER_PAGE) + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, filteredTotal)} of {filteredTotal} inquir{filteredTotal !== 1 ? 'ies' : 'y'}</span>
                 </div>
             )}
@@ -226,7 +260,7 @@ const InquiriesTab = ({ inquiries = [], rentals = [], onView }) => {
             {/* Grid or empty */}
             {total > 0 ? (
                 <>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.875rem' }}>
+                    <div className="inquiries-grid">
                         {paginatedInquiries.map(inquiry => {
                             const rental = rentals?.find(r => r.id === inquiry.rental_id);
                             return (
@@ -246,7 +280,7 @@ const InquiriesTab = ({ inquiries = [], rentals = [], onView }) => {
                     <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
                 </>
             ) : (
-                <div style={{ backgroundColor: 'white', border: '1px solid hsl(220 15% 91%)', borderRadius: '0.875rem', padding: '3rem', textAlign: 'center', boxShadow: '0 1px 3px hsl(220 20% 15% / 0.04)' }}>
+                <div style={{ backgroundColor: 'white', border: '1px solid hsl(220 15% 91%)', borderRadius: '0.875rem', padding: 'clamp(2rem, 5vw, 3rem)', textAlign: 'center', boxShadow: '0 1px 3px hsl(220 20% 15% / 0.04)' }}>
                     <div style={{ color: 'hsl(220 15% 68%)', margin: '0 auto 1rem', display: 'flex', justifyContent: 'center' }}>{Icons.empty}</div>
                     <h3 style={{ fontSize: '0.95rem', fontWeight: 800, color: 'hsl(220 25% 15%)', margin: '0 0 0.35rem' }}>No Inquiries Yet</h3>
                     <p style={{ color: 'hsl(220 15% 52%)', fontSize: '0.82rem', margin: 0 }}>You haven't received any inquiries from tenants yet.</p>

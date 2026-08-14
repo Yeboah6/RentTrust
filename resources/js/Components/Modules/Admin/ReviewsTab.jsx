@@ -413,7 +413,7 @@ const ReviewCard = ({ review, properties, onViewProperty, onDelete }) => {
 const ReviewsTab = ({ reviews = [], properties = [], onViewProperty, showToast }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [ratingFilter, setRatingFilter] = useState('all');
-    const [typeFilter, setTypeFilter] = useState('all'); // new: app/rent filter
+    const [typeFilter, setTypeFilter] = useState('all');
     const [currentPage, setCurrentPage] = useState(1);
     
     // Get unique review types and their counts
@@ -487,9 +487,63 @@ const ReviewsTab = ({ reviews = [], properties = [], onViewProperty, showToast }
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            <style>{`
+                /* Responsive styles */
+                .reviews-header {
+                    display: flex;
+                    flex-wrap: wrap;
+                    align-items: center;
+                    justify-content: space-between;
+                    gap: 0.75rem;
+                }
+                .reviews-filters {
+                    display: flex;
+                    flex-wrap: wrap;
+                    gap: 0.75rem;
+                }
+                .reviews-filters > * {
+                    flex: 1 1 auto;
+                }
+                .reviews-filters .search-wrapper {
+                    position: relative;
+                    flex: 2 1 260px;
+                }
+                .reviews-grid {
+                    display: grid;
+                    grid-template-columns: 1fr;
+                    gap: 0.875rem;
+                }
+
+                @media (max-width: 640px) {
+                    .reviews-header {
+                        flex-direction: column;
+                        align-items: stretch;
+                    }
+                    .reviews-filters {
+                        flex-direction: column;
+                    }
+                    .reviews-filters > *,
+                    .reviews-filters .search-wrapper {
+                        width: 100%;
+                        flex: none;
+                    }
+                }
+
+                @media (min-width: 640px) {
+                    .reviews-grid {
+                        grid-template-columns: repeat(2, 1fr);
+                    }
+                }
+
+                @media (min-width: 1024px) {
+                    .reviews-grid {
+                        grid-template-columns: repeat(3, 1fr);
+                    }
+                }
+            `}</style>
 
             {/* Section heading + stats */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
+            <div className="reviews-header">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
                     <div style={{ width: 3, height: '1.2rem', borderRadius: 999, backgroundColor: 'hsl(38 92% 50%)', flexShrink: 0 }} />
                     <h2 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 900, color: 'hsl(220 25% 12%)', letterSpacing: '-0.01em' }}>
@@ -512,7 +566,6 @@ const ReviewsTab = ({ reviews = [], properties = [], onViewProperty, showToast }
                         }}>
                             {Icons.star} {avgRating} avg
                         </span>
-                        {/* Review type counts */}
                         {reviewTypes.map(type => (
                             typeCounts[type] > 0 && (
                                 <span key={type} style={{ 
@@ -544,8 +597,8 @@ const ReviewsTab = ({ reviews = [], properties = [], onViewProperty, showToast }
             </div>
 
             {/* Search + Filter */}
-            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-                <div style={{ position: 'relative', flex: '1 1 260px' }}>
+            <div className="reviews-filters">
+                <div className="search-wrapper">
                     <div style={{ 
                         position: 'absolute', left: '0.75rem', top: '50%', 
                         transform: 'translateY(-50%)', color: 'hsl(220 15% 55%)',
@@ -631,11 +684,7 @@ const ReviewsTab = ({ reviews = [], properties = [], onViewProperty, showToast }
             {/* Grid or empty state */}
             {filteredTotal > 0 ? (
                 <>
-                    <div style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(3, 1fr)',
-                        gap: '0.875rem',
-                    }}>
+                    <div className="reviews-grid">
                         {paginatedReviews.map(review => (
                             <ReviewCard
                                 key={review.id}
@@ -684,13 +733,6 @@ const ReviewsTab = ({ reviews = [], properties = [], onViewProperty, showToast }
                     </p>
                 </div>
             )}
-
-            <style>{`
-                @keyframes slideDown {
-                    from { opacity: 0; transform: translateY(-6px); }
-                    to   { opacity: 1; transform: translateY(0); }
-                }
-            `}</style>
         </div>
     );
 };
