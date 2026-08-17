@@ -30,7 +30,6 @@ class CheckoutController extends Controller
     }
 
     // ─── Checkout page ────────────────────────────────────────────────────────
-
     public function show(string $plan): Response
     {
         $planModel = is_numeric($plan)
@@ -42,7 +41,6 @@ class CheckoutController extends Controller
 
         if ($planModel->isFree()) {
             $this->activateAndUpdatePackage(auth()->user(), $planModel);
-            // $this->markUserVerified(auth()->user());
             return redirect()->route('agent.dashboard')->with('success', 'Free plan activated!');
         }
 
@@ -55,7 +53,6 @@ class CheckoutController extends Controller
     }
 
     // ─── Payment actions ──────────────────────────────────────────────────────
-
     public function start(Request $request)
     {
         $request->validate([
@@ -75,7 +72,6 @@ class CheckoutController extends Controller
 
             if ($result['free'] ?? false) {
                 $this->updateUserPackage($user, $plan);
-                // $this->markUserVerified($user);
                 return redirect()->route('agent.dashboard')->with('success', 'Free plan activated!');
             }
 
@@ -128,7 +124,6 @@ class CheckoutController extends Controller
     }
 
     // ─── Package sync helpers ─────────────────────────────────────────────────
-
     public function activateFreeForAgent($user, Plan $plan): void
     {
         $this->paymentService->activateFree($user, $plan);
@@ -190,7 +185,7 @@ class CheckoutController extends Controller
             'is_free'               => $plan->isFree(),
             'is_popular'            => $popularPlanId !== null && $plan->id === $popularPlanId,
             'cta_text'              => 'Choose ' . $plan->name,
-            'color'                 => $plan->color ?? null, // optional UI hint column
+            'color'                 => $plan->color ?? null,
         ];
     }
 
@@ -235,7 +230,6 @@ class CheckoutController extends Controller
             $features[] = 'Analytics dashboard access';
         }
 
-        // Support tier — add a `support_tier` column (e.g. 'basic', 'priority', 'dedicated')
         if (! empty($plan->support_tier)) {
             $features[] = match ($plan->support_tier) {
                 'dedicated' => 'Dedicated account manager',
@@ -268,17 +262,11 @@ class CheckoutController extends Controller
             if ($explicit) return $explicit->id;
         }
 
-        // Fall back to the middle-priced plan.
         $index = (int) floor(($paidPlans->count() - 1) / 2);
         return $paidPlans->values()[$index]?->id;
     }
 
     // ─── Confirmed payment handler ────────────────────────────────────────────
-
-    /**
-     * Shared post-confirmation logic used by both the webhook-confirmed
-     * and manual-verify paths in callback().
-     */
     private function handleConfirmedPayment(Payment $payment, $currentUser, Request $request)
     {
         $wasFree = $currentUser?->package === 'free'
@@ -286,13 +274,10 @@ class CheckoutController extends Controller
 
         if ($payment->user) {
             $this->syncPackageFromSubscription($payment->user);
-            // $this->markUserVerified($payment->user);
         }
 
         $newPlan = $payment->subscription?->plan;
 
-        // If the user was on a free plan and has now upgraded to any paid plan,
-        // force a re-login so middleware picks up the new role/package cleanly.
         if ($wasFree && $newPlan && ! $newPlan->isFree()) {
             Auth::logout();
             $request->session()->invalidate();

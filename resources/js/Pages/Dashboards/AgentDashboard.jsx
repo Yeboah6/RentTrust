@@ -341,6 +341,27 @@ const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views
           flex: 0 0 auto;
           min-width: max-content;
         }
+        .agent-mobile-tab-select {
+          display: none;
+          width: 100%;
+          margin-bottom: 1.5rem;
+          padding: 0.875rem 1rem;
+          border: 1px solid hsl(40 20% 88%);
+          border-radius: 0.75rem;
+          background-color: white;
+          color: hsl(200 25% 15%);
+          font-size: 0.95rem;
+          font-weight: 500;
+          outline: none;
+        }
+        @media (max-width: 768px) {
+          .tabs-grid {
+            display: none !important;
+          }
+          .agent-mobile-tab-select {
+            display: block;
+          }
+        }
         @media (min-width: 769px) {
           .tabs-grid {
             display: grid;
@@ -411,6 +432,19 @@ const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views
                   </button>
                 ))}
               </div>
+
+              <select
+                className="agent-mobile-tab-select"
+                value={activeTab}
+                onChange={(e) => setActiveTab(e.target.value)}
+                aria-label="Select agent dashboard tab"
+              >
+                {['overview', 'listings', 'inquiries', 'reviews', 'views', 'billing'].map((tab) => (
+                  <option key={tab} value={tab}>
+                    {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                  </option>
+                ))}
+              </select>
 
               {/* Overview Tab */}
               {activeTab === 'overview' && (

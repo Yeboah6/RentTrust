@@ -612,6 +612,19 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
                         fontWeight: '600',
                       }}>
                         <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: 'hsl(152 60% 40%)', display: 'inline-block', marginRight: '0.25rem' }} />
+                        {agent.status === 'verified' ? 'Verified Agent' : agent.status === 'rejected' ? 'Verification Rejected' : agent.status === 'unverified' ? 'Unverified' : 'Unknown Status'}
+                      </span>
+                      <span style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        padding: '0.25rem 0.625rem',
+                        backgroundColor: 'hsl(152 60% 40% / 0.15)',
+                        color: 'hsl(152 60% 40%)',
+                        borderRadius: '9999px',
+                        fontSize: '0.75rem',
+                        fontWeight: '600',
+                      }}>
+                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: 'hsl(152 60% 40%)', display: 'inline-block', marginRight: '0.25rem' }} />
                         Free Plan
                       </span>
                     </div>
@@ -832,7 +845,7 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
                           Top agents on RentTrustGh use Pro. Join them and unlock more listings, priority placement & full lead access.
                         </p>
                         <div className="upgrade-feature-grid">
-                          {['Verified badge', 'Respond to tenant reviews', 'Advanced analytics', 'View inquiries from tenants'].map(f => (
+                          {['More listings', 'Respond to tenant reviews', 'Advanced analytics', 'View inquiries from tenants'].map(f => (
                             <span key={f} style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', color: 'rgba(255,255,255,0.9)', fontSize: '0.8rem' }}>
                               <CheckCircle style={{ width: '0.875rem', height: '0.875rem', color: 'rgba(255,255,255,0.85)', flexShrink: 0 }} />
                               {f}

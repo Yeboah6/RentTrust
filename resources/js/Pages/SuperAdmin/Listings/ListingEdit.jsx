@@ -56,12 +56,9 @@ const LISTING_TYPES = [
 const CURRENCIES = [
     { value: 'GH₵', label: 'GH₵ GHS' },
     { value: '$',   label: '$ USD' },
-    { value: '£',   label: '£ GBP' },
-    { value: '€',   label: '€ EUR' },
-    { value: '₦',   label: '₦ NGN' },
 ];
 
-const ALL_STATUSES = ['active','inactive','sold','rented'];
+const ALL_STATUSES = ['active','inactive','sold','rented','suspended'];
 
 const STEPS = [
     { number: 1, label: 'Property Info', icon: Icons.home },

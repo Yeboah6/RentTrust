@@ -8,7 +8,7 @@ use App\Http\Middleware\EnsureAgentIsAuthenticated;
 use App\Http\Middleware\RoleMiddleware;
 use App\Http\Middleware\RoleCheckMiddleware;
 use App\Http\Middleware\RequiresSubscription;
-// use App\Http\Middleware\CheckSuspended;
+use Illuminate\Console\Scheduling\Schedule;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -36,4 +36,16 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
-    })->create();
+    })
+    
+    ->withSchedule(function (Schedule $schedule) {
+        // Schedule your commands here
+        $schedule->command('subscriptions:notify-expiry')
+            ->dailyAt('09:00')
+            ->withoutOverlapping()
+            ->appendOutputTo(storage_path('logs/subscription-notifications.log'));
+
+        $schedule->command('subscriptions:expire')
+            ->dailyAt('01:00');
+    })
+    ->create();

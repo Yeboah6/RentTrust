@@ -73,14 +73,12 @@ class PaymentController extends Controller
     {
         $payment = Payment::with(['user', 'subscription.plan'])->findOrFail($id);
  
-        // Guard: only successful payments can be refunded
         abort_if(
             $payment->status !== 'success' && $payment->status !== 'paid',
             422,
             'Only successful payments can be refunded.'
         );
  
-        // Calculate how much has already been refunded
         $alreadyRefunded = Payment::where('parent_payment_id', $id)
             ->where('type', 'refund')
             ->where('status', 'success')

@@ -227,6 +227,29 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, agent
           min-width: max-content;
         }
 
+        .admin-mobile-tab-select {
+          display: none;
+          width: 100%;
+          margin-bottom: 2rem;
+          padding: 0.875rem 1rem;
+          border: 1px solid hsl(40 20% 88%);
+          border-radius: 0.75rem;
+          background-color: white;
+          color: hsl(200 25% 15%);
+          font-size: 0.95rem;
+          font-weight: 500;
+          outline: none;
+        }
+
+        @media (max-width: 767px) {
+          .desktop-tabs {
+            display: none !important;
+          }
+          .admin-mobile-tab-select {
+            display: block;
+          }
+        }
+
         .admin-profile-header {
           display: flex;
           flex-wrap: wrap;
@@ -356,43 +379,58 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, agent
             </div>
 
             {/* Tabs */}
-            <div className="admin-tabs-container">
-              {['overview', 'agents', 'listings', 'verifications', 'reports', 'reviews', 'inquiries', 'subscriptions', 'analytics'].map(tab => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className="action-button"
-                  style={{
-                    padding: '0.5rem 1rem',
-                    border: 'none',
-                    borderRadius: '0.375rem',
-                    backgroundColor: activeTab === tab ? 'white' : 'transparent',
-                    color: activeTab === tab ? 'hsl(200 25% 15%)' : 'hsl(200 15% 45%)',
-                    fontWeight: '500',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '0.5rem',
-                    transition: 'all 0.2s',
-                    boxShadow: activeTab === tab ? '0 1px 2px 0 hsl(200 25% 15% / 0.05)' : 'none',
-                    textTransform: 'capitalize',
-                    whiteSpace: 'nowrap'
-                  }}
-                >
-                  {tab === 'overview' && <BarChart style={{ height: '1rem', width: '1rem' }} />}
-                  {tab === 'agents' && <Shield style={{ height: '1rem', width: '1rem' }} />}
-                  {tab === 'listings' && <Home style={{ height: '1rem', width: '1rem' }} />}
-                  {tab === 'verifications' && <Shield style={{ height: '1rem', width: '1rem' }} />}
-                  {tab === 'reports' && <AlertCircle style={{ height: '1rem', width: '1rem' }} />}
-                  {tab === 'reviews' && <MessageSquare style={{ height: '1rem', width: '1rem' }} />}
-                  {tab === 'inquiries' && <Eye style={{ height: '1rem', width: '1rem' }} />}
-                  {tab === 'subscriptions' && <Gift style={{ height: '1rem', width: '1rem' }} />}
-                  {tab === 'analytics' && <BarChart style={{ height: '1rem', width: '1rem' }} />}
-                  {tab}
-                </button>
-              ))}
+            <div className="desktop-tabs">
+              <div className="admin-tabs-container">
+                {['overview', 'agents', 'listings', 'verifications', 'reports', 'reviews', 'inquiries', 'subscriptions', 'analytics'].map(tab => (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    className="action-button"
+                    style={{
+                      padding: '0.5rem 1rem',
+                      border: 'none',
+                      borderRadius: '0.375rem',
+                      backgroundColor: activeTab === tab ? 'white' : 'transparent',
+                      color: activeTab === tab ? 'hsl(200 25% 15%)' : 'hsl(200 15% 45%)',
+                      fontWeight: '500',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.5rem',
+                      transition: 'all 0.2s',
+                      boxShadow: activeTab === tab ? '0 1px 2px 0 hsl(200 25% 15% / 0.05)' : 'none',
+                      textTransform: 'capitalize',
+                      whiteSpace: 'nowrap'
+                    }}
+                  >
+                    {tab === 'overview' && <BarChart style={{ height: '1rem', width: '1rem' }} />}
+                    {tab === 'agents' && <Shield style={{ height: '1rem', width: '1rem' }} />}
+                    {tab === 'listings' && <Home style={{ height: '1rem', width: '1rem' }} />}
+                    {tab === 'verifications' && <Shield style={{ height: '1rem', width: '1rem' }} />}
+                    {tab === 'reports' && <AlertCircle style={{ height: '1rem', width: '1rem' }} />}
+                    {tab === 'reviews' && <MessageSquare style={{ height: '1rem', width: '1rem' }} />}
+                    {tab === 'inquiries' && <Eye style={{ height: '1rem', width: '1rem' }} />}
+                    {tab === 'subscriptions' && <Gift style={{ height: '1rem', width: '1rem' }} />}
+                    {tab === 'analytics' && <BarChart style={{ height: '1rem', width: '1rem' }} />}
+                    {tab}
+                  </button>
+                ))}
+              </div>
             </div>
+
+            <select
+              className="admin-mobile-tab-select"
+              value={activeTab}
+              onChange={(e) => setActiveTab(e.target.value)}
+              aria-label="Select admin tab"
+            >
+              {['overview', 'agents', 'listings', 'verifications', 'reports', 'reviews', 'inquiries', 'subscriptions', 'analytics'].map((tab) => (
+                <option key={tab} value={tab}>
+                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                </option>
+              ))}
+            </select>
 
             {activeTab === 'overview' && (
                 <AdminOverview 

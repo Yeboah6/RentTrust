@@ -71,8 +71,8 @@ Route::prefix('super-admin')
         ->name('agents.verification');
 
     // Route::get('/agents/verifications', [AgentController::class, 'index'])->name('super-admin.verifications.index');
-    Route::post('/verifications/{verification}/approve', [AgentController::class, 'approve']);
-    Route::post('/verifications/{verification}/reject', [AgentController::class, 'reject']);
+    Route::post('/verifications/{verification}/approve', [AgentController::class, 'approve'])->name('super-admin.verifications.approve');
+    Route::post('/verifications/{verification}/reject', [AgentController::class, 'reject'])->name('super-admin.verifications.reject');
 
     Route::resource('tenants', TenantController::class)
         ->only(['index', 'show', 'destroy']);
@@ -83,26 +83,17 @@ Route::prefix('super-admin')
 
     // ── Listings ──────────────────────────────────────────────────────────────
     // Verification page
-    Route::get('listings/verification', [ListingController::class, 'verification'])
+    Route::get('/listings/verification', [ListingController::class, 'verification'])
         ->name('listings.verification');
  
     Route::resource('listings', ListingController::class)
         ->only(['index', 'show', 'edit', 'update', 'destroy', 'create', 'store']);
  
     // Status action routes
-    Route::post('listings/{listing}/approve', [ListingController::class, 'approve'])
-        ->name('listings.approve');
-    
-    Route::post('listings/{listing}/reject',  [ListingController::class, 'reject'])
-        ->name('listings.reject');
-    
     Route::post('listings/{listing}/suspend', [ListingController::class, 'suspend'])
         ->name('listings.suspend');
 
-    // Verification action routes
-    Route::get('/verifications', [ListingController::class, 'verification'])
-        ->name('verifications.index');
-    
+    // Verification action routes    
     Route::get('/verifications/{verification}', [ListingController::class, 'verificationShow'])
         ->name('verifications.show');
     
