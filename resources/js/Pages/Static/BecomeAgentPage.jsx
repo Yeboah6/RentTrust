@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useForm, Head } from '@inertiajs/react';
+import { useForm, usePage, Link, Head } from '@inertiajs/react';
 import Header from '../../Components/Layouts/Header';
 import Footer from '../../Components/Layouts/Footer';
 
@@ -26,6 +26,12 @@ const Eye = ({ style }) => (
 const EyeOff = ({ style }) => (
   <svg style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+  </svg>
+);
+
+const ArrowRight = ({ style }) => (
+  <svg style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
   </svg>
 );
 
@@ -113,6 +119,44 @@ const EmailIcon = ({ status }) => {
   return null;
 };
 
+// ── Already-logged-in state ────────────────────────────────────────────────────
+// Shown instead of the registration form when the visitor already has an
+// agent/admin/super-admin session — there's nothing to register, just send
+// them to the dashboard for their role.
+const AlreadyRegisteredState = ({ roleLabel, dashboardHref, name }) => (
+  <div style={{ padding: 'clamp(1.5rem, 4vw, 2rem)', textAlign: 'center' }}>
+    <div style={{
+      width: '3.5rem', height: '3.5rem', borderRadius: '50%',
+      background: 'hsl(152 60% 40% / 0.1)', color: 'hsl(152 60% 40%)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.25rem',
+    }}>
+      <CheckCircle style={{ height: '2rem', width: '2rem' }} />
+    </div>
+
+    <h2 style={{ color: C.text, fontSize: 'clamp(1.125rem, 3.5vw, 1.375rem)', fontWeight: 700, marginBottom: '0.5rem' }}>
+      You're already registered
+    </h2>
+    <p style={{ color: C.muted, fontSize: '0.9375rem', lineHeight: 1.6, marginBottom: '1.75rem' }}>
+      {name ? `${name}, you're` : "You're"} signed in as {roleLabel === 'Agent' ? 'an' : 'a'} {roleLabel} on RentTrustGh.
+      Head to your dashboard to manage listings and your profile.
+    </p>
+
+    <Link
+      href={dashboardHref}
+      style={{
+        display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+        width: '100%', padding: '0.75rem', border: 'none', borderRadius: '0.75rem',
+        background: C.teal, color: 'white', fontWeight: 600, fontSize: '1rem',
+        textDecoration: 'none', boxSizing: 'border-box', transition: 'opacity 0.15s',
+      }}
+      onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.88')}
+      onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
+    >
+      Go to Dashboard <ArrowRight style={{ height: '1.125rem', width: '1.125rem' }} />
+    </Link>
+  </div>
+);
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 const BecomeAgentPage = () => {
   const [showPassword, setShowPassword]   = useState(false);
@@ -120,6 +164,28 @@ const BecomeAgentPage = () => {
   const [emailStatus, setEmailStatus]     = useState('idle'); // idle | invalid | checking | taken | valid
 
   const agentTypes = ['Landlord', 'Agent'];
+
+  const { auth } = usePage().props;
+
+  // Same auth-shape logic as Header — figure out if there's already an
+  // agent-side session, so we can skip the registration form entirely.
+  const isAgentLoggedIn      = !!auth?.agent;
+  const isAdminLoggedIn      = !!auth?.admin;
+  const isSuperAdminLoggedIn = !!auth?.super && !isAdminLoggedIn;
+  const isAgentRoleLoggedIn  = isAgentLoggedIn || isAdminLoggedIn || isSuperAdminLoggedIn;
+
+  const dashboard = isSuperAdminLoggedIn
+    ? { href: '/super-admin/dashboard', label: 'Super Admin', name: auth?.super?.name }
+    : isAdminLoggedIn
+    ? { href: '/admin/dashboard', label: 'Admin', name: auth?.admin?.name }
+    : {
+        href:
+          auth?.agent?.package === 'free' || auth?.agent?.package == null
+            ? '/agent/dashboard'
+            : '/agent-dashboard',
+        label: auth?.agent?.type || 'Agent',
+        name: auth?.agent?.name,
+      };
 
   const { data, setData, post, processing, errors, reset } = useForm({
     name:                  '',
@@ -330,219 +396,230 @@ const BecomeAgentPage = () => {
                   <img src="/images/rent-trust.png" alt="RentTrustGh" />
                 </div>
                 <h1 style={{ color: C.text, fontSize: 'clamp(1.25rem, 4vw, 1.5rem)', fontWeight: 700, marginBottom: '0.5rem' }}>
-                  Register as Agent/Landlord
+                  {isAgentRoleLoggedIn ? "You're all set" : "Register as Agent/Landlord"}
                 </h1>
                 <p style={{ color: C.muted, fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', margin: 0 }}>
-                  Build your reputation and connect with tenants on RentTrust
+                  {isAgentRoleLoggedIn
+                    ? 'Your account is already active on RentTrustGh'
+                    : 'Build your reputation and connect with tenants on RentTrust'}
                 </p>
               </div>
 
-              {/* Form */}
-              <div style={{ padding: 'clamp(1.5rem, 4vw, 2rem)' }}>
-                <form onSubmit={handleSubmit}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {/* Already logged in — send to dashboard instead of the form */}
+              {isAgentRoleLoggedIn ? (
+                <AlreadyRegisteredState
+                  roleLabel={dashboard.label}
+                  dashboardHref={dashboard.href}
+                  name={dashboard.name}
+                />
+              ) : (
+                /* Form */
+                <div style={{ padding: 'clamp(1.5rem, 4vw, 2rem)' }}>
+                  <form onSubmit={handleSubmit}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
 
-                    {/* Full name */}
-                    <div>
-                      <label style={labelStyle}>Full Name *</label>
-                      <input
-                        type="text"
-                        placeholder="Kofi Mensah"
-                        value={data.name}
-                        onChange={(e) => setData('name', e.target.value)}
-                        style={fieldStyle(!!errors.name)}
-                        onFocus={onFocus(!!errors.name)}
-                        onBlur={onBlur(!!errors.name)}
-                      />
-                      <ErrorMsg msg={errors.name} />
-                    </div>
-
-                    {/* Phone */}
-                    <div>
-                      <label style={labelStyle}>Phone Number *</label>
-                      <input
-                        type="tel"
-                        placeholder="+233 XX XXX XXXX"
-                        value={data.phone}
-                        onChange={(e) => setData('phone', e.target.value)}
-                        style={fieldStyle(!!errors.phone)}
-                        onFocus={onFocus(!!errors.phone)}
-                        onBlur={onBlur(!!errors.phone)}
-                      />
-                      <ErrorMsg msg={errors.phone} />
-                    </div>
-
-                    {/* Email */}
-                    <div>
-                      <label style={labelStyle}>Email *</label>
-                      <div style={{ position: 'relative' }}>
-                        <input
-                          type="email"
-                          placeholder="you@example.com"
-                          value={data.email}
-                          onChange={(e) => handleEmailChange(e.target.value)}
-                          style={{ ...fieldStyle(emailHasError, emailIsValid), paddingRight: '2.25rem' }}
-                          onFocus={onFocus(emailHasError, emailIsValid)}
-                          onBlur={onBlur(emailHasError, emailIsValid)}
-                        />
-                        <span style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
-                          <EmailIcon status={emailStatus} />
-                        </span>
-                      </div>
-                      {errors.email                                      && <ErrorMsg msg={errors.email} />}
-                      {!errors.email && emailStatus === 'taken'          && <ErrorMsg msg="This email is already registered." />}
-                      {!errors.email && emailStatus === 'invalid'        && <ErrorMsg msg="Please enter a valid email address." />}
-                      {!errors.email && emailStatus === 'valid'          && <HintMsg  msg="✓ Email is available." color={C.green} />}
-                    </div>
-
-                    {/* Company */}
-                    <div>
-                      <label style={labelStyle}>Company/Agency Name</label>
-                      <input
-                        type="text"
-                        placeholder="Optional"
-                        value={data.company}
-                        onChange={(e) => setData('company', e.target.value)}
-                        style={fieldStyle(!!errors.company)}
-                        onFocus={onFocus(!!errors.company)}
-                        onBlur={onBlur(!!errors.company)}
-                      />
-                      <ErrorMsg msg={errors.company} />
-                    </div>
-
-                    {/* Type + Fee */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+                      {/* Full name */}
                       <div>
-                        <label style={labelStyle}>Type of Agent</label>
-                        <select
-                          value={data.type}
-                          onChange={(e) => setData('type', e.target.value)}
-                          style={{ ...fieldStyle(!!errors.type), appearance: 'none' }}
-                          onFocus={onFocus(!!errors.type)}
-                          onBlur={onBlur(!!errors.type)}
-                        >
-                          <option value="">Select agent type</option>
-                          {agentTypes.map((t) => <option key={t} value={t}>{t}</option>)}
-                        </select>
-                        <ErrorMsg msg={errors.type} />
+                        <label style={labelStyle}>Full Name *</label>
+                        <input
+                          type="text"
+                          placeholder="Kofi Mensah"
+                          value={data.name}
+                          onChange={(e) => setData('name', e.target.value)}
+                          style={fieldStyle(!!errors.name)}
+                          onFocus={onFocus(!!errors.name)}
+                          onBlur={onBlur(!!errors.name)}
+                        />
+                        <ErrorMsg msg={errors.name} />
                       </div>
 
+                      {/* Phone */}
                       <div>
-                        <label style={labelStyle}>Agent Fee (%)</label>
+                        <label style={labelStyle}>Phone Number *</label>
                         <input
-                          type="number"
-                          placeholder="e.g. 10"
-                          min="0" max="100"
-                          value={data.fee}
-                          onChange={(e) => setData('fee', e.target.value)}
-                          style={fieldStyle(!!errors.fee)}
-                          onFocus={onFocus(!!errors.fee)}
-                          onBlur={onBlur(!!errors.fee)}
+                          type="tel"
+                          placeholder="+233 XX XXX XXXX"
+                          value={data.phone}
+                          onChange={(e) => setData('phone', e.target.value)}
+                          style={fieldStyle(!!errors.phone)}
+                          onFocus={onFocus(!!errors.phone)}
+                          onBlur={onBlur(!!errors.phone)}
                         />
-                        <ErrorMsg msg={errors.fee} />
-                        {!errors.fee && <HintMsg msg="Your typical commission rate" />}
+                        <ErrorMsg msg={errors.phone} />
                       </div>
-                    </div>
 
-                    {/* Bio */}
-                    <div>
-                      <label style={labelStyle}>Bio</label>
-                      <textarea
-                        placeholder="Tell tenants about yourself and your experience..."
-                        rows={4}
-                        value={data.bio}
-                        onChange={(e) => setData('bio', e.target.value)}
-                        style={{ ...fieldStyle(!!errors.bio), fontFamily: 'inherit' }}
-                        onFocus={onFocus(!!errors.bio)}
-                        onBlur={onBlur(!!errors.bio)}
-                      />
-                      <ErrorMsg msg={errors.bio} />
-                      <HintMsg msg={`${data.bio.length}/500 characters`} color={data.bio.length > 480 ? C.red : C.muted} />
-                    </div>
+                      {/* Email */}
+                      <div>
+                        <label style={labelStyle}>Email *</label>
+                        <div style={{ position: 'relative' }}>
+                          <input
+                            type="email"
+                            placeholder="you@example.com"
+                            value={data.email}
+                            onChange={(e) => handleEmailChange(e.target.value)}
+                            style={{ ...fieldStyle(emailHasError, emailIsValid), paddingRight: '2.25rem' }}
+                            onFocus={onFocus(emailHasError, emailIsValid)}
+                            onBlur={onBlur(emailHasError, emailIsValid)}
+                          />
+                          <span style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
+                            <EmailIcon status={emailStatus} />
+                          </span>
+                        </div>
+                        {errors.email                                      && <ErrorMsg msg={errors.email} />}
+                        {!errors.email && emailStatus === 'taken'          && <ErrorMsg msg="This email is already registered." />}
+                        {!errors.email && emailStatus === 'invalid'        && <ErrorMsg msg="Please enter a valid email address." />}
+                        {!errors.email && emailStatus === 'valid'          && <HintMsg  msg="✓ Email is available." color={C.green} />}
+                      </div>
 
-                    {/* Password */}
-                    <div>
-                      <label style={labelStyle}>Password *</label>
-                      <div style={{ position: 'relative' }}>
+                      {/* Company */}
+                      <div>
+                        <label style={labelStyle}>Company/Agency Name</label>
                         <input
-                          type={showPassword ? 'text' : 'password'}
-                          placeholder="••••••••"
-                          value={data.password}
-                          onChange={(e) => setData('password', e.target.value)}
-                          style={{ ...fieldStyle(!!errors.password), paddingRight: '3rem' }}
-                          onFocus={onFocus(!!errors.password)}
-                          onBlur={onBlur(!!errors.password)}
+                          type="text"
+                          placeholder="Optional"
+                          value={data.company}
+                          onChange={(e) => setData('company', e.target.value)}
+                          style={fieldStyle(!!errors.company)}
+                          onFocus={onFocus(!!errors.company)}
+                          onBlur={onBlur(!!errors.company)}
                         />
-                        <button type="button" onClick={() => setShowPassword((v) => !v)}
-                          style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', border: 'none', background: 'transparent', color: C.muted, cursor: 'pointer', padding: '0.25rem', display: 'flex' }}
-                          onMouseEnter={(e) => e.currentTarget.style.color = C.teal}
-                          onMouseLeave={(e) => e.currentTarget.style.color = C.muted}
-                        >
-                          {showPassword ? <EyeOff style={{ height: '1.25rem', width: '1.25rem' }} /> : <Eye style={{ height: '1.25rem', width: '1.25rem' }} />}
-                        </button>
+                        <ErrorMsg msg={errors.company} />
                       </div>
-                      <StrengthMeter password={data.password} />
-                      <ErrorMsg msg={errors.password} />
-                    </div>
 
-                    {/* Confirm password */}
-                    <div>
-                      <label style={labelStyle}>Confirm Password *</label>
-                      <div style={{ position: 'relative' }}>
-                        <input
-                          type={showConfirm ? 'text' : 'password'}
-                          placeholder="••••••••"
-                          value={data.password_confirmation}
-                          onChange={(e) => setData('password_confirmation', e.target.value)}
-                          style={{ ...fieldStyle(confirmHasError, confirmIsValid), paddingRight: '3rem' }}
-                          onFocus={onFocus(confirmHasError, confirmIsValid)}
-                          onBlur={onBlur(confirmHasError, confirmIsValid)}
+                      {/* Type + Fee */}
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+                        <div>
+                          <label style={labelStyle}>Type of Agent</label>
+                          <select
+                            value={data.type}
+                            onChange={(e) => setData('type', e.target.value)}
+                            style={{ ...fieldStyle(!!errors.type), appearance: 'none' }}
+                            onFocus={onFocus(!!errors.type)}
+                            onBlur={onBlur(!!errors.type)}
+                          >
+                            <option value="">Select agent type</option>
+                            {agentTypes.map((t) => <option key={t} value={t}>{t}</option>)}
+                          </select>
+                          <ErrorMsg msg={errors.type} />
+                        </div>
+
+                        <div>
+                          <label style={labelStyle}>Agent Fee (%)</label>
+                          <input
+                            type="number"
+                            placeholder="e.g. 10"
+                            min="0" max="100"
+                            value={data.fee}
+                            onChange={(e) => setData('fee', e.target.value)}
+                            style={fieldStyle(!!errors.fee)}
+                            onFocus={onFocus(!!errors.fee)}
+                            onBlur={onBlur(!!errors.fee)}
+                          />
+                          <ErrorMsg msg={errors.fee} />
+                          {!errors.fee && <HintMsg msg="Your typical commission rate" />}
+                        </div>
+                      </div>
+
+                      {/* Bio */}
+                      <div>
+                        <label style={labelStyle}>Bio</label>
+                        <textarea
+                          placeholder="Tell tenants about yourself and your experience..."
+                          rows={4}
+                          value={data.bio}
+                          onChange={(e) => setData('bio', e.target.value)}
+                          style={{ ...fieldStyle(!!errors.bio), fontFamily: 'inherit' }}
+                          onFocus={onFocus(!!errors.bio)}
+                          onBlur={onBlur(!!errors.bio)}
                         />
-                        <button type="button" onClick={() => setShowConfirm((v) => !v)}
-                          style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', border: 'none', background: 'transparent', color: C.muted, cursor: 'pointer', padding: '0.25rem', display: 'flex' }}
-                          onMouseEnter={(e) => e.currentTarget.style.color = C.teal}
-                          onMouseLeave={(e) => e.currentTarget.style.color = C.muted}
-                        >
-                          {showConfirm ? <EyeOff style={{ height: '1.25rem', width: '1.25rem' }} /> : <Eye style={{ height: '1.25rem', width: '1.25rem' }} />}
-                        </button>
+                        <ErrorMsg msg={errors.bio} />
+                        <HintMsg msg={`${data.bio.length}/500 characters`} color={data.bio.length > 480 ? C.red : C.muted} />
                       </div>
-                      {errors.password_confirmation                            && <ErrorMsg msg={errors.password_confirmation} />}
-                      {!errors.password_confirmation && confirmFilled && !passwordsMatch && <ErrorMsg msg="Passwords do not match." />}
-                      {!errors.password_confirmation && confirmIsValid              && <HintMsg  msg="✓ Passwords match." color={C.green} />}
-                    </div>
 
-                    {/* Benefits */}
-                    <div style={{ backgroundColor: 'hsl(152 60% 40% / 0.05)', border: '1px solid hsl(152 60% 40% / 0.2)', borderRadius: '0.75rem', padding: '1rem' }}>
-                      <h4 style={{ fontWeight: 500, marginBottom: '0.5rem', color: C.text }}>Benefits of Registering</h4>
-                      <div style={{ fontSize: '0.875rem', color: C.muted, display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
-                        {[
-                          'Respond to tenant reviews and build your reputation',
-                          'Manage property listings',
-                          'Get verified badge to increase trust',
-                          'Connect with potential tenants directly',
-                        ].map((benefit) => (
-                          <div key={benefit} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
-                            <CheckCircle style={{ height: '1rem', width: '1rem', marginTop: '0.125rem', color: 'hsl(152 60% 40%)', flexShrink: 0 }} />
-                            <span>{benefit}</span>
-                          </div>
-                        ))}
+                      {/* Password */}
+                      <div>
+                        <label style={labelStyle}>Password *</label>
+                        <div style={{ position: 'relative' }}>
+                          <input
+                            type={showPassword ? 'text' : 'password'}
+                            placeholder="••••••••"
+                            value={data.password}
+                            onChange={(e) => setData('password', e.target.value)}
+                            style={{ ...fieldStyle(!!errors.password), paddingRight: '3rem' }}
+                            onFocus={onFocus(!!errors.password)}
+                            onBlur={onBlur(!!errors.password)}
+                          />
+                          <button type="button" onClick={() => setShowPassword((v) => !v)}
+                            style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', border: 'none', background: 'transparent', color: C.muted, cursor: 'pointer', padding: '0.25rem', display: 'flex' }}
+                            onMouseEnter={(e) => e.currentTarget.style.color = C.teal}
+                            onMouseLeave={(e) => e.currentTarget.style.color = C.muted}
+                          >
+                            {showPassword ? <EyeOff style={{ height: '1.25rem', width: '1.25rem' }} /> : <Eye style={{ height: '1.25rem', width: '1.25rem' }} />}
+                          </button>
+                        </div>
+                        <StrengthMeter password={data.password} />
+                        <ErrorMsg msg={errors.password} />
                       </div>
+
+                      {/* Confirm password */}
+                      <div>
+                        <label style={labelStyle}>Confirm Password *</label>
+                        <div style={{ position: 'relative' }}>
+                          <input
+                            type={showConfirm ? 'text' : 'password'}
+                            placeholder="••••••••"
+                            value={data.password_confirmation}
+                            onChange={(e) => setData('password_confirmation', e.target.value)}
+                            style={{ ...fieldStyle(confirmHasError, confirmIsValid), paddingRight: '3rem' }}
+                            onFocus={onFocus(confirmHasError, confirmIsValid)}
+                            onBlur={onBlur(confirmHasError, confirmIsValid)}
+                          />
+                          <button type="button" onClick={() => setShowConfirm((v) => !v)}
+                            style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', border: 'none', background: 'transparent', color: C.muted, cursor: 'pointer', padding: '0.25rem', display: 'flex' }}
+                            onMouseEnter={(e) => e.currentTarget.style.color = C.teal}
+                            onMouseLeave={(e) => e.currentTarget.style.color = C.muted}
+                          >
+                            {showConfirm ? <EyeOff style={{ height: '1.25rem', width: '1.25rem' }} /> : <Eye style={{ height: '1.25rem', width: '1.25rem' }} />}
+                          </button>
+                        </div>
+                        {errors.password_confirmation                            && <ErrorMsg msg={errors.password_confirmation} />}
+                        {!errors.password_confirmation && confirmFilled && !passwordsMatch && <ErrorMsg msg="Passwords do not match." />}
+                        {!errors.password_confirmation && confirmIsValid              && <HintMsg  msg="✓ Passwords match." color={C.green} />}
+                      </div>
+
+                      {/* Benefits */}
+                      <div style={{ backgroundColor: 'hsl(152 60% 40% / 0.05)', border: '1px solid hsl(152 60% 40% / 0.2)', borderRadius: '0.75rem', padding: '1rem' }}>
+                        <h4 style={{ fontWeight: 500, marginBottom: '0.5rem', color: C.text }}>Benefits of Registering</h4>
+                        <div style={{ fontSize: '0.875rem', color: C.muted, display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
+                          {[
+                            'Respond to tenant reviews and build your reputation',
+                            'Manage property listings',
+                            'Get verified badge to increase trust',
+                            'Connect with potential tenants directly',
+                          ].map((benefit) => (
+                            <div key={benefit} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
+                              <CheckCircle style={{ height: '1rem', width: '1rem', marginTop: '0.125rem', color: 'hsl(152 60% 40%)', flexShrink: 0 }} />
+                              <span>{benefit}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Submit */}
+                      <button
+                        type="submit"
+                        disabled={processing}
+                        style={{ width: '100%', padding: '0.75rem', border: 'none', borderRadius: '0.75rem', background: processing ? `${C.teal}80` : C.teal, color: 'white', fontWeight: 600, fontSize: '1rem', cursor: processing ? 'not-allowed' : 'pointer', transition: 'opacity 0.15s' }}
+                        onMouseEnter={(e) => !processing && (e.currentTarget.style.opacity = '0.88')}
+                        onMouseLeave={(e) => !processing && (e.currentTarget.style.opacity = '1')}
+                      >
+                        {processing ? 'Registering…' : 'Complete Registration'}
+                      </button>
+
                     </div>
-
-                    {/* Submit */}
-                    <button
-                      type="submit"
-                      disabled={processing}
-                      style={{ width: '100%', padding: '0.75rem', border: 'none', borderRadius: '0.75rem', background: processing ? `${C.teal}80` : C.teal, color: 'white', fontWeight: 600, fontSize: '1rem', cursor: processing ? 'not-allowed' : 'pointer', transition: 'opacity 0.15s' }}
-                      onMouseEnter={(e) => !processing && (e.currentTarget.style.opacity = '0.88')}
-                      onMouseLeave={(e) => !processing && (e.currentTarget.style.opacity = '1')}
-                    >
-                      {processing ? 'Registering…' : 'Complete Registration'}
-                    </button>
-
-                  </div>
-                </form>
-              </div>
+                  </form>
+                </div>
+              )}
             </div>
           </div>
         </main>

@@ -207,8 +207,8 @@ const Footer = () => {
             <p className="text-sm" style={{ color: 'hsl(200 15% 45%)' }}>
               © {new Date().getFullYear()} RentTrustGh. All rights reserved. 
             </p>
-            <p className="text-sm" style={{ color: 'hsl(200 15% 45%)' }}>
-               Made with ❤️🙏 by KEKStudios || Everyday with God is Everyday in Victory.
+            <p className="text-sm" style={{ color: 'hsl(200 15% 45%)', textAlign: 'center' }}>
+              KEKStudios || Everyday with God is Everyday in Victory.
             </p>
             <p 
               className="text-xs px-3 py-1.5 rounded-lg"

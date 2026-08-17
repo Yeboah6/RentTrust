@@ -53,12 +53,6 @@ const Settings = ({ style }) => (
   </svg>
 );
 
-const Lock = ({ style }) => (
-  <svg style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-  </svg>
-);
-
 const ShieldCheck = ({ style }) => (
   <svg style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
@@ -134,6 +128,58 @@ const buildLatestVerificationMap = (records = []) => {
   return map;
 };
 
+// ── Signature element: radial usage gauge ──────────────────────────────────
+// The whole point of the free tier is the quota, so instead of burying it in
+// a line of text, the listing count gets its own dial — colour escalates
+// teal → amber → red as the agent approaches the limit, a visual nudge
+// toward the upgrade CTA below.
+const RadialGauge = ({ value, max, label, sublabel }) => {
+  const radius = 40;
+  const circumference = 2 * Math.PI * radius;
+  const pct = max > 0 ? Math.min(value / max, 1) : 0;
+  const offset = circumference * (1 - pct);
+  const color = pct >= 1 ? 'hsl(0 65% 51%)' : pct >= 0.6 ? 'hsl(38 92% 50%)' : 'hsl(174 62% 32%)';
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
+      <div style={{ position: 'relative', width: 'clamp(3.25rem, 9vw, 4rem)', height: 'clamp(3.25rem, 9vw, 4rem)', flexShrink: 0 }}>
+        <svg viewBox="0 0 100 100" style={{ width: '100%', height: '100%', transform: 'rotate(-90deg)' }}>
+          <circle cx="50" cy="50" r={radius} fill="none" stroke="hsl(40 20% 90%)" strokeWidth="10" />
+          <circle
+            cx="50" cy="50" r={radius} fill="none" stroke={color} strokeWidth="10" strokeLinecap="round"
+            strokeDasharray={circumference} strokeDashoffset={offset}
+            style={{ transition: 'stroke-dashoffset 0.4s ease, stroke 0.4s ease' }}
+          />
+        </svg>
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <span style={{ fontSize: 'clamp(0.75rem, 2.5vw, 0.875rem)', fontWeight: 700, color: 'hsl(200 25% 15%)', fontVariantNumeric: 'tabular-nums' }}>
+            {value}/{max}
+          </span>
+        </div>
+      </div>
+      <div style={{ minWidth: 0 }}>
+        <p style={{ margin: 0, fontSize: '0.8125rem', fontWeight: 600, color: 'hsl(200 25% 15%)' }}>{label}</p>
+        {sublabel && <p style={{ margin: '0.125rem 0 0', fontSize: '0.75rem', color: 'hsl(200 15% 45%)' }}>{sublabel}</p>}
+      </div>
+    </div>
+  );
+};
+
+// ── Stat card ────────────────────────────────────────────────────────────────
+const StatCard = ({ icon, value, label, accent, children }) => (
+  <div style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.75rem', padding: 'clamp(1rem, 3vw, 1.25rem)', position: 'relative', overflow: 'hidden' }}>
+    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', backgroundColor: accent }} />
+    <div style={{ width: '2.25rem', height: '2.25rem', borderRadius: '0.5rem', background: `${accent}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '0.75rem' }}>
+      {icon}
+    </div>
+    <p style={{ fontSize: 'clamp(1.5rem, 4vw, 1.875rem)', fontWeight: 700, color: 'hsl(200 25% 15%)', margin: 0, lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
+      {value}
+    </p>
+    <p style={{ fontSize: '0.8125rem', color: 'hsl(200 15% 45%)', margin: '0.25rem 0 0' }}>{label}</p>
+    {children}
+  </div>
+);
+
 const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, propertyTypes, amenities, verificationData = []  }) => {
   const [activeTab, setActiveTab] = useState("overview");
   const [showAddListingModal, setShowAddListingModal] = useState(false);
@@ -190,7 +236,6 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
       }))
     : [];
 
-  // const activeListings = properties.length;
   const activeListings = properties.length;
   const rentalListings = properties.filter(p => p.purpose === 'rent').length;
   const saleListings = properties.filter(p => p.purpose === 'sale').length;
@@ -221,62 +266,21 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
         ? (formattedReviews.reduce((sum, r) => sum + (Number(r.overall_rating) || 0), 0) / total).toFixed(1) 
         : '0.0';
 
-  const getStatusBadge = (status) => {
-    if (status === "verified") {
-      return (
-        <span style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          padding: 'clamp(0.25rem, 1vw, 0.25rem) clamp(0.5rem, 2vw, 0.625rem)',
-          fontSize: 'clamp(0.75rem, 2vw, 0.75rem)',
-          fontWeight: '500',
-          backgroundColor: 'hsl(152 60% 40%)',
-          color: 'white',
-          borderRadius: '9999px',
-          gap: 'clamp(0.25rem, 1vw, 0.25rem)'
-        }}>
-          <CheckCircle style={{ height: 'clamp(0.75rem, 2vw, 0.75rem)', width: 'clamp(0.75rem, 2vw, 0.75rem)' }} />
-          Verified
-        </span>
-      );
-    } else if (status === "pending") {
-      return (
-        <span style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          padding: 'clamp(0.25rem, 1vw, 0.25rem) clamp(0.5rem, 2vw, 0.625rem)',
-          fontSize: 'clamp(0.75rem, 2vw, 0.75rem)',
-          fontWeight: '500',
-          backgroundColor: 'hsl(40 30% 94%)',
-          color: 'hsl(200 25% 15%)',
-          borderRadius: '9999px',
-          gap: 'clamp(0.25rem, 1vw, 0.25rem)',
-          border: '1px solid hsl(40 20% 88%)'
-        }}>
-          <Clock style={{ height: 'clamp(0.75rem, 2vw, 0.75rem)', width: 'clamp(0.75rem, 2vw, 0.75rem)' }} />
-          Pending
-        </span>
-      );
-    } else {
-      return (
-        <span style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          padding: 'clamp(0.25rem, 1vw, 0.25rem) clamp(0.5rem, 2vw, 0.625rem)',
-          fontSize: 'clamp(0.75rem, 2vw, 0.75rem)',
-          fontWeight: '500',
-          backgroundColor: 'white',
-          color: 'hsl(200 15% 45%)',
-          borderRadius: '9999px',
-          gap: 'clamp(0.25rem, 1vw, 0.25rem)',
-          border: '1px solid hsl(40 20% 88%)'
-        }}>
-          <AlertCircle style={{ height: 'clamp(0.75rem, 2vw, 0.75rem)', width: 'clamp(0.75rem, 2vw, 0.75rem)' }} />
-          Unverified
-        </span>
-      );
-    }
-  };
+  // "At a glance" tenant-sentiment breakdown for the Reviews tab — reuses the
+  // same four boolean fields already collected per review instead of just
+  // tallying them as badges per-card.
+  const reviewCriteria = [
+    { key: 'landlord_responsive', label: 'Responsive landlord' },
+    { key: 'property_matched_description', label: 'Accurate listing' },
+    { key: 'fair_pricing', label: 'Fair pricing' },
+    { key: 'good_communication', label: 'Good communication' },
+  ];
+  const reviewCriteriaStats = total > 0
+    ? reviewCriteria.map((c) => ({
+        ...c,
+        pct: Math.round((formattedReviews.filter((r) => r[c.key] === 1).length / total) * 100),
+      }))
+    : [];
 
   const renderStars = (rating) => {
     const ratingValue = Math.floor(rating || 0);
@@ -316,6 +320,12 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
     router.delete(`/rent/${property.id}`, { preserveScroll: true });
   };
 
+  const tabs = [
+    { id: 'overview', label: 'Overview', icon: BarChart },
+    { id: 'listings', label: 'Listings', icon: Home, count: activeListings },
+    { id: 'reviews', label: 'Reviews', icon: MessageSquare, count: total },
+  ];
+
   return (
     <>
     <Head>
@@ -340,40 +350,6 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
           display: grid;
           grid-template-columns: 1fr;
           gap: clamp(0.75rem, 3vw, 1.25rem);
-        }
-
-        /* ---------- Tabs ---------- */
-        .tabs-grid {
-          display: flex;
-          flex-direction: column; /* Stack vertically by default (mobile first) */
-          gap: clamp(0.375rem, 1vw, 0.5rem);
-          background-color: hsl(40 30% 94%);
-          padding: clamp(0.375rem, 1vw, 0.5rem);
-          border-radius: clamp(0.375rem, 2vw, 0.5rem);
-          margin-bottom: clamp(1.5rem, 4vw, 2rem);
-        }
-              
-        .tabs-grid > button {
-          flex: 1 1 auto;
-          min-width: max-content;
-          justify-content: center;
-          padding: clamp(0.5rem, 2vw, 0.75rem) clamp(0.75rem, 3vw, 1.5rem);
-          width: 100%; /* Full width on mobile */
-        }
-              
-        /* Tablet and above - horizontal layout */
-        @media (min-width: 640px) {
-          .tabs-grid {
-            flex-direction: row; /* Switch to horizontal on larger screens */
-            flex-wrap: wrap;
-            gap: clamp(0.5rem, 2vw, 1rem);
-            padding: clamp(0.5rem, 1.5vw, 0.75rem);
-          }
-          .tabs-grid > button {
-            flex: 1 1 0;
-            width: auto; /* Reset width for horizontal layout */
-            padding: clamp(0.5rem, 2vw, 0.75rem) clamp(1rem, 3vw, 1.5rem);
-          }
         }
 
         .review-grid {
@@ -408,13 +384,82 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
           }
         }
 
-        /* ---------- Profile header ---------- */
+        /* ---------- Underline tabs ---------- */
+        .tabs-bar {
+          display: flex;
+          gap: clamp(1.25rem, 4vw, 2rem);
+          border-bottom: 1px solid hsl(40 20% 88%);
+          margin-bottom: clamp(1.5rem, 4vw, 2rem);
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+          scrollbar-width: none;
+        }
+        .tabs-bar::-webkit-scrollbar { display: none; }
+        .tabs-bar > button {
+          position: relative;
+          background: none;
+          border: none;
+          padding: clamp(0.75rem, 2vw, 0.875rem) 0.125rem;
+          font-weight: 600;
+          font-size: clamp(0.875rem, 2vw, 0.9375rem);
+          color: hsl(200 15% 45%);
+          cursor: pointer;
+          white-space: nowrap;
+          display: flex;
+          align-items: center;
+          gap: 0.4375rem;
+          min-height: 44px;
+          -webkit-tap-highlight-color: transparent;
+          transition: color 0.15s;
+        }
+        .tabs-bar > button.is-active { color: hsl(200 25% 15%); }
+        .tabs-bar > button.is-active::after {
+          content: '';
+          position: absolute;
+          left: 0; right: 0; bottom: -1px;
+          height: 2px;
+          border-radius: 2px;
+          background: hsl(174 62% 32%);
+        }
+        .tab-count {
+          font-size: 0.6875rem;
+          font-weight: 700;
+          padding: 0.0625rem 0.375rem;
+          border-radius: 9999px;
+          background: hsl(40 30% 94%);
+          color: hsl(200 15% 45%);
+        }
+        .tabs-bar > button.is-active .tab-count {
+          background: hsl(174 62% 32% / 0.12);
+          color: hsl(174 62% 32%);
+        }
+
+        /* ---------- Profile card ---------- */
+        .profile-card {
+          background-color: white;
+          border: 1px solid hsl(40 20% 88%);
+          border-radius: 1rem;
+          padding: clamp(1.25rem, 3.5vw, 1.75rem);
+          display: flex;
+          flex-direction: column;
+          gap: clamp(1.25rem, 3vw, 1.5rem);
+        }
+
         .profile-header-container {
           display: flex;
           flex-wrap: wrap;
           justify-content: space-between;
           align-items: flex-start;
           gap: clamp(1rem, 3vw, 1.5rem);
+        }
+
+        .profile-status-strip {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          gap: clamp(1.25rem, 4vw, 2.5rem);
+          padding-top: clamp(1.25rem, 3vw, 1.5rem);
+          border-top: 1px solid hsl(40 20% 88%);
         }
 
         @media (max-width: 640px) {
@@ -426,6 +471,23 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
           .profile-header-container > a.settings-link {
             width: 100%;
             justify-content: center;
+          }
+          .profile-status-strip {
+            gap: 1.25rem;
+          }
+        }
+
+        /* ---------- Review sentiment rows ---------- */
+        .review-criteria-row {
+          display: grid;
+          grid-template-columns: minmax(0, 8.5rem) 1fr 2.25rem;
+          align-items: center;
+          gap: 0.75rem;
+        }
+        @media (max-width: 480px) {
+          .review-criteria-row {
+            grid-template-columns: minmax(0, 6rem) 1fr 2rem;
+            gap: 0.5rem;
           }
         }
 
@@ -474,7 +536,7 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
           -webkit-tap-highlight-color: transparent;
         }
 
-        /* ---------- Additional tweaks ---------- */
+        /* ---------- Upgrade CTA ---------- */
         .upgrade-cta {
           border-radius: 0.875rem;
           overflow: hidden;
@@ -490,6 +552,17 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
           gap: 1.25rem;
         }
 
+        .upgrade-feature-grid {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 0.5rem 1rem;
+        }
+        @media (min-width: 480px) {
+          .upgrade-feature-grid {
+            grid-template-columns: repeat(2, 1fr);
+          }
+        }
+
         @media (max-width: 480px) {
           .upgrade-cta-inner {
             flex-direction: column;
@@ -503,9 +576,9 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
 
         <main style={{ flex: 1, padding: 'clamp(1.5rem, 4vw, 2rem) clamp(0.75rem, 3vw, 1rem)' }}>
           <div className="container mx-auto" style={{ maxWidth: '1200px' }}>
-            
-            {/* Profile Header */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginBottom: 'clamp(1.5rem, 4vw, 2rem)' }}>
+
+            {/* Profile Card */}
+            <div className="profile-card" style={{ marginBottom: 'clamp(1.5rem, 4vw, 2rem)' }}>
               <div className="profile-header-container">
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: 'clamp(1rem, 3vw, 1.5rem)', flex: 1 }}>
                   <div style={{
@@ -528,7 +601,6 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
                       <h1 style={{ color: 'hsl(200 25% 15%)', fontSize: 'clamp(1.125rem, 4vw, 1.5rem)', fontWeight: '700', lineHeight: '1.2' }}>
                         {agent.name}
                       </h1>
-                      {getStatusBadge(agent.status)}
                       <span style={{
                         display: 'inline-flex',
                         alignItems: 'center',
@@ -544,23 +616,13 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
                       </span>
                     </div>
                     {agent.company && (
-                      <p style={{ color: 'hsl(200 15% 45%)', marginBottom: 'clamp(0.25rem, 1vw, 0.5rem)', fontSize: 'clamp(0.875rem, 2vw, 1rem)' }}>
+                      <p style={{ color: 'hsl(200 15% 45%)', margin: 0, fontSize: 'clamp(0.875rem, 2vw, 1rem)' }}>
                         {agent.company}
                       </p>
                     )}
-                    <div style={{ display: 'flex', gap: 'clamp(0.75rem, 2vw, 1rem)', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', flexWrap: 'wrap' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.25rem, 1vw, 0.375rem)', color: 'hsl(200 15% 45%)' }}>
-                        <Home style={{ height: 'clamp(0.875rem, 2.5vw, 1rem)', width: 'clamp(0.875rem, 2.5vw, 1rem)' }} />
-                        {activeListings} / {LISTING_LIMIT} Listings
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.25rem, 1vw, 0.375rem)', color: 'hsl(200 15% 45%)' }}>
-                        <Star style={{ height: 'clamp(0.875rem, 2.5vw, 1rem)', width: 'clamp(0.875rem, 2.5vw, 1rem)' }} />
-                        {calculateAverageRating} ({reviews.length} reviews)
-                      </div>
-                    </div>
                   </div>
                 </div>
-                
+
                 <button type="button" onClick={() => setShowPricingModal(true)} style={{
                   padding: 'clamp(0.5rem, 2vw, 0.75rem) clamp(1rem, 3vw, 1.25rem)',
                   background: 'linear-gradient(135deg, hsl(174 62% 32%) 0%, hsl(174 50% 25%) 100%)',
@@ -588,6 +650,27 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
                   <Settings style={{ height: 'clamp(1rem, 3vw, 1rem)', width: 'clamp(1rem, 3vw, 1rem)' }} />
                   Settings
                 </Link>
+              </div>
+
+              {/* Status strip — the signature gauge, alongside rating */}
+              <div className="profile-status-strip">
+                <RadialGauge
+                  value={activeListings}
+                  max={LISTING_LIMIT}
+                  label="Listings used"
+                  sublabel={listingsFull ? 'Limit reached' : `${LISTING_LIMIT - activeListings} slot${LISTING_LIMIT - activeListings === 1 ? '' : 's'} left`}
+                />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+                  <div style={{ display: 'flex' }}>{renderStars(Number(calculateAverageRating))}</div>
+                  <div>
+                    <p style={{ margin: 0, fontSize: '0.8125rem', fontWeight: 600, color: 'hsl(200 25% 15%)' }}>
+                      {calculateAverageRating} rating
+                    </p>
+                    <p style={{ margin: '0.125rem 0 0', fontSize: '0.75rem', color: 'hsl(200 15% 45%)' }}>
+                      {reviews.length} review{reviews.length === 1 ? '' : 's'}
+                    </p>
+                  </div>
+                </div>
               </div>
 
               {/* Limit Warning Banners */}
@@ -677,35 +760,16 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
 
             {/* Tabs */}
             <div>
-              <div className="tabs-grid">
-                {['overview', 'listings', 'reviews'].map((tab) => (
+              <div className="tabs-bar">
+                {tabs.map(({ id, label, icon: Icon, count }) => (
                   <button
-                    key={tab}
-                    onClick={() => setActiveTab(tab)}
-                    className="action-button"
-                    style={{
-                      padding: 'clamp(0.5rem, 2vw, 0.5rem) clamp(0.75rem, 3vw, 1rem)',
-                      border: 'none',
-                      borderRadius: 'clamp(0.25rem, 1.5vw, 0.375rem)',
-                      backgroundColor: activeTab === tab ? 'white' : 'transparent',
-                      color: activeTab === tab ? 'hsl(200 25% 15%)' : 'hsl(200 15% 45%)',
-                      fontWeight: '500',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: 'clamp(0.25rem, 1vw, 0.5rem)',
-                      transition: 'all 0.2s',
-                      boxShadow: activeTab === tab ? '0 1px 2px 0 hsl(200 25% 15% / 0.05)' : 'none',
-                      textTransform: 'capitalize',
-                      fontSize: 'clamp(0.875rem, 2vw, 0.875rem)',
-                      whiteSpace: 'nowrap'
-                    }}
+                    key={id}
+                    onClick={() => setActiveTab(id)}
+                    className={activeTab === id ? 'is-active' : ''}
                   >
-                    {tab === 'overview' && <BarChart style={{ height: 'clamp(0.875rem, 2.5vw, 1rem)', width: 'clamp(0.875rem, 2.5vw, 1rem)' }} />}
-                    {tab === 'listings' && <Home style={{ height: 'clamp(0.875rem, 2.5vw, 1rem)', width: 'clamp(0.875rem, 2.5vw, 1rem)' }} />}
-                    {tab === 'reviews' && <MessageSquare style={{ height: 'clamp(0.875rem, 2.5vw, 1rem)', width: 'clamp(0.875rem, 2.5vw, 1rem)' }} />}
-                    {tab}
+                    <Icon style={{ height: 'clamp(0.875rem, 2.5vw, 1rem)', width: 'clamp(0.875rem, 2.5vw, 1rem)' }} />
+                    {label}
+                    {typeof count === 'number' && <span className="tab-count">{count}</span>}
                   </button>
                 ))}
               </div>
@@ -716,29 +780,12 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
                   
                   {/* Stats Grid */}
                   <div className="stats-grid">
-                    <div style={{
-                      backgroundColor: 'white',
-                      border: '1px solid hsl(40 20% 88%)',
-                      borderRadius: '0.75rem',
-                      padding: 'clamp(1rem, 3vw, 1.25rem)',
-                    }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
-                        <div style={{
-                          width: '2.25rem',
-                          height: '2.25rem',
-                          borderRadius: '0.5rem',
-                          background: 'hsl(174 62% 32% / 0.1)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                        }}>
-                          <Home style={{ width: '1.125rem', height: '1.125rem', color: 'hsl(174 62% 32%)' }} />
-                        </div>
-                      </div>
-                      <p style={{ fontSize: 'clamp(1.5rem, 4vw, 1.875rem)', fontWeight: '700', color: 'hsl(200 25% 15%)', margin: 0, lineHeight: 1 }}>
-                        {activeListings} / {LISTING_LIMIT}
-                      </p>
-                      <p style={{ fontSize: '0.8125rem', color: 'hsl(200 15% 45%)', margin: '0.25rem 0 0' }}>Active Listings</p>
+                    <StatCard
+                      icon={<Home style={{ width: '1.125rem', height: '1.125rem', color: 'hsl(174 62% 32%)' }} />}
+                      accent="hsl(174 62% 32%)"
+                      value={`${activeListings} / ${LISTING_LIMIT}`}
+                      label="Active Listings"
+                    >
                       <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.375rem', flexWrap: 'wrap' }}>
                         <span style={{ fontSize: '0.75rem', color: 'hsl(174 62% 32%)', fontWeight: 500 }}>
                           🏠 {rentalListings} rent
@@ -750,98 +797,44 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
                       <p style={{ fontSize: '0.75rem', color: activeListings >= LISTING_LIMIT ? 'hsl(0 65% 51%)' : 'hsl(200 15% 45%)', marginTop: '0.25rem', fontWeight: activeListings >= LISTING_LIMIT ? 600 : 400 }}>
                         {activeListings >= LISTING_LIMIT ? '⚠ Limit reached' : `${LISTING_LIMIT - activeListings} slots left`}
                       </p>
-                    </div>
+                    </StatCard>
 
-                    <div style={{
-                      backgroundColor: 'white',
-                      border: '1px solid hsl(40 20% 88%)',
-                      borderRadius: '0.75rem',
-                      padding: 'clamp(1rem, 3vw, 1.25rem)',
-                    }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
-                        <div style={{
-                          width: '2.25rem',
-                          height: '2.25rem',
-                          borderRadius: '0.5rem',
-                          background: 'hsl(174 62% 32% / 0.1)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                        }}>
-                          <Eye style={{ width: '1.125rem', height: '1.125rem', color: 'hsl(174 62% 32%)' }} />
-                        </div>
-                      </div>
-                      <p style={{ fontSize: 'clamp(1.5rem, 4vw, 1.875rem)', fontWeight: '700', color: 'hsl(200 25% 15%)', margin: 0, lineHeight: 1 }}>
-                        {totalViews}
-                      </p>
-                      <p style={{ fontSize: '0.8125rem', color: 'hsl(200 15% 45%)', margin: '0.25rem 0 0' }}>Views Across all listings</p>
-                    </div>
+                    <StatCard
+                      icon={<Eye style={{ width: '1.125rem', height: '1.125rem', color: 'hsl(38 92% 45%)' }} />}
+                      accent="hsl(38 92% 45%)"
+                      value={totalViews}
+                      label="Views across all listings"
+                    />
 
-                    <div style={{
-                      backgroundColor: 'white',
-                      border: '1px solid hsl(40 20% 88%)',
-                      borderRadius: '0.75rem',
-                      padding: 'clamp(1rem, 3vw, 1.25rem)',
-                    }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
-                        <div style={{
-                          width: '2.25rem',
-                          height: '2.25rem',
-                          borderRadius: '0.5rem',
-                          background: 'hsl(174 62% 32% / 0.1)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                        }}>
-                          <MessageSquare style={{ width: '1.125rem', height: '1.125rem', color: 'hsl(174 62% 32%)' }} />
-                        </div>
-                      </div>
-                      <p style={{ fontSize: 'clamp(1.5rem, 4vw, 1.875rem)', fontWeight: '700', color: 'hsl(200 25% 15%)', margin: 0, lineHeight: 1 }}>
-                        {monthlyInquiries}
-                      </p>
-                      <p style={{ fontSize: '0.8125rem', color: 'hsl(200 15% 45%)', margin: '0.25rem 0 0' }}>Inquiries</p>
-                    </div>
+                    <StatCard
+                      icon={<MessageSquare style={{ width: '1.125rem', height: '1.125rem', color: 'hsl(174 62% 32%)' }} />}
+                      accent="hsl(174 62% 32%)"
+                      value={monthlyInquiries}
+                      label="Inquiries"
+                    />
 
-                    <div style={{
-                      backgroundColor: 'white',
-                      border: '1px solid hsl(40 20% 88%)',
-                      borderRadius: '0.75rem',
-                      padding: 'clamp(1rem, 3vw, 1.25rem)',
-                    }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
-                        <div style={{
-                          width: '2.25rem',
-                          height: '2.25rem',
-                          borderRadius: '0.5rem',
-                          background: 'hsl(174 62% 32% / 0.1)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                        }}>
-                          <MessageSquare style={{ width: '1.125rem', height: '1.125rem', color: 'hsl(174 62% 32%)' }} />
-                        </div>
-                      </div>
-                       <p style={{ fontSize: 'clamp(1.5rem, 4vw, 1.875rem)', fontWeight: '700', color: 'hsl(200 25% 15%)', margin: 0, lineHeight: 1 }}>
-                        {reviews.length}
-                      </p>
-                      <p style={{ fontSize: '0.8125rem', color: 'hsl(200 15% 45%)', margin: '0.25rem 0 0' }}>Reviews</p>
-                     </div>
+                    <StatCard
+                      icon={<Star style={{ width: '1.125rem', height: '1.125rem', color: 'hsl(38 92% 45%)' }} />}
+                      accent="hsl(38 92% 45%)"
+                      value={reviews.length}
+                      label="Reviews"
+                    />
                   </div>
 
                   {/* Upgrade CTA */}
                   <div className="upgrade-cta">
                     <div className="upgrade-cta-inner">
-                      <div>
+                      <div style={{ flex: '1 1 20rem', minWidth: 0 }}>
                         <h3 style={{ margin: '0 0 0.375rem', color: 'white', fontWeight: '700', fontSize: 'clamp(1.125rem, 3vw, 1.375rem)' }}>
                           🚀 Grow Faster with Pro
                         </h3>
                         <p style={{ margin: '0 0 0.875rem', color: 'rgba(255,255,255,0.8)', fontSize: '0.875rem', lineHeight: '1.5' }}>
                           Top agents on RentTrustGh use Pro. Join them and unlock more listings, priority placement & full lead access.
                         </p>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
+                        <div className="upgrade-feature-grid">
                           {['Verified badge', 'Respond to tenant reviews', 'Advanced analytics', 'View inquiries from tenants'].map(f => (
                             <span key={f} style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', color: 'rgba(255,255,255,0.9)', fontSize: '0.8rem' }}>
-                              <CheckCircle style={{ width: '0.875rem', height: '0.875rem', color: 'rgba(255,255,255,0.85)' }} />
+                              <CheckCircle style={{ width: '0.875rem', height: '0.875rem', color: 'rgba(255,255,255,0.85)', flexShrink: 0 }} />
                               {f}
                             </span>
                           ))}
@@ -880,7 +873,7 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
                     justifyContent: 'space-between',
                     alignItems: 'center',
                     flexWrap: 'wrap',
-                    gap: 'clamp(1rem, 3vw, 1.5rem)' // Increased from previous value
+                    gap: 'clamp(1rem, 3vw, 1.5rem)'
                   }}>
                     <h2 style={{
                       color: 'hsl(200 25% 15%)',
@@ -990,6 +983,28 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
               {activeTab === 'reviews' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(1rem, 3vw, 1.5rem)' }}>
                   <h2 style={{ color: 'hsl(200 25% 15%)', fontSize: 'clamp(1rem, 3vw, 1.125rem)', fontWeight: '600' }}>Tenant Reviews ({formattedReviews.length})</h2>
+
+                  {total > 0 && (
+                    <div style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.5rem, 2vw, 0.75rem)', padding: 'clamp(1rem, 3vw, 1.25rem)' }}>
+                      <p style={{ margin: '0 0 0.875rem', fontSize: '0.75rem', fontWeight: 700, color: 'hsl(200 15% 45%)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                        What tenants say
+                      </p>
+                      <div style={{ display: 'grid', gap: '0.75rem' }}>
+                        {reviewCriteriaStats.map((c) => (
+                          <div key={c.key} className="review-criteria-row">
+                            <span style={{ fontSize: '0.8125rem', color: 'hsl(200 25% 15%)' }}>{c.label}</span>
+                            <div style={{ height: '6px', borderRadius: '999px', backgroundColor: 'hsl(40 30% 94%)', overflow: 'hidden' }}>
+                              <div style={{ width: `${c.pct}%`, height: '100%', backgroundColor: 'hsl(174 62% 32%)', borderRadius: '999px', transition: 'width 0.3s ease' }} />
+                            </div>
+                            <span style={{ textAlign: 'right', fontSize: '0.8125rem', fontWeight: 600, color: 'hsl(200 25% 15%)', fontVariantNumeric: 'tabular-nums' }}>
+                              {c.pct}%
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   {formattedReviews.length > 0 ? (
                     <div className="review-grid">
                       {formattedReviews.map((review) => (

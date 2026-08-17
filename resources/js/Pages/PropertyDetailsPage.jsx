@@ -426,7 +426,7 @@ export default function PropertyDetailsPage({ rental, reviews, seo, agent }) {
                                         </div>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
                                             <Calendar style={{ height: 'clamp(0.875rem, 2.5vw, 1rem)', width: 'clamp(0.875rem, 2.5vw, 1rem)', flexShrink: 0, color: 'hsl(174 62% 36%)' }} />
-                                            {advance} year{advance !== 1 ? 's' : ''} advance
+                                            {advance} month{advance !== 1 ? 's' : ''} advance
                                         </div>
                                     </div>
                                 </div>
@@ -487,7 +487,7 @@ export default function PropertyDetailsPage({ rental, reviews, seo, agent }) {
                                                                         {review.full_name || 'Anonymous'}
                                                                     </p>
                                                                     <p style={{ fontSize: '0.7rem', color: 'hsl(200 15% 55%)' }}>
-                                                                        {review.created_at ? new Date(review.created_at).toLocaleDateString('en-GB', { month: 'short', day: 'numeric', year: 'numeric' }) : ''}
+                                                                        {review.created_at ? new Date(review.created_at).toLocaleDateString('en-GB', { month: 'short', day: 'numeric', month: 'numeric' }) : ''}
                                                                     </p>
                                                                 </div>
                                                             </div>
@@ -572,7 +572,7 @@ export default function PropertyDetailsPage({ rental, reviews, seo, agent }) {
                                             </div>
                                             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                                                 <span style={{ color: 'hsl(200 15% 45%)' }}>Advance Required</span>
-                                                <span style={{ fontWeight: '500', color: 'hsl(200 25% 15%)' }}>{advance} year{advance !== 1 ? 's' : ''}</span>
+                                                <span style={{ fontWeight: '500', color: 'hsl(200 25% 15%)' }}>{advance} month{advance !== 1 ? 's' : ''}</span>
                                             </div>
                                             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                                                 <span style={{ color: 'hsl(200 15% 45%)' }}>Agent Fee</span>

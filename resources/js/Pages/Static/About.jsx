@@ -51,12 +51,12 @@ export default function AboutPage({ totalListings = 0, totalVerifiedAgents = 0, 
         { value: platformRating ? `${platformRating.toFixed(1)}★` : 'N/A', label: 'Platform Rating', sub: 'From our users' },
     ];
 
-    const team = [
-        // { initials: 'KM', name: 'Kwame Mensah',   role: 'Co-Founder & CEO',     hue: 174, bio: 'Former real estate broker who spent years watching tenants get scammed. Built RentTrust to fix that.' },
-        { initials: 'YSO', name: 'Yeboah Solomon O.',   role: 'Founder & CTO',     hue: 220, bio: 'Software engineer passionate about using tech to solve housing problems across West Africa.' },
-        // { initials: 'EO', name: 'Emeka Okonkwo', role: 'Head of Verification',  hue: 38,  bio: 'Runs the team that physically inspects and verifies every property before it goes live.' },
-        { initials: 'ED', name: 'Ethel Damoah',  role: 'Community Manager',     hue: 152, bio: 'Ensures tenants and landlords have a voice. Manages reviews, disputes, and agent accountability.' },
-    ];
+    // const team = [
+    //     // { initials: 'KM', name: 'Kwame Mensah',   role: 'Co-Founder & CEO',     hue: 174, bio: 'Former real estate broker who spent years watching tenants get scammed. Built RentTrust to fix that.' },
+    //     { initials: 'YSO', name: 'Yeboah Solomon O.',   role: 'Founder & CTO',     hue: 220, bio: 'Software engineer passionate about using tech to solve housing problems across West Africa.' },
+    //     // { initials: 'EO', name: 'Emeka Okonkwo', role: 'Head of Verification',  hue: 38,  bio: 'Runs the team that physically inspects and verifies every property before it goes live.' },
+    //     { initials: 'ED', name: 'Ethel Damoah',  role: 'Community Manager',     hue: 152, bio: 'Ensures tenants and landlords have a voice. Manages reviews, disputes, and agent accountability.' },
+    // ];
 
     // const milestones = [
     //     { year: '2023', label: 'Founded',  detail: 'RentTrust was born in Accra after our founders experienced firsthand how broken the rental market was for everyday Ghanaians.' },
@@ -425,7 +425,7 @@ export default function AboutPage({ totalListings = 0, totalVerifiedAgents = 0, 
                                 </div> */}
 
                                 {/* Team */}
-                                <div style={{ backgroundColor: 'white', borderRadius: '1.25rem', border: '1px solid hsl(40 20% 88%)', padding: 'clamp(1.5rem,4vw,2.5rem)', boxShadow: '0 4px 32px hsl(200 25% 15% / 0.07)' }}>
+                                {/* <div style={{ backgroundColor: 'white', borderRadius: '1.25rem', border: '1px solid hsl(40 20% 88%)', padding: 'clamp(1.5rem,4vw,2.5rem)', boxShadow: '0 4px 32px hsl(200 25% 15% / 0.07)' }}>
                                     <h2 style={{ fontSize: 'clamp(1.125rem,2.5vw,1.375rem)', fontWeight: 700, color: 'hsl(200 25% 15%)', marginBottom: '0.375rem' }}>
                                         Meet the team
                                     </h2>
@@ -442,7 +442,7 @@ export default function AboutPage({ totalListings = 0, totalVerifiedAgents = 0, 
                                             </div>
                                         ))}
                                     </div>
-                                </div>
+                                </div> */}
                             </div>
 
                             {/* ── RIGHT COLUMN ── */}

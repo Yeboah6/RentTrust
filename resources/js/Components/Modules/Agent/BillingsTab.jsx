@@ -434,7 +434,6 @@ const BillingTab = ({ billing, plans = [], onUpgrade }) => {
                             </p>
                             <div style={{ borderTop: '1px solid hsl(220 15% 94%)' }}>
                                 <FeatureRow label="Property Listings" value={sub?.listing_limit || 'Unlimited'} isFree={isFree} />
-                                <FeatureRow label="Verified Badge" included={sub?.verified_badge ?? false} isFree={isFree} />
                                 <FeatureRow label="Priority Ranking" included={sub?.priority_ranking ?? false} isFree={isFree} />
                                 <FeatureRow label="Analytics Access" included={sub?.analytics_access ?? false} isFree={isFree} />
                                 <FeatureRow label="Respond to tenant reviews" />

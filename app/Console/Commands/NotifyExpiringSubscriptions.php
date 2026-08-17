@@ -20,11 +20,16 @@ class NotifyExpiringSubscriptions extends Command
     public function handle(): void
     {
         foreach ($this->milestones as $days => $flagColumn) {
-            $subscriptions = Subscription::where('status', 'active')
+            $windowStart = now()->startOfDay()->addDays($days);
+            $windowEnd = $windowStart->copy()->endOfDay();
+
+            $subscriptions = Subscription::with('plan')
+                ->where('status', 'active')
+                ->where('ends_at', '>=', now())
                 ->whereHas('plan', function ($query) {
                     $query->whereIn('slug', ['pro', 'elite']);
                 })
-                ->whereDate('ends_at', now()->addDays($days)->toDateString())
+                ->whereBetween('ends_at', [$windowStart, $windowEnd])
                 ->whereNull($flagColumn)
                 ->get();
 
