@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link, router, useForm, usePage, Head } from '@inertiajs/react';
 import SuperAdminLayout from '@/Layouts/SuperAdminLayout';
 import AdminEdit from './AdminEdit';
@@ -19,7 +19,6 @@ const Icons = {
     plus:        () => <Ico d="M12 4v16m8-8H4" size="1rem" />,
     edit:        () => <Ico d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />,
     trash:       () => <Ico d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />,
-    impersonate: () => <Ico d={["M16 7a4 4 0 11-8 0 4 4 0 018 0z","M12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"]} />,
     shield:      () => <Ico d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" size="0.75rem" />,
     x:           () => <Ico d="M6 18L18 6M6 6l12 12" />,
     refresh:  () => <Ico d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" size="0.9rem" />,
@@ -161,16 +160,6 @@ const FInput = ({ type = 'text', value, onChange, placeholder, hasError, suffix 
     );
 };
 
-const FSelect = ({ value, onChange, children, hasError }) => {
-    const [f, setF] = useState(false);
-    return (
-        <select value={value} onChange={onChange} onFocus={() => setF(true)} onBlur={() => setF(false)}
-            style={{ ...fieldStyle(f, hasError), cursor: 'pointer', appearance: 'none' }}>
-            {children}
-        </select>
-    );
-};
-
 const Toggle = ({ value, onChange, label, sub }) => (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem 1rem', borderRadius: '0.65rem', backgroundColor: 'hsl(220 15% 97%)', border: '1px solid hsl(220 15% 91%)' }}>
         <div>
@@ -184,8 +173,7 @@ const Toggle = ({ value, onChange, label, sub }) => (
     </div>
 );
 
-const AddAdminModal = ({ onClose, onSuccess }) => {
-  const [adminEdit, setAdminEdit] = useState(false);
+const AddAdminModal = ({ onClose }) => {
   const [emailStatus, setEmailStatus] = useState('idle'); // idle | invalid | checking | taken | valid
   const [done, setDone] = useState(false);
 
@@ -221,17 +209,12 @@ const AddAdminModal = ({ onClose, onSuccess }) => {
     e.preventDefault();
     post('/super-admin/admins', {
       preserveScroll: true,
-      onSuccess: () => { setDone(true); onSuccess?.(); },
+      onSuccess: () => setDone(true),
     });
   };
 
-  // ── Derived state ─────────────────────────────────────────────────────────
   const emailHasError = !!errors.email || emailStatus === 'invalid' || emailStatus === 'taken';
-//   const confirmFilled = data.password_confirmation.length > 0;
-//   const passwordsMatch = data.password === data.password_confirmation;
-//   const confirmHasError = !!errors.password_confirmation || (confirmFilled && !passwordsMatch);
 
-  // ── Live avatar ───────────────────────────────────────────────────────────
   const liveHue = [...(data.name || data.email || '')].reduce((a, c) => a + c.charCodeAt(0), 0) % 360;
   const liveInitials = (data.name || data.email || '')
     ? (data.name || data.email).split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
@@ -241,7 +224,6 @@ const AddAdminModal = ({ onClose, onSuccess }) => {
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'hsl(222 28% 8% / 0.62)', backdropFilter: 'blur(5px)' }}>
       <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: '540px', margin: '1rem', backgroundColor: 'white', borderRadius: '1.25rem', overflow: 'hidden', boxShadow: '0 40px 100px hsl(220 28% 6% / 0.32)', animation: 'adminModalIn 0.22s cubic-bezier(0.16,1,0.3,1)' }}>
 
-        {/* ── Dark header ── */}
         <div style={{ background: 'linear-gradient(135deg, hsl(222 30% 14%), hsl(220 28% 20%))', padding: '1.5rem 1.75rem', position: 'relative', overflow: 'hidden' }}>
           <div style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(hsl(220 30% 50% / 0.07) 1px, transparent 1px)', backgroundSize: '20px 20px', pointerEvents: 'none' }} />
           <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -267,7 +249,6 @@ const AddAdminModal = ({ onClose, onSuccess }) => {
         </div>
 
         {done ? (
-          /* ── Success panel ── */
           <div style={{ padding: '2.25rem 1.75rem', textAlign: 'center' }}>
             <div style={{ width: '4.5rem', height: '4.5rem', borderRadius: '50%', backgroundColor: 'hsl(152 55% 92%)', color: 'hsl(152 55% 33%)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.25rem', fontSize: '1.6rem' }}>
               <Icons.check />
@@ -276,10 +257,7 @@ const AddAdminModal = ({ onClose, onSuccess }) => {
               {data.name || data.email} added successfully
             </h3>
             <p style={{ fontSize: '0.85rem', color: 'hsl(220 15% 50%)', margin: '0 0 0.5rem', lineHeight: 1.6 }}>
-              {/* {data.send_invite */}
-                <>An invitation has been sent to <strong>{data.email}</strong>.</>
-                <>The account is now active. Share credentials securely.</>
-                {/* } */}
+              An invitation has been sent to <strong>{data.email}</strong>.
             </p>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.3rem 0.75rem', borderRadius: '999px', backgroundColor: 'hsl(270 60% 95%)', color: 'hsl(270 60% 42%)', fontSize: '0.72rem', fontWeight: 700, marginBottom: '1.75rem' }}>
               <Icons.shield /> {data.role === 'super_admin' ? 'Super Admin' : 'Admin'}
@@ -298,8 +276,6 @@ const AddAdminModal = ({ onClose, onSuccess }) => {
         ) : (
           <form onSubmit={handleSubmit}>
             <div style={{ padding: '1.5rem 1.75rem', display: 'flex', flexDirection: 'column', gap: '1.15rem' }}>
-
-              {/* Name + Email */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.875rem' }}>
                 <FField label="Full Name" required error={errors.name}>
                   <FInput value={data.name} onChange={e => setData('name', e.target.value)} placeholder="Jane Doe" hasError={!!errors.name} />
@@ -327,7 +303,6 @@ const AddAdminModal = ({ onClose, onSuccess }) => {
                 </FField>
               </div>
 
-              {/* Role selector */}
               <FField label="Role" hint="Super Admins have unrestricted access to this panel.">
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.6rem' }}>
                   {ROLES.map(r => {
@@ -353,7 +328,6 @@ const AddAdminModal = ({ onClose, onSuccess }) => {
               </FField>
             </div>
 
-            {/* Footer */}
             <div style={{ padding: '1rem 1.75rem 1.5rem', borderTop: '1px solid hsl(220 15% 93%)', display: 'flex', gap: '0.65rem' }}>
               <button type="button" onClick={onClose}
                 style={{ flex: 1, padding: '0.65rem', borderRadius: '0.65rem', border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white', fontSize: '0.875rem', fontWeight: 600, color: 'hsl(220 25% 30%)', cursor: 'pointer', fontFamily: 'inherit' }}>
@@ -422,6 +396,63 @@ const DeleteModal = ({ admin, onConfirm, onClose, processing }) => (
     </div>
 );
 
+// ─── Admin details modal (NEW) ─────────────────────────────────────────────────
+
+const DetailRow = ({ label, value }) => (
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.7rem 0', borderBottom: '1px solid hsl(220 15% 93%)' }}>
+        <span style={{ fontSize: '0.72rem', fontWeight: '700', letterSpacing: '0.05em', color: 'hsl(220 15% 50%)' }}>{label}</span>
+        <span style={{ fontSize: '0.85rem', fontWeight: '600', color: 'hsl(220 25% 18%)', textAlign: 'right' }}>{value}</span>
+    </div>
+);
+
+const AdminDetailsModal = ({ admin, onClose, onEdit, onResend, onDelete }) => (
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 65, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'hsl(222 28% 8% / 0.6)', backdropFilter: 'blur(5px)' }}>
+        <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: '440px', margin: '1rem', backgroundColor: 'white', borderRadius: '1.1rem', overflow: 'hidden', boxShadow: '0 32px 80px hsl(220 28% 6% / 0.28)', animation: 'adminModalIn 0.2s cubic-bezier(0.16,1,0.3,1)' }}>
+
+            <div style={{ background: 'linear-gradient(135deg, hsl(222 30% 14%), hsl(220 28% 20%))', padding: '1.5rem 1.75rem', position: 'relative' }}>
+                <button onClick={onClose} style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'none', border: 'none', cursor: 'pointer', color: 'hsl(220 20% 55%)', display: 'flex' }}
+                    onMouseEnter={e => e.currentTarget.style.color = 'white'}
+                    onMouseLeave={e => e.currentTarget.style.color = 'hsl(220 20% 55%)'}>
+                    <Icons.x />
+                </button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <Avatar name={admin.name} email={admin.email} size="3rem" fontSize="0.95rem" />
+                    <div>
+                        <h2 style={{ margin: '0 0 0.2rem', fontSize: '1.05rem', fontWeight: 800, color: 'white' }}>{admin.name ?? '—'}</h2>
+                        <p style={{ margin: 0, fontSize: '0.75rem', color: 'hsl(220 20% 62%)' }}>{admin.email}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div style={{ padding: '1.25rem 1.75rem' }}>
+                <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                    <RoleBadge role={admin.role} />
+                    <StatusBadge status={admin.status ?? 'active'} />
+                </div>
+
+                <DetailRow label="LAST ACTIVE" value={fmtRelative(admin.last_active)} />
+                <DetailRow label="CREATED" value={fmtDate(admin.created_at)} />
+                <DetailRow label="ADMIN ID" value={`#${admin.id}`} />
+            </div>
+
+            <div style={{ padding: '1rem 1.75rem 1.5rem', borderTop: '1px solid hsl(220 15% 93%)', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                <button onClick={() => { onClose(); onEdit(admin); }}
+                    style={{ flex: '1 1 45%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem', padding: '0.6rem', borderRadius: '0.6rem', border: 'none', backgroundColor: 'hsl(214 100% 95%)', color: 'hsl(214 80% 42%)', fontSize: '0.78rem', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit' }}>
+                    <Icons.edit /> Edit
+                </button>
+                <button onClick={() => onResend(admin)}
+                    style={{ flex: '1 1 45%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem', padding: '0.6rem', borderRadius: '0.6rem', border: 'none', backgroundColor: 'hsl(40 90% 93%)', color: 'hsl(40 75% 40%)', fontSize: '0.78rem', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit' }}>
+                    <Icons.mail /> Resend
+                </button>
+                <button onClick={() => { onClose(); onDelete(admin); }}
+                    style={{ flex: '1 1 45%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem', padding: '0.6rem', borderRadius: '0.6rem', border: 'none', backgroundColor: 'hsl(0 70% 96%)', color: 'hsl(0 65% 48%)', fontSize: '0.78rem', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit' }}>
+                    <Icons.trash /> Remove
+                </button>
+            </div>
+        </div>
+    </div>
+);
+
 // ─── Toast ────────────────────────────────────────────────────────────────────
 
 const Toast = ({ toast }) => toast ? (
@@ -433,9 +464,8 @@ const Toast = ({ toast }) => toast ? (
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
-const AdminsIndex = ({ admins: initial = [] }) => {
-    // const [admins,       setAdmins]       = useState(initial);
-    const { admins = [] } = usePage().props;
+const AdminsIndex = () => {
+    const { admins = [], flash = {}, errors: pageErrors = {} } = usePage().props;
     const [search,       setSearch]       = useState('');
     const [filterStatus, setFilterStatus] = useState('all');
     const [sortField,    setSortField]    = useState('name');
@@ -445,6 +475,7 @@ const AdminsIndex = ({ admins: initial = [] }) => {
     const [deleteTarget, setDeleteTarget] = useState(null);
     const [deleting,     setDeleting]     = useState(false);
     const [editingAdmin, setEditingAdmin] = useState(null);
+    const [viewAdmin,    setViewAdmin]    = useState(null);
     const [toast,        setToast]        = useState(null);
     const [refreshing,   refresh]   = useRefresh(['admins']);
     const toastTimer = useRef(null);
@@ -454,6 +485,22 @@ const AdminsIndex = ({ admins: initial = [] }) => {
         setToast({ msg, type });
         toastTimer.current = setTimeout(() => setToast(null), 3500);
     };
+
+    // Backend-driven toasts — controller sets these via back()->with('success', ...) / withErrors([...])
+    useEffect(() => {
+        if (flash?.success) showToast(flash.success, 'success');
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [flash?.success]);
+
+    useEffect(() => {
+        if (flash?.error) showToast(flash.error, 'error');
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [flash?.error]);
+
+    useEffect(() => {
+        if (pageErrors?.email) showToast(pageErrors.email, 'error');
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [pageErrors?.email]);
 
     const toggleSort = (field) => {
         if (sortField === field) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
@@ -477,18 +524,13 @@ const AdminsIndex = ({ admins: initial = [] }) => {
     const activeCount    = admins.filter(a => (a.status ?? 'active').toLowerCase() === 'active').length;
     const suspendedCount = admins.filter(a => (a.status ?? '').toLowerCase() === 'suspended').length;
     const pendingCount   = admins.filter(a => (a.status ?? '').toLowerCase() === 'pending').length;
-    const superCount     = admins.filter(a => (a.role ?? '').toLowerCase().includes('super')).length;
 
     const confirmDelete = () => {
         if (!deleteTarget) return;
         setDeleting(true);
         router.delete(`/super-admin/admins/${deleteTarget.id}`, {
             preserveScroll: true,
-            onSuccess: () => {
-                setAdmins(prev => prev.filter(a => a.id !== deleteTarget.id));
-                showToast(`${deleteTarget.name} removed successfully.`);
-                setDeleteTarget(null);
-            },
+            onSuccess: () => setDeleteTarget(null),
             onError: () => showToast('Failed to remove admin.', 'error'),
             onFinish: () => setDeleting(false),
         });
@@ -497,9 +539,9 @@ const AdminsIndex = ({ admins: initial = [] }) => {
     const resendInvite = (admin) => {
         router.post(`/super-admin/admins/${admin.id}/resend-invite`, {
             preserveScroll: true,
-            onSuccess: () => showToast('Invitation email resent.'),
-            onError: () => showToast('Failed to resend invitation.', 'error'),
         });
+        // success/error toast handled by the flash/errors effects above,
+        // driven by the controller's exact message.
     };
 
     const SortTh = ({ field, label, align = 'left' }) => {
@@ -525,8 +567,17 @@ const AdminsIndex = ({ admins: initial = [] }) => {
             <title>RentTrustGh | Ghana's Trusted Property Marketplace</title>
         </Head>
             <Toast toast={toast} />
-            {showAdd    && <AddAdminModal onClose={() => setShowAdd(false)} onSuccess={() => { showToast('Admin account created.'); router.reload({ only: ['admins'] }); }} />}
+            {showAdd      && <AddAdminModal onClose={() => setShowAdd(false)} />}
             {deleteTarget && <DeleteModal admin={deleteTarget} onConfirm={confirmDelete} onClose={() => setDeleteTarget(null)} processing={deleting} />}
+            {viewAdmin    && (
+                <AdminDetailsModal
+                    admin={viewAdmin}
+                    onClose={() => setViewAdmin(null)}
+                    onEdit={setEditingAdmin}
+                    onResend={resendInvite}
+                    onDelete={setDeleteTarget}
+                />
+            )}
 
             <div>
                 {/* ── Header ── */}
@@ -618,7 +669,8 @@ const AdminsIndex = ({ admins: initial = [] }) => {
                                         <tr key={a.id}
                                             onMouseEnter={() => setHoveredRow(a.id)}
                                             onMouseLeave={() => setHoveredRow(null)}
-                                            style={{ borderBottom: '1px solid hsl(220 15% 94%)', backgroundColor: hoveredRow === a.id ? 'hsl(220 25% 98.5%)' : 'white', transition: 'background-color 0.1s' }}>
+                                            onClick={() => setViewAdmin(a)}
+                                            style={{ borderBottom: '1px solid hsl(220 15% 94%)', backgroundColor: hoveredRow === a.id ? 'hsl(220 25% 98.5%)' : 'white', transition: 'background-color 0.1s', cursor: 'pointer' }}>
 
                                             {/* Admin */}
                                             <td style={{ padding: '0.875rem 1rem' }}>
@@ -659,17 +711,11 @@ const AdminsIndex = ({ admins: initial = [] }) => {
                                             </td>
 
                                             {/* Actions */}
-                                            <td style={{ padding: '0.875rem 1rem' }}>
+                                            <td style={{ padding: '0.875rem 1rem' }} onClick={e => e.stopPropagation()}>
                                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.35rem' }}>
-                                                    <Link href={`/super-admin/impersonate/${a.id}`} method="post" as="button"
-                                                        style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', padding: '0.4rem 0.65rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: '600', backgroundColor: 'hsl(270 60% 95%)', color: 'hsl(270 60% 42%)', border: 'none', cursor: 'pointer', textDecoration: 'none', transition: 'filter 0.12s', whiteSpace: 'nowrap', fontFamily: 'inherit' }}
-                                                        onMouseEnter={e => e.currentTarget.style.filter = 'brightness(0.92)'}
-                                                        onMouseLeave={e => e.currentTarget.style.filter = 'none'}>
-                                                        <Icons.impersonate /> Impersonate
-                                                    </Link>
-                                                    <button 
-                                                    onClick={() => setEditingAdmin(a)}
-                                                        style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', padding: '0.4rem 0.65rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: '600', backgroundColor: 'hsl(214 100% 95%)', color: 'hsl(214 80% 42%)', textDecoration: 'none', transition: 'filter 0.12s', whiteSpace: 'nowrap' }}
+                                                    <button
+                                                        onClick={() => setEditingAdmin(a)}
+                                                        style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', padding: '0.4rem 0.65rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: '600', backgroundColor: 'hsl(214 100% 95%)', color: 'hsl(214 80% 42%)', border: 'none', cursor: 'pointer', transition: 'filter 0.12s', whiteSpace: 'nowrap', fontFamily: 'inherit' }}
                                                         onMouseEnter={e => e.currentTarget.style.filter = 'brightness(0.92)'}
                                                         onMouseLeave={e => e.currentTarget.style.filter = 'none'}>
                                                         <Icons.edit /> Edit

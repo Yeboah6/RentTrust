@@ -859,28 +859,21 @@ class RentController extends Controller
 
         // Dynamic features computed from DB column values
         $computed = array_values(array_filter([
-        $plan->boost_limit > 0  ? "{$plan->boost_limit} listing boosts/month" : null,
-        $plan->lead_limit > 0   ? "{$plan->lead_limit} lead contacts/month"   : null,
-        $plan->verified_badge   ? 'Verified landlord badge'                    : null,
-        $plan->priority_ranking ? 'Priority search ranking'                    : null,
-        $plan->analytics_access ? 'Analytics dashboard access'                 : null,
+        $plan->priority_ranking? 'Priority ranking for listings' : null,
+        $plan->analytics_access? 'Access to analytics' : null,
         ]));
     
-        // Features stored in the JSON column — cast to array in the model
         $fromDb = is_array($plan->features) ? $plan->features : [];
     
-        // Merge: DB features first, then append any computed ones not already listed
         $merged = $fromDb;
         foreach ($computed as $item) {
-        if (!in_array($item, $merged, true)) {
-            $merged[] = $item;
-        }
+            if (!in_array($item, $merged, true)) {
+                $merged[] = $item;
+            }
         }
     
-        // Always inject the accurate rental/sale line from DB limits
         array_unshift($merged, $rentalDesc, $saleDesc);
     
-        // De-duplicate while preserving order
         return array_values(array_unique($merged));
     }
 
@@ -902,8 +895,6 @@ class RentController extends Controller
                 'listing_limit' => $plan->listing_limit,
                 'rental_limit'  => $plan->rental_limit,
                 'sale_limit'    => $plan->sale_limit,
-                'boost_limit'   => $plan->boost_limit,
-                'lead_limit'    => $plan->lead_limit,
                 'priority_ranking' => $plan->priority_ranking,
                 'analytics_access' => $plan->analytics_access,
                 'sort_order'    => $plan->sort_order,

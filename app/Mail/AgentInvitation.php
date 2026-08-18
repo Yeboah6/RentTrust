@@ -40,6 +40,12 @@ class AgentInvitation extends Mailable
     {
         return new Content(
             view: 'emails.AgentInvitation',
+            with: [
+                'agentName' => $this->agentName,
+                'agentEmail' => $this->agentEmail,
+                'setupUrl' => $this->setupUrl,
+                'expiresAt' => $this->expiresAt,
+            ]
         );
     }
 

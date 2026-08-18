@@ -151,8 +151,8 @@ const Kpi = ({ label, value, sub, accent, iconBg, iconColor, icon }) => (
 );
 
 const Toast = ({ toast }) => toast ? (
-    <div style={{ position: 'fixed', top: '1.25rem', right: '1.25rem', zIndex: 200, padding: '0.85rem 1.25rem', borderRadius: '0.75rem', backgroundColor: toast.type === 'error' ? 'hsl(0 65% 50%)' : 'hsl(152 55% 37%)', color: 'white', fontWeight: '600', fontSize: '0.875rem', boxShadow: '0 8px 28px hsl(220 25% 8% / 0.22)', animation: 'agSlideIn 0.2s ease', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-        {toast.type === 'error' ? <Icons.x /> : <Icons.check />}
+    <div style={{ position: 'fixed', top: '1.25rem', right: '1.25rem', zIndex: 200, padding: '0.85rem 1.25rem', borderRadius: '0.75rem', backgroundColor: toast.type === 'error' ? 'hsl(0 65% 50%)' : toast.type === 'info' ? 'hsl(220 65% 50%)' : 'hsl(152 55% 37%)', color: 'white', fontWeight: '600', fontSize: '0.875rem', boxShadow: '0 8px 28px hsl(220 25% 8% / 0.22)', animation: 'agSlideIn 0.2s ease', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        {toast.type === 'error' ? <Icons.x /> : toast.type === 'info' ? <Icons.mail /> : <Icons.check />}
         {toast.msg}
     </div>
 ) : null;
@@ -431,7 +431,7 @@ const MessageAgentsModal = ({ agents, initialSelected, onClose, onSent }) => {
 
 // ─── Agent card ───────────────────────────────────────────────────────────────
 
-const AgentCard = ({ agent: a, index, onAction, selected, onToggleSelect }) => {
+const AgentCard = ({ agent: a, index, onAction, selected, onToggleSelect, resendInvitation, resendingId }) => {
     const [hov, setHov] = useState(false);
     const hue    = avatarHue(a.name);
     const stCfg  = STATUS_CFG[a.status_key] ?? STATUS_CFG.inactive;
@@ -459,7 +459,6 @@ const AgentCard = ({ agent: a, index, onAction, selected, onToggleSelect }) => {
                                 {a.name.split(' ').map(w => w[0]).slice(0, 2).join('')}
                             </div>
                         )}
-                        {/* Checkmark only ever renders when verification is genuinely approved */}
                         {a.is_verified && (
                             <div style={{ position: 'absolute', bottom: '-2px', right: '-2px', width: '1.05rem', height: '1.05rem', borderRadius: '50%', backgroundColor: 'hsl(214 80% 50%)', border: '2px solid white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                 <svg style={{ width: '0.5rem', height: '0.5rem' }} fill="white" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
@@ -558,6 +557,34 @@ const AgentCard = ({ agent: a, index, onAction, selected, onToggleSelect }) => {
                     </button>
                 )}
 
+                <button onClick={() => resendInvitation(a)}
+                    disabled={resendingId === a._id}
+                    style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '0.3rem',
+                        height: '1.9rem',
+                        padding: '0 0.5rem',
+                        borderRadius: '0.45rem',
+                        border: 'none',
+                        backgroundColor: 'hsl(40 90% 93%)',
+                        color: 'hsl(40 80% 30%)',
+                        fontSize: '0.7rem',
+                        fontWeight: '700',
+                        cursor: resendingId === a._id ? 'not-allowed' : 'pointer',
+                        fontFamily: 'inherit',
+                        transition: 'filter 0.15s',
+                        opacity: resendingId === a._id ? 0.9 : 1,
+                        flexShrink: 0,
+                    }}
+                    onMouseEnter={e => {
+                        if (resendingId !== a._id) e.currentTarget.style.filter = 'brightness(0.9)';
+                    }}
+                    onMouseLeave={e => { e.currentTarget.style.filter = 'none'; }}>
+                    {resendingId === a._id ? <><Icons.spinner /> Sending...</> : <><Icons.mail /> Resend</>}
+                </button>
+
                 <button onClick={() => onAction(a, 'delete')}
                     style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '1.9rem', height: '1.9rem', borderRadius: '0.45rem', border: 'none', backgroundColor: 'hsl(0 65% 96%)', color: 'hsl(0 65% 48%)', cursor: 'pointer', transition: 'filter 0.15s', fontFamily: 'inherit', marginLeft: 'auto', flexShrink: 0 }}
                     onMouseEnter={e => e.currentTarget.style.filter = 'brightness(0.9)'}
@@ -571,7 +598,7 @@ const AgentCard = ({ agent: a, index, onAction, selected, onToggleSelect }) => {
 
 // ─── Agent row (list view) ────────────────────────────────────────────────────
 
-const AgentRow = ({ agent: a, index, onAction, selected, onToggleSelect }) => {
+const AgentRow = ({ agent: a, index, onAction, selected, onToggleSelect, resendInvitation, resendingId }) => {
     const [hov, setHov] = useState(false);
     const hue = avatarHue(a.name);
 
@@ -653,6 +680,10 @@ const AgentRow = ({ agent: a, index, onAction, selected, onToggleSelect }) => {
                 opacity: hov ? 1 : 0,
                 transition: 'opacity 0.15s ease, transform 0.15s ease',
                 pointerEvents: hov ? 'auto' : 'none',
+                backgroundColor: 'white',
+                padding: '0.25rem',
+                borderRadius: '0.5rem',
+                boxShadow: '0 2px 8px hsl(220 20% 15% / 0.1)',
             }}>
                 <Link href={`/super-admin/agents/${a._id}`}
                     style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.38rem 0.5rem', borderRadius: '0.45rem', border: '1px solid hsl(220 15% 88%)', backgroundColor: 'white', color: 'hsl(220 25% 35%)', textDecoration: 'none', transition: 'all 0.15s' }}
@@ -686,7 +717,7 @@ const AgentRow = ({ agent: a, index, onAction, selected, onToggleSelect }) => {
                         style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.38rem 0.5rem', borderRadius: '0.45rem', border: 'none', backgroundColor: 'hsl(0 65% 96%)', color: 'hsl(0 65% 48%)', cursor: 'pointer', fontFamily: 'inherit', transition: 'filter 0.15s' }}
                         onMouseEnter={e => e.currentTarget.style.filter = 'brightness(0.9)'}
                         onMouseLeave={e => e.currentTarget.style.filter = 'none'}>
-                        <Icons.ban />
+                        <Icons.ban /> Suspend
                     </button>
                 )}
                 {a.status_key === 'suspended' && (
@@ -694,11 +725,36 @@ const AgentRow = ({ agent: a, index, onAction, selected, onToggleSelect }) => {
                         style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.38rem 0.5rem', borderRadius: '0.45rem', border: 'none', backgroundColor: 'hsl(152 55% 92%)', color: 'hsl(152 55% 30%)', cursor: 'pointer', fontFamily: 'inherit', transition: 'filter 0.15s' }}
                         onMouseEnter={e => e.currentTarget.style.filter = 'brightness(0.9)'}
                         onMouseLeave={e => e.currentTarget.style.filter = 'none'}>
-                        <Icons.check />
+                        <Icons.check /> Reactivate
                     </button>
                 )}
+                <button onClick={() => resendInvitation(a)}
+                    disabled={resendingId === a._id}
+                    style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '0.3rem',
+                        padding: '0.38rem 0.55rem',
+                        borderRadius: '0.45rem',
+                        border: 'none',
+                        backgroundColor: 'hsl(40 90% 93%)',
+                        color: 'hsl(40 80% 30%)',
+                        fontSize: '0.72rem',
+                        fontWeight: '700',
+                        cursor: resendingId === a._id ? 'not-allowed' : 'pointer',
+                        fontFamily: 'inherit',
+                        transition: 'filter 0.15s',
+                        opacity: resendingId === a._id ? 0.9 : 1,
+                    }}
+                    onMouseEnter={e => {
+                        if (resendingId !== a._id) e.currentTarget.style.filter = 'brightness(0.9)';
+                    }}
+                    onMouseLeave={e => { e.currentTarget.style.filter = 'none'; }}>
+                    {resendingId === a._id ? <><Icons.spinner /> Sending...</> : <><Icons.mail /> Resend</>}
+                </button>
                 <button onClick={() => onAction(a, 'delete')}
-                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.38rem 0.5rem', borderRadius: '0.45rem', border: 'none', backgroundColor: 'hsl(0 65% 96%)', color: 'hsl(0 65% 48%)', cursor: 'pointer', fontFamily: 'inherit', transition: 'filter 0.15s' }}
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.38rem 0.5rem', borderRadius: '0.45rem', border: 'none', backgroundColor: 'hsl(0 65% 96%)', color: 'hsl(0 65% 48%)', cursor: 'pointer', transition: 'filter 0.15s', fontFamily: 'inherit', marginLeft: 'auto', flexShrink: 0 }}
                     onMouseEnter={e => e.currentTarget.style.filter = 'brightness(0.9)'}
                     onMouseLeave={e => e.currentTarget.style.filter = 'none'}>
                     <Icons.trash />
@@ -741,15 +797,32 @@ const AgentsIndex = ({ agents: rawAgents = [], listings_count }) => {
     const [toast,      setToast]      = useState(null);
     const [refreshing,   refresh]   = useRefresh(['agents', 'listings_count']);
     const toastTimer = useRef(null);
-
-    // Agent messaging
-    const [selectedIds,   setSelectedIds]   = useState(() => new Set());
-    const [messageModal,  setMessageModal]  = useState(false);
+    const [resendingId, setResendingId] = useState(null);
+    const [messageModal, setMessageModal] = useState(false);
+    const [selectedIds, setSelectedIds] = useState(new Set());
 
     const showToast = (msg, type = 'success') => {
         clearTimeout(toastTimer.current);
         setToast({ msg, type });
         toastTimer.current = setTimeout(() => setToast(null), 3500);
+    };
+
+    const resendInvitation = (agent) => {
+        setResendingId(agent._id);
+        showToast(`Sending invitation to ${agent.email}...`, 'info');
+
+        router.post(`/super-admin/agents/${agent._id}/resend-invite`, {}, {
+            preserveScroll: true,
+            onSuccess: () => {
+                showToast(`Invitation sent successfully to ${agent.email}`, 'success');
+            },
+            onError: () => {
+                showToast('Failed to resend invitation. Please try again.', 'error');
+            },
+            onFinish: () => {
+                setResendingId(null);
+            },
+        });
     };
 
     const toggleSelect = (id, forceOpenModal = false) => {
@@ -985,7 +1058,8 @@ const AgentsIndex = ({ agents: rawAgents = [], listings_count }) => {
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
                             {paginated.map((a, i) => (
                                 <AgentCard key={a._id} agent={a} index={i} onAction={handleAction}
-                                    selected={selectedIds.has(a._id)} onToggleSelect={toggleSelect} />
+                                    selected={selectedIds.has(a._id)} onToggleSelect={toggleSelect}
+                                    resendInvitation={resendInvitation} resendingId={resendingId} />
                             ))}
                         </div>
                         <div style={{ marginTop: '1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -1009,7 +1083,8 @@ const AgentsIndex = ({ agents: rawAgents = [], listings_count }) => {
                         </div>
                         {paginated.map((a, i) => (
                             <AgentRow key={a._id} agent={a} index={i} onAction={handleAction}
-                                selected={selectedIds.has(a._id)} onToggleSelect={toggleSelect} />
+                                selected={selectedIds.has(a._id)} onToggleSelect={toggleSelect}
+                                resendInvitation={resendInvitation} resendingId={resendingId} />
                         ))}
                         <div style={{ padding: '0.875rem 1.25rem', borderTop: '1px solid hsl(220 15% 93%)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'hsl(220 15% 98.5%)' }}>
                             <p style={{ margin: 0, fontSize: '0.78rem', color: 'hsl(220 15% 50%)' }}>Page <strong style={{ color: 'hsl(220 25% 22%)' }}>{page}</strong> of <strong style={{ color: 'hsl(220 25% 22%)' }}>{totalPages}</strong> · {filtered.length.toLocaleString()} result{filtered.length !== 1 ? 's' : ''}</p>

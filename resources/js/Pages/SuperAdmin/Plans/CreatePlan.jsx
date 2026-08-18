@@ -150,9 +150,6 @@ const PreviewCard = ({ data }) => {
                                 <p style={{ margin: 0, fontSize: '0.9rem', fontWeight: '800', color: 'hsl(220 25% 14%)', lineHeight: 1 }}>
                                     {data.name || <span style={{ color: 'hsl(220 15% 65%)', fontWeight: '500' }}>Plan Name</span>}
                                 </p>
-                                {data.verified_badge && (
-                                    <span style={{ fontSize: '0.6rem', fontWeight: '800', letterSpacing: '0.07em', color: 'hsl(40 80% 38%)', backgroundColor: 'hsl(40 90% 93%)', padding: '0.12rem 0.45rem', borderRadius: '999px' }}>✓ VERIFIED</span>
-                                )}
                             </div>
                             {data.priority_ranking 
                                 ? <p style={{ margin: 0, fontSize: '0.72rem', color: 'hsl(152 55% 40%)', lineHeight: 1.4 }}>Priority ranking enabled</p>
@@ -183,14 +180,8 @@ const PreviewCard = ({ data }) => {
 
                 {/* Permissions/Features */}
                 <div style={{ marginTop: '0.875rem', minHeight: '2rem' }}>
-                    {(data.verified_badge || data.priority_ranking || data.analytics_access) ? (
+                    {(data.priority_ranking || data.analytics_access) ? (
                         <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.38rem' }}>
-                            {data.verified_badge && (
-                                <li style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '0.78rem', color: 'hsl(220 15% 35%)' }}>
-                                    <span style={{ color: `hsl(${hue} 55% 42%)`, flexShrink: 0, display: 'flex' }}><Icons.check /></span>
-                                    Verified Badge
-                                </li>
-                            )}
                             {data.priority_ranking && (
                                 <li style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '0.78rem', color: 'hsl(220 15% 35%)' }}>
                                     <span style={{ color: `hsl(${hue} 55% 42%)`, flexShrink: 0, display: 'flex' }}><Icons.check /></span>
@@ -241,13 +232,8 @@ const PlanCreate = ({ inline = false, onClose } = {}) => {
         listing_limit:      '',
         rental_limit:       '',
         sale_limit:         '',
-        boost_limit:        '',
-        lead_limit:         '',
-        verified_badge:     false,
         priority_ranking:   false,
         analytics_access:   false,
-        paystack_plan_code: '',
-        flutterwave_plan_id: '',
         is_active:          true,
         sort_order:         0,
         features: [],
@@ -396,7 +382,6 @@ const PlanCreate = ({ inline = false, onClose } = {}) => {
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                                 <p style={{ margin: 0, fontSize: '0.7rem', fontWeight: '800', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'hsl(220 15% 52%)', paddingBottom: '0.4rem', borderBottom: '1px solid hsl(220 15% 94%)' }}>Plan Features</p>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-                                    <Toggle value={data.verified_badge}   onChange={v => setData('verified_badge', v)}   label="Verified Badge"   sub="Show verification mark on listings" />
                                     <Toggle value={data.priority_ranking}   onChange={v => setData('priority_ranking', v)}   label="Priority Ranking"   sub="Better visibility in search results" />
                                     <Toggle value={data.analytics_access}   onChange={v => setData('analytics_access', v)}   label="Analytics Access"   sub="View detailed listing analytics" />
                                 </div>
@@ -425,17 +410,6 @@ const PlanCreate = ({ inline = false, onClose } = {}) => {
                                     <Icons.plus /> Add Feature
                                 </button>
                             </FField>
-
-                            {/* ── Payment Gateway Codes ── */}
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                                <p style={{ margin: 0, fontSize: '0.7rem', fontWeight: '800', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'hsl(220 15% 52%)', paddingBottom: '0.4rem', borderBottom: '1px solid hsl(220 15% 94%)' }}>Payment Gateway Integration</p>
-                                <FField label="Paystack Plan Code" hint="E.g., PLN_xxxxx">
-                                    <PlanInput value={data.paystack_plan_code} onChange={e => setData('paystack_plan_code', e.target.value)} placeholder="Leave blank if not using Paystack" />
-                                </FField>
-                                <FField label="Flutterwave Plan ID" hint="E.g., xxxxx">
-                                    <PlanInput value={data.flutterwave_plan_id} onChange={e => setData('flutterwave_plan_id', e.target.value)} placeholder="Leave blank if not using Flutterwave" />
-                                </FField>
-                            </div>
                         </div>
 
                         {/* ── Footer ── */}

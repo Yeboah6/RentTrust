@@ -19,7 +19,7 @@ class ListingUpdatedMail extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Your Listing Has Been Updated — ' . $listing->title,
+            subject: 'Your Listing Has Been Updated — ' . $this->listing->title,
         );
     }
 
@@ -27,6 +27,11 @@ class ListingUpdatedMail extends Mailable implements ShouldQueue
     {
         return new Content(
             view: 'emails.listing_updated',
+            with: [
+                'listingTitle' => $this->listing->title,
+                'listingUrl' => route('rental.show', $this->listing->id),
+                // ...add other listing data as needed
+            ]
         );
     }
 }

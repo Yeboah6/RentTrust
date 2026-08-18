@@ -45,8 +45,9 @@ class ResetPasswordMail extends Mailable  implements ShouldQueue
         return new Content(
             view: 'emails.reset-password',
             with: [
-                'userName' => $this->user->fullName ?? 'User',
+                'userName' => $this->user->name ?? 'User',
                 'resetUrl' => $this->resetUrl,
+                'token' => $this->token,
                 'expiresAt' => now()->addHours(24)->format('M d, Y h:i A'),
             ],
         );

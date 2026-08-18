@@ -39,9 +39,10 @@ class AgentAccountUpdated extends Mailable
         return new Content(
             view: 'emails.account-updated',
             with: [
-                'agent' => $this->agent,
+                'agentName' => $this->agent->name,
+                'agentEmail' => $this->agent->email,
                 'changedFields' => $this->changedFields,
-                'updatedBy' => $this->updatedBy,
+                'updatedByName' => $this->updatedBy->name,
             ]
         );
     }

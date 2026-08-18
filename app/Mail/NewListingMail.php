@@ -6,18 +6,34 @@ use App\Models\Rental;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Content;
+use Illuminate\Mail\Mailables\Envelope;
+use Illuminate\Queue\SerializesModels;
 
 class NewListingMail extends Mailable implements ShouldQueue
 {
-    use Queueable;
+    use Queueable, SerializesModels;
 
-    public function __construct(public Rental $rental, public string $body)
+    public function __construct(public readonly Rental $rental, public readonly string $body)
     {
     }
 
-    public function build()
+    public function envelope(): Envelope
     {
-        return $this->subject("New listing: {$this->rental->title}")
-            ->html($this->body);
+        return new Envelope(
+            subject: "New listing: {$this->rental->title}"
+        );
+    }
+
+    public function content(): Content
+    {
+        return new Content(
+            view: 'emails.new-listing',
+            with: [
+                'rentalTitle' => $this->rental->title,
+                'rentalUrl' => route('rental.show', $this->rental->id),
+                'body' => $this->body,
+            ]
+        );
     }
 }

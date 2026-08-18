@@ -88,7 +88,7 @@ class AgentController extends Controller
         ]);
 
         DB::beginTransaction();
- 
+
         try {
         $setupToken = Str::random(64);
 
@@ -139,6 +139,56 @@ class AgentController extends Controller
             Log::error('Agent creation failed', ['error' => $e->getMessage()]);
 
             return back()->withErrors(['email' => $e->getMessage()]);
+        }
+    }
+
+    public function resendInvitation(Request $request, User $user)
+    {
+        if ($user->role !== 'agent') {
+            return back()->withErrors(['email' => 'This user is not an agent account.']);
+        }
+
+        DB::beginTransaction();
+
+        try {
+            $setupToken = Str::random(64);
+
+            $user->update([
+                'setup_token'            => hash('sha256', $setupToken),
+                'setup_token_expires_at' => now()->addHours(48),
+                'status'                 => 'pending',
+            ]);
+
+            $setupUrl = route('agent.setup', ['token' => $setupToken]);
+
+            Mail::to($user->email)->send(
+                new AgentInvitation(
+                    agentName: $user->name,
+                    agentEmail: $user->email,
+                    setupUrl: $setupUrl,
+                    expiresAt: $user->setup_token_expires_at->format('M j, Y g:i A'),
+                )
+            );
+
+            AdminAuditLog::record('user', 'Agent invitation resent', [
+                'affected_user' => $user->name,
+                'affected_id'   => $user->id,
+                'notes'         => 'Agent invitation resent via email.',
+                'properties'    => ['email' => $user->email, 'role' => $user->role],
+            ]);
+
+            DB::commit();
+
+            return back()->with('success', 'Invitation email resent successfully!');
+
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error('Agent resend invitation failed', [
+                'error' => $e->getMessage(),
+                'agent_id' => $user->id,
+            ]);
+
+            return back()->withErrors(['email' => 'Failed to resend invitation. Please try again.']);
         }
     }
 

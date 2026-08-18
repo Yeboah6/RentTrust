@@ -19,12 +19,9 @@ return new class extends Migration
             $table->string('currency')->default('GHS');
             $table->string('interval')->default('monthly');
             $table->integer('listing_limit')->nullable();
-            $table->boolean('verified_badge')->default(false);
             $table->boolean('priority_ranking')->default(false);
             $table->boolean('analytics_access')->default(false);
             $table->json('features');
-            $table->string('paystack_plan_code')->nullable();
-            $table->string('flutterwave_plan_id')->nullable();
             $table->boolean('is_active')->default(true);
             $table->integer('sort_order')->default(0);
             $table->integer('rental_limit')->nullable();

@@ -35,8 +35,9 @@ class AgentSuspended extends Mailable
         return new Content(
             view: 'emails.agent-suspended',
             with: [
-                'agent' => $this->agent,
-                'suspendedBy' => $this->suspendedBy,
+                'agentName' => $this->agent->name,
+                'agentEmail' => $this->agent->email,
+                'suspendedByName' => $this->suspendedBy->name,
                 'status' => $this->status,
                 'reason' => $this->reason,
             ]

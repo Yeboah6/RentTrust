@@ -29,8 +29,9 @@ class AgentReactivated extends Mailable
         return new Content(
             view: 'emails.agent-reactivated',
             with: [
-                'agent' => $this->agent,
-                'reactivatedBy' => $this->reactivatedBy,
+                'agentName' => $this->agent->name,
+                'agentEmail' => $this->agent->email,
+                'reactivatedByName' => $this->reactivatedBy->name,
             ]
         );
     }

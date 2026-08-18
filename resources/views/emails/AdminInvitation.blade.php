@@ -16,16 +16,9 @@
 
                 <!-- Header -->
                 <tr>
-                    <td style="background:linear-gradient(135deg,#0f172a,#1e293b);padding:40px 32px;text-align:center;">
+                    <td style="background-color:#1e293b;padding:40px 32px;text-align:center;">
 
-                        {{-- <img
-                            src="/rent-trust.png"
-                            alt="RentTrustGh"
-                            width="70"
-                            style="display:block;margin:0 auto 16px;"
-                        > --}}
-
-                        <h1 style="margin:0;color:#ffffff;font-size:28px;font-weight:800;">
+                        <h1 style="margin:0;color:#fff;font-size:28px;font-weight:800;">
                             Welcome to RentTrustGh
                         </h1>
 

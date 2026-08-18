@@ -7,8 +7,8 @@ export default defineConfig({
     plugins: [
         laravel({
             input: [
-                'resources/css/app.css',   // ← must be here
-                'resources/js/app.jsx',    // or app.js
+                'resources/css/app.css',
+                'resources/js/app.jsx', 
             ],
             refresh: true,
         }),
@@ -47,6 +47,7 @@ export default defineConfig({
     //          host: '192.168.100.16' // Replace with your machine's IP
     //      }
     //  },
+
     // server: {
     //     host: '0.0.0.0', // Listen on all network interfaces
     //     port: 5173,

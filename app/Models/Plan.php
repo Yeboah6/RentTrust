@@ -21,14 +21,9 @@ class Plan extends Model
         'listing_limit', 
         'rental_limit', 
         'sale_limit', 
-        'boost_limit', 
-        'lead_limit',
-        'verified_badge', 
         'priority_ranking', 
         'analytics_access', 
         'features',
-        'paystack_plan_code', 
-        'flutterwave_plan_id',
         'is_active', 
         'sort_order', 
     ];
@@ -46,15 +41,12 @@ class Plan extends Model
 
     protected $casts = [
         'price'            => 'decimal:2',
-        'verified_badge'   => 'boolean',
         'priority_ranking' => 'boolean',
         'analytics_access' => 'boolean',
         'is_active'        => 'boolean',
         'listing_limit'    => 'integer',
         'rental_limit'     => 'integer',
         'sale_limit'       => 'integer',
-        'boost_limit'      => 'integer',
-        'lead_limit'       => 'integer',
         'features' => 'array',
     ];
 

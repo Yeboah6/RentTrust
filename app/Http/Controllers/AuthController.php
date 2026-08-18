@@ -45,11 +45,13 @@ class AuthController extends Controller
             'package'  => 'free',
             'status'   => 'active',
         ]);
- 
+
         Auth::login($user, remember: true);
- 
+
         $request->session()->regenerate();
- 
+
+        $this->touchLastActive($user);
+
         return redirect('/');
     }
 
@@ -59,42 +61,40 @@ class AuthController extends Controller
     {
         // 1. Rate-limit check + credential check (throws ValidationException on failure)
         $request->authenticate();
- 
+
         // 2. Auth::attempt() succeeded — user is now resolved
         $user = $request->user();
- 
+
         // 3. Suspension check (after credentials are confirmed valid)
         if ($user->status === 'suspended') {
             Auth::logout();
-            
+
             throw ValidationException::withMessages([
                 'suspended' => 'Your account has been suspended. Please contact support for assistance.',
             ]);
         }
- 
+
         // 4. Regenerate session to prevent fixation
         $request->session()->regenerate();
- 
+
         // 5. Stamp last active
-        $user->update(['last_active' => now()]);
- 
+        $this->touchLastActive($user);
+
         // 6. Role-based redirect
         return $this->redirectByRole($user);
+    }
+
+    private function touchLastActive(User $user): void
+    {
+        $user->forceFill([
+            'last_active' => now(),
+        ])->saveQuietly();
     }
 
     // ── Role-based redirect ───────────────────────────────────────────────────
  
     private function redirectByRole(User $user): RedirectResponse
     {
-        // ── Unverified (admin invited but not yet set up) ──────────────────────
-        // if ($user->status === 'unverified') {
-        //     Auth::logout();
-
-        //     throw ValidationException::withMessages([
-        //         'email' => 'Your account setup is incomplete. Please check your email for the setup link.',
-        //     ]);
-        // }
-
         // ── Super admin ────────────────────────────────────────────────────────
         if ($user->role === 'super_admin' && $user->package === 'super_admin') {
             return redirect('/super-admin/dashboard');

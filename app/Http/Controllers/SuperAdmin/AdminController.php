@@ -95,7 +95,9 @@ class AdminController extends Controller
 
     public function resendInvitation(Request $request, User $user)
     {
-        abort_if($user->role !== 'admin', 404);
+        if ($user->role !== 'admin') {
+            return back()->withErrors(['email' => 'This user is not an admin account.']);
+        }
 
         DB::beginTransaction();
 

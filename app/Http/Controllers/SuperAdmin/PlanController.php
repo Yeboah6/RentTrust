@@ -32,11 +32,8 @@ class PlanController extends Controller
             'listing_limit'      => 'nullable|integer|min:0',
             'rental_limit'       => 'nullable|integer|min:0',
             'sale_limit'         => 'nullable|integer|min:0',
-            'verified_badge'     => 'boolean',
             'priority_ranking'   => 'boolean',
             'analytics_access'   => 'boolean',
-            'paystack_plan_code' => 'nullable|string|max:255',
-            'flutterwave_plan_id'=> 'nullable|string|max:255',
             'is_active'          => 'boolean',
             'sort_order'         => 'required|integer|min:0',
             'features'           => 'required|array'
@@ -70,11 +67,8 @@ class PlanController extends Controller
             'listing_limit'      => 'nullable|integer|min:0',
             'rental_limit'       => 'nullable|integer|min:0',
             'sale_limit'         => 'nullable|integer|min:0',
-            'verified_badge'     => 'boolean',
             'priority_ranking'   => 'boolean',
             'analytics_access'   => 'boolean',
-            'paystack_plan_code' => 'nullable|string|max:255',
-            'flutterwave_plan_id'=> 'nullable|string|max:255',
             'is_active'          => 'boolean',
             'sort_order'         => 'required|integer|min:0',
             'features'           => 'required|array'

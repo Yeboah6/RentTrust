@@ -62,6 +62,7 @@ Route::prefix('super-admin')
     Route::post('agents/{agent}/suspend',    [AgentController::class, 'suspend'])    ->name('agents.suspend');
     Route::post('agents/{agent}/reactivate', [AgentController::class, 'reactivate']) ->name('agents.reactivate');
     Route::post('/agents/message',           [AgentController::class, 'sendMessage'])->name('agents.message');
+    Route::post('/agents/{user}/resend-invite',[AgentController::class, 'resendInvitation'])->name('agents.resend-invite');
 
     // Resource routes after specific routes
     Route::resource('agents', AgentController::class)

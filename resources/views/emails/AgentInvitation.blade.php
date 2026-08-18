@@ -15,14 +15,7 @@
 
 <!-- Header -->
 <tr>
-    <td style="background:linear-gradient(135deg,#0f766e,#115e59);padding:42px 32px;text-align:center;">
-
-        <img
-            src="{{ asset('images/rent-trust.jpg') }}"
-            alt="RentTrustGH"
-            width="72"
-            style="display:block;margin:0 auto 16px;"
-        >
+    <td style="background-color:#1e293b;padding:42px 32px;text-align:center;">
 
         <h1 style="margin:0;color:#ffffff;font-size:28px;font-weight:800;">
             Welcome to RentTrustGH
