@@ -337,8 +337,8 @@ class AgentController extends Controller
 
         $agent->update([
             'status'          => 'suspended',
-            'suspended_at'    => now(),
-            'suspended_by'    => auth()->id(),
+            // 'suspended_at'    => now(),
+            // 'suspended_by'    => auth()->id(),
             'previous_status' => $previousStatus,
         ]);
 
@@ -346,7 +346,9 @@ class AgentController extends Controller
             Mail::to($agent->email)->send(
                 new AgentSuspended(
                     agent: $agent,
-                    suspendedBy: auth()->user(),
+                    suspendedBy: "RentTrustGH Admin",
+                    status: 'suspended',
+                    reason: 'Account suspended by an administrator.',
                 )
             );
         } catch (\Throwable $e) {
@@ -362,10 +364,6 @@ class AgentController extends Controller
             'notes'         => "Agent {$agent->email} has been suspended. Previous status: {$previousStatus}",
             'properties'    => ['agent_id' => $agent->id, 'previous_status' => $previousStatus, 'suspended_by' => auth()->id()],
         ]);
-
-        Rental::where('agent_id', $agent->id)
-            ->where('status', 'approved')
-            ->update(['status' => 'inactive']);
 
         Log::info('SuperAdmin suspended agent', [
             'user_id'  => $agent->id,
@@ -387,16 +385,16 @@ class AgentController extends Controller
 
         $agent->update([
             'status'          => $restoreStatus,
-            'suspended_at'    => null,
-            'suspended_by'    => null,
-            'previous_status' => null,
+            // 'suspended_at'    => null,
+            // 'suspended_by'    => null,
+            // 'previous_status' => null,
         ]);
 
         try {
             Mail::to($agent->email)->send(
                 new AgentReactivated(
                     agent: $agent,
-                    reactivatedBy: auth()->user(),
+                    reactivatedBy: "RentTrustGH Admin",
                 )
             );
         } catch (\Throwable $e) {
