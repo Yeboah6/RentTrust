@@ -12,7 +12,7 @@ class InquiriesController extends Controller
     public function index(Request $request)
     {
         $search    = $request->input('search', '');
-        $type      = $request->input('type', '');       // whatsapp | phone | form | ''
+        $type      = $request->input('type', '');      
         $city      = $request->input('city', '');
         $agentId   = $request->input('agent_id', '');
         $startDate = $request->input('start_date', '');
@@ -30,7 +30,7 @@ class InquiriesController extends Controller
                 'li.message',
                 'li.ip',
                 'li.created_at',
-                // Rental
+
                 'r.id as rental_id',
                 'r.rental_id as rental_uuid',
                 'r.title as rental_title',
@@ -39,12 +39,12 @@ class InquiriesController extends Controller
                 'r.property_type',
                 'r.purpose',
                 'r.status as rental_status',
-                // Tenant (may be guest)
+
                 'tenant.id as tenant_id',
                 'tenant.name as tenant_name',
                 'tenant.email as tenant_email',
                 'tenant.phone as tenant_phone',
-                // Agent
+
                 'agent.id as agent_id',
                 'agent.name as agent_name',
                 'agent.email as agent_email',

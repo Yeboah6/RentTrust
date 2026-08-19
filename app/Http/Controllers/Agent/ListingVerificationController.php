@@ -10,7 +10,7 @@ use Illuminate\Validation\Rule;
 
 class ListingVerificationController extends Controller
 {
-    private const MAX_FILE_KB = 10240; // 10MB, matches frontend limit
+    private const MAX_FILE_KB = 10240;
     private const ALLOWED_MIMES = 'jpg,jpeg,png,pdf,doc,docx,webp';
     private const AVAILABILITY_OPTIONS = ['available', 'rented', 'sold', 'unavailable'];
 
@@ -133,7 +133,7 @@ class ListingVerificationController extends Controller
         $foundPath = null;
     
         foreach ($fields as $field) {
-            $paths = $verification->{$field} ?? []; // array of string paths
+            $paths = $verification->{$field} ?? [];
     
             foreach ((array) $paths as $path) {
                 if ($path && basename($path) === $filename) {

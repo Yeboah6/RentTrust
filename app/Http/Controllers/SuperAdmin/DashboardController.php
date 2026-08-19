@@ -21,7 +21,6 @@ class DashboardController extends Controller
 {
     public function __construct()
     {
-        // super admin should be authenticated, verified and have the proper role
         $this->middleware(['auth', 'verified', 'role:super_admin']);
     }
 

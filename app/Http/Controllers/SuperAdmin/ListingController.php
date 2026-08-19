@@ -463,7 +463,7 @@ class ListingController extends Controller
             ->get();
 
         return Inertia::render('SuperAdmin/Listings/ListingEdit', [
-            'listing'        => $this->formatListing($listing, $regions), // ← pass regions
+            'listing'        => $this->formatListing($listing, $regions),
             'agents'         => User::select('id', 'name', 'company as agency')->orderBy('name')->get(),
             'amenities'      => Amenity::active()->select('id', 'name', 'is_active', 'category')->orderBy('name')->get(),
             'property_types' => PropertyType::active()->select('id', 'name', 'slug')->orderBy('name')->get(),
@@ -535,7 +535,6 @@ class ListingController extends Controller
             'removedImages.*'  => 'string',
         ];
     
-        // Purpose-specific price rules — same as agent store
         if ($isSale) {
             $rules['salePrice']       = 'required|numeric|min:0';
             $rules['rentMin']         = 'prohibited';

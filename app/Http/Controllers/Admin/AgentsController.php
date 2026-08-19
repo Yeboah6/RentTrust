@@ -220,7 +220,7 @@ class AgentsController extends Controller
 
             // Create the complimentary subscription
             Subscription::create([
-                'subscription_uuid'             => Subscription::generateUUID(),
+                'subscription_uuid'         => Subscription::generateUUID(),
                 'user_id'                   => $user->id,
                 'plan_id'                   => $plan->id,
                 'provider'                  => 'admin_grant',

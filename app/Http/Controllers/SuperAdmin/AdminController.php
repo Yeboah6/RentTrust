@@ -55,15 +55,15 @@ class AdminController extends Controller
                 'user_id'               => (string) Str::uuid(),
                 'name'                  => $data['name'],
                 'email'                 => $data['email'],
-                'password'              => Hash::make(Str::random(32)), // unusable until they set their own
+                'password'              => Hash::make(Str::random(32)),
                 'role'                  => $data['role'],
                 'package'               => $data['role'] === 'super_admin' ? 'super_admin' : 'admin',
-                'status'                => 'unverified', // becomes 'verified' after setup
-                'setup_token'           => hash('sha256', $setupToken), // store hashed
+                'status'                => 'verified',
+                'setup_token'           => hash('sha256', $setupToken),
                 'setup_token_expires_at'=> now()->addHours(24),
             ]);
 
-            $setupUrl = route('admin.setup', ['token' => $setupToken]); // plain token in URL
+            $setupUrl = route('admin.setup', ['token' => $setupToken]);
 
             Mail::to($admin->email)->send(
                 new AdminInvitation(

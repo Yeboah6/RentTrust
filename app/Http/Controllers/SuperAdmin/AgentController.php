@@ -50,7 +50,7 @@ class AgentController extends Controller
                     'reviews_count'   => $user->reviews_count ?? 0,
                     'joined_at'       => $user->created_at,
                     'last_active'     => $user->last_active,
-                    'is_verified'              => $user->verification?->status === 'approved',
+                    'is_verified'     => $user->verification?->status === 'approved',
                     'has_verification_submission' => (bool) $user->verification,
                 ];
             });

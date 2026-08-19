@@ -96,7 +96,7 @@ class AgentVerificationController extends Controller
         $foundPath = null;
     
         foreach ($fields as $field) {
-            $path = $verification->{$field}; // single string path, or null
+            $path = $verification->{$field};
     
             if ($path && basename($path) === $filename) {
                 $foundPath = $path;
