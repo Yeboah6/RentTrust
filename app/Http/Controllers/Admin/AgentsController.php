@@ -23,7 +23,7 @@ class AgentsController extends Controller
     public function suspendAgent(Request $request, $id)
     {
         $validated = $request->validate([
-            'status' => 'required|in:suspended,pending',
+            'status' => 'required|in:suspended,unverified',
             'reason' => 'nullable|string|max:500',
         ]);
 
@@ -100,7 +100,7 @@ class AgentsController extends Controller
             'role'                   => 'agent',
             'location'               => $validated['location'] ?? null,
             'package'                => null,
-            'status'                 => "pending",
+            'status'                 => "unverified",
             'password'               => Hash::make(Str::random(32)), 
             'setup_token'            => hash('sha256', $setupToken),
             'setup_token_expires_at' => now()->addHours(48),         

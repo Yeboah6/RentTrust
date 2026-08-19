@@ -1165,6 +1165,10 @@ const EditRentals = ({ agentData, setShowEditListingModal, rental, locations = [
                           <option value="3">3 Months</option>
                           <option value="4">4 Months</option>
                           <option value="5">5 Months</option>
+                          <option value="6">6 Months</option>
+                          <option value="7">7 Months</option>
+                          <option value="8">8 Months</option>
+                          <option value="9">9 Months</option>
                         </select>
                       </div>
                     </div>

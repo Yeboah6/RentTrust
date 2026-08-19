@@ -31,7 +31,6 @@ class NewListingMail extends Mailable implements ShouldQueue
             view: 'emails.new-listing',
             with: [
                 'rentalTitle' => $this->rental->title,
-                'rentalUrl' => route('rental.show', $this->rental->id),
                 'body' => $this->body,
             ]
         );

@@ -337,10 +337,17 @@ class AgentController extends Controller
 
         $agent->update([
             'status'          => 'suspended',
-            // 'suspended_at'    => now(),
-            // 'suspended_by'    => auth()->id(),
             'previous_status' => $previousStatus,
         ]);
+
+        if ($agent->status === 'suspended' && $agent->verification) {
+            AgentVerification::where('agent_id', $agent->id)
+                ->update([
+                    'status' => 'rejected',
+                    'reviewed_at' => now(),
+                    'reviewed_by' => auth()->user()?->name,
+                ]);
+        }
 
         try {
             Mail::to($agent->email)->send(
@@ -381,7 +388,7 @@ class AgentController extends Controller
             return back()->with('error', 'Agent is not suspended.');
         }
 
-        $restoreStatus = $agent->previous_status ?? ($agent->is_verified ? 'verified' : 'pending');
+        $restoreStatus = $agent->previous_status ?? ($agent->is_verified ? 'verified' : 'unverified');
 
         $agent->update([
             'status'          => $restoreStatus,

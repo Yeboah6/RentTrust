@@ -28,9 +28,7 @@ class ListingUpdatedMail extends Mailable implements ShouldQueue
         return new Content(
             view: 'emails.listing_updated',
             with: [
-                'listingTitle' => $this->listing->title,
-                'listingUrl' => route('rental.show', $this->listing->id),
-                // ...add other listing data as needed
+                'listing' => $this->listing,
             ]
         );
     }

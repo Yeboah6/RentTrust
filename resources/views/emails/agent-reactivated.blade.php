@@ -32,30 +32,28 @@
             </p>
 
             <p style="margin:0 0 16px; font-size:14px; line-height:1.6; color:#3f3f46;">
-                Your agent account on <strong>{{ config('app.name') }}</strong> has been reactivated and is now active again.
+                Good news — your agent account on <strong>{{ config('app.name') }}</strong> has been reactivated by an administrator.
             </p>
 
-            <p style="margin:0 0 8px; font-size:14px; font-weight:700; color:#18181b;">
-                What's been restored:
-            </p>
             <ul style="margin:0 0 24px; padding-left:20px; font-size:14px; line-height:1.8; color:#3f3f46; list-style:none;">
-                <li style="margin-bottom:4px;"><span style="color:#16a34a; font-weight:700;">&#10003;</span> Full account access</li>
-                <li style="margin-bottom:4px;"><span style="color:#16a34a; font-weight:700;">&#10003;</span> Your active listings have been restored</li>
-                <li style="margin-bottom:4px;"><span style="color:#16a34a; font-weight:700;">&#10003;</span> Ability to respond to inquiries</li>
+               <li>Re-submit details for verification</li>
+                <li>You can log back in to your account</li>
+                <li>Your listings are active and visible again</li>
+                <li>You can respond to new inquiries as normal</li>
             </ul>
 
             <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
                 <tr>
                     <td style="border-radius:6px; background-color:#16a34a;">
-                        <a href="{{ route('agent.dashboard') }}" style="display:inline-block; padding:12px 24px; font-size:14px; font-weight:600; color:#ffffff; text-decoration:none;">
-                            Return to Dashboard
+                        <a href="{{ url('/login') }}" style="display:inline-block; padding:12px 24px; font-size:14px; font-weight:600; color:#ffffff; text-decoration:none;">
+                            Log In
                         </a>
                     </td>
                 </tr>
             </table>
 
-            <p style="margin:0 0 16px; font-size:14px; line-height:1.6; color:#3f3f46;">
-                Thank you for working with us. If you have any questions, our support team is always happy to help.
+           <p style="margin:0 0 16px; font-size:14px; line-height:1.6; color:#3f3f46;">
+                Welcome back!
             </p>
 
             <p style="margin:0; font-size:14px; line-height:1.6; color:#3f3f46;">

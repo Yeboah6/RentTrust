@@ -52,16 +52,16 @@ const STATUS_CFG = {
     suspended:{ label: 'Suspended',bg: 'hsl(0 70% 95%)',   color: 'hsl(0 65% 40%)',   dot: 'hsl(0 65% 50%)' },
     rejected: { label: 'Rejected', bg: 'hsl(0 70% 95%)',   color: 'hsl(0 65% 40%)',   dot: 'hsl(0 65% 50%)' },
     inactive: { label: 'Inactive', bg: 'hsl(220 15% 93%)', color: 'hsl(220 15% 38%)', dot: 'hsl(220 15% 52%)' },
+    unverified: { label: 'Unverified', bg: 'hsl(40 90% 93%)', color: 'hsl(40 80% 30%)', dot: 'hsl(40 80% 44%)' },
 };
 
 const TIER_CFG = {
-    premium:  { label: 'Premium',  bg: 'hsl(40 90% 93%)',  color: 'hsl(40 80% 30%)',  dot: 'hsl(40 80% 44%)'  },
-    standard: { label: 'Standard', bg: 'hsl(220 15% 93%)', color: 'hsl(220 15% 38%)', dot: 'hsl(220 15% 52%)' },
-    basic:    { label: 'Basic',    bg: 'hsl(220 15% 93%)', color: 'hsl(220 15% 38%)', dot: 'hsl(220 15% 52%)' },
-    pro:      { label: 'Pro',      bg: 'hsl(270 60% 95%)', color: 'hsl(270 55% 38%)', dot: 'hsl(270 55% 50%)' },
+    free:   { label: 'Free', bg: 'hsl(220 15% 93%)', color: 'hsl(220 15% 38%)', dot: 'hsl(220 15% 52%)' },
+    pro:    { label: 'Pro',    bg: 'hsl(220 15% 93%)', color: 'hsl(220 15% 38%)', dot: 'hsl(220 15% 52%)' },
+    elite:  { label: 'Elite',      bg: 'hsl(270 60% 95%)', color: 'hsl(270 55% 38%)', dot: 'hsl(270 55% 50%)' },
 };
 
-const STATUSES = ['all', 'active', 'pending', 'verified', 'suspended', 'rejected', 'inactive'];
+const STATUSES = ['all', 'active', 'pending', 'verified', 'suspended', 'rejected', 'inactive', 'unverified'];
 const PAGE_SIZE = 12;
 const MESSAGE_MAX = 5000;
 
@@ -97,7 +97,7 @@ const normalise = (a) => {
         name:          a.name          ?? a.full_name      ?? '—',
         email:         a.email         ?? '',
         phone:         a.phone         ?? a.phone_number   ?? '',
-        status_key:    isVerified ? 'verified' : rawStatus,
+        status_key:    isVerified ?    'verified' : rawStatus,
         tier:          (a.tier         ?? a.plan           ?? a.subscription_type ?? 'standard').toLowerCase(),
         agency:        a.agency        ?? a.agency_name    ?? a.company           ?? '',
         license:       a.license       ?? a.license_number ?? a.rea_number        ?? '',
@@ -109,18 +109,16 @@ const normalise = (a) => {
         reviews_count: a.reviews_count ?? 0,
         is_verified:   isVerified,
         has_verification_submission: !!a.has_verification_submission,
-        is_featured:   a.is_featured   ?? a.featured       ?? false,
         avatar:        a.avatar        ?? a.profile_photo  ?? null,
         joined_at:     a.joined_at     ?? a.created_at     ?? '',
         last_active:   a.last_active   ?? a.last_login_at  ?? '',
-        total_revenue: a.total_revenue ?? null,
     };
 };
 
 // ─── Atoms ────────────────────────────────────────────────────────────────────
 
 const StatusBadge = ({ sk }) => {
-    const cfg = STATUS_CFG[sk] ?? STATUS_CFG.inactive;
+    const cfg = STATUS_CFG[sk] ?? STATUS_CFG.unverified;
     return (
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', padding: '0.2rem 0.52rem', borderRadius: '999px', fontSize: '0.62rem', fontWeight: '800', letterSpacing: '0.06em', backgroundColor: cfg.bg, color: cfg.color, whiteSpace: 'nowrap' }}>
             <span style={{ width: '0.33rem', height: '0.33rem', borderRadius: '50%', backgroundColor: cfg.dot, flexShrink: 0 }} />
@@ -130,10 +128,10 @@ const StatusBadge = ({ sk }) => {
 };
 
 const TierBadge = ({ tier }) => {
-    const cfg = TIER_CFG[(tier ?? '').toLowerCase()] ?? TIER_CFG.standard;
+    const cfg = TIER_CFG[(tier ?? '').toLowerCase()] ?? TIER_CFG.free;
     return (
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', padding: '0.18rem 0.48rem', borderRadius: '999px', fontSize: '0.6rem', fontWeight: '800', letterSpacing: '0.07em', backgroundColor: cfg.bg, color: cfg.color, whiteSpace: 'nowrap' }}>
-            {tier?.toLowerCase() === 'premium' || tier?.toLowerCase() === 'pro' ? '⭐ ' : ''}
+            {tier?.toLowerCase() === 'pro' || tier?.toLowerCase() === 'elite' ? '⭐ ' : ''}
             {cfg.label.toUpperCase()}
         </span>
     );
@@ -434,7 +432,7 @@ const MessageAgentsModal = ({ agents, initialSelected, onClose, onSent }) => {
 const AgentCard = ({ agent: a, index, onAction, selected, onToggleSelect, resendInvitation, resendingId }) => {
     const [hov, setHov] = useState(false);
     const hue    = avatarHue(a.name);
-    const stCfg  = STATUS_CFG[a.status_key] ?? STATUS_CFG.inactive;
+    const stCfg  = STATUS_CFG[a.status_key] ?? STATUS_CFG.unverified;
 
     return (
         <div onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
@@ -468,7 +466,7 @@ const AgentCard = ({ agent: a, index, onAction, selected, onToggleSelect, resend
                     <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', flexWrap: 'wrap', marginBottom: '0.2rem' }}>
                             <h3 style={{ fontSize: '0.88rem', fontWeight: '800', color: 'hsl(220 25% 13%)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.name}</h3>
-                            {a.is_featured && <span style={{ fontSize: '0.58rem', backgroundColor: 'hsl(40 90% 93%)', color: 'hsl(40 80% 30%)', padding: '0.05rem 0.3rem', borderRadius: '0.2rem', fontWeight: '800', letterSpacing: '0.04em' }}>⭐</span>}
+                            {/* {a.is_featured && <span style={{ fontSize: '0.58rem', backgroundColor: 'hsl(40 90% 93%)', color: 'hsl(40 80% 30%)', padding: '0.05rem 0.3rem', borderRadius: '0.2rem', fontWeight: '800', letterSpacing: '0.04em' }}>⭐</span>} */}
                         </div>
                         <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
                             <StatusBadge sk={a.status_key} />
@@ -631,7 +629,7 @@ const AgentRow = ({ agent: a, index, onAction, selected, onToggleSelect, resendI
             <div style={{ minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginBottom: '0.18rem' }}>
                     <span style={{ fontSize: '0.875rem', fontWeight: '700', color: 'hsl(220 25% 14%)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.name}</span>
-                    {a.is_featured && <span style={{ fontSize: '0.58rem', backgroundColor: 'hsl(40 90% 93%)', color: 'hsl(40 80% 30%)', padding: '0.05rem 0.28rem', borderRadius: '0.2rem', fontWeight: '800' }}>⭐</span>}
+                    {/* {a.is_featured && <span style={{ fontSize: '0.58rem', backgroundColor: 'hsl(40 90% 93%)', color: 'hsl(40 80% 30%)', padding: '0.05rem 0.28rem', borderRadius: '0.2rem', fontWeight: '800' }}>⭐</span>} */}
                 </div>
                 <div style={{ fontSize: '0.7rem', color: 'hsl(220 15% 52%)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.email}</div>
                 {a.agency && <div style={{ fontSize: '0.68rem', color: 'hsl(220 15% 58%)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>🏢 {a.agency}</div>}

@@ -481,6 +481,11 @@ class RentController extends Controller
                 ]);
             }
 
+            $listingOwner = $rent->user ?? $rent->agent;
+            if ($listingOwner && filter_var($listingOwner->email, FILTER_VALIDATE_EMAIL)) {
+                Mail::to($listingOwner->email)->queue(new \App\Mail\ListingUpdatedMail($rent->fresh()));
+            }
+
             return response()->json([
                 'message' => 'Rental listing updated successfully!',
                 'rental'  => $rent,
