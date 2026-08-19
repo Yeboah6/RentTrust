@@ -20,8 +20,20 @@ class RoleMiddleware
             return redirect()->route('login')->with('error', 'Please log in to access this page.');
         }
 
+        $user = auth()->user();
+
+        if ($user->role === 'agent' && $user->status === 'suspended') {
+            auth()->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return redirect()->route('login')->withErrors([
+                'suspended' => 'Your account has been suspended. Please contact support for assistance.',
+            ]);
+        }
+
         // Get the authenticated user's role
-        $userRole = auth()->user()->role;
+        $userRole = $user->role;
 
         // Check if user has the required role
         if ($userRole !== $role) {

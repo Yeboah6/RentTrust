@@ -111,7 +111,10 @@ class MailTest extends TestCase
 
         $mail = new AgentAccountUpdated(
             agent: $agent,
-            changedFields: ['name', 'phone'],
+            changedFields: [
+                'name' => ['from' => 'Previous Name', 'to' => 'Agent One'],
+                'phone' => ['from' => '0240000000', 'to' => '0550000000'],
+            ],
             updatedBy: $updatedBy
         );
 

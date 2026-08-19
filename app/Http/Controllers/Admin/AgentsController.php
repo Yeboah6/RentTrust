@@ -23,7 +23,7 @@ class AgentsController extends Controller
     public function suspendAgent(Request $request, $id)
     {
         $validated = $request->validate([
-            'status' => 'required|in:suspended,unverified',
+            'status' => 'required|in:suspended,pending',
             'reason' => 'nullable|string|max:500',
         ]);
 
@@ -33,6 +33,15 @@ class AgentsController extends Controller
             'status' => $validated['status'],
             'updated_at' => now(),
         ]);
+
+        if ($validated['status'] === 'suspended') {
+            AgentVerification::where('agent_id', $agent->id)
+                ->update([
+                    'status' => 'rejected',
+                    'reviewed_at' => now(),
+                    'reviewed_by' => auth()->user()?->name,
+                ]);
+        }
 
         // Audit log
         AdminAuditLog::record('suspension', "Agent suspended: {$agent->name}", [
@@ -165,7 +174,16 @@ class AgentsController extends Controller
         ]);
 
         $after = $agent->only(['name', 'email', 'phone', 'bio', 'company', 'fee', 'location', 'role']);
-        $changedFields = array_diff_assoc($after, $before);
+        $changedFields = [];
+
+        foreach ($after as $field => $value) {
+            if ($before[$field] !== $value) {
+                $changedFields[$field] = [
+                    'from' => $before[$field],
+                    'to' => $value,
+                ];
+            }
+        }
 
         AdminAuditLog::record('user', 'Agent updated', [
             'affected_user' => $agent->name,

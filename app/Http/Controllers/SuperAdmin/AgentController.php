@@ -346,7 +346,7 @@ class AgentController extends Controller
             Mail::to($agent->email)->send(
                 new AgentSuspended(
                     agent: $agent,
-                    suspendedBy: "RentTrustGH Admin",
+                    suspendedBy: auth()->user(),
                     status: 'suspended',
                     reason: 'Account suspended by an administrator.',
                 )
@@ -381,20 +381,17 @@ class AgentController extends Controller
             return back()->with('error', 'Agent is not suspended.');
         }
 
-        $restoreStatus = $agent->previous_status ?? ($agent->is_verified ? 'verified' : 'active');
+        $restoreStatus = $agent->previous_status ?? ($agent->is_verified ? 'verified' : 'pending');
 
         $agent->update([
             'status'          => $restoreStatus,
-            // 'suspended_at'    => null,
-            // 'suspended_by'    => null,
-            // 'previous_status' => null,
         ]);
 
         try {
             Mail::to($agent->email)->send(
                 new AgentReactivated(
                     agent: $agent,
-                    reactivatedBy: "RentTrustGH Admin",
+                    reactivatedBy: auth()->user(),
                 )
             );
         } catch (\Throwable $e) {

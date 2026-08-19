@@ -28,7 +28,7 @@
             </h1>
 
             <p style="margin:0 0 16px; font-size:14px; line-height:1.6; color:#3f3f46;">
-                Hi <strong>{{ $agent->name }}</strong>,
+                Hi <strong>{{ $agentName }}</strong>,
             </p>
 
             @if ($status === 'suspended')
@@ -62,7 +62,7 @@
                 <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
                     <tr>
                         <td style="border-radius:6px; background-color:#dc2626;">
-                            <a href="{{ route('contact.support') }}" style="display:inline-block; padding:12px 24px; font-size:14px; font-weight:600; color:#ffffff; text-decoration:none;">
+                            <a href="/contact" style="display:inline-block; padding:12px 24px; font-size:14px; font-weight:600; color:#ffffff; text-decoration:none;">
                                 Contact Support
                             </a>
                         </td>
@@ -122,7 +122,7 @@
     <tr>
         <td style="padding:16px 32px 24px; border-top:1px solid #f0f0f0;">
             <p style="margin:0; font-size:12px; color:#a1a1aa;">
-                Account {{ $status === 'suspended' ? 'suspended' : 'reactivated' }} on {{ now()->format('M d, Y \a\t h:i A') }} by {{ $suspendedBy->name }}.
+                Account {{ $status === 'suspended' ? 'suspended' : 'reactivated' }} on {{ now()->format('M d, Y \a\t h:i A') }} by {{ $suspendedByName }}.
             </p>
         </td>
     </tr>

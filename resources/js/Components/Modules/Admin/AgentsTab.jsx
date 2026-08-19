@@ -40,7 +40,7 @@ const StatusBadge = ({ status }) => {
         unverified: { bg: 'hsl(220 15% 93%)',  color: 'hsl(220 15% 45%)',  icon: Icons.clock,  label: 'Unverified' },
         suspended:  { bg: 'hsl(0 72% 93%)',    color: 'hsl(0 72% 45%)',    icon: Icons.suspend, label: 'Suspended' },
     };
-    const cfg = config[status] || config.unverified;
+    const cfg = config[status] || config.pending;
     
     return (
         <span style={{
@@ -416,7 +416,7 @@ const AgentCard = ({ agent, onViewDetails, onEdit, onSuspend, onUpgrade, onResen
                         onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'hsl(152 60% 35%)'; }}
                         onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'hsl(152 60% 40%)'; }}
                     >
-                        {Icons.check} Unsuspend
+                        {Icons.check} Reactivate
                     </button>
                 )}
 

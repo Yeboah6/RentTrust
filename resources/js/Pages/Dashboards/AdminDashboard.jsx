@@ -491,7 +491,7 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, agent
                         const a = agents.find(a => a.id === agentId);
                         if (!a) return;
                         const isSuspended = a.status === 'suspended';
-                        const newStatus = isSuspended ? 'unverified' : 'suspended';
+                        const newStatus = isSuspended ? 'pending' : 'suspended';
                         const action = isSuspended ? 'unsuspend' : 'suspend';
                         if (!confirm(`Are you sure you want to ${action} ${a.name}?`)) return;
                         router.put(`/admin/agents/${agentId}/suspend`, { status: newStatus }, {

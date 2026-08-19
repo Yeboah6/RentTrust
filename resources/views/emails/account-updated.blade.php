@@ -28,7 +28,7 @@
             </h1>
 
             <p style="margin:0 0 16px; font-size:14px; line-height:1.6; color:#3f3f46;">
-                Hi <strong>{{ $agent->name }}</strong>,
+                Hi <strong>{{ $agentName }}</strong>,
             </p>
 
             <p style="margin:0 0 16px; font-size:14px; line-height:1.6; color:#3f3f46;">
@@ -89,7 +89,7 @@
     <tr>
         <td style="padding:16px 32px 24px; border-top:1px solid #f0f0f0;">
             <p style="margin:0; font-size:12px; color:#a1a1aa;">
-                This is an automated notification. Updated on {{ now()->format('M d, Y \a\t h:i A') }} by an administrator.
+                This is an automated notification. Updated on {{ now()->format('M d, Y \a\t h:i A') }} by an RentTrustGh.
             </p>
         </td>
     </tr>

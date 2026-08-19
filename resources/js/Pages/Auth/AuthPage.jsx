@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm, Link, Head } from "@inertiajs/react";
 
 // ── Icons ────────────────────────────────────────────────────────────────────
@@ -106,6 +106,7 @@ const AuthPage = ({ isLogin: initialLogin = true }) => {
   const [isLogin, setIsLogin] = useState(initialLogin);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [showSuspensionModal, setShowSuspensionModal] = useState(false);
 
   // email validation state: 'idle' | 'invalid' | 'checking' | 'taken' | 'valid'
   const [emailStatus, setEmailStatus] = useState('idle');
@@ -117,6 +118,12 @@ const AuthPage = ({ isLogin: initialLogin = true }) => {
     password: '',
     password_confirmation: '',
   });
+
+  useEffect(() => {
+    if (errors?.suspended) {
+      setShowSuspensionModal(true);
+    }
+  }, [errors?.suspended]);
 
   const toggleMode = () => {
     setIsLogin((v) => !v);
@@ -301,15 +308,20 @@ const handleEmailChange = (val) => {
         }
       `}</style>
 
-          {errors?.suspended && (
-            <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: '1rem' }}>
+          {showSuspensionModal && errors?.suspended && (
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="suspension-title"
+              style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: '1rem' }}
+            >
               <div style={{ backgroundColor: 'white', borderRadius: '1rem', border: '1px solid hsl(40 20% 88%)', padding: '2rem', maxWidth: '400px', width: '100%', textAlign: 'center' }}>
 
                 <div style={{ width: '56px', height: '56px', borderRadius: '50%', backgroundColor: 'hsl(0 70% 97%)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.25rem' }}>
                   <AlertCircle style={{ height: '1.5rem', width: '1.5rem', color: 'hsl(0 70% 50%)' }} />
                 </div>
 
-                <h2 style={{ fontSize: '1.125rem', fontWeight: '600', color: 'hsl(200 25% 15%)', marginBottom: '0.5rem' }}>
+                <h2 id="suspension-title" style={{ fontSize: '1.125rem', fontWeight: '600', color: 'hsl(200 25% 15%)', marginBottom: '0.5rem' }}>
                   Account suspended
                 </h2>
                 <p style={{ fontSize: '0.875rem', color: 'hsl(200 15% 45%)', lineHeight: '1.6', marginBottom: '1.5rem' }}>
@@ -323,14 +335,16 @@ const handleEmailChange = (val) => {
                 </div>
 
                 <a
-                  href="mailto:renttrustgh2026@gmail.com"
+                  href="/contact"
                   style={{ display: 'block', padding: '0.625rem 1rem', backgroundColor: 'hsl(0 70% 97%)', border: '1px solid hsl(0 70% 88%)', borderRadius: '0.5rem', fontSize: '0.875rem', fontWeight: '500', color: 'hsl(0 70% 45%)', textDecoration: 'none' }}
                 >
                   Contact support
                 </a>
 
                 <button
-                style={{ display: 'block', padding: '0.625rem 1rem', backgroundColor: 'hsl(0 70% 97%)', border: '1px solid hsl(0 70% 88%)', borderRadius: '0.5rem', fontSize: '0.875rem', fontWeight: '500', color: 'hsl(0 70% 45%)', textDecoration: 'none' }}
+                  type="button"
+                  onClick={() => setShowSuspensionModal(false)}
+                  style={{ display: 'block', width: '100%', marginTop: '0.75rem', padding: '0.625rem 1rem', backgroundColor: 'white', border: '1px solid hsl(40 20% 82%)', borderRadius: '0.5rem', fontSize: '0.875rem', fontWeight: '500', color: 'hsl(200 25% 15%)', cursor: 'pointer' }}
                 >
                   Close
                 </button>

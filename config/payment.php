@@ -14,11 +14,11 @@ return [
             'class' => App\Gateways\PaystackGateway::class,
             'enabled' => true,
         ],
-        'flutterwave' => [
-            'name' => 'Flutterwave',
-            'class' => App\Gateways\FlutterwaveGateway::class,
-            'enabled' => true,
-        ],
+        // 'flutterwave' => [
+        //     'name' => 'Flutterwave',
+        //     'class' => App\Gateways\FlutterwaveGateway::class,
+        //     'enabled' => true,
+        // ],
     ],
     
     'payment_methods' => [
