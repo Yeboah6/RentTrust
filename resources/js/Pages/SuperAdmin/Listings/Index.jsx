@@ -115,7 +115,7 @@ const normalise = (l) => ({
     currency:      'GH₵',
     location:      [l.area, l.city].filter(Boolean).join(', ') || '—',
     agent_name:    l.agent_name    ?? '—',
-    agent_id:      l.agent_id      ?? null,
+    agent_id:      l.agent_id      ?? l.user_id  ?? null,
     views:         l.views_count     ?? 0,
     inquiries:     l.inquiries_count ?? 0,
     images:        resolveImages(l.images),

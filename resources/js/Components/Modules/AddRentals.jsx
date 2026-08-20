@@ -28,6 +28,7 @@ const FIELD_LABELS = {
 };
 
 const isFilled = (v) => v !== '' && v !== null && v !== undefined;
+const fieldsForStep = (step) => STEP_FIELDS[step] ?? [];
 
 const getInputStyle = (hasError) => ({
   width: '100%',
@@ -94,6 +95,7 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData, locations
   const [images, setImages] = useState([]);
   const [currentStep, setCurrentStep] = useState(1);
   const [toast, setToast] = useState(null);
+  const [clientErrors, setClientErrors] = useState({});
 
   const handleAmenityToggle = (amenity) => {
     const updatedAmenities = data.amenities.includes(amenity)
@@ -122,6 +124,11 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData, locations
     const updatedImages = [...images, ...newImages].slice(0, 6);
     setImages(updatedImages);
     setData('images', updatedImages.map(img => img.file));
+    setClientErrors(prev => {
+      const next = { ...prev };
+      if (updatedImages.length > 0) delete next.images;
+      return next;
+    });
   };
 
   const handlePurposeChange = (value) => {
@@ -147,20 +154,45 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData, locations
   };
 
   const validateStep = (step) => {
+    const stepErrors = {};
+
     if (step === 1) {
-      return isFilled(data.title) && isFilled(data.propertyType) && isFilled(data.city) && isFilled(data.area);
+      if (!isFilled(data.title)) stepErrors.title = 'Property title is required.';
+      if (!isFilled(data.propertyType)) stepErrors.propertyType = 'Property type is required.';
+      if (!isFilled(data.city)) stepErrors.city = 'Region is required.';
+      if (!isFilled(data.area)) stepErrors.area = 'Area or neighborhood is required.';
     } else if (step === 2) {
       if (data.purpose === 'rent') {
-        return isFilled(data.rentMin) && isFilled(data.rentMax) && isFilled(data.bedrooms) && isFilled(data.advanceDuration);
+        if (!isFilled(data.rentMin)) stepErrors.rentMin = 'Minimum rent is required.';
+        if (!isFilled(data.rentMax)) stepErrors.rentMax = 'Maximum rent is required.';
+        if (!isFilled(data.bedrooms)) stepErrors.bedrooms = 'Bedrooms is required.';
+        if (!isFilled(data.bathrooms)) stepErrors.bathrooms = 'Bathrooms is required.';
+        if (!data.images?.length) stepErrors.images = 'At least one photo is required.';
+        if (!isFilled(data.advanceDuration)) stepErrors.advanceDuration = 'Advance duration is required.';
+      } else {
+        if (!isFilled(data.salePrice)) stepErrors.salePrice = 'Sale price is required.';
+        if (!isFilled(data.bedrooms)) stepErrors.bedrooms = 'Bedrooms is required.';
+        if (!isFilled(data.bathrooms)) stepErrors.bathrooms = 'Bathrooms is required.';
+        if (!data.images?.length) stepErrors.images = 'At least one photo is required.';
       }
-      return isFilled(data.salePrice) && isFilled(data.bedrooms);
     } else if (step === 3) {
-      return isFilled(data.agentName) && isFilled(data.agentPhone) && isFilled(data.agentEmail);
+      if (!isFilled(data.agentName)) stepErrors.agentName = 'Your name is required.';
+      if (!isFilled(data.agentPhone)) stepErrors.agentPhone = 'Phone number is required.';
+      if (!isFilled(data.agentEmail)) stepErrors.agentEmail = 'Email address is required.';
     }
-    return true;
+
+    setClientErrors(prev => {
+      const next = { ...prev };
+      fieldsForStep(step).forEach(field => delete next[field]);
+      return { ...next, ...stepErrors };
+    });
+
+    return Object.keys(stepErrors).length === 0;
   };
 
-  const stepHasError = (step) => STEP_FIELDS[step].some((field) => Boolean(errors[field]));
+  const getFieldError = (field) => clientErrors[field] || errors[field];
+  const displayedErrors = { ...errors, ...clientErrors };
+  const stepHasError = (step) => fieldsForStep(step).some((field) => Boolean(getFieldError(field)));
 
   const handleNext = (e) => {
     e.preventDefault();
@@ -168,7 +200,7 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData, locations
       setCurrentStep(prev => Math.min(prev + 1, 4));
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
-      showToast("Missing Information", "Please fill all required fields before proceeding.", "error");
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
@@ -187,7 +219,7 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData, locations
     e.preventDefault();
     
     if (!validateStep(currentStep)) {
-      showToast("Missing Information", "Please fill all required fields.", "error");
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
 
@@ -226,7 +258,7 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData, locations
       },
       onError: (errs) => {
         const failingStep = [1, 2, 3].find((step) =>
-          STEP_FIELDS[step].some((field) => Boolean(errs[field]))
+          fieldsForStep(step).some((field) => Boolean(errs[field]))
         );
         if (failingStep) {
           setCurrentStep(failingStep);
@@ -552,9 +584,9 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData, locations
                   value={data.title}
                   onChange={(e) => setData('title', e.target.value)}
                   placeholder="e.g., 2 Bedroom Self-Contained Apartment"
-                  style={getInputStyle(!!errors.title)}
+                  style={getInputStyle(!!getFieldError('title'))}
                 />
-                <ErrorMsg msg={errors.title} />
+                <ErrorMsg msg={getFieldError('title')} />
               </label>
 
               <div className="form-grid-2">
@@ -563,14 +595,14 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData, locations
                   <select
                     value={data.propertyType}
                     onChange={(e) => setData('propertyType', e.target.value)}
-                    style={getInputStyle(!!errors.propertyType)}
+                    style={getInputStyle(!!getFieldError('propertyType'))}
                   >
                     <option value="">Select type</option>
                     {PropertyNames.map(type => (
                       <option key={type} value={type}>{type}</option>
                     ))}
                   </select>
-                  <ErrorMsg msg={errors.propertyType} />
+                  <ErrorMsg msg={getFieldError('propertyType')} />
                 </label>
 
                 <label style={labelStyle}>
@@ -578,14 +610,14 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData, locations
                   <select
                     value={data.city}
                     onChange={(e) => setData('city', e.target.value)}
-                    style={getInputStyle(!!errors.city)}
+                    style={getInputStyle(!!getFieldError('city'))}
                   >
                     <option value="">Select Region</option>
                     {names.map(city => (
                       <option key={city} value={city}>{city}</option>
                     ))}
                   </select>
-                  <ErrorMsg msg={errors.city} />
+                  <ErrorMsg msg={getFieldError('city')} />
                 </label>
               </div>
 
@@ -596,9 +628,9 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData, locations
                   value={data.area}
                   onChange={(e) => setData('area', e.target.value)}
                   placeholder="e.g., East Legon, Spintex"
-                  style={getInputStyle(!!errors.area)}
+                  style={getInputStyle(!!getFieldError('area'))}
                 />
-                <ErrorMsg msg={errors.area} />
+                <ErrorMsg msg={getFieldError('area')} />
               </label>
 
               <label style={labelStyle}>
@@ -608,9 +640,9 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData, locations
                   onChange={(e) => setData('address', e.target.value)}
                   placeholder="Enter the complete address (optional)"
                   rows={3}
-                  style={{ ...getInputStyle(!!errors.address), resize: 'vertical' }}
+                  style={{ ...getInputStyle(!!getFieldError('address')), resize: 'vertical' }}
                 />
-                <ErrorMsg msg={errors.address} />
+                <ErrorMsg msg={getFieldError('address')} />
               </label>
             </>
           )}
@@ -628,9 +660,9 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData, locations
                         value={data.rentMin}
                         onChange={(e) => setData('rentMin', e.target.value)}
                         placeholder="1500"
-                        style={getInputStyle(!!errors.rentMin)}
+                        style={getInputStyle(!!getFieldError('rentMin'))}
                       />
-                      <ErrorMsg msg={errors.rentMin} />
+                      <ErrorMsg msg={getFieldError('rentMin')} />
                     </label>
 
                     <label style={labelStyle}>
@@ -640,9 +672,9 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData, locations
                         value={data.rentMax}
                         onChange={(e) => setData('rentMax', e.target.value)}
                         placeholder="2500"
-                        style={getInputStyle(!!errors.rentMax)}
+                        style={getInputStyle(!!getFieldError('rentMax'))}
                       />
-                      <ErrorMsg msg={errors.rentMax} />
+                      <ErrorMsg msg={getFieldError('rentMax')} />
                     </label>
                   </div>
 
@@ -651,13 +683,13 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData, locations
                     <select
                       value={data.advanceDuration}
                       onChange={(e) => setData('advanceDuration', e.target.value)}
-                      style={getInputStyle(!!errors.advanceDuration)}
+                      style={getInputStyle(!!getFieldError('advanceDuration'))}
                     >
                       {[1,2,3,4,5,6,7,8,9].map(m => (
                         <option key={m} value={m}>{m} month{m > 1 ? 's' : ''}</option>
                       ))}
                     </select>
-                    <ErrorMsg msg={errors.advanceDuration} />
+                    <ErrorMsg msg={getFieldError('advanceDuration')} />
                   </label>
                 </>
               ) : (
@@ -668,9 +700,9 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData, locations
                     value={data.salePrice}
                     onChange={(e) => setData('salePrice', e.target.value)}
                     placeholder="250000"
-                    style={getInputStyle(!!errors.salePrice)}
+                      style={getInputStyle(!!getFieldError('salePrice'))}
                   />
-                  <ErrorMsg msg={errors.salePrice} />
+                  <ErrorMsg msg={getFieldError('salePrice')} />
                 </label>
               )}
 
@@ -683,22 +715,22 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData, locations
                     onChange={(e) => setData('bedrooms', e.target.value)}
                     placeholder="2"
                     min="0"
-                    style={getInputStyle(!!errors.bedrooms)}
+                    style={getInputStyle(!!getFieldError('bedrooms'))}
                   />
-                  <ErrorMsg msg={errors.bedrooms} />
+                  <ErrorMsg msg={getFieldError('bedrooms')} />
                 </label>
 
                 <label style={labelStyle}>
-                  Bathrooms
+                  Bathrooms *
                   <input
                     type="number"
                     value={data.bathrooms}
                     onChange={(e) => setData('bathrooms', e.target.value)}
                     placeholder="1"
                     min="0"
-                    style={getInputStyle(!!errors.bathrooms)}
+                    style={getInputStyle(!!getFieldError('bathrooms'))}
                   />
-                  <ErrorMsg msg={errors.bathrooms} />
+                  <ErrorMsg msg={getFieldError('bathrooms')} />
                 </label>
               </div>
 
@@ -734,7 +766,7 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData, locations
                     </button>
                   ))}
                 </div>
-                <ErrorMsg msg={errors.amenities} />
+                <ErrorMsg msg={getFieldError('amenities')} />
               </div>
 
               <label style={labelStyle}>
@@ -744,9 +776,9 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData, locations
                   onChange={(e) => setData('description', e.target.value)}
                   placeholder="Describe the property..."
                   rows={4}
-                  style={{ ...getInputStyle(!!errors.description), resize: 'vertical' }}
+                  style={{ ...getInputStyle(!!getFieldError('description')), resize: 'vertical' }}
                 />
-                <ErrorMsg msg={errors.description} />
+                <ErrorMsg msg={getFieldError('description')} />
               </label>
 
               <div>
@@ -813,7 +845,7 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData, locations
                     ))}
                   </div>
                 )}
-                <ErrorMsg msg={errors.images} />
+                <ErrorMsg msg={getFieldError('images')} />
               </div>
             </>
           )}
@@ -833,9 +865,9 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData, locations
                   type="text"
                   value={data.agentName}
                   onChange={(e) => setData('agentName', e.target.value)}
-                  style={getInputStyle(!!errors.agentName)}
+                  style={getInputStyle(!!getFieldError('agentName'))}
                 />
-                <ErrorMsg msg={errors.agentName} />
+                <ErrorMsg msg={getFieldError('agentName')} />
               </label>
 
               <label style={labelStyle}>
@@ -844,9 +876,9 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData, locations
                   type="tel"
                   value={data.agentPhone}
                   onChange={(e) => setData('agentPhone', e.target.value)}
-                  style={getInputStyle(!!errors.agentPhone)}
+                  style={getInputStyle(!!getFieldError('agentPhone'))}
                 />
-                <ErrorMsg msg={errors.agentPhone} />
+                <ErrorMsg msg={getFieldError('agentPhone')} />
               </label>
 
               <label style={labelStyle}>
@@ -855,9 +887,9 @@ const AddRentalPage = ({ agentData, setShowAddListingModal, adminData, locations
                   type="email"
                   value={data.agentEmail}
                   onChange={(e) => setData('agentEmail', e.target.value)}
-                  style={getInputStyle(!!errors.agentEmail)}
+                  style={getInputStyle(!!getFieldError('agentEmail'))}
                 />
-                <ErrorMsg msg={errors.agentEmail} />
+                <ErrorMsg msg={getFieldError('agentEmail')} />
               </label>
             </>
           )}

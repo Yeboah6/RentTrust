@@ -42,6 +42,7 @@ class AgentController extends Controller
                     'status'          => $user->status ?? 'pending',
                     'type'            => $user->type,
                     'company'         => $user->company,
+                    'package'         => $user->package,
                     'bio'             => $user->bio,
                     'listings_count'  => $user->listings_count  ?? 0,
                     'active_listings' => $user->active_listings ?? 0,

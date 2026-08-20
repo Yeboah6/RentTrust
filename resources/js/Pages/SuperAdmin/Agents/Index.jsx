@@ -56,9 +56,9 @@ const STATUS_CFG = {
 };
 
 const TIER_CFG = {
-    free:   { label: 'Free', bg: 'hsl(220 15% 93%)', color: 'hsl(220 15% 38%)', dot: 'hsl(220 15% 52%)' },
-    pro:    { label: 'Pro',    bg: 'hsl(220 15% 93%)', color: 'hsl(220 15% 38%)', dot: 'hsl(220 15% 52%)' },
-    elite:  { label: 'Elite',      bg: 'hsl(270 60% 95%)', color: 'hsl(270 55% 38%)', dot: 'hsl(270 55% 50%)' },
+    free:   { label: 'Free',  bg: 'hsl(220 15% 93%)', color: 'hsl(220 15% 38%)', dot: 'hsl(220 15% 52%)' },
+    pro:    { label: 'Pro',   bg: 'hsl(214 100% 95%)', color: 'hsl(214 80% 38%)', dot: 'hsl(214 80% 50%)' },
+    elite:  { label: 'Elite', bg: 'hsl(270 60% 95%)', color: 'hsl(270 55% 38%)', dot: 'hsl(270 55% 50%)' },
 };
 
 const STATUSES = ['all', 'active', 'pending', 'verified', 'suspended', 'rejected', 'inactive', 'unverified'];
@@ -98,7 +98,7 @@ const normalise = (a) => {
         email:         a.email         ?? '',
         phone:         a.phone         ?? a.phone_number   ?? '',
         status_key:    isVerified ?    'verified' : rawStatus,
-        tier:          (a.tier         ?? a.plan           ?? a.subscription_type ?? 'standard').toLowerCase(),
+        tier:          (a.package      ?? a.tier           ?? a.plan              ?? a.subscription_type ?? 'free').toLowerCase(),
         agency:        a.agency        ?? a.agency_name    ?? a.company           ?? '',
         license:       a.license       ?? a.license_number ?? a.rea_number        ?? '',
         location:      a.location      ?? a.city           ?? a.area              ?? '',

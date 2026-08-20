@@ -514,17 +514,6 @@ const PropertyCard = ({ listing }) => {
               <span style={{ fontSize: '0.875rem', color: 'hsl(200 15% 45%)' }}>
                 {listing.agentName}
               </span>
-              {listing.isAgentVerified && (
-                <span style={{
-                  display: 'inline-flex', alignItems: 'center',
-                  padding: '0.125rem 0.5rem', fontSize: '0.75rem', fontWeight: '500',
-                  backgroundColor: 'hsl(152 60% 40% / 0.1)',
-                  color: 'hsl(152 60% 40%)', borderRadius: '9999px'
-                }}>
-                  <CheckCircle2 style={{ height: '0.75rem', width: '0.75rem', marginRight: '0.25rem' }} />
-                  Verified
-                </span>
-              )}
             </div>
           </div>
         )}
@@ -639,9 +628,8 @@ const RentalListingsPage = ({ listings: initialListingsData = {} }) => {
       bathrooms: listing.bathrooms,
       property_type: listing.property_type,
       agentName: listing.agent_name || null,
-      status: listing.status === "verified" ? "available" : listing.status,
-      isAgentVerified: listing.status === "verified",
-      isVerified: Boolean(listing.status),
+      status: listing.status,
+      isVerified: Boolean(listing.is_verified) || listing.verification_status === "verified",
       isRented: Boolean(listing.is_rented),
       reviewCount: parseInt(listing.review_count) || 0,
       rating: parseFloat(listing.rating) || 0,
