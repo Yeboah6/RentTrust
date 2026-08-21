@@ -14,13 +14,13 @@ class SaleSearchController extends Controller
 {
     /**
      * Display sale listings
-     */
+    */
     public function index()
     {
         // Initial load: show 8 sale listings
         $listings = Rental::where('purpose', 'sale')
-            // ->where('is_sold', false)
-            ->latest()
+            ->where('is_sold', false)
+            ->orderByDesc('id')
             ->paginate(8);
 
         return inertia('SaleListingsPage', [
@@ -33,29 +33,24 @@ class SaleSearchController extends Controller
      */
     public function getMore(Request $request)
     {
-        $page = $request->query('page', 2);
         $perPage = 8;
-        
-        if (!is_numeric($page) || $page < 2) {
-            return response()->json([
-                'error' => 'Invalid page number',
-                'listings' => [],
-                'has_more' => false,
-            ], 400);
-        }
+        $lastId = $request->query('last_id');
 
         try {
-            $listings = Rental::where('purpose', 'sale')
-                // ->where('is_sold', false)
-                ->latest()
-                ->paginate($perPage, ['*'], 'page', $page);
+            $query = Rental::where('purpose', 'sale')
+                ->where('is_sold', false)
+                ->when($lastId !== null, fn ($query) => $query->where('id', '<', $lastId))
+                ->orderByDesc('id')
+                ->limit($perPage + 1);
+
+            $listings = $query->get();
+            $hasMore = $listings->count() > $perPage;
+            $listings = $listings->take($perPage)->values();
 
             return response()->json([
-                'listings' => $listings->items(),
-                'has_more' => $listings->hasMorePages(),
-                'current_page' => $listings->currentPage(),
-                'total' => $listings->total(),
-                'per_page' => $listings->perPage(),
+                'listings' => $listings,
+                'has_more' => $hasMore,
+                'last_id' => $listings->last()?->id,
             ]);
 
         } catch (\Exception $e) {
@@ -69,6 +64,7 @@ class SaleSearchController extends Controller
                 'message' => config('app.debug') ? $e->getMessage() : 'Server error',
                 'listings' => [],
                 'has_more' => false,
+                'last_id' => null,
             ], 500);
         }
     }
@@ -80,7 +76,7 @@ class SaleSearchController extends Controller
     {
         try {
             $cities = Rental::where('purpose', 'sale')
-                // ->where('is_sold', false)
+                ->where('is_sold', false)
                 ->whereNotNull('city')
                 ->where('city', '<>', '')
                 ->distinct()
@@ -106,7 +102,7 @@ class SaleSearchController extends Controller
     {
         try {
             $areas = Rental::where('purpose', 'sale')
-                // ->where('is_sold', false)
+                ->where('is_sold', false)
                 ->whereNotNull('area')
                 ->where('area', '<>', '')
                 ->distinct()

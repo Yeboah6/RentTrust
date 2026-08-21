@@ -2,33 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Link, Head } from "@inertiajs/react";
 import Header from "../Components/Layouts/Header";
 import Footer from "../Components/Layouts/Footer";
-import { ChevronLeft, ChevronRight, BedDouble, Bath, Search as SearchIcon, MapPin as MapPinIcon, ChevronDown } from "lucide-react";
-
-// ─── Icon Components ───────────────────────────────────────────────────────────
-
-const MapPin = ({ style }) => (
-  <svg style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-  </svg>
-);
-
-const Star = ({ style }) => (
-  <svg style={style} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-  </svg>
-);
-
-const Shield = ({ style }) => (
-  <svg style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-  </svg>
-);
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-const fmt = (n) => `GH₵${Number(n || 0).toLocaleString()}`;
-const hue = (s = '') => [...s].reduce((a, c) => a + c.charCodeAt(0), 0) % 360;
+import { ChevronLeft, ChevronRight, BedDouble, Bath, Search as SearchIcon, XCircle } from "lucide-react";
 
 const slugifyArea = (value) => {
   return String(value || '')
@@ -38,23 +12,51 @@ const slugifyArea = (value) => {
     .replace(/[^a-z0-9\-]/g, '');
 };
 
-const parseImages = (imagesData) => {
-  if (!imagesData) return [];
-  if (Array.isArray(imagesData)) return imagesData;
-  if (typeof imagesData === 'string') {
-    try {
-      const parsed = JSON.parse(imagesData);
-      return Array.isArray(parsed) ? parsed : [];
-    } catch {
-      return [];
-    }
-  }
-  return [];
-};
+// Icon components
+const Search = ({ className, style }) => (
+  <svg className={className} style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+  </svg>
+);
 
-// ─── Dropdown Component ────────────────────────────────────────────────────────
+const MapPin = ({ className, style }) => (
+  <svg className={className} style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+  </svg>
+);
 
-const Dropdown = ({ value, options, onChange, placeholder, label }) => {
+const Star = ({ className, style }) => (
+  <svg className={className} style={style} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+  </svg>
+);
+
+const CheckCircle2 = ({ className, style }) => (
+  <svg className={className} style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+  </svg>
+);
+
+const Tag = ({ className, style }) => (
+  <svg className={className} style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5.586a1 1 0 01.707.293l7.414 7.414a1 1 0 010 1.414l-7.586 7.586a1 1 0 01-1.414 0L3.707 12.293A1 1 0 013 11.586V6a3 3 0 013-3z" />
+  </svg>
+);
+
+const ChevronDown = ({ className, style }) => (
+  <svg className={className} style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+  </svg>
+);
+
+const Shield = ({ style }) => (
+  <svg style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+  </svg>
+);
+
+const Dropdown = ({ value, options, onChange, placeholder }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -73,21 +75,16 @@ const Dropdown = ({ value, options, onChange, placeholder, label }) => {
 
   return (
     <div ref={dropdownRef} style={{ position: 'relative' }}>
-      {label && (
-        <label style={{ display: 'block', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', fontWeight: '500', color: 'hsl(200 25% 15%)', marginBottom: '0.375rem' }}>
-          {label}
-        </label>
-      )}
       <button
         onClick={() => setIsOpen(!isOpen)}
         style={{
           width: '100%',
-          height: 'clamp(2.5rem, 10vw, 3rem)',
+          height: '3rem',
           border: '1px solid hsl(40 20% 88%)',
           borderRadius: '0.75rem',
           paddingLeft: '1rem',
           paddingRight: '2.5rem',
-          fontSize: 'clamp(0.875rem, 2vw, 1rem)',
+          fontSize: '1rem',
           outline: 'none',
           backgroundColor: 'white',
           color: 'hsl(200 25% 15%)',
@@ -95,24 +92,22 @@ const Dropdown = ({ value, options, onChange, placeholder, label }) => {
           textAlign: 'left',
           display: 'flex',
           alignItems: 'center',
-          transition: 'border-color 0.2s',
-          fontWeight: '500'
+          transition: 'border-color 0.2s'
         }}
-        onMouseEnter={(e) => !isOpen && (e.currentTarget.style.borderColor = 'hsl(174 62% 32%)')}
+        onMouseEnter={(e) => e.currentTarget.style.borderColor = 'hsl(38 92% 50%)'}
         onMouseLeave={(e) => !isOpen && (e.currentTarget.style.borderColor = 'hsl(40 20% 88%)')}
       >
         {selectedOption ? selectedOption.label : placeholder}
-        <ChevronDown 
-          style={{ 
+        <ChevronDown
+          style={{
             position: 'absolute',
             right: '0.75rem',
-            height: 'clamp(1rem, 3vw, 1.25rem)',
-            width: 'clamp(1rem, 3vw, 1.25rem)',
-            color: '#627884',
+            height: '1.25rem',
+            width: '1.25rem',
+            color: 'hsl(200 15% 45%)',
             transition: 'transform 0.2s',
-            transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-            pointerEvents: 'none'
-          }} 
+            transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)'
+          }}
         />
       </button>
 
@@ -126,11 +121,9 @@ const Dropdown = ({ value, options, onChange, placeholder, label }) => {
             backgroundColor: 'white',
             border: '1px solid hsl(40 20% 88%)',
             borderRadius: '0.75rem',
-            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)',
+            boxShadow: '0 8px 20px -4px hsl(200 25% 15% / 0.12)',
             zIndex: 50,
-            overflow: 'hidden',
-            maxHeight: '250px',
-            overflowY: 'auto'
+            overflow: 'hidden'
           }}
         >
           {options.map((option, index) => (
@@ -142,16 +135,17 @@ const Dropdown = ({ value, options, onChange, placeholder, label }) => {
               }}
               style={{
                 width: '100%',
-                padding: 'clamp(0.5rem, 2vw, 0.75rem) 1rem',
+                padding: '0.75rem 1rem',
                 border: 'none',
-                backgroundColor: option.value === value ? '#1f847a' : 'white',
+                backgroundColor: option.value === value ? '#c9791f' : 'white',
                 color: option.value === value ? 'white' : 'hsl(200 25% 15%)',
                 textAlign: 'left',
                 cursor: 'pointer',
-                fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)',
-                fontWeight: option.value === value ? '600' : '400',
+                fontSize: '0.875rem',
+                fontWeight: option.value === value ? '500' : '400',
                 transition: 'background-color 0.15s',
-                borderTop: index > 0 ? '1px solid hsl(40 20% 92%)' : 'none'
+                borderTop: index > 0 ? '1px solid hsl(40 20% 92%)' : 'none',
+                borderRadius: '10px'
               }}
               onMouseEnter={(e) => {
                 if (option.value !== value) {
@@ -173,59 +167,78 @@ const Dropdown = ({ value, options, onChange, placeholder, label }) => {
   );
 };
 
-// ─── Property Card Component ───────────────────────────────────────────────────
+// Parse images from database (handles both string and array formats)
+const parseImages = (imagesData) => {
+  if (!imagesData) return [];
+
+  try {
+    if (Array.isArray(imagesData)) return imagesData;
+
+    if (typeof imagesData === 'string') {
+      const parsed = JSON.parse(imagesData);
+      return Array.isArray(parsed) ? parsed : [];
+    }
+
+    return [];
+  } catch (e) {
+    console.error('Error parsing images:', e);
+    return [];
+  }
+};
 
 const PropertyCard = ({ listing }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  
+
   const imagesArray = parseImages(listing.images);
 
   const handlePrevImage = (e) => {
     e.stopPropagation();
-    setCurrentImageIndex((prev) => prev === 0 ? imagesArray.length - 1 : prev - 1);
+    setCurrentImageIndex((prev) =>
+      prev === 0 ? imagesArray.length - 1 : prev - 1
+    );
   };
 
   const handleNextImage = (e) => {
     e.stopPropagation();
-    setCurrentImageIndex((prev) => prev === imagesArray.length - 1 ? 0 : prev + 1);
+    setCurrentImageIndex((prev) =>
+      prev === imagesArray.length - 1 ? 0 : prev + 1
+    );
   };
 
   return (
     <div
+      className="overflow-hidden cursor-pointer border rounded-xl bg-white transition-all duration-300"
       style={{
-        overflow: 'hidden',
-        cursor: 'pointer',
-        border: '1px solid hsl(40 20% 88%)',
-        borderRadius: '0.875rem',
-        backgroundColor: 'white',
-        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-        transform: isHovered ? 'translateY(-6px)' : 'translateY(0)',
-        boxShadow: isHovered 
-          ? '0 12px 24px -6px rgba(0, 0, 0, 0.12)'
-          : '0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+        borderColor: 'hsl(40 20% 88%)',
+        transform: isHovered ? 'translateY(-4px)' : 'translateY(0)',
+        boxShadow: isHovered
+          ? '0 8px 20px -4px hsl(200 25% 15% / 0.12), 0 4px 8px -2px hsl(200 25% 15% / 0.08)'
+          : '0 2px 8px -2px hsl(200 25% 15% / 0.1), 0 1px 3px -1px hsl(200 25% 15% / 0.06)'
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Image Carousel */}
-      <div style={{ 
-        height: 'clamp(10rem, 35vw, 14rem)',
+      {/* Image Carousel Section */}
+      <div style={{
+        height: '12rem',
         position: 'relative',
         overflow: 'hidden',
-        backgroundColor: 'hsl(174 62% 32% / 0.05)'
+        backgroundColor: 'hsl(38 92% 50% / 0.06)'
       }}>
         {imagesArray.length > 0 ? (
-          <img 
+          <img
             src={`/storage/rental_images/${imagesArray[currentImageIndex]}`}
-            alt={`${listing.title} image ${currentImageIndex + 1}`}
+            alt={`${listing.title || 'Property'} image ${currentImageIndex + 1}`}
+            loading="lazy"
             style={{
               width: '100%',
               height: '100%',
               objectFit: 'cover',
               objectPosition: 'center',
-              transition: 'transform 0.3s ease-in-out',
-              transform: isHovered ? 'scale(1.08)' : 'scale(1)'
+              transition: 'transform 0.3s ease-in-out, filter 0.3s ease-in-out',
+              transform: isHovered ? 'scale(1.05)' : 'scale(1)',
+              filter: listing.isSold ? 'grayscale(70%)' : 'none'
             }}
           />
         ) : (
@@ -237,10 +250,37 @@ const PropertyCard = ({ listing }) => {
             height: '100%',
             flexDirection: 'column'
           }}>
-            <MapPin style={{ height: 'clamp(2.5rem, 8vw, 3rem)', width: 'clamp(2.5rem, 8vw, 3rem)', color: 'hsl(200 25% 15% / 0.15)' }} />
-            <div style={{ fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', color: 'hsl(200 15% 45%)', marginTop: '0.5rem' }}>
-              No image
+            <MapPin style={{ height: '3rem', width: '3rem', color: 'hsl(200 25% 15% / 0.2)' }} />
+            <div style={{ fontSize: '12px', color: '#666', marginTop: '8px' }}>
+              No image available
             </div>
+          </div>
+        )}
+
+        {/* Sold overlay ribbon */}
+        {listing.isSold && (
+          <div style={{
+            position: 'absolute',
+            inset: 0,
+            backgroundColor: 'rgba(10, 9, 8, 0.35)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 5,
+            pointerEvents: 'none'
+          }}>
+            <span style={{
+              backgroundColor: 'rgba(10, 9, 8, 0.85)',
+              color: 'white',
+              fontSize: '0.75rem',
+              fontWeight: '700',
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+              padding: '0.375rem 1rem',
+              borderRadius: '9999px'
+            }}>
+              Sold
+            </span>
           </div>
         )}
 
@@ -251,14 +291,14 @@ const PropertyCard = ({ listing }) => {
               onClick={handlePrevImage}
               style={{
                 position: 'absolute',
-                left: 'clamp(0.5rem, 2vw, 0.75rem)',
+                left: '0.5rem',
                 top: '50%',
                 transform: 'translateY(-50%)',
                 backgroundColor: 'rgba(255, 255, 255, 0.9)',
                 border: 'none',
                 borderRadius: '50%',
-                width: 'clamp(2rem, 8vw, 2.5rem)',
-                height: 'clamp(2rem, 8vw, 2.5rem)',
+                width: '2rem',
+                height: '2rem',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -267,11 +307,11 @@ const PropertyCard = ({ listing }) => {
                 zIndex: 10,
                 transition: 'all 0.2s'
               }}
-              onMouseEnter={(e) => { 
+              onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 1)';
                 e.currentTarget.style.transform = 'translateY(-50%) scale(1.1)';
               }}
-              onMouseLeave={(e) => { 
+              onMouseLeave={(e) => {
                 e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
                 e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
               }}
@@ -283,14 +323,14 @@ const PropertyCard = ({ listing }) => {
               onClick={handleNextImage}
               style={{
                 position: 'absolute',
-                right: 'clamp(0.5rem, 2vw, 0.75rem)',
+                right: '0.5rem',
                 top: '50%',
                 transform: 'translateY(-50%)',
                 backgroundColor: 'rgba(255, 255, 255, 0.9)',
                 border: 'none',
                 borderRadius: '50%',
-                width: 'clamp(2rem, 8vw, 2.5rem)',
-                height: 'clamp(2rem, 8vw, 2.5rem)',
+                width: '2rem',
+                height: '2rem',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -299,11 +339,11 @@ const PropertyCard = ({ listing }) => {
                 zIndex: 10,
                 transition: 'all 0.2s'
               }}
-              onMouseEnter={(e) => { 
+              onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 1)';
                 e.currentTarget.style.transform = 'translateY(-50%) scale(1.1)';
               }}
-              onMouseLeave={(e) => { 
+              onMouseLeave={(e) => {
                 e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
                 e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
               }}
@@ -311,15 +351,14 @@ const PropertyCard = ({ listing }) => {
               <ChevronRight size={20} style={{ color: '#374151' }} />
             </button>
 
-            {/* Dot Indicators */}
             <div style={{
               position: 'absolute',
-              bottom: 'clamp(0.5rem, 2vw, 0.75rem)',
+              bottom: '0.75rem',
               left: '50%',
               transform: 'translateX(-50%)',
               display: 'flex',
-              gap: 'clamp(0.25rem, 1vw, 0.375rem)',
-              padding: 'clamp(0.25rem, 1vw, 0.375rem) clamp(0.5rem, 2vw, 0.625rem)',
+              gap: '0.375rem',
+              padding: '0.375rem 0.625rem',
               backgroundColor: 'rgba(0, 0, 0, 0.6)',
               borderRadius: '9999px',
               zIndex: 10
@@ -328,28 +367,25 @@ const PropertyCard = ({ listing }) => {
                 <div
                   key={index}
                   style={{
-                    width: index === currentImageIndex ? 'clamp(0.75rem, 2vw, 1rem)' : 'clamp(0.25rem, 1vw, 0.375rem)',
-                    height: 'clamp(0.25rem, 1vw, 0.375rem)',
+                    width: '0.375rem',
+                    height: '0.375rem',
                     borderRadius: '50%',
                     backgroundColor: index === currentImageIndex ? 'white' : 'rgba(255, 255, 255, 0.5)',
-                    transition: 'all 0.2s',
-                    cursor: 'pointer'
+                    transition: 'all 0.2s'
                   }}
-                  onClick={() => setCurrentImageIndex(index)}
                 />
               ))}
             </div>
 
-            {/* Image Counter */}
             <div style={{
               position: 'absolute',
-              top: 'clamp(0.5rem, 2vw, 0.75rem)',
-              right: 'clamp(0.5rem, 2vw, 0.75rem)',
+              top: '0.75rem',
+              right: '0.75rem',
               backgroundColor: 'rgba(0, 0, 0, 0.7)',
               color: 'white',
-              padding: 'clamp(0.125rem, 0.5vw, 0.25rem) clamp(0.375rem, 1.5vw, 0.5rem)',
+              padding: '0.25rem 0.5rem',
               borderRadius: '0.375rem',
-              fontSize: 'clamp(0.6875rem, 2vw, 0.75rem)',
+              fontSize: '0.75rem',
               fontWeight: '500',
               zIndex: 10
             }}>
@@ -367,134 +403,183 @@ const PropertyCard = ({ listing }) => {
             </span>
           </div>
         )}
+
+        {/* For Sale Badge */}
+        {!listing.isSold && (
+          <div style={{ position: 'absolute', top: 'clamp(0.5rem, 2vw, 0.75rem)', right: 'clamp(0.5rem, 2vw, 0.75rem)' }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', padding: 'clamp(0.25rem, 1vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem)', fontSize: 'clamp(0.7rem, 2vw, 0.825rem)', fontWeight: '600', backgroundColor: 'hsl(38 92% 50%)', color: 'hsl(30 45% 12%)', borderRadius: '9999px', gap: '0.375rem', backdropFilter: 'blur(8px)' }}>
+              <Tag style={{ height: 'clamp(0.7rem, 2vw, 0.825rem)', width: 'clamp(0.7rem, 2vw, 0.825rem)' }} />
+              For Sale
+            </span>
+          </div>
+        )}
       </div>
 
-      {/* Card Content */}
-      <div style={{ padding: 'clamp(1rem, 3vw, 1.25rem)', display: 'flex', flexDirection: 'column', gap: 'clamp(0.5rem, 2vw, 0.75rem)' }}>
-        
-        {/* Title */}
-        <h3 style={{ color: 'hsl(200 25% 15%)', fontSize: 'clamp(0.975rem, 2.5vw, 1.1rem)', fontWeight: '700', lineHeight: '1.3', margin: 0 }}>
+      {/* Card Content Section */}
+      <div className="p-4" style={{ opacity: listing.isSold ? 0.75 : 1 }}>
+        {/* Status badge */}
+        {(listing.isSold || listing.status) && (
+          <div style={{ marginBottom: '0.75rem' }}>
+            <span
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.25rem',
+                padding: '0.25rem 0.625rem',
+                fontSize: '0.75rem',
+                fontWeight: '500',
+                borderRadius: '9999px',
+                ...(listing.isSold
+                  ? { backgroundColor: 'hsl(0 72% 51% / 0.1)', color: 'hsl(0 65% 45%)' }
+                  : { backgroundColor: 'hsl(174 62% 32% / 0.1)', color: '#1f847a' })
+              }}
+            >
+              {listing.isSold ? (
+                <XCircle className="h-3 w-3" />
+              ) : (
+                <CheckCircle2 className="h-3 w-3" />
+              )}
+              {listing.isSold ? "Sold" : listing.status}
+            </span>
+          </div>
+        )}
+
+        <h3 className="font-semibold tracking-tight mb-1" style={{ color: 'hsl(200 25% 15%)', fontSize: '1.125rem' }}>
           {listing.title}
         </h3>
-
-        {/* Location */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', color: 'hsl(200 15% 45%)', fontSize: 'clamp(0.8rem, 2vw, 0.875rem)' }}>
-          <MapPin style={{ height: 'clamp(0.8rem, 2vw, 0.875rem)', width: 'clamp(0.8rem, 2vw, 0.875rem)', flexShrink: 0 }} />
-          {listing.area}, {listing.city}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', marginBottom: '0.75rem' }}>
+          <MapPin style={{ height: '0.875rem', width: '0.875rem', color: 'hsl(200 15% 45%)' }} />
+          <span style={{ fontSize: '0.875rem', color: 'hsl(200 15% 45%)' }}>
+            {listing.area}, {listing.city}
+          </span>
         </div>
 
-        {/* Features */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.5rem, 2vw, 0.75rem)', flexWrap: 'wrap', fontSize: 'clamp(0.8rem, 2vw, 0.875rem)', color: 'hsl(200 15% 45%)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-            <BedDouble style={{ height: 'clamp(0.875rem, 2.5vw, 1rem)', width: 'clamp(0.875rem, 2.5vw, 1rem)', color: 'hsl(174 62% 36%)' }} />
-            {listing.bedrooms ?? '—'} bed{listing.bedrooms === 1 ? '' : 's'}
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-            <Bath style={{ height: 'clamp(0.875rem, 2.5vw, 1rem)', width: 'clamp(0.875rem, 2.5vw, 1rem)', color: 'hsl(174 62% 36%)' }} />
-            {listing.bathrooms ?? '—'} bath{listing.bathrooms === 1 ? '' : 's'}
-          </div>
+        <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '0.75rem', color: 'hsl(200 15% 45%)', fontSize: '0.875rem' }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '0.22rem', fontSize: '0.76rem', color: 'hsl(200 15% 46%)' }}>
+            <BedDouble style={{ width: '0.82rem', height: '0.82rem' }} />
+            {listing.bedrooms ?? 0} bed{listing.bedrooms === 1 ? '' : 's'}
+          </span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '0.22rem', fontSize: '0.76rem', color: 'hsl(200 15% 46%)' }}>
+            <Bath style={{ width: '0.82rem', height: '0.82rem' }} />
+            {listing.bathrooms ?? 0} bath{listing.bathrooms === 1 ? '' : 's'}
+          </span>
           {listing.property_type && (
-            <span style={{ fontWeight: '600', color: 'hsl(174 62% 32%)' }}>
-              {String(listing.property_type).replace(/\b\w/g, c => c.toUpperCase())}
-            </span>
+            <span style={{ fontWeight: '600' }}>{String(listing.property_type).replace(/\b\w/g, c => c.toUpperCase())}</span>
           )}
         </div>
 
-        {/* Price */}
-        <div style={{ padding: 'clamp(0.625rem, 2vw, 0.75rem)', backgroundColor: 'hsl(174 62% 32% / 0.07)', border: '1px solid hsl(174 62% 32% / 0.15)', borderRadius: '0.5rem', textAlign: 'center', marginTop: 'clamp(0.25rem, 1vw, 0.5rem)' }}>
-          <p style={{ fontSize: 'clamp(0.7rem, 2vw, 0.775rem)', color: 'hsl(200 15% 45%)', margin: 0, marginBottom: '0.125rem' }}>Sale Price</p>
-          <p style={{ fontSize: 'clamp(1.1rem, 4vw, 1.3rem)', fontWeight: '800', color: 'hsl(174 62% 28%)', margin: 0 }}>
-            {fmt(listing.salePrice)}
-          </p>
+        <div style={{ marginBottom: '0.75rem' }}>
+          <div className="font-bold" style={{ color: listing.isSold ? 'hsl(200 15% 45%)' : '#c9791f', fontSize: '1.25rem', textDecoration: listing.isSold ? 'line-through' : 'none' }}>
+            GH₵{listing.price.toLocaleString()}
+          </div>
+          <div style={{ fontSize: '0.75rem', color: 'hsl(200 15% 45%)' }}>
+            {listing.isSold ? 'no longer available' : 'asking price'}
+          </div>
         </div>
 
-        {/* Agent & Reviews */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 'clamp(0.5rem, 2vw, 0.75rem)', borderTop: '1px solid hsl(40 20% 90%)', fontSize: 'clamp(0.8rem, 2vw, 0.875rem)' }}>
-          {listing.agentName && (
-            <span style={{ color: 'hsl(200 15% 45%)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              {listing.agentName}
-            </span>
-          )}
-          {listing.reviewCount > 0 && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', marginLeft: 'auto', paddingLeft: '0.5rem' }}>
-              <Star style={{ height: 'clamp(0.875rem, 2.5vw, 1rem)', width: 'clamp(0.875rem, 2.5vw, 1rem)', color: 'hsl(38 92% 50%)', fill: 'hsl(38 92% 50%)' }} />
-              <span style={{ fontWeight: '600', color: 'hsl(200 25% 15%)' }}>
+        {listing.agentName && (
+          <div style={{
+            paddingTop: '0.75rem',
+            borderTop: '1px solid hsl(40 20% 88%)',
+            marginBottom: '0.75rem'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: '0.875rem', color: 'hsl(200 15% 45%)' }}>
+                {listing.agentName}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {listing.reviewCount > 0 && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+              <Star style={{ height: '1rem', width: '1rem', color: 'hsl(38 92% 50%)', fill: 'hsl(38 92% 50%)' }} />
+              <span style={{ fontWeight: '500', fontSize: '0.875rem', color: 'hsl(200 25% 15%)' }}>
                 {listing.rating}
               </span>
             </div>
-          )}
-        </div>
+            <span style={{ fontSize: '0.875rem', color: 'hsl(200 15% 45%)' }}>
+              ({listing.reviewCount} {listing.reviewCount === 1 ? 'review' : 'reviews'})
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );
 };
 
-// ─── Main Component ───────────────────────────────────────────────────────────
-
-const SaleListingsPage = ({ listings: initialListingsData = {}, filters = {} }) => {
+const SaleListingsPage = ({ listings: initialListingsData = {} }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
   const [selectedArea, setSelectedArea] = useState("");
   const [sortBy, setSortBy] = useState("recent");
   const [listings, setListings] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [lastId, setLastId] = useState(null);
   const [hasMore, setHasMore] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [cityOptions, setCityOptions] = useState([{ value: "", label: "All Regions" }]);
   const [areaOptions, setAreaOptions] = useState([{ value: "", label: "All Areas" }]);
 
-  // Initialize listings
   useEffect(() => {
     const data = initialListingsData.data || initialListingsData;
+
     if (data && Array.isArray(data)) {
       const formattedInitialListings = formatListings(data);
       setListings(formattedInitialListings);
-      setCurrentPage(initialListingsData.current_page || 1);
-      setHasMore(
-        initialListingsData.has_more !== false &&
-        (initialListingsData.next_page_url || initialListingsData.current_page < initialListingsData.last_page)
-      );
+
+      if (formattedInitialListings.length > 0) {
+        const lastItem = formattedInitialListings[formattedInitialListings.length - 1];
+        setLastId(lastItem.id);
+      }
+
+      setHasMore(initialListingsData.has_more !== false);
     }
+  }, [initialListingsData]);
 
-    if (filters.city) setSelectedCity(filters.city.toLowerCase());
-    if (filters.area) setSelectedArea(filters.area.replace(/-/g, ' '));
-  }, [initialListingsData, filters]);
-
-  // Load cities
   useEffect(() => {
     const loadCities = async () => {
       try {
         const response = await fetch('/buy/api/cities');
-        if (!response.ok) throw new Error('Failed to fetch cities');
+        if (!response.ok) {
+          throw new Error(`Failed to fetch cities: ${response.status}`);
+        }
+
         const data = await response.json();
         const options = [
           { value: '', label: 'All Regions' },
           ...data.cities.map((city) => ({ value: city.toLowerCase(), label: city }))
         ];
+
         setCityOptions(options);
       } catch (error) {
-        console.error('Failed to load cities:', error);
+        console.error('Failed to load sale cities:', error);
       }
     };
+
     loadCities();
   }, []);
 
-  // Load areas
   useEffect(() => {
     const loadAreas = async () => {
       try {
         const response = await fetch('/buy/api/areas');
-        if (!response.ok) throw new Error('Failed to fetch areas');
+        if (!response.ok) {
+          throw new Error(`Failed to fetch areas: ${response.status}`);
+        }
+
         const data = await response.json();
         const options = [
           { value: '', label: 'All Areas' },
           ...data.areas.map((area) => ({ value: area.toLowerCase(), label: area }))
         ];
+
         setAreaOptions(options);
       } catch (error) {
-        console.error('Failed to load areas:', error);
+        console.error('Failed to load sale areas:', error);
       }
     };
+
     loadAreas();
   }, []);
 
@@ -503,38 +588,54 @@ const SaleListingsPage = ({ listings: initialListingsData = {}, filters = {} }) 
       id: listing.id,
       slug: listing.slug || null,
       title: listing.title || `${listing.bedrooms} Bedroom ${listing.property_type}`,
-      area: listing.area || listing.location || 'Unknown',
+      area: listing.area || listing.location,
       city: listing.city || "Accra",
-      salePrice: parseFloat(listing.sale_price) || 0,
+      price: parseFloat(listing.sale_price) || 0,
       bedrooms: listing.bedrooms,
       bathrooms: listing.bathrooms,
       property_type: listing.property_type,
       agentName: listing.agent_name || null,
-      status: listing.status || 'pending',
-      isVerified: Boolean(listing.is_verified),
+      status: listing.status,
+      isVerified: Boolean(listing.is_verified) || listing.verification_status === "verified",
+      isSold: Boolean(listing.is_sold) || listing.status === "sold",
       reviewCount: parseInt(listing.review_count) || 0,
       rating: parseFloat(listing.rating) || 0,
       images: listing.images || [],
+      amenities: listing.amenities || [],
+      description: listing.description || '',
       created_at: listing.created_at
     }));
   };
 
   const loadMoreListings = async () => {
     if (isLoading || !hasMore) return;
-    
+
     setIsLoading(true);
     try {
-      const nextPage = currentPage + 1;
-      const response = await fetch(`/buy/api/more?page=${nextPage}`);
-      
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-      
+      const url = lastId
+        ? `/buy/api/more?last_id=${lastId}`
+        : `/buy/api/more`;
+
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       const data = await response.json();
-      
+
       if (data.listings && Array.isArray(data.listings) && data.listings.length > 0) {
         const formattedNewListings = formatListings(data.listings);
+
+        const existingIds = new Set(listings.map(l => l.id));
+        const duplicates = formattedNewListings.filter(l => existingIds.has(l.id));
+
+        if (duplicates.length > 0) {
+          console.warn('⚠️ Duplicate listings detected:', duplicates.map(d => d.id));
+        }
+
         setListings(prev => [...prev, ...formattedNewListings]);
-        setCurrentPage(data.current_page || nextPage);
+        setLastId(data.last_id);
         setHasMore(data.has_more);
       } else {
         setHasMore(false);
@@ -566,9 +667,9 @@ const SaleListingsPage = ({ listings: initialListingsData = {}, filters = {} }) 
   const sortedListings = [...filteredListings].sort((a, b) => {
     switch (sortBy) {
       case "price-low":
-        return a.salePrice - b.salePrice;
+        return a.price - b.price;
       case "price-high":
-        return b.salePrice - a.salePrice;
+        return b.price - a.price;
       case "rating":
         return b.rating - a.rating;
       case "recent":
@@ -580,17 +681,16 @@ const SaleListingsPage = ({ listings: initialListingsData = {}, filters = {} }) 
   return (
     <>
         <Head>
-          <title>Houses & Property for Sale in Ghana | RentTrustGh</title>
+          <title>Houses & Apartments for Sale in Ghana | RentTrustGh</title>
 
-          {/* Primary Meta */}
           <meta
               name="description"
-              content="Browse verified houses, apartments, land, offices, shops, and commercial properties for sale across Ghana. Compare prices, locations, amenities, and trusted agents on RentTrustGh."
+              content="Browse verified houses, apartments, land, and other properties for sale across Ghana. Compare prices, locations, amenities, reviews, and trusted agents on RentTrustGh."
           />
 
           <meta
               name="keywords"
-              content="houses for sale Ghana, property for sale Ghana, apartments for sale Ghana, land for sale Ghana, commercial property Ghana, offices for sale Ghana, real estate Ghana, Accra houses for sale, Kumasi property, Tema property"
+              content="houses for sale Ghana, apartments for sale Ghana, property for sale Ghana, Accra houses for sale, Tema properties, Kumasi houses for sale, land for sale Ghana, verified sale listings Ghana"
           />
 
           <meta
@@ -603,25 +703,23 @@ const SaleListingsPage = ({ listings: initialListingsData = {}, filters = {} }) 
               content="index,follow"
           />
 
-          {/* Canonical */}
           <link
               rel="canonical"
               href="https://renttrustgh.com/buy"
           />
 
-          {/* Open Graph */}
           <meta property="og:type" content="website" />
           <meta property="og:site_name" content="RentTrustGh" />
           <meta property="og:locale" content="en_GH" />
 
           <meta
               property="og:title"
-              content="Houses & Property for Sale in Ghana | RentTrustGh"
+              content="Houses & Apartments for Sale in Ghana | RentTrustGh"
           />
 
           <meta
               property="og:description"
-              content="Discover verified houses, apartments, land, offices, and commercial properties for sale throughout Ghana."
+              content="Find verified properties for sale across Ghana. Browse houses, apartments, land, prices, locations, and trusted agents."
           />
 
           <meta
@@ -631,10 +729,9 @@ const SaleListingsPage = ({ listings: initialListingsData = {}, filters = {} }) 
 
           <meta
               property="og:image"
-              content="https://renttrustgh.com/images/seo/buy-properties-og.jpg"
+              content="https://renttrustgh.com/images/seo/sales-og.jpg"
           />
 
-          {/* Twitter */}
           <meta
               name="twitter:card"
               content="summary_large_image"
@@ -642,67 +739,65 @@ const SaleListingsPage = ({ listings: initialListingsData = {}, filters = {} }) 
 
           <meta
               name="twitter:title"
-              content="Houses & Property for Sale in Ghana | RentTrustGh"
+              content="Houses & Apartments for Sale in Ghana | RentTrustGh"
           />
 
           <meta
               name="twitter:description"
-              content="Browse verified houses, apartments, land, offices, and commercial property listings for sale across Ghana."
+              content="Browse trusted houses, apartments, land, and other verified sale listings across Ghana."
           />
 
           <meta
               name="twitter:image"
-              content="https://renttrustgh.com/images/seo/buy-properties-og.jpg"
+              content="https://renttrustgh.com/images/seo/sales-og.jpg"
           />
 
-          {/* Structured Data */}
           <script
               type="application/ld+json"
               dangerouslySetInnerHTML={{
                   __html: JSON.stringify({
                       "@context": "https://schema.org",
                       "@type": "CollectionPage",
-                      "name": "Properties for Sale in Ghana",
-                      "url": "https://renttrustgh.com/buy",
-                      "description":
-                          "Browse verified houses, apartments, land, offices, shops, and commercial properties available for sale across Ghana.",
-                      "isPartOf": {
+                      name: "Properties for Sale in Ghana",
+                      url: "https://renttrustgh.com/buy",
+                      description:
+                          "Browse verified houses, apartments, land, and other properties available for sale across Ghana.",
+                      isPartOf: {
                           "@type": "WebSite",
-                          "name": "RentTrustGh",
-                          "url": "https://renttrustgh.com"
+                          name: "RentTrustGh",
+                          url: "https://renttrustgh.com"
                       },
-                      "publisher": {
+                      publisher: {
                           "@type": "Organization",
-                          "name": "RentTrustGh",
-                          "url": "https://renttrustgh.com",
-                          "logo": {
+                          name: "RentTrustGh",
+                          url: "https://renttrustgh.com",
+                          logo: {
                               "@type": "ImageObject",
-                              "url": "https://renttrustgh.com/images/rent-trust.png"
+                              url: "https://renttrustgh.com/images/rent-trust.png"
                           }
                       }
                   })
               }}
           />
 
-          {/* Breadcrumb Schema */}
           <script
               type="application/ld+json"
               dangerouslySetInnerHTML={{
                   __html: JSON.stringify({
                       "@context": "https://schema.org",
                       "@type": "BreadcrumbList",
-                      "itemListElement": [
+                      itemListElement: [
                           {
                               "@type": "ListItem",
-                              "position": 1,
-                              "name": "Home",
-                              "item": "https://renttrustgh.com"
+                              position: 1,
+                              name: "Home",
+                              item: "https://renttrustgh.com"
                           },
                           {
                               "@type": "ListItem",
-                              "position": 2,
-                              "name": "Properties for Sale",
-                              "item": "https://renttrustgh.com/buy"
+                              position: 2,
+                              name: "Properties for Sale",
+                              item: "https://renttrustgh.com/buy"
                           }
                       ]
                   })
@@ -719,8 +814,7 @@ const SaleListingsPage = ({ listings: initialListingsData = {}, filters = {} }) 
         h1, h2, h3, h4, h5, h6 {
           font-weight: 600;
         }
-
-        @media (max-width: 768px) {
+          @media (max-width: 768px) {
           .search-grid {
             grid-template-columns: 1fr !important;
           }
@@ -735,29 +829,21 @@ const SaleListingsPage = ({ listings: initialListingsData = {}, filters = {} }) 
           }
         }
 
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(8px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-
-        .listing-card {
-          animation: fadeIn 0.4s ease-out;
-        }
       `}</style>
 
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'hsl(40 33% 98%)' }}>
         <Header />
 
         <main style={{ flex: 1 }}>
-          
-          {/* Search & Filter Header */}
+          {/* Search Header */}
+
           <div style={{ backgroundColor: 'white', borderBottom: '1px solid hsl(40 20% 88%)', paddingTop: 'clamp(1.5rem, 4vw, 2rem)', paddingBottom: 'clamp(1.5rem, 4vw, 2rem)' }}>
             <div className="container mx-auto" style={{ padding: '0 clamp(0.75rem, 3vw, 1rem)' }}>
-              
+
               {/* Heading */}
               <div style={{ marginBottom: 'clamp(1.5rem, 4vw, 2rem)' }}>
                 <h1 style={{ color: 'hsl(200 25% 15%)', fontSize: 'clamp(1.5rem, 5vw, 2rem)', fontWeight: '700', lineHeight: '1.2', margin: 0, marginBottom: '0.5rem' }}>
-                  Find Properties for Sale
+                  Find Properties for Sale in Ghana
                 </h1>
                 <p style={{ color: 'hsl(200 15% 45%)', fontSize: 'clamp(0.875rem, 2.5vw, 1rem)', margin: 0 }}>
                   Browse verified listings across Ghana
@@ -785,7 +871,7 @@ const SaleListingsPage = ({ listings: initialListingsData = {}, filters = {} }) 
                   }}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  onFocus={(e) => e.currentTarget.style.borderColor = 'hsl(174 62% 32%)'}
+                  onFocus={(e) => e.currentTarget.style.borderColor = 'hsl(38 92% 50%)'}
                   onBlur={(e) => e.currentTarget.style.borderColor = 'hsl(40 20% 88%)'}
                 />
               </div>
@@ -797,7 +883,6 @@ const SaleListingsPage = ({ listings: initialListingsData = {}, filters = {} }) 
                   options={cityOptions}
                   onChange={setSelectedCity}
                   placeholder="All Regions"
-                  label="Region"
                 />
 
                 <Dropdown
@@ -805,7 +890,6 @@ const SaleListingsPage = ({ listings: initialListingsData = {}, filters = {} }) 
                   options={areaOptions}
                   onChange={setSelectedArea}
                   placeholder="All Areas"
-                  label="Area"
                 />
 
                 <Dropdown
@@ -813,7 +897,6 @@ const SaleListingsPage = ({ listings: initialListingsData = {}, filters = {} }) 
                   options={sortOptions}
                   onChange={setSortBy}
                   placeholder="Sort by"
-                  label="Sort"
                 />
 
                 <div style={{ display: 'flex', alignItems: 'flex-end' }}>
@@ -821,8 +904,8 @@ const SaleListingsPage = ({ listings: initialListingsData = {}, filters = {} }) 
                     style={{
                       width: '100%',
                       height: 'clamp(2.5rem, 10vw, 3rem)',
-                      background: 'linear-gradient(135deg, hsl(174 62% 28%), hsl(174 55% 36%))',
-                      color: 'white',
+                      background: 'linear-gradient(135deg, hsl(38 85% 44%), hsl(38 92% 54%))',
+                      color: 'hsl(30 45% 12%)',
                       border: 'none',
                       borderRadius: '0.75rem',
                       fontWeight: '600',
@@ -834,7 +917,7 @@ const SaleListingsPage = ({ listings: initialListingsData = {}, filters = {} }) 
                       transition: 'all 0.2s',
                       fontSize: 'clamp(0.875rem, 2vw, 1rem)'
                     }}
-                    onMouseEnter={(e) => { e.currentTarget.style.filter = 'brightness(1.1)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+                    onMouseEnter={(e) => { e.currentTarget.style.filter = 'brightness(1.05)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
                     onMouseLeave={(e) => { e.currentTarget.style.filter = 'none'; e.currentTarget.style.transform = 'none'; }}
                   >
                     <SearchIcon style={{ height: 'clamp(1rem, 2.5vw, 1.1rem)', width: 'clamp(1rem, 2.5vw, 1.1rem)' }} />
@@ -845,76 +928,63 @@ const SaleListingsPage = ({ listings: initialListingsData = {}, filters = {} }) 
             </div>
           </div>
 
-          {/* Results Section */}
-          <div className="container mx-auto" style={{ padding: 'clamp(1.5rem, 4vw, 2rem) clamp(0.75rem, 3vw, 1rem)', flex: 1 }}>
-            
-            {/* Results Count */}
-            <div style={{ marginBottom: 'clamp(1.5rem, 3vw, 2rem)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div>
-                <p style={{ color: 'hsl(200 25% 15%)', fontSize: 'clamp(0.875rem, 2.5vw, 1rem)', fontWeight: '600', margin: 0 }}>
-                  {sortedListings.length} {sortedListings.length === 1 ? 'Property' : 'Properties'} Available
-                </p>
-                {(searchQuery || selectedCity || selectedArea) && (
-                  <p style={{ color: 'hsl(200 15% 45%)', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', margin: '0.25rem 0 0 0' }}>
-                    Based on your filters
-                  </p>
-                )}
-              </div>
+          {/* Results */}
+          <div className="container mx-auto px-4 py-8">
+            <div style={{ marginBottom: '1.5rem' }}>
+              <p style={{ color: 'hsl(200 15% 45%)' }}>
+                Showing <span className="font-medium" style={{ color: 'hsl(200 25% 15%)' }}>{sortedListings.length}</span> listings
+              </p>
             </div>
 
             {/* Listings Grid */}
-            {sortedListings.length > 0 ? (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(clamp(250px, 60vw, 320px), 1fr))', gap: 'clamp(1rem, 3vw, 1.5rem)' }}>
-                {sortedListings.map((listing) => {
-                  const listingAreaSlug = slugifyArea(listing.area);
-                  const listingSlug = listing.slug || listing.id;
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 gap-6">
+              {sortedListings.map((listing) => {
+                const listingAreaSlug = slugifyArea(listing.area);
+                const listingSlug = listing.slug || listing.id;
 
-                  return (
-                    <Link
-                      key={listing.id}
-                      href={`/buy/${listingAreaSlug}/${listingSlug}`}
-                      className="listing-card"
-                      style={{ textDecoration: 'none', display: 'block' }}
-                    >
-                      <PropertyCard listing={listing} />
-                    </Link>
-                  );
-                })}
-              </div>
-            ) : (
-              <div style={{ textAlign: 'center', padding: 'clamp(2rem, 5vw, 4rem) 1rem' }}>
-                <MapPin style={{ height: 'clamp(2.5rem, 8vw, 3.5rem)', width: 'clamp(2.5rem, 8vw, 3.5rem)', color: 'hsl(200 15% 45% / 0.4)', margin: '0 auto 1rem', display: 'block' }} />
-                <h3 style={{ color: 'hsl(200 25% 15%)', fontSize: 'clamp(1.1rem, 3vw, 1.35rem)', fontWeight: '600', margin: '0 0 0.5rem 0' }}>
-                  No Properties Found
+                return (
+                  <Link
+                    key={listing.id}
+                    href={`/buy/${listingAreaSlug}/${listingSlug}`}
+                    className="block transition-transform hover:scale-[1.02]"
+                  >
+                    <PropertyCard listing={listing} />
+                  </Link>
+                );
+              })}
+            </div>
+
+            {sortedListings.length === 0 && (
+              <div style={{ textAlign: 'center', padding: '3rem 0' }}>
+                <MapPin style={{ height: '3rem', width: '3rem', color: 'hsl(200 15% 45% / 0.5)', margin: '0 auto 1rem' }} />
+                <h3 className="text-lg font-semibold tracking-tight" style={{ color: 'hsl(200 25% 15%)', marginBottom: '0.5rem' }}>
+                  No listings found
                 </h3>
-                <p style={{ color: 'hsl(200 15% 45%)', fontSize: 'clamp(0.875rem, 2vw, 1rem)', margin: 0 }}>
-                  Try adjusting your search criteria or filters
-                </p>
+                <p style={{ color: 'hsl(200 15% 45%)' }}>Try adjusting your search criteria</p>
               </div>
             )}
 
-            {/* Load More Button */}
+            {/* Load More */}
             {hasMore && sortedListings.length > 0 && (
-              <div style={{ textAlign: 'center', marginTop: 'clamp(2rem, 4vw, 3rem)' }}>
+              <div style={{ textAlign: 'center', marginTop: '2rem' }}>
                 <button
                   style={{
-                    padding: 'clamp(0.75rem, 2vw, 0.875rem) clamp(1.5rem, 4vw, 2rem)',
+                    padding: '0.75rem 2rem',
                     border: '1px solid hsl(40 20% 88%)',
                     borderRadius: '0.75rem',
                     backgroundColor: isLoading ? 'hsl(40 20% 88%)' : 'white',
-                    color: isLoading ? 'hsl(200 15% 45%)' : 'hsl(174 62% 32%)',
-                    fontWeight: '600',
+                    color: isLoading ? 'hsl(200 15% 45%)' : '#c9791f',
+                    fontWeight: '500',
                     cursor: isLoading ? 'not-allowed' : 'pointer',
-                    transition: 'all 0.2s',
-                    opacity: isLoading ? 0.6 : 1,
-                    fontSize: 'clamp(0.875rem, 2vw, 1rem)'
+                    transition: 'background-color 0.2s',
+                    opacity: isLoading ? 0.6 : 1
                   }}
-                  onMouseEnter={(e) => !isLoading && (e.currentTarget.style.backgroundColor = 'hsl(174 62% 32% / 0.05)')}
+                  onMouseEnter={(e) => !isLoading && (e.currentTarget.style.backgroundColor = 'hsl(38 92% 50% / 0.06)')}
                   onMouseLeave={(e) => !isLoading && (e.currentTarget.style.backgroundColor = 'white')}
                   onClick={loadMoreListings}
                   disabled={isLoading}
                 >
-                  {isLoading ? 'Loading Properties...' : 'Load More Properties'}
+                  {isLoading ? 'Loading...' : 'Load More Listings'}
                 </button>
               </div>
             )}

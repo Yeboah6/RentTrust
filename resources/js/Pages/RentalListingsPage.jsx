@@ -251,6 +251,7 @@ const PropertyCard = ({ listing }) => {
           <img 
             src={`/storage/rental_images/${imagesArray[currentImageIndex]}`}
             alt={`${listing.title || 'Property'} image ${currentImageIndex + 1}`}
+            loading="lazy"
             style={{
               width: '100%',
               height: '100%',
@@ -432,7 +433,7 @@ const PropertyCard = ({ listing }) => {
       {/* Card Content Section */}
       <div className="p-4 property-card-content" style={{ opacity: listing.isRented ? 0.75 : 1 }}>
         {/* Status badge */}
-        {(listing.isRented || listing.status === "available" || listing.status === "approved" || listing.status === "verified") && (
+        {(listing.isRented || listing.status) && (
           <div style={{ marginBottom: '0.75rem' }}>
             <span
               style={{
@@ -445,9 +446,7 @@ const PropertyCard = ({ listing }) => {
                 borderRadius: '9999px',
                 ...(listing.isRented
                   ? { backgroundColor: 'hsl(0 72% 51% / 0.1)', color: 'hsl(0 65% 45%)' }
-                  : listing.status === "available" || listing.status === "approved" || listing.status === "verified"
-                    ? { backgroundColor: 'hsl(174 62% 32% / 0.1)', color: '#1f847a' }
-                    : { backgroundColor: 'hsl(38 92% 50% / 0.1)', color: 'hsl(38 92% 40%)' })
+                  : { backgroundColor: 'hsl(174 62% 32% / 0.1)', color: '#1f847a' })
               }}
             >
               {listing.isRented ? (
@@ -455,11 +454,7 @@ const PropertyCard = ({ listing }) => {
               ) : (
                 <CheckCircle2 className="h-3 w-3" />
               )}
-              {listing.isRented
-                ? "Rented"
-                : listing.status === "available" || listing.status === "approved" || listing.status === "verified"
-                  ? "Verified"
-                  : listing.status}
+              {listing.isRented ? "Rented" : listing.status}
             </span>
           </div>
         )}

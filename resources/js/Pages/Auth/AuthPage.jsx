@@ -534,7 +534,7 @@ const handleEmailChange = (val) => {
                 <button onClick={toggleMode} style={{ border: 'none', background: 'transparent', color: COLOR.teal, cursor: 'pointer', fontSize: '0.875rem', fontWeight: 600, padding: '0.5rem 1rem' }}
                   onMouseEnter={(e) => e.currentTarget.style.opacity = '0.7'}
                   onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}>
-                  {isLogin ? 'Create an account' : 'Sign in instead'}
+                  {isLogin ? 'Create an account' : 'Sign in'}
                 </button>
                 <Link
                   href={'/become-agent'}

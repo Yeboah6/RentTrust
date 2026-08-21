@@ -385,15 +385,12 @@ const VerificationsIndex = ({ verifications: raw = [], metrics: serverMetrics = 
     const confirmReview = (adminNotes) => {
         const { verification, action } = reviewModal;
         setProcessing(true);
-        // Listing verifications live on their own route, distinct from the
-        // agent-identity verification endpoints — same "approve"/"reject" verbs,
-        // different resource. Also POST (matching the controllers), not PATCH.
-        const url = `/super-admin/listing-verifications/${verification.id}/${action}`;
+        const url = `/super-admin/verifications/${verification.id}/${action}`;
         const payload = action === 'approve'
             ? { admin_notes: adminNotes }
-            : { rejection_reason: adminNotes };
+            : { admin_notes: adminNotes };
 
-        router.post(url, payload, {
+        router.patch(url, payload, {
             preserveScroll: true,
             onSuccess: () => {
                 showToast(`Verification ${action === 'approve' ? 'approved' : 'rejected'}.`);
