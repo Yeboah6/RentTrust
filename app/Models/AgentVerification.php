@@ -7,29 +7,53 @@ use Illuminate\Database\Eloquent\Model;
 class AgentVerification extends Model
 {
     protected $fillable = [
-        'agent_id',
-        'agent_name',
-        'email',
-        'phone_number',
-        'gov_id',
-        'license_documents',
-        'proof_of_address',
-        'notes',
-        'admin_notes',
+        'verification_id',
+        'user_id',
         'status',
-        'submitted_at',
-        'reviewed_at',
+        'identity_status',
+        'identity_verified_at',
+        'professional_status',
+        'professional_verified_at',
+        'verified_at',
+        'expires_at',
         'reviewed_by',
+        'reviewed_at',
+        'review_notes',
+        'rejection_reason',
+        'risk_level',
+        'risk_score',
+        'requires_manual_review',
     ];
 
     protected $casts = [
-        'submitted_at' => 'datetime',
+        'identity_verified_at' => 'datetime',
+        'professional_verified_at' => 'datetime',
+        'verified_at' => 'datetime',
+        'expires_at' => 'datetime',
         'reviewed_at' => 'datetime',
     ];
 
     public function agent()
     {
         return $this->belongsTo(User::class, 'agent_id');
+    }
+
+    public function identityVerifications()
+    {
+        return $this->hasMany(IdentityVerification::class);
+    }
+
+    public function events()
+    {
+        return $this->hasMany(VerificationEvent::class);
+    }
+
+    public function reviewer()
+    {
+        return $this->belongsTo(
+            User::class,
+            'reviewed_by'
+        );
     }
     
 }

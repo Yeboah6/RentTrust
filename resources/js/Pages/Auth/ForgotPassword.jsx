@@ -27,22 +27,24 @@ const validateEmail = (email) => {
 
 const ForgotPasswordPage = () => {
   const [emailSent, setEmailSent] = useState(false);
+  const [sentToEmail, setSentToEmail] = useState("");
 
   const { data, setData, post, processing, errors, reset } = useForm({
     email: "",
-    userType: "agent", // 'agent' or 'admin'
+    userType: "agent",
   });
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+
     if (!validateEmail(data.email)) {
       alert('Please enter a valid email address');
       return;
     }
-    
+
     post("/forgot-password", {
       onSuccess: () => {
+        setSentToEmail(data.email);
         setEmailSent(true);
         reset("email");
       },
@@ -160,7 +162,7 @@ const ForgotPasswordPage = () => {
                     {/* User Type Selection */}
                     <div>
                       <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', fontSize: '0.875rem', color: 'hsl(200 25% 15%)' }}>
-                        I am a
+                        I am an
                       </label>
                       <div style={{ display: 'flex', gap: '0.75rem' }}>
                         <label
@@ -344,7 +346,7 @@ const ForgotPasswordPage = () => {
                       marginBottom: '1.5rem'
                     }}
                   >
-                    We've sent a password reset link to <strong style={{ color: 'hsl(200 25% 15%)' }}>{data.email}</strong>. 
+                    We've sent a password reset link to <strong style={{ color: 'hsl(200 25% 15%)' }}>{sentToEmail}</strong>. 
                     Please check your inbox and follow the instructions.
                   </p>
 

@@ -9,7 +9,9 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Models\Rental;
-// use App\Traits\GeneratesUUIDs;
+use App\Models\AgentVerification;
+use App\Models\AgentLicense;
+use App\Models\VerificationConsent;
 use Illuminate\Support\Str;
 
 class User extends Authenticatable
@@ -32,6 +34,10 @@ class User extends Authenticatable
         'company',
         'bio',
         'status',
+        'verification_status',
+        'identity_verified_at',
+        'agent_verified_at',
+        'verification_expires_at',
         'fee',
         'package',
         'password',
@@ -51,10 +57,10 @@ class User extends Authenticatable
         return $this->hasManyThrough(
             \App\Models\Review::class,
             \App\Models\Rental::class,
-            'user_id',      // Foreign key on rentals table
-            'rental_id',    // Foreign key on reviews table
-            'id',           // Local key on users table
-            'id'            // Local key on rentals table
+            'user_id',  
+            'rental_id',
+            'id',       
+            'id'        
         );
     }
 
@@ -80,6 +86,9 @@ class User extends Authenticatable
             'password'              => 'hashed',
             'last_active'           => 'datetime',
             'setup_token_expires_at'=> 'datetime',
+            'identity_verified_at' => 'datetime',
+            'agent_verified_at' => 'datetime',
+            'verification_expires_at' => 'datetime',
         ];
     }
 
@@ -114,11 +123,6 @@ class User extends Authenticatable
         return $this->status === 'active';
     }
 
-    public function verification()
-    {
-        return $this->hasOne(\App\Models\AgentVerification::class, 'agent_id');
-    }
-
     public function subscription()
     {
         return $this->hasOne(Subscription::class)->latestOfMany('ends_at');
@@ -148,5 +152,20 @@ class User extends Authenticatable
     public function hasActiveSubscription(): bool
     {
         return $this->subscription?->isActive() ?? false;
+    }
+
+    public function agentVerification()
+    {
+        return $this->hasOne(AgentVerification::class);
+    }
+
+    public function agentLicenses()
+    {
+        return $this->hasMany(AgentLicense::class);
+    }
+
+    public function verificationConsents()
+    {
+        return $this->hasMany(VerificationConsent::class);
     }
 }

@@ -22,6 +22,10 @@ return new class extends Migration
             $table->string('company')->nullable();
             $table->string('bio')->nullable();
             $table->string('status')->nullable();
+            $table->string('verification_status')->default('unverified')->index();
+            $table->timestamp('identity_verified_at')->nullable();
+            $table->timestamp('agent_verified_at')->nullable();
+            $table->timestamp('verification_expires_at')->nullable();
             $table->string('fee')->nullable();
             $table->string('package')->nullable()->default('free');
             $table->string('password');

@@ -46,7 +46,7 @@ class ProfileController extends Controller
 
         return Inertia::render('SuperAdmin/Profile', [
             'admin'    => [
-                'id'                  => $admin->id,
+                'id'                  => $admin->user_id,
                 'name'                => $admin->name,
                 'email'               => $admin->email,
                 'avatar'              => $admin->avatar
@@ -54,10 +54,10 @@ class ProfileController extends Controller
                         ? $admin->avatar
                         : asset('storage/' . $admin->avatar))
                     : null,
-                'last_login_at'       => $admin->last_login_at?->toISOString()
+                'last_active'       => $admin->last_active?->toISOString()
                                       ?? $admin->last_seen_at?->toISOString(),
-                'last_login_ip'       => $admin->last_login_ip,
-                'updated_at' => $admin->password_updated_at?->toISOString(),
+                // 'last_login_ip'       => $admin->last_login_ip,
+                'updated_at' => $admin->updated_at?->toISOString(),
                 'created_at'          => $admin->created_at?->toISOString(),
                 'updated_at'          => $admin->updated_at?->toISOString(),
             ],
@@ -66,7 +66,7 @@ class ProfileController extends Controller
                 'total_actions'     => $totalActions,
                 'this_month'        => $thisMonth,
                 'admin_count'       => \App\Models\User::where('role', 'admin')->count(),
-                'listings_reviewed' => 0, // extend if you track this
+                'listings_reviewed' => 0,
             ],
         ]);
     }

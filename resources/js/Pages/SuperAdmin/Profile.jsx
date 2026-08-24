@@ -209,7 +209,7 @@ const SuperAdminProfile = ({ admin, activity = [], stats = {} }) => {
                                 </p>
                                 <p style={{ margin: '0.25rem 0 0', fontSize: '0.75rem', color: 'hsl(220 20% 45%)' }}>
                                     Member since {fmtDate(a.created_at)}
-                                    {a.last_login_at && <span> · Last login {fmtRelative(a.last_login_at)}</span>}
+                                    {a.last_active && <span> · Last login {fmtRelative(a.last_active)}</span>}
                                 </p>
                             </div>
                         </div>
@@ -278,11 +278,11 @@ const SuperAdminProfile = ({ admin, activity = [], stats = {} }) => {
                             {/* Account details — read only */}
                             <Card title="Account Details" icon={<Icons.shield />}>
                                 <div style={{ paddingTop: '0.5rem' }}>
-                                    <InfoRow label="Admin ID"    value={`#${a.id}`}         mono />
+                                    <InfoRow label="Admin ID"    value={`#super_${a.id}`}         mono />
                                     <InfoRow label="Role"        value="Super Administrator" />
                                     <InfoRow label="Status"      value="Active" />
                                     <InfoRow label="Member Since" value={fmtDate(a.created_at)} />
-                                    <InfoRow label="Last Login"  value={fmtRelative(a.last_login_at)} />
+                                    <InfoRow label="Last Login"  value={fmtRelative(a.last_active)} />
                                     <InfoRow label="Last Updated" value={fmtDate(a.updated_at)} />
                                 </div>
                             </Card>
@@ -432,10 +432,10 @@ const SuperAdminProfile = ({ admin, activity = [], stats = {} }) => {
                             {/* Session info */}
                             <Card title="Session Info" icon={<Icons.clock />}>
                                 <div style={{ paddingTop: '0.5rem' }}>
-                                    <InfoRow label="Last Login"       value={fmtRelative(a.last_login_at)} />
-                                    <InfoRow label="Last Login IP"    value={a.last_login_ip ?? '—'} mono />
+                                    <InfoRow label="Last Login"       value={fmtRelative(a.last_active)} />
+                                    {/* <InfoRow label="Last Login IP"    value={a.last_login_ip ?? '—'} mono /> */}
                                     <InfoRow label="Account Created"  value={fmtDate(a.created_at)} />
-                                    <InfoRow label="Password Updated" value={fmtDate(a.password_updated_at) ?? 'Unknown'} />
+                                    <InfoRow label="Password Updated" value={fmtDate(a.updated_at) ?? 'Unknown'} />
                                 </div>
                             </Card>
                         </div>

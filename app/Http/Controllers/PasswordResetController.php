@@ -30,15 +30,16 @@ class PasswordResetController extends Controller
     {
         $request->validate([
             'email' => 'required|email',
-            'userType' => 'required|in:agent,admin,super_admin',
+            'userType' => 'required|in:agent,admin',
         ]);
 
         $email = $request->email;
         $userType = $request->userType;
+    
+        $roles = $userType === 'admin' ? ['admin', 'super_admin'] : ['agent'];
 
-        // lookup user by role (agents and administrators share the users table)
         $user = User::where('email', $email)
-                     ->where('role', $userType === 'admin' ? 'admin' : $userType)
+                     ->whereIn('role', $roles)
                      ->first();
 
         if (!$user) {
@@ -47,26 +48,23 @@ class PasswordResetController extends Controller
             ]);
         }
 
-        // Generate token
         $token = Str::random(64);
 
-        // Store token in password_resets table
         DB::table('password_reset_tokens')->where('email', $email)->delete();
 
         DB::table('password_reset_tokens')->insert([
-            'id'        => (string) Str::uuid(),
+            'id'         => (string) Str::uuid(),
             'email'      => $email,
             'token'      => Hash::make($token),
-            'user_type'  => $userType,
+            'user_type'  => $user->role,
             'created_at' => Carbon::now(),
         ]);
 
-        // Send email with reset link
-        $resetUrl = url('/reset-password/' . $token . '?email=' . urlencode($email) . '&type=' . $userType);
-        
+        $resetUrl = url('/reset-password/' . $token . '?email=' . urlencode($email) . '&type=' . $user->role);
+
         try {
             Mail::to($email)->queue(new ResetPasswordMail($user, $resetUrl, $token));
-            
+
             return back()->with('success', 'Password reset link sent to your email!');
         } catch (\Exception $e) {
             return back()->withErrors([

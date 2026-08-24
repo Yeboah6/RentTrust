@@ -49,6 +49,22 @@ const C = {
   text:        'hsl(200 25% 15%)',
 };
 
+// ── Design tokens ─────────────────────────────────────────────────────────────
+const COLOR = {
+  teal:       'hsl(174 62% 32%)',
+  tealHover:  'hsl(174 55% 28%)',
+  tealLight:  'hsl(174 62% 32% / 0.08)',
+  red:        'hsl(0 72% 51%)',
+  redLight:   'hsl(0 72% 51% / 0.05)',
+  green:      'hsl(142 60% 36%)',
+  greenLight: 'hsl(142 60% 36% / 0.05)',
+  greenBorder:'hsl(142 50% 55%)',
+  border:     'hsl(40 20% 88%)',
+  muted:      'hsl(200 15% 45%)',
+  text:       'hsl(200 25% 15%)',
+  bg:         'hsl(40 33% 98%)',
+};
+
 // ── Shared helpers ────────────────────────────────────────────────────────────
 const fieldStyle = (hasError, isValid = false) => ({
   width: '100%',
@@ -618,6 +634,21 @@ const BecomeAgentPage = () => {
 
                     </div>
                   </form>
+
+                  {/* Toggle mode */}
+                  <div style={{ marginTop: '0.5rem', paddingTop: '1.5rem', borderTop: `1px solid ${COLOR.border}`, textAlign: 'center' }}>
+                    <p style={{ color: COLOR.muted, fontSize: '0.875rem', marginBottom: '0.5rem' }}>
+                      Already have an account?
+                    </p>
+                    <Link
+                      href={'/login'}
+                      style={{ display: 'block', marginTop: '0.5rem', color: COLOR.teal, fontSize: '0.875rem', fontWeight: 500, textDecoration: 'none' }}
+                      onMouseEnter={(e) => e.currentTarget.style.opacity = '0.7'}
+                      onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+                    >
+                      Login
+                    </Link>
+                  </div>
                 </div>
               )}
             </div>
