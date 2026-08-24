@@ -9,8 +9,8 @@ use Illuminate\Database\Eloquent\Collection;
 
 class ListingLimitService
 {
-    private const RENTAL_SLOT_STATUSES = ['active', 'inactive', 'rented'];
-    private const SALE_SLOT_STATUSES   = ['active', 'inactive', 'sold'];
+    private const RENTAL_SLOT_STATUSES = ['available', 'inactive', 'rented'];
+    private const SALE_SLOT_STATUSES   = ['available', 'inactive', 'sold'];
 
     /**
      * Get the active subscription for a user

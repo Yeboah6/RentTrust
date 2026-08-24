@@ -19,7 +19,6 @@ class SaleSearchController extends Controller
     {
         // Initial load: show 8 sale listings
         $listings = Rental::where('purpose', 'sale')
-            ->where('is_sold', false)
             ->orderByDesc('id')
             ->paginate(8);
 
@@ -38,7 +37,6 @@ class SaleSearchController extends Controller
 
         try {
             $query = Rental::where('purpose', 'sale')
-                ->where('is_sold', false)
                 ->when($lastId !== null, fn ($query) => $query->where('id', '<', $lastId))
                 ->orderByDesc('id')
                 ->limit($perPage + 1);
@@ -76,7 +74,6 @@ class SaleSearchController extends Controller
     {
         try {
             $cities = Rental::where('purpose', 'sale')
-                ->where('is_sold', false)
                 ->whereNotNull('city')
                 ->where('city', '<>', '')
                 ->distinct()
@@ -280,42 +277,42 @@ class SaleSearchController extends Controller
     /**
      * Show individual sale listing
      */
-    public function show(Request $request, Rental $sale)
-    {
+    // public function show(Request $request, Rental $sale)
+    // {
 
-        try {
-            $ip = $request->ip();
-            if (!ListingView::hasViewInWindow($sale->id, $ip)) {
-                ListingView::create([
-                    'listing_view_id' => ListingView::generateUUID(),
-                    'rental_id'  => $sale->id,
-                    'user_id'    => Auth::id(),
-                    'ip'         => $ip,
-                    'user_agent' => $request->userAgent(),
-                    'referrer'   => $request->headers->get('referer'),
-                ]);
-            }
-        } catch (\Exception $e) {
-            Log::warning('Failed to track listing view: ' . $e->getMessage());
-        }
+    //     try {
+    //         $ip = $request->ip();
+    //         if (!ListingView::hasViewInWindow($sale->id, $ip)) {
+    //             ListingView::create([
+    //                 'listing_view_id' => ListingView::generateUUID(),
+    //                 'rental_id'  => $sale->id,
+    //                 'user_id'    => Auth::id(),
+    //                 'ip'         => $ip,
+    //                 'user_agent' => $request->userAgent(),
+    //                 'referrer'   => $request->headers->get('referer'),
+    //             ]);
+    //         }
+    //     } catch (\Exception $e) {
+    //         Log::warning('Failed to track listing view: ' . $e->getMessage());
+    //     }
 
-        // Track view
-        $this->trackView($request, $sale);
+    //     // Track view
+    //     $this->trackView($request, $sale);
 
-        $sale->load('user');
+    //     $sale->load('user');
         
-        $reviews = $sale->reviews()
-            ->orderBy('created_at', 'desc')
-            ->get();
+    //     $reviews = $sale->reviews()
+    //         ->orderBy('created_at', 'desc')
+    //         ->get();
 
-        return inertia('SaleDetailsPage', [
-            'rental' => $sale,
-            'reviews' => $reviews,
-            'price_label' => 'Sale Price',
-            'days_on_market' => $sale->getDaysOnMarket(),
-            'seo' => app(SeoService::class)->areaMeta(Str::slug($sale->first()->area), 'sale'),
-        ]);
-    }
+    //     return inertia('SaleDetailsPage', [
+    //         'rental' => $sale,
+    //         'reviews' => $reviews,
+    //         'price_label' => 'Sale Price',
+    //         'days_on_market' => $sale->getDaysOnMarket(),
+    //         'seo' => app(SeoService::class)->areaMeta(Str::slug($sale->first()->area), 'sale'),
+    //     ]);
+    // }
 
     /**
      * Track listing view

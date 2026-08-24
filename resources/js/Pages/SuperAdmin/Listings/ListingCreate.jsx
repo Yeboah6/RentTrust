@@ -51,7 +51,7 @@ const CURRENCIES = [
     { value: '₦',   label: '₦ NGN' },
 ];
 
-const INITIAL_STATUSES = ['approved', 'pending', 'draft'];
+const INITIAL_STATUSES = ['available', 'approved', 'pending', 'draft'];
 
 // ─── Validation ───────────────────────────────────────────────────────────────
 

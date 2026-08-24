@@ -35,6 +35,8 @@ return [
     |
     */
 
+    'admin_address' => env('ADMIN_NOTIFICATION_EMAIL', 'renttrust2026@gmail.com'),
+
     'mailers' => [
 
         'smtp' => [

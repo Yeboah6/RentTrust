@@ -171,7 +171,7 @@ class AnalyticsController extends Controller
         // ── Listings ──────────────────────────────────────────────────────────
 
         $totalListings   = Rental::count();
-        $activeListings  = Rental::where('status', 'active')->where('is_sold', false)->count();
+        $activeListings  = Rental::where('status', 'available')->where('is_sold', false)->count();
         $soldStatusListings = Rental::where('status', 'sold')->count();
         $rentedStatusListings = Rental::where('status', 'rented')->count();
         $inactiveListings = Rental::where('status', 'inactive')->count();

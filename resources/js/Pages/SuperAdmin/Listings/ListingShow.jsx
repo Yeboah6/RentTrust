@@ -45,7 +45,7 @@ const Icons = {
 // ─── Config ───────────────────────────────────────────────────────────────────
 
 const STATUS_CFG = {
-    active:    { label: 'Active',    bg: 'hsl(152 60% 93%)', color: 'hsl(152 60% 28%)', dot: 'hsl(152 60% 38%)', bar: 'hsl(152 55% 42%)' },
+    available:    { label: 'Available',    bg: 'hsl(152 60% 93%)', color: 'hsl(152 60% 28%)', dot: 'hsl(152 60% 38%)', bar: 'hsl(152 55% 42%)' },
     pending:   { label: 'Pending',   bg: 'hsl(40 90% 93%)',  color: 'hsl(40 80% 30%)',  dot: 'hsl(40 80% 44%)',  bar: 'hsl(40 80% 48%)' },
     sold:      { label: 'Sold',      bg: 'hsl(214 100% 95%)',color: 'hsl(214 80% 38%)', dot: 'hsl(214 80% 50%)', bar: 'hsl(214 80% 52%)' },
     rented:    { label: 'Rented',    bg: 'hsl(270 60% 95%)', color: 'hsl(270 55% 38%)', dot: 'hsl(270 55% 50%)', bar: 'hsl(270 55% 52%)' },
@@ -501,7 +501,7 @@ const ListingShow = ({ listing: rawListing, property_types = [], regions = [] })
 
     const isSuspended = listing.status_key === 'suspended';
     const isPending   = listing.status_key === 'pending';
-    const isActive    = listing.status_key === 'active';
+    const isActive    = listing.status_key === 'available';
     const agentHue    = avatarHue(listing.agent_name);
 
     return (

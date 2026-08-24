@@ -216,7 +216,7 @@ class RentController extends Controller
                 'agent_name'          => $request->agentName,
                 'agent_phone'         => $request->agentPhone,
                 'agent_email'         => $request->agentEmail,
-                'status'              => 'active',
+                'status'              => 'available',
                 'is_verified'         => false,
                 'images'              => $filePaths,
             ];
@@ -438,7 +438,7 @@ class RentController extends Controller
                 // Admin path: explicit status control
                 $updateData['status'] = $request->status;
 
-                if ($request->status === 'active' && $rent->status !== 'active') {
+                if ($request->status === 'available' && $rent->status !== 'available') {
                     $updateData['is_sold'] = false;
                     $updateData['is_rented'] = false;
                     $updateData['sold_at'] = null;
@@ -446,7 +446,7 @@ class RentController extends Controller
                 }
             } else {
                 // Agent path: derive status from availability flags
-                $updateData['status'] = $isSold ? 'sold' : ($isRented ? 'rented' : 'active');
+                $updateData['status'] = $isSold ? 'sold' : ($isRented ? 'rented' : 'available');
             }
 
             if ($isSold) {

@@ -176,7 +176,7 @@ const AdminDashboard = ({ adminData, rentals, agentData, reviews, reports, agent
     status = status || '';
     const configs = {
       verified:   { icon: CheckCircle, bg: 'hsl(152 60% 40%)', color: 'white', label: 'Verified' },
-      active:     { icon: CheckCircle, bg: 'hsl(152 60% 40%)', color: 'white', label: 'Active' },
+      available:  { icon: CheckCircle, bg: 'hsl(152 60% 40%)', color: 'white', label: 'Available' },
       approved:   { icon: CheckCircle, bg: 'hsl(152 60% 40%)', color: 'white', label: 'Approved' },
       pending:    { icon: Clock,       bg: 'hsl(40 30% 94%)', color: 'hsl(200 25% 15%)', label: 'Pending', border: '1px solid hsl(40 20% 88%)' },
       unverified: { icon: Clock,       bg: 'hsl(40 30% 94%)', color: 'hsl(200 25% 15%)', label: 'Unverified', border: '1px solid hsl(40 20% 88%)' },

@@ -14,7 +14,6 @@ class AgentAnalyticsController extends Controller
     public function __construct(ListingAnalyticsService $analytics)
     {
         $this->analytics = $analytics;
-        // $this->gate = $gate;
     }
 
     /**

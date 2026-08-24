@@ -88,7 +88,13 @@ const VERIFICATION_CFG = {
   approved:   { bg: 'hsl(152 60% 93%)', color: 'hsl(152 60% 35%)', label: 'Verified' },
   pending:    { bg: 'hsl(38 92% 93%)',  color: 'hsl(38 92% 40%)',  label: 'Pending Review' },
   rejected:   { bg: 'hsl(0 72% 93%)',   color: 'hsl(0 72% 45%)',   label: 'Rejected' },
-  unverified: { bg: 'hsl(220 15% 93%)', color: 'hsl(220 15% 45%)', label: 'Unverified' },
+  unverified: { bg: 'hsl(220 25% 90%)', color: 'hsl(220 25% 32%)', label: 'Unverified' },
+};
+
+const AGENT_STATUS_CFG = {
+  verified:   { bg: 'hsl(152 60% 40% / 0.15)', color: 'hsl(152 60% 35%)', dot: 'hsl(152 60% 40%)', label: 'Verified Agent' },
+  rejected:   { bg: 'hsl(0 72% 93%)',           color: 'hsl(0 72% 45%)',   dot: 'hsl(0 72% 45%)',   label: 'Verification Rejected' },
+  unverified: { bg: 'hsl(220 25% 90%)',         color: 'hsl(220 25% 32%)', dot: 'hsl(220 25% 32%)', label: 'Unverified' },
 };
 
 const getVerificationBadge = (status) => {
@@ -129,10 +135,6 @@ const buildLatestVerificationMap = (records = []) => {
 };
 
 // ── Signature element: radial usage gauge ──────────────────────────────────
-// The whole point of the free tier is the quota, so instead of burying it in
-// a line of text, the listing count gets its own dial — colour escalates
-// teal → amber → red as the agent approaches the limit, a visual nudge
-// toward the upgrade CTA below.
 const RadialGauge = ({ value, max, label, sublabel }) => {
   const radius = 40;
   const circumference = 2 * Math.PI * radius;
@@ -141,8 +143,8 @@ const RadialGauge = ({ value, max, label, sublabel }) => {
   const color = pct >= 1 ? 'hsl(0 65% 51%)' : pct >= 0.6 ? 'hsl(38 92% 50%)' : 'hsl(174 62% 32%)';
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
-      <div style={{ position: 'relative', width: 'clamp(3.25rem, 9vw, 4rem)', height: 'clamp(3.25rem, 9vw, 4rem)', flexShrink: 0 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem', minWidth: 0 }}>
+      <div style={{ position: 'relative', width: 'clamp(3.25rem, 8vw, 4rem)', height: 'clamp(3.25rem, 8vw, 4rem)', flexShrink: 0 }}>
         <svg viewBox="0 0 100 100" style={{ width: '100%', height: '100%', transform: 'rotate(-90deg)' }}>
           <circle cx="50" cy="50" r={radius} fill="none" stroke="hsl(40 20% 90%)" strokeWidth="10" />
           <circle
@@ -167,12 +169,12 @@ const RadialGauge = ({ value, max, label, sublabel }) => {
 
 // ── Stat card ────────────────────────────────────────────────────────────────
 const StatCard = ({ icon, value, label, accent, children }) => (
-  <div style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.75rem', padding: 'clamp(1rem, 3vw, 1.25rem)', position: 'relative', overflow: 'hidden' }}>
+  <div style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.75rem', padding: 'clamp(1rem, 3vw, 1.25rem)', position: 'relative', overflow: 'hidden', minWidth: 0 }}>
     <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', backgroundColor: accent }} />
     <div style={{ width: '2.25rem', height: '2.25rem', borderRadius: '0.5rem', background: `${accent}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '0.75rem' }}>
       {icon}
     </div>
-    <p style={{ fontSize: 'clamp(1.5rem, 4vw, 1.875rem)', fontWeight: 700, color: 'hsl(200 25% 15%)', margin: 0, lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
+    <p style={{ fontSize: 'clamp(1.375rem, 3.5vw, 1.875rem)', fontWeight: 700, color: 'hsl(200 25% 15%)', margin: 0, lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
       {value}
     </p>
     <p style={{ fontSize: '0.8125rem', color: 'hsl(200 15% 45%)', margin: '0.25rem 0 0' }}>{label}</p>
@@ -210,6 +212,8 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
     status: agentData?.status || "unverified",
     plan: agentData?.plan || "free",
   };
+
+  const agentStatusCfg = AGENT_STATUS_CFG[agent.status] || AGENT_STATUS_CFG.unverified;
 
   const latestVerificationByListing = useMemo(
     () => buildLatestVerificationMap(verificationData),
@@ -266,9 +270,6 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
         ? (formattedReviews.reduce((sum, r) => sum + (Number(r.overall_rating) || 0), 0) / total).toFixed(1) 
         : '0.0';
 
-  // "At a glance" tenant-sentiment breakdown for the Reviews tab — reuses the
-  // same four boolean fields already collected per review instead of just
-  // tallying them as badges per-card.
   const reviewCriteria = [
     { key: 'landlord_responsive', label: 'Responsive landlord' },
     { key: 'property_matched_description', label: 'Accurate listing' },
@@ -334,12 +335,52 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
       <style>{`
         * {
           font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+          box-sizing: border-box;
         }
         h1, h2, h3, h4, h5, h6 {
           font-weight: 600;
         }
 
-        /* ---------- Mobile-first responsive grids ---------- */
+        .tabs-bar {
+          display: flex;
+          gap: clamp(1.25rem, 4vw, 2rem);
+        }
+
+        /* ============================================================
+           BREAKPOINT MAP
+           xs   : < 380px   (small phones — iPhone SE etc.)
+           base : 380–639px (standard phones)
+           sm   : ≥ 640px   (large phones / small tablets)
+           md   : ≥ 768px   (tablets)
+           lg   : ≥ 1024px  (small laptops)
+           xl   : ≥ 1280px  (desktops)
+           2xl  : ≥ 1536px  (large / ultra-wide monitors — capped, not stretched)
+           ============================================================ */
+
+        .app-shell {
+          min-height: 100vh;
+          display: flex;
+          flex-direction: column;
+          background-color: hsl(40 33% 98%);
+        }
+
+        .page-main {
+          flex: 1;
+          width: 100%;
+          padding: clamp(1.25rem, 4vw, 2.5rem) clamp(0.75rem, 4vw, 1.5rem);
+        }
+
+        .page-container {
+          width: 100%;
+          max-width: 1240px;
+          margin: 0 auto;
+        }
+
+        @media (min-width: 1536px) {
+          .page-container { max-width: 1320px; }
+        }
+
+        /* ---------- Responsive grids ---------- */
         .listing-grid {
           display: grid;
           grid-template-columns: 1fr;
@@ -358,30 +399,40 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
           gap: clamp(0.75rem, 2vw, 1rem);
         }
 
-        /* ---------- Tablet (≥640px) ---------- */
+        /* ---------- sm (≥640px): small tablets / large phones ---------- */
         @media (min-width: 640px) {
-          .listing-grid {
-            grid-template-columns: repeat(2, 1fr);
-          }
-          .stats-grid {
-            grid-template-columns: repeat(2, 1fr);
-          }
-          .review-grid {
-            grid-template-columns: repeat(2, 1fr);
-          }
+          .listing-grid { grid-template-columns: repeat(2, 1fr); }
+          .stats-grid { grid-template-columns: repeat(2, 1fr); }
+          .review-grid { grid-template-columns: repeat(2, 1fr); }
         }
 
-        /* ---------- Desktop (≥1024px) ---------- */
+        /* ---------- md (≥768px): tablets — gets its own step so 2-col
+           stat cards don't look sparse right up until 1024px ---------- */
+        @media (min-width: 768px) {
+          .stats-grid { grid-template-columns: repeat(4, 1fr); }
+        }
+
+        /* ---------- lg (≥1024px): small laptops ---------- */
         @media (min-width: 1024px) {
-          .listing-grid {
-            grid-template-columns: repeat(3, 1fr);
-          }
-          .stats-grid {
-            grid-template-columns: repeat(4, 1fr);
-          }
-          .review-grid {
-            grid-template-columns: repeat(3, 1fr);
-          }
+          .listing-grid { grid-template-columns: repeat(3, 1fr); }
+          .review-grid { grid-template-columns: repeat(3, 1fr); }
+          .tabs-bar { gap: 2.5rem; grid-template-columns: repeat(3, 1fr) !important;}
+          .tabs-grid {  }
+        }
+
+        /* ---------- xl (≥1280px): desktops — four listing columns
+           instead of stretching three cards across the full width ---------- */
+        @media (min-width: 1280px) {
+          .listing-grid { grid-template-columns: repeat(4, 1fr); }
+          .review-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+
+        /* ---------- 2xl (≥1536px): ultra-wide — cap growth, add breathing
+           room instead of letting cards keep stretching ---------- */
+        @media (min-width: 1536px) {
+          .listing-grid { grid-template-columns: repeat(4, 1fr); gap: 1.25rem; }
+          .stats-grid { gap: 1.5rem; }
+          .tabs-bar { gap: 3rem; }
         }
 
         /* ---------- Underline tabs ---------- */
@@ -421,6 +472,11 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
           border-radius: 2px;
           background: hsl(174 62% 32%);
         }
+        .tabs-bar > button:focus-visible {
+          outline: 2px solid hsl(174 62% 32%);
+          outline-offset: 2px;
+          border-radius: 0.25rem;
+        }
         .tab-count {
           font-size: 0.6875rem;
           font-weight: 700;
@@ -439,7 +495,7 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
           background-color: white;
           border: 1px solid hsl(40 20% 88%);
           border-radius: 1rem;
-          padding: clamp(1.25rem, 3.5vw, 1.75rem);
+          padding: clamp(1.125rem, 3.5vw, 1.75rem);
           display: flex;
           flex-direction: column;
           gap: clamp(1.25rem, 3vw, 1.5rem);
@@ -453,6 +509,34 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
           gap: clamp(1rem, 3vw, 1.5rem);
         }
 
+        .profile-identity {
+          display: flex;
+          align-items: flex-start;
+          gap: clamp(0.75rem, 3vw, 1.5rem);
+          flex: 1 1 16rem;
+          min-width: 0;
+        }
+
+        .profile-avatar {
+          width: clamp(2.75rem, 11vw, 4.5rem);
+          height: clamp(2.75rem, 11vw, 4.5rem);
+          border-radius: 50%;
+          background-color: hsl(174 62% 32% / 0.1);
+          color: hsl(174 62% 32%);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: clamp(1.125rem, 5vw, 1.75rem);
+          font-weight: 600;
+          flex-shrink: 0;
+        }
+
+        .profile-actions {
+          display: flex;
+          gap: 0.625rem;
+          flex-wrap: wrap;
+        }
+
         .profile-status-strip {
           display: flex;
           flex-wrap: wrap;
@@ -462,18 +546,43 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
           border-top: 1px solid hsl(40 20% 88%);
         }
 
-        @media (max-width: 640px) {
+        /* ---------- xs: very small phones (< 380px) ---------- */
+        @media (max-width: 379px) {
+          .profile-avatar {
+            width: 2.5rem;
+            height: 2.5rem;
+            font-size: 1rem;
+          }
+          .profile-name {
+            font-size: 1rem !important;
+          }
+        }
+
+        /* ---------- base phones (< 640px) ---------- */
+        @media (max-width: 639px) {
           .profile-header-container {
             flex-direction: column;
-            align-items: flex-start;
+            align-items: stretch;
           }
-          .profile-header-container > button,
-          .profile-header-container > a.settings-link {
+          .profile-actions {
+            width: 100%;
+            flex-direction: column;
+          }
+          .profile-actions > button,
+          .profile-actions > a.settings-link {
             width: 100%;
             justify-content: center;
           }
           .profile-status-strip {
             gap: 1.25rem;
+          }
+        }
+
+        /* ---------- md+ (≥768px): actions sit inline, not stacked ---------- */
+        @media (min-width: 768px) {
+          .profile-actions {
+            flex-direction: row;
+            width: auto;
           }
         }
 
@@ -494,46 +603,85 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
         /* ---------- Modals ---------- */
         .modal-overlay {
           position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background-color: rgba(0, 0, 0, 0.5);
+          inset: 0;
+          background-color: rgba(15, 20, 25, 0.5);
           display: flex;
           align-items: center;
           justify-content: center;
           z-index: 50;
-          padding: clamp(0.5rem, 2vw, 1rem);
+          padding: clamp(0.5rem, 3vw, 2rem);
         }
 
+        /* Width is capped with min() rather than a flat percentage, so a
+           4K/ultra-wide monitor doesn't stretch forms to 1500px+ wide —
+           it settles at a comfortable reading width and centers instead. */
         .modal-content {
           background-color: white;
           border-radius: clamp(0.75rem, 2vw, 1rem);
-          max-height: 90vh;
+          max-height: min(92vh, 900px);
           overflow: auto;
           width: 100%;
+          max-width: min(96vw, 640px);
           position: relative;
-          max-width: 95%; /* mobile first */
           display: flex;
           flex-direction: column;
         }
 
-        @media (min-width: 640px) {
+        .modal-content.modal-wide {
+          max-width: min(96vw, 880px);
+        }
+
+        @media (max-width: 639px) {
           .modal-content {
-            max-width: 90%;
+            max-width: 100vw;
+            width: 100vw;
+            max-height: 100dvh;
+            height: 100dvh;
+            border-radius: 0;
           }
         }
 
-        @media (min-width: 1024px) {
-          .modal-content {
-            max-width: 60%;
-          }
+        .modal-close-btn {
+          align-self: flex-end;
+          position: sticky;
+          top: 0;
+          padding: clamp(0.75rem, 2vw, 1rem);
+          border: none;
+          background: transparent;
+          font-size: clamp(1.25rem, 4vw, 1.5rem);
+          cursor: pointer;
+          color: hsl(200 15% 45%);
+          z-index: 10;
+          min-width: 44px;
+          min-height: 44px;
+        }
+        .modal-close-btn:focus-visible {
+          outline: 2px solid hsl(174 62% 32%);
+          outline-offset: -2px;
+          border-radius: 0.375rem;
         }
 
         /* ---------- Touch targets ---------- */
         .action-button {
           min-height: 44px;
           -webkit-tap-highlight-color: transparent;
+        }
+        .action-button:focus-visible {
+          outline: 2px solid hsl(174 62% 32%);
+          outline-offset: 2px;
+        }
+
+        /* iOS Safari zooms on inputs under 16px — guard rail in case any
+           child form components fall back to a smaller base size. */
+        input, select, textarea {
+          font-size: max(16px, 1em);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          * {
+            transition-duration: 0.01ms !important;
+            animation-duration: 0.01ms !important;
+          }
         }
 
         /* ---------- Upgrade CTA ---------- */
@@ -562,6 +710,11 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
             grid-template-columns: repeat(2, 1fr);
           }
         }
+        @media (min-width: 1024px) {
+          .upgrade-feature-grid {
+            grid-template-columns: repeat(4, 1fr);
+          }
+        }
 
         @media (max-width: 480px) {
           .upgrade-cta-inner {
@@ -569,50 +722,57 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
             align-items: stretch;
           }
         }
+
+        /* ---------- Limit banners ---------- */
+        .limit-banner {
+          padding: 1rem 1.25rem;
+          border-radius: 0.625rem;
+          display: flex;
+          align-items: flex-start;
+          gap: 0.75rem;
+          flex-wrap: wrap;
+        }
+        @media (max-width: 479px) {
+          .limit-banner {
+            flex-direction: column;
+          }
+          .limit-banner > button {
+            width: 100%;
+            justify-content: center;
+          }
+        }
       `}</style>
 
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'hsl(40 33% 98%)' }}>
+      <div className="app-shell">
         <Header />
 
-        <main style={{ flex: 1, padding: 'clamp(1.5rem, 4vw, 2rem) clamp(0.75rem, 3vw, 1rem)' }}>
-          <div className="container mx-auto" style={{ maxWidth: '1200px' }}>
+        <main className="page-main">
+          <div className="page-container">
 
             {/* Profile Card */}
             <div className="profile-card" style={{ marginBottom: 'clamp(1.5rem, 4vw, 2rem)' }}>
               <div className="profile-header-container">
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 'clamp(1rem, 3vw, 1.5rem)', flex: 1 }}>
-                  <div style={{
-                    width: 'clamp(3rem, 12vw, 4.5rem)',
-                    height: 'clamp(3rem, 12vw, 4.5rem)',
-                    borderRadius: '50%',
-                    backgroundColor: 'hsl(174 62% 32% / 0.1)',
-                    color: 'hsl(174 62% 32%)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: 'clamp(1.25rem, 5vw, 1.75rem)',
-                    fontWeight: '600',
-                    flexShrink: 0
-                  }}>
+                <div className="profile-identity">
+                  <div className="profile-avatar">
                     {agent.name[0]}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.5rem, 2vw, 0.75rem)', marginBottom: 'clamp(0.25rem, 1vw, 0.5rem)', flexWrap: 'wrap' }}>
-                      <h1 style={{ color: 'hsl(200 25% 15%)', fontSize: 'clamp(1.125rem, 4vw, 1.5rem)', fontWeight: '700', lineHeight: '1.2' }}>
+                      <h1 className="profile-name" style={{ color: 'hsl(200 25% 15%)', fontSize: 'clamp(1.125rem, 4vw, 1.5rem)', fontWeight: '700', lineHeight: '1.2', margin: 0 }}>
                         {agent.name}
                       </h1>
                       <span style={{
                         display: 'inline-flex',
                         alignItems: 'center',
                         padding: '0.25rem 0.625rem',
-                        backgroundColor: 'hsl(152 60% 40% / 0.15)',
-                        color: 'hsl(152 60% 40%)',
+                        backgroundColor: agentStatusCfg.bg,
+                        color: agentStatusCfg.color,
                         borderRadius: '9999px',
                         fontSize: '0.75rem',
                         fontWeight: '600',
                       }}>
-                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: 'hsl(152 60% 40%)', display: 'inline-block', marginRight: '0.25rem' }} />
-                        {agent.status === 'verified' ? 'Verified Agent' : agent.status === 'rejected' ? 'Verification Rejected' : agent.status === 'unverified' ? 'Unverified' : 'Unknown Status'}
+                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: agentStatusCfg.dot, display: 'inline-block', marginRight: '0.25rem' }} />
+                        {agentStatusCfg.label}
                       </span>
                       <span style={{
                         display: 'inline-flex',
@@ -629,40 +789,42 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
                       </span>
                     </div>
                     {agent.company && (
-                      <p style={{ color: 'hsl(200 15% 45%)', margin: 0, fontSize: 'clamp(0.875rem, 2vw, 1rem)' }}>
+                      <p style={{ color: 'hsl(200 15% 45%)', margin: 0, fontSize: 'clamp(0.875rem, 2vw, 1rem)', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         {agent.company}
                       </p>
                     )}
                   </div>
                 </div>
 
-                <button type="button" onClick={() => setShowPricingModal(true)} style={{
-                  padding: 'clamp(0.5rem, 2vw, 0.75rem) clamp(1rem, 3vw, 1.25rem)',
-                  background: 'linear-gradient(135deg, hsl(174 62% 32%) 0%, hsl(174 50% 25%) 100%)',
-                  color: 'white',
-                  borderRadius: 'clamp(0.375rem, 2vw, 0.5rem)',
-                  fontWeight: '600',
-                  fontSize: 'clamp(0.875rem, 2vw, 0.875rem)',
-                  textDecoration: 'none',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  whiteSpace: 'nowrap',
-                  height: 'fit-content',
-                  border: 'none',
-                  cursor: 'pointer',
-                  minHeight: '44px'
-                }}>
-                  <Zap style={{ height: '1rem', width: '1rem' }} />
-                  Upgrade to Pro
-                </button>
-                <Link className="settings-link action-button" href={'/settings'} style={{ padding: 'clamp(0.5rem, 2vw, 0.5rem) clamp(1rem, 3vw, 1rem)', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.375rem, 2vw, 0.5rem)', backgroundColor: 'white', color: 'hsl(174 62% 32%)', fontWeight: '500', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'clamp(0.5rem, 2vw, 0.5rem)', textDecoration: 'none', fontSize: 'clamp(0.875rem, 2vw, 0.875rem)', transition: 'all 0.2s', whiteSpace: 'nowrap', height: 'fit-content' }}
-                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'hsl(40 30% 96%)'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'white'; }}
-                >
-                  <Settings style={{ height: 'clamp(1rem, 3vw, 1rem)', width: 'clamp(1rem, 3vw, 1rem)' }} />
-                  Settings
-                </Link>
+                <div className="profile-actions">
+                  <button type="button" onClick={() => setShowPricingModal(true)} className="action-button" style={{
+                    padding: 'clamp(0.5rem, 2vw, 0.75rem) clamp(1rem, 3vw, 1.25rem)',
+                    background: 'linear-gradient(135deg, hsl(174 62% 32%) 0%, hsl(174 50% 25%) 100%)',
+                    color: 'white',
+                    borderRadius: 'clamp(0.375rem, 2vw, 0.5rem)',
+                    fontWeight: '600',
+                    fontSize: 'clamp(0.875rem, 2vw, 0.875rem)',
+                    textDecoration: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.5rem',
+                    whiteSpace: 'nowrap',
+                    height: 'fit-content',
+                    border: 'none',
+                    cursor: 'pointer',
+                  }}>
+                    <Zap style={{ height: '1rem', width: '1rem' }} />
+                    Upgrade to Pro
+                  </button>
+                  <Link className="settings-link action-button" href={'/settings'} style={{ padding: 'clamp(0.5rem, 2vw, 0.5rem) clamp(1rem, 3vw, 1rem)', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.375rem, 2vw, 0.5rem)', backgroundColor: 'white', color: 'hsl(174 62% 32%)', fontWeight: '500', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'clamp(0.5rem, 2vw, 0.5rem)', textDecoration: 'none', fontSize: 'clamp(0.875rem, 2vw, 0.875rem)', transition: 'background-color 0.2s', whiteSpace: 'nowrap', height: 'fit-content' }}
+                    onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'hsl(40 30% 96%)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'white'; }}
+                  >
+                    <Settings style={{ height: 'clamp(1rem, 3vw, 1rem)', width: 'clamp(1rem, 3vw, 1rem)' }} />
+                    Settings
+                  </Link>
+                </div>
               </div>
 
               {/* Status strip — the signature gauge, alongside rating */}
@@ -688,18 +850,12 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
 
               {/* Limit Warning Banners */}
               {listingsFull && (
-                <div style={{
-                  padding: '1rem 1.25rem',
+                <div className="limit-banner" style={{
                   backgroundColor: 'hsl(0 65% 51% / 0.05)',
                   border: '1px solid hsl(0 65% 51% / 0.2)',
-                  borderRadius: '0.625rem',
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: '0.75rem',
-                  flexWrap: 'wrap',
                 }}>
                   <AlertCircle style={{ width: '1.125rem', height: '1.125rem', color: 'hsl(0 65% 51%)', flexShrink: 0, marginTop: '0.125rem' }} />
-                  <div style={{ flex: 1 }}>
+                  <div style={{ flex: 1, minWidth: '12rem' }}>
                     <p style={{ margin: 0, fontWeight: '600', color: 'hsl(0 65% 51%)', fontSize: '0.9rem' }}>
                       🚫 You've reached your free listing limit
                     </p>
@@ -707,7 +863,7 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
                       Upgrade to continue posting properties and attract more tenants.
                     </p>
                   </div>
-                  <button type="button" onClick={() => setShowPricingModal(true)} style={{
+                  <button type="button" onClick={() => setShowPricingModal(true)} className="action-button" style={{
                     display: 'inline-flex',
                     alignItems: 'center',
                     gap: '0.375rem',
@@ -721,7 +877,6 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
                     flexShrink: 0,
                     border: 'none',
                     cursor: 'pointer',
-                    minHeight: '44px'
                   }}>
                     <Zap style={{ width: '0.75rem', height: '0.75rem' }} />
                     Upgrade Now
@@ -730,18 +885,12 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
               )}
 
               {inquiriesFull && (
-                <div style={{
-                  padding: '1rem 1.25rem',
+                <div className="limit-banner" style={{
                   backgroundColor: 'hsl(38 92% 50% / 0.07)',
                   border: '1px solid hsl(38 92% 50% / 0.27)',
-                  borderRadius: '0.625rem',
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: '0.75rem',
-                  flexWrap: 'wrap',
                 }}>
                   <MessageSquare style={{ width: '1.125rem', height: '1.125rem', color: 'hsl(38 92% 50%)', flexShrink: 0, marginTop: '0.125rem' }} />
-                  <div style={{ flex: 1 }}>
+                  <div style={{ flex: 1, minWidth: '12rem' }}>
                     <p style={{ margin: 0, fontWeight: '600', color: 'hsl(38 92% 50%)', fontSize: '0.9rem' }}>
                       🎯 High Demand — Inquiry Limit Reached
                     </p>
@@ -749,7 +898,7 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
                       You've received {INQUIRY_LIMIT} inquiries this month. Upgrade for unlimited access to leads.
                     </p>
                   </div>
-                  <button type="button" onClick={() => setShowPricingModal(true)} style={{
+                  <button type="button" onClick={() => setShowPricingModal(true)} className="action-button" style={{
                     display: 'inline-flex',
                     alignItems: 'center',
                     gap: '0.375rem',
@@ -763,7 +912,6 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
                     flexShrink: 0,
                     border: 'none',
                     cursor: 'pointer',
-                    minHeight: '44px'
                   }}>
                     Unlock Leads
                   </button>
@@ -773,10 +921,12 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
 
             {/* Tabs */}
             <div>
-              <div className="tabs-bar">
+              <div className="tabs-bar" role="tablist" style={{ display: 'grid', gap: 'clamp(0.25rem, 1vw, 0.5rem)' }}>
                 {tabs.map(({ id, label, icon: Icon, count }) => (
                   <button
                     key={id}
+                    role="tab"
+                    aria-selected={activeTab === id}
                     onClick={() => setActiveTab(id)}
                     className={activeTab === id ? 'is-active' : ''}
                   >
@@ -853,7 +1003,7 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
                           ))}
                         </div>
                       </div>
-                      <button type="button" onClick={() => setShowPricingModal(true)} style={{
+                      <button type="button" onClick={() => setShowPricingModal(true)} className="action-button" style={{
                         display: 'inline-flex',
                         alignItems: 'center',
                         gap: '0.5rem',
@@ -868,7 +1018,6 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
                         whiteSpace: 'nowrap',
                         border: 'none',
                         cursor: 'pointer',
-                        minHeight: '44px'
                       }}>
                         <Zap style={{ width: '1rem', height: '1rem' }} />
                         Upgrade to Pro
@@ -891,7 +1040,8 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
                     <h2 style={{
                       color: 'hsl(200 25% 15%)',
                       fontSize: 'clamp(1rem, 3vw, 1.125rem)',
-                      fontWeight: '600'
+                      fontWeight: '600',
+                      margin: 0,
                     }}>
                       Your Listings
                     </h2>
@@ -995,7 +1145,7 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
               {/* Reviews Tab */}
               {activeTab === 'reviews' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(1rem, 3vw, 1.5rem)' }}>
-                  <h2 style={{ color: 'hsl(200 25% 15%)', fontSize: 'clamp(1rem, 3vw, 1.125rem)', fontWeight: '600' }}>Tenant Reviews ({formattedReviews.length})</h2>
+                  <h2 style={{ color: 'hsl(200 25% 15%)', fontSize: 'clamp(1rem, 3vw, 1.125rem)', fontWeight: '600', margin: 0 }}>Tenant Reviews ({formattedReviews.length})</h2>
 
                   {total > 0 && (
                     <div style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: 'clamp(0.5rem, 2vw, 0.75rem)', padding: 'clamp(1rem, 3vw, 1.25rem)' }}>
@@ -1068,22 +1218,11 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
         {/* Add Listing Modal */}
         {showAddListingModal && (
           <div className="modal-overlay">
-            <div className="modal-content">
+            <div className="modal-content modal-wide">
               <button
                 onClick={() => setShowAddListingModal(false)}
-                className="action-button"
-                style={{
-                  alignSelf: 'flex-end',
-                  position: 'sticky',
-                  top: 0,
-                  padding: 'clamp(0.75rem, 2vw, 1rem)',
-                  border: 'none',
-                  background: 'transparent',
-                  fontSize: 'clamp(1.25rem, 4vw, 1.5rem)',
-                  cursor: 'pointer',
-                  color: 'hsl(200 15% 45%)',
-                  zIndex: 10
-                }}
+                className="action-button modal-close-btn"
+                aria-label="Close"
               >
                 ✕
               </button>
@@ -1095,8 +1234,8 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
         {/* Edit Listing Modal */}
         {showEditListingModal && selectedRental && (
           <div className="modal-overlay">
-            <div className="modal-content">
-              <button onClick={() => { setShowEditListingModal(false); setSelectedRental(null); }} className="action-button" style={{ alignSelf: 'flex-end', position: 'sticky', top: 0, padding: 'clamp(0.75rem, 2vw, 1rem)', border: 'none', background: 'transparent', fontSize: 'clamp(1.25rem, 4vw, 1.5rem)', cursor: 'pointer', color: 'hsl(200 15% 45%)', zIndex: 10 }}>✕</button>
+            <div className="modal-content modal-wide">
+              <button onClick={() => { setShowEditListingModal(false); setSelectedRental(null); }} className="action-button modal-close-btn" aria-label="Close">✕</button>
               <EditRentals agentData={agentData} setShowEditListingModal={setShowEditListingModal} rental={selectedRental} locations={locations} propertyTypes={propertyTypes} amenities={amenities} />
             </div>
           </div>
@@ -1105,22 +1244,11 @@ const AgentFreeDashboard = ({ agentData, rentals = [], reviews = [], locations, 
         {/* View Rental Modal */}
         {showViewModal && selectedRental && (
           <div className="modal-overlay">
-            <div className="modal-content">
+            <div className="modal-content modal-wide">
               <button
                 onClick={() => setShowViewModal(false)}
-                className="action-button"
-                style={{
-                  alignSelf: 'flex-end',
-                  position: 'sticky',
-                  top: 0,
-                  padding: 'clamp(0.75rem, 2vw, 1rem)',
-                  border: 'none',
-                  background: 'transparent',
-                  fontSize: 'clamp(1.25rem, 4vw, 1.5rem)',
-                  cursor: 'pointer',
-                  color: 'hsl(200 15% 45%)',
-                  zIndex: 10
-                }}
+                className="action-button modal-close-btn"
+                aria-label="Close"
               >
                 ✕
               </button>

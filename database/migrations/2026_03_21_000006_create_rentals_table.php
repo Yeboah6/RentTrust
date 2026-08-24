@@ -34,7 +34,7 @@ return new class extends Migration
             $table->string('agent_name');
             $table->string('agent_phone');
             $table->string('agent_email');
-            $table->enum('status', ['active', 'inactive', 'rented', 'sold', 'suspended'])->default('active');
+            $table->enum('status', ['available', 'inactive', 'rented', 'sold', 'suspended'])->default('available');
             $table->string('verification_status')->default('pending');
             $table->boolean('is_verified')->default(false);
             $table->enum('purpose', ['rent', 'sale'])->default('rent');

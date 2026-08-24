@@ -13,6 +13,8 @@ use App\Models\ListingVerification;
 use App\Models\Location;
 use Illuminate\Support\Facades\{DB, Log, Storage, Validator, Mail};
 use App\Mail\ListingUpdatedMail;
+use App\Notifications\VerificationApprovedNotification;
+use App\Notifications\VerificationRejectedNotification;
 use Inertia\Inertia;
 use Illuminate\Support\Str;
 
@@ -29,18 +31,18 @@ class ListingController extends Controller
         $metrics = [
             'total'        => $listings->count(),
     
-            'active'       => $listings->where('status', 'active')->count(),
+            'active'       => $listings->where('status', 'available')->count(),
             'inactive'     => $listings->where('status', 'inactive')->count(),
             'flagged'      => 0,
     
             // Sale-specific
             'sale_total'   => $listings->where('purpose', 'sale')->count(),
-            'sale_active'  => $listings->where('purpose', 'sale')->where('status', 'active')->count(),
+            'sale_active'  => $listings->where('purpose', 'sale')->where('status', 'available')->count(),
             'sale_sold'    => $listings->where('purpose', 'sale')->where('is_sold', true)->count(),
     
             // Rent-specific
             'rent_total'   => $listings->where('purpose', 'rent')->count(),
-            'rent_active'  => $listings->where('purpose', 'rent')->where('status', 'active')->count(),
+            'rent_active'  => $listings->where('purpose', 'rent')->where('status', 'available')->count(),
             'rent_sold'    => $listings->where('purpose', 'rent')->where('is_rented', true)->count(),
         ];
     
@@ -183,18 +185,18 @@ class ListingController extends Controller
         return back()->with('success', 'Verification request rejected.');
     }
 
-    private function notifyAgent(ListingVerification $verification, string $subject, string $body): void
-    {
-        $email = $verification->user?->email;
+    // private function notifyAgent(ListingVerification $verification, string $subject, string $body): void
+    // {
+    //     $email = $verification->user?->email;
  
-        if (! $email) {
-            return;
-        }
+    //     if (! $email) {
+    //         return;
+    //     }
  
-        Mail::raw($body, function ($message) use ($email, $subject) {
-            $message->to($email)->subject($subject);
-        });
-    }
+    //     Mail::raw($body, function ($message) use ($email, $subject) {
+    //         $message->to($email)->subject($subject);
+    //     });
+    // }
 
     /**
      * Get verification details with documents.
@@ -232,10 +234,10 @@ class ListingController extends Controller
                                     ->where('role', 'agent')
                                    ->orderBy('name')->get(),
             'amenities'      => Amenity::active()
-                                   ->select('id', 'name', 'icon', 'category')
+                                   ->select('id', 'name', 'category')
                                    ->orderBy('category')->orderBy('name')->get(),
             'property_types' => PropertyType::orderBy('name')
-                                   ->select('id', 'name', 'icon', 'slug')
+                                   ->select('id', 'name', 'slug')
                                    ->get(),
             'regions'        => $regions,
         ]);
@@ -278,7 +280,7 @@ class ListingController extends Controller
             'agentEmail'   => 'nullable|email|max:255',
             'amenities'    => 'nullable',
             'is_verified'  => 'boolean',
-            'status'       => 'required|in:active,inactive',
+            'status'       => 'required|in:available,inactive',
             'images.*'     => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
             ];
 
@@ -350,7 +352,7 @@ class ListingController extends Controller
                     'agent_phone'  => $request->agentPhone,
                     'agent_email'  => $request->agentEmail,
                     'is_verified'  => $request->boolean('is_verified', false),
-                    'status'       => $request->input('status', 'active'),
+                    'status'       => $request->input('status', 'available'),
                     'images'       => $filePaths,
                 ];
 
@@ -495,12 +497,12 @@ class ListingController extends Controller
     
         // ── Status map — DB only accepts 'pending', 'approved', 'rejected' ────────
         $statusMap = [
-            'active'   => 'active',
+            'active'   => 'available',
             'inactive' => 'inactive',
             'rented'   => 'rented',
             'sold'     => 'sold'
         ];
-        $dbStatus = $statusMap[$request->input('status', 'active')] ?? 'active';
+        $dbStatus = $statusMap[$request->input('status', 'available')] ?? 'available';
     
         // ── Purpose map — DB only accepts 'rent', 'sale' ──────────────────────────
         $purposeMap = [

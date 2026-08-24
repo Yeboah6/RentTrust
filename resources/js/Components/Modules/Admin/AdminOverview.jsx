@@ -39,7 +39,7 @@ const fmtDate = (v) => {
 
 const statusKey = (r) => {
     const raw = (r?.effective_listing_status ?? r?.status ?? 'pending').toString().toLowerCase();
-    return raw === 'approved' ? 'active' : raw;
+    return raw === 'approved' ? 'available' : raw;
 };
 
 // ─── Status Badge ─────────────────────────────────────────────────────────────
@@ -47,7 +47,7 @@ const StatusBadge = ({ status }) => {
     const config = {
         approved:   { bg: 'hsl(152 60% 93%)', color: 'hsl(152 60% 35%)', icon: Icons.check, label: 'Approved' },
         verified:   { bg: 'hsl(152 60% 93%)', color: 'hsl(152 60% 35%)', icon: Icons.check, label: 'Verified' },
-        active:     { bg: 'hsl(152 60% 93%)', color: 'hsl(152 60% 35%)', icon: Icons.check, label: 'Active' },
+        available:     { bg: 'hsl(152 60% 93%)', color: 'hsl(152 60% 35%)', icon: Icons.check, label: 'Available' },
         resolved:   { bg: 'hsl(152 60% 93%)', color: 'hsl(152 60% 35%)', icon: Icons.check, label: 'Resolved' },
         pending:    { bg: 'hsl(38 92% 93%)',  color: 'hsl(38 92% 40%)',  icon: Icons.clock, label: 'Pending' },
         rejected:   { bg: 'hsl(0 72% 93%)',   color: 'hsl(0 72% 45%)',   icon: Icons.alert, label: 'Rejected' },
@@ -243,7 +243,7 @@ const AdminOverview = ({
 
     const stats = useMemo(() => ({
         totalListings:   rentals.length,
-        activeListings:  rentals.filter(r => ['active', 'verified', 'approved'].includes(statusKey(r))).length,
+        activeListings:  rentals.filter(r => ['available', 'verified', 'approved'].includes(statusKey(r))).length,
         pendingListings:  rentals.filter(r => ['inactive', 'sold', 'rented'].includes(statusKey(r))).length,
         totalAgents:     agentData.length,
         activeAgents:    agentData.filter(a => a.status !== 'suspended').length,

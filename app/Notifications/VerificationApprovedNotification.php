@@ -32,7 +32,6 @@ class VerificationApprovedNotification extends Notification implements ShouldQue
             ->greeting("Great news, {$notifiable->name}!")
             ->line("Your listing **{$this->rental->title}** has been approved and verified.")
             ->line('Your property is now live and visible to potential renters.')
-            ->action('View Your Listing', route('listing.show', $this->rental->id))
             ->line('Thank you for using our platform!');
     }
 
@@ -43,7 +42,6 @@ class VerificationApprovedNotification extends Notification implements ShouldQue
             'rental_id' => $this->rental->id,
             'rental_title' => $this->rental->title,
             'message' => "Your listing \"{$this->rental->title}\" has been verified and is now live.",
-            'action_url' => route('listing.show', $this->rental->id),
             'icon' => 'check-circle',
             'color' => 'success'
         ];

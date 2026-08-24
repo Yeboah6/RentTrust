@@ -34,7 +34,7 @@ const StatusBadge = ({ status }) => {
     const config = {
         approved:  { bg: 'hsl(152 60% 93%)', color: 'hsl(152 60% 35%)', icon: Icons.check, label: 'Approved' },
         verified:  { bg: 'hsl(152 60% 93%)', color: 'hsl(152 60% 35%)', icon: Icons.check, label: 'Verified' },
-        active:    { bg: 'hsl(152 60% 93%)', color: 'hsl(152 60% 35%)', icon: Icons.check, label: 'Active' },
+        available:    { bg: 'hsl(152 60% 93%)', color: 'hsl(152 60% 35%)', icon: Icons.check, label: 'Available' },
         pending:   { bg: 'hsl(38 92% 93%)',  color: 'hsl(38 92% 40%)',  icon: Icons.clock, label: 'Pending' },
         rejected:  { bg: 'hsl(0 72% 93%)',   color: 'hsl(0 72% 45%)',   icon: Icons.alert, label: 'Rejected' },
         rented:    { bg: 'hsl(271 60% 93%)', color: 'hsl(271 60% 40%)',  icon: Icons.check, label: 'Rented' },
@@ -177,7 +177,7 @@ const ListingCard = ({ property, onView, onEdit, onDelete }) => {
             {/* Status strip */}
             <div style={{ 
                 height: 3, 
-                background: property.status === 'approved' || property.status === 'active' 
+                background: property.status === 'approved' || property.status === 'available' 
                         ? 'hsl(152 60% 40%)' 
                         : property.status === 'pending' 
                             ? 'hsl(38 92% 50%)' 
@@ -356,7 +356,7 @@ const ListingsTab = ({
 
     // Map filter values to actual data fields
     const statusMap = {
-        active: ['approved', 'verified', 'active'],
+        available: ['approved', 'verified', 'available'],
         pending: ['pending'],
         sold: ['sold'],
         rented: ['rented'],
@@ -403,7 +403,7 @@ const ListingsTab = ({
     const sales = filteredListings.filter(p => p.purpose === 'sale');
     
     // Counts for status pills
-    const activeCount = listings.filter(p => ['approved', 'verified', 'active'].includes(p.status?.toLowerCase())).length;
+    const activeCount = listings.filter(p => ['approved', 'verified', 'available'].includes(p.status?.toLowerCase())).length;
     const pendingCount = listings.filter(p => p.status === 'pending').length;
     const suspendedCount = listings.filter(p => p.status === 'suspended').length;
     const flaggedCount = listings.filter(p => p.flagged_count > 0).length;
@@ -572,7 +572,7 @@ const ListingsTab = ({
                     onBlur={e => e.currentTarget.style.borderColor = 'hsl(220 15% 88%)'}
                 >
                     <option value="all">All Status</option>
-                    <option value="active">Active</option>
+                    <option value="available">Available</option>
                     <option value="pending">Pending</option>
                     <option value="sold">Sold</option>
                     <option value="rented">Rented</option>

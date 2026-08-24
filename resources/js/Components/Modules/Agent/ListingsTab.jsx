@@ -32,12 +32,12 @@ const Icons = {
 
 // ─── Availability Badge ────────────────────────────────────────────────────────
 const AVAILABILITY_CFG = {
-    active:   { bg: 'hsl(152 60% 93%)', color: 'hsl(152 60% 35%)', icon: Icons.check, label: 'Active' },
+    available:   { bg: 'hsl(152 60% 93%)', color: 'hsl(152 60% 35%)', icon: Icons.check, label: 'Available' },
     inactive: { bg: 'hsl(220 15% 93%)', color: 'hsl(220 15% 45%)', icon: Icons.alert, label: 'Inactive' },
     rented:   { bg: 'hsl(271 60% 93%)', color: 'hsl(271 60% 40%)', icon: Icons.check, label: 'Rented' },
     sold:     { bg: 'hsl(220 15% 93%)', color: 'hsl(220 25% 35%)', icon: Icons.check, label: 'Sold' },
 };
-const AVAILABILITY_STATUSES = ['all', 'active', 'inactive', 'rented', 'sold'];
+const AVAILABILITY_STATUSES = ['all', 'available', 'inactive', 'rented', 'sold'];
 
 const AvailabilityBadge = ({ status }) => {
     const cfg = AVAILABILITY_CFG[status] || AVAILABILITY_CFG.inactive;

@@ -66,6 +66,7 @@ const fileName = (path) => (path ? path.split("/").pop() : "");
 const VerificationRequestModal = ({ isOpen, onClose, agentData, selectedRental, verificationData }) => {
   const [uploadProgress, setUploadProgress] = useState({});
   const [toast, setToast] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [selectedFiles, setSelectedFiles] = useState({
     ownership_documents: [],
@@ -216,7 +217,9 @@ const VerificationRequestModal = ({ isOpen, onClose, agentData, selectedRental, 
   };
 
   const handleSubmit = () => {
-    if (!validateForm()) return;
+    if (isSubmitting || !validateForm()) return;
+
+    setIsSubmitting(true);
 
     const isResubmission = verificationStatus === "rejected" && !!existingVerificationId;
 
@@ -254,6 +257,7 @@ const VerificationRequestModal = ({ isOpen, onClose, agentData, selectedRental, 
           handleClose();
         }, 1500);
       },
+      onFinish: () => setIsSubmitting(false),
       onError: (errs) => {
         const firstError = Object.values(errs)[0];
         showToast(
@@ -271,7 +275,7 @@ const VerificationRequestModal = ({ isOpen, onClose, agentData, selectedRental, 
   };
 
   const handleClose = () => {
-    if (processing) return;
+    if (processing || isSubmitting) return;
     reset();
     setSelectedFiles({ ownership_documents: [], photos: [], other_documents: [] });
     setUploadProgress({});
@@ -700,7 +704,7 @@ const VerificationRequestModal = ({ isOpen, onClose, agentData, selectedRental, 
                 </p>
               </div>
             </div>
-            <button onClick={handleClose} disabled={processing} className="vrm-close-btn">
+            <button onClick={handleClose} disabled={processing || isSubmitting} className="vrm-close-btn">
               <X style={{ height: "1.25rem", width: "1.25rem", color: "hsl(200 15% 45%)" }} />
             </button>
           </div>
@@ -889,14 +893,14 @@ const VerificationRequestModal = ({ isOpen, onClose, agentData, selectedRental, 
 
           {showForm && (
             <div className="vrm-footer">
-              <button type="button" onClick={handleClose} disabled={processing} className="vrm-btn vrm-btn--secondary" style={{ flex: 1 }}>
+              <button type="button" onClick={handleClose} disabled={processing || isSubmitting} className="vrm-btn vrm-btn--secondary" style={{ flex: 1 }}>
                 Cancel
               </button>
               <button
-                type="button" onClick={handleSubmit} disabled={processing || !data.terms_accepted}
+                type="button" onClick={handleSubmit} disabled={processing || isSubmitting || !data.terms_accepted}
                 className="vrm-btn vrm-btn--primary" style={{ flex: 2 }}
               >
-                {processing ? (
+                {processing || isSubmitting ? (
                   <>
                     <div style={{ width: "1rem", height: "1rem", border: "2px solid white", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
                     {isResubmitFlow ? "Resubmitting..." : "Submitting..."}

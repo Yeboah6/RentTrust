@@ -23,9 +23,9 @@ const Icons = {
     trash:      <Ico d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />,
 };
 
-// ─── Availability Badge (rentals.status: active/inactive/rented/sold/pending) ─
+// ─── Availability Badge (rentals.status: available/inactive/rented/sold/pending) ─
 const AVAILABILITY_CFG = {
-    active:    { color: 'hsl(152 60% 35%)', icon: Icons.check, label: 'Active' },
+    available:    { color: 'hsl(152 60% 35%)', icon: Icons.check, label: 'Available' },
     pending:   { color: 'hsl(38 92% 40%)',  icon: Icons.clock, label: 'Pending' },
     inactive:  { color: 'hsl(220 15% 45%)', icon: Icons.alert, label: 'Inactive' },
     rented:    { color: 'hsl(271 60% 40%)', icon: Icons.check, label: 'Rented' },

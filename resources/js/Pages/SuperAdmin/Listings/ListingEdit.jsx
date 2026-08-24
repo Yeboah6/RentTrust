@@ -39,7 +39,7 @@ const Icons = {
 // ─── Config ───────────────────────────────────────────────────────────────────
 
 const STATUS_CFG = {
-    active:    { label: 'Active',    bg: 'hsl(152 60% 93%)', color: 'hsl(152 60% 28%)', dot: 'hsl(152 60% 38%)' },
+    available:    { label: 'Available',    bg: 'hsl(152 60% 93%)', color: 'hsl(152 60% 28%)', dot: 'hsl(152 60% 38%)' },
     inactive:  { label: 'Inactive',   bg: 'hsl(40 90% 93%)',  color: 'hsl(40 80% 30%)',  dot: 'hsl(40 80% 44%)' },
     sold:      { label: 'Sold',      bg: 'hsl(214 100% 95%)',color: 'hsl(214 80% 38%)', dot: 'hsl(214 80% 50%)' },
     rented:    { label: 'Rented',    bg: 'hsl(270 60% 95%)', color: 'hsl(270 55% 38%)', dot: 'hsl(270 55% 50%)' },
@@ -58,7 +58,7 @@ const CURRENCIES = [
     { value: '$',   label: '$ USD' },
 ];
 
-const ALL_STATUSES = ['active','inactive','sold','rented','suspended'];
+const ALL_STATUSES = ['available','inactive','sold','rented','suspended'];
 
 const STEPS = [
     { number: 1, label: 'Property Info', icon: Icons.home },
@@ -171,7 +171,7 @@ const SectionLabel = ({ children }) => (
 );
 
 const StatusBadge = ({ sk }) => {
-    const c = STATUS_CFG[sk] ?? STATUS_CFG.active;
+    const c = STATUS_CFG[sk] ?? STATUS_CFG.available;
     return (
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', padding: '0.2rem 0.6rem', borderRadius: '999px', fontSize: '0.68rem', fontWeight: '800', letterSpacing: '0.06em', backgroundColor: c.bg, color: c.color }}>
             <span style={{ width: '0.35rem', height: '0.35rem', borderRadius: '50%', backgroundColor: c.dot }} />

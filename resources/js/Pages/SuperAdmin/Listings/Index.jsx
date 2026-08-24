@@ -43,10 +43,10 @@ const Icons = {
 };
 
 // ─── Config ───────────────────────────────────────────────────────────────────
-// Matches the `rentals` table's `status` enum: active | inactive | rented | sold
+// Matches the `rentals` table's `status` enum: available | inactive | rented | sold
 
 const STATUS_CFG = {
-    active:    { label: 'Active',    bg: 'hsl(152 60% 93%)', color: 'hsl(152 60% 28%)', dot: 'hsl(152 60% 38%)' },
+    available: { label: 'Available',    bg: 'hsl(152 60% 93%)', color: 'hsl(152 60% 28%)', dot: 'hsl(152 60% 38%)' },
     inactive:  { label: 'Inactive',  bg: 'hsl(40 90% 93%)',  color: 'hsl(40 80% 30%)',  dot: 'hsl(40 80% 44%)' },
     sold:      { label: 'Sold',      bg: 'hsl(214 100% 95%)',color: 'hsl(214 80% 38%)', dot: 'hsl(214 80% 50%)' },
     rented:    { label: 'Rented',    bg: 'hsl(270 60% 95%)', color: 'hsl(270 55% 38%)', dot: 'hsl(270 55% 50%)' },
@@ -61,7 +61,7 @@ const TYPE_CFG = {
 
 const SORT_COLS = ['title', 'price', 'created_at', 'views'];
 const PAGE_SIZE = 12;
-const STATUSES  = ['all','active','inactive','sold','rented'];
+const STATUSES  = ['all','available','inactive','sold','rented'];
 const LISTING_TYPES = ['all','sale','rent'];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -367,14 +367,14 @@ const ListingRow = ({ listing: l, index, onAction }) => {
                     <Icons.edit />
                 </Link>
                 {l.status_key === 'inactive' && (
-                    <button onClick={() => onAction(l, 'active')}
+                    <button onClick={() => onAction(l, 'available')}
                         style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.38rem 0.5rem', borderRadius: '0.45rem', border: 'none', backgroundColor: 'hsl(152 55% 92%)', color: 'hsl(152 55% 30%)', cursor: 'pointer', transition: 'filter 0.15s', fontFamily: 'inherit' }}
                         onMouseEnter={e => e.currentTarget.style.filter = 'brightness(0.9)'}
                         onMouseLeave={e => e.currentTarget.style.filter = 'none'}>
                         <Icons.check />
                     </button>
                 )}
-                {(l.status_key === 'inactive' || l.status_key === 'active') && (
+                {(l.status_key === 'inactive' || l.status_key === 'available') && (
                     <button onClick={() => onAction(l, l.status_key === 'inactive' ? 'reject' : 'suspend')}
                         style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.38rem 0.5rem', borderRadius: '0.45rem', border: 'none', backgroundColor: 'hsl(0 65% 96%)', color: 'hsl(0 65% 48%)', cursor: 'pointer', transition: 'filter 0.15s', fontFamily: 'inherit' }}
                         onMouseEnter={e => e.currentTarget.style.filter = 'brightness(0.9)'}
@@ -457,15 +457,15 @@ const ListingsIndex = ({ listings: rawListings = [], metrics: serverMetrics = {}
     const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
     // KPIs — prefer server-side metrics, fall back to client-side
-    const activeCount   = serverMetrics.active   ?? listings.filter(l => l.status_key === 'active').length;
+    const activeCount   = serverMetrics.active   ?? listings.filter(l => l.status_key === 'available').length;
     const inactiveCount = serverMetrics.inactive ?? listings.filter(l => l.status_key === 'inactive').length;
     const flaggedCount  = serverMetrics.flagged  ?? listings.filter(l => l.flagged_count > 0).length;
     const saleTotal     = serverMetrics.sale_total  ?? listings.filter(l => l.listing_type === 'sale').length;
-    const saleActive    = serverMetrics.sale_active ?? listings.filter(l => l.listing_type === 'sale' && l.status_key === 'active').length;
+    const saleActive    = serverMetrics.sale_active ?? listings.filter(l => l.listing_type === 'sale' && l.status_key === 'available').length;
     const saleSold      = serverMetrics.sale_sold   ?? listings.filter(l => l.is_sold).length;
     const rentSold      = serverMetrics.rent_sold   ?? listings.filter(l => l.is_rented).length;
     const rentTotal      = serverMetrics.rent_total  ?? listings.filter(l => l.listing_type === 'rent').length;
-    const rentActive    = serverMetrics.rent_active ?? listings.filter(l => l.listing_type === 'rent' && l.status_key === 'active').length;
+    const rentActive    = serverMetrics.rent_active ?? listings.filter(l => l.listing_type === 'rent' && l.status_key === 'available').length;
 
     const handleAction = (listing, action) => setModal({ listing, action });
 

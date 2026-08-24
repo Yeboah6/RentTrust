@@ -4,7 +4,7 @@ import Footer from '../Components/Layouts/Footer';
 import SEO from '../Components/SEO';
 import JsonLd from '../Components/JsonLd';
 import { Link, usePage, useForm } from "@inertiajs/react";
-import { ChevronLeft, ChevronRight, BedDouble, Bath } from 'lucide-react';
+import { ChevronLeft, ChevronRight, BedDouble, Bath, Ruler, Phone, Mail } from 'lucide-react';
 import ReportListingDialog from "../Components/Modules/ReportListingDialog";
 import ReviewForm from "../Components/Modules/ReviewForm";
 import InquiryModal from "../Components/Modules/InquiryForm";
@@ -80,27 +80,66 @@ const parseImages = (imagesData) => {
     return [];
 };
 
-// ─── Main ─────────────────────────────────────────────────────────────────────
+const buildPropertySchema = (rental, seo) => {
+    const imageUrl = seo?.image || null;
 
-const buildSaleAreaSchema = (area, city, seo) => ({
-  '@context': 'https://schema.org',
-  '@type': 'CollectionPage',
-  'name': seo?.title || `${area.name} Properties for Sale`,
-  'description': seo?.description || `Explore homes for sale in ${area.name}, ${city}.`,
-  'url': seo?.canonical || (typeof window !== 'undefined' ? window.location.href : ''),
-  'breadcrumb': {
+    return {
+        '@context': 'https://schema.org',
+        '@type': 'Offer',
+        'name': seo?.title || rental.title,
+        'description': seo?.description || rental.description,
+        'url': seo?.canonical || (typeof window !== 'undefined' ? window.location.href : ''),
+        'image': imageUrl ? [imageUrl] : undefined,
+        'offers': {
+            '@type': 'Offer',
+            'priceCurrency': 'GHS',
+            'price': rental.sale_price || 0,
+            'availability': rental.is_sold ? 'https://schema.org/SoldOut' : 'https://schema.org/InStock',
+            'url': seo?.canonical || (typeof window !== 'undefined' ? window.location.href : ''),
+        },
+        'category': rental.property_type,
+        'address': {
+            '@type': 'PostalAddress',
+            'addressLocality': rental.area,
+            'addressRegion': rental.city,
+            'addressCountry': 'GH',
+        },
+        'brand': {
+            '@type': 'Organization',
+            'name': rental.agent?.name || rental.agent_name,
+        },
+    };
+};
+
+const buildBreadcrumbSchema = (rental, seo) => ({
+    '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     'itemListElement': [
-      { '@type': 'ListItem', 'position': 1, 'name': 'Home', 'item': `${typeof window !== 'undefined' ? window.location.origin : ''}/` },
-      { '@type': 'ListItem', 'position': 2, 'name': 'Buy', 'item': `${typeof window !== 'undefined' ? window.location.origin : ''}/buy` },
-      { '@type': 'ListItem', 'position': 3, 'name': area.name, 'item': seo?.canonical || '' }
-    ]
-  }
+        {
+            '@type': 'ListItem',
+            'position': 1,
+            'name': 'Home',
+            'item': `${typeof window !== 'undefined' ? window.location.origin : ''}/`,
+        },
+        {
+            '@type': 'ListItem',
+            'position': 2,
+            'name': rental.area,
+            'item': `${seo?.canonical?.replace(/\/[a-z0-9\-]+$/, '')}`,
+        },
+        {
+            '@type': 'ListItem',
+            'position': 3,
+            'name': rental.title || `${rental.bedrooms || ''} bedroom ${rental.property_type || 'property'}`,
+            'item': seo?.canonical || (typeof window !== 'undefined' ? window.location.href : ''),
+        },
+    ],
 });
 
-export default function SaleDetailsPage({ rental, reviews, days_on_market, seo }) {
+// ─── Main ─────────────────────────────────────────────────────────────────────
+
+export default function SaleDetailsPage({ rental, reviews, seo, agent }) {
     const { auth } = usePage().props;
-    const areaSchema = buildSaleAreaSchema(seo);
 
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [showImageModal,    setShowImageModal]     = useState(false);
@@ -112,6 +151,8 @@ export default function SaleDetailsPage({ rental, reviews, days_on_market, seo }
 
     const images    = parseImages(rental.images);
     const amenities = typeof rental.amenities === 'string' ? JSON.parse(rental.amenities || '[]') : (rental.amenities ?? []);
+    const agentFee  = (rental.sale_price ?? 0) * ((agent?.fee ?? 0) / 100);
+    const agentProfile = agent ?? rental.agent ?? rental.user ?? null;
 
     const showToast = (title, description, variant = 'success') => {
         setToast({ title, description, variant });
@@ -168,12 +209,16 @@ export default function SaleDetailsPage({ rental, reviews, days_on_market, seo }
         ));
     };
 
+    const propertySchema = buildPropertySchema(rental, seo);
+    const breadcrumbSchema = buildBreadcrumbSchema(rental, seo);
+
     return (
         <>
-        <SEO {...seo} />
-            <JsonLd schema={areaSchema} />
+            <SEO {...seo} />
+            <JsonLd schema={propertySchema} />
+            <JsonLd schema={breadcrumbSchema} />
             <style>{`
-                * { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
+                * { font-family: system-ui, sans-serif; }
                 h1, h2, h3, h4, h5, h6 { font-weight: 600; }
 
                 @keyframes slideIn {
@@ -188,7 +233,6 @@ export default function SaleDetailsPage({ rental, reviews, days_on_market, seo }
 
                 @media (max-width: 768px) {
                     .carousel-button { width: clamp(2.5rem, 10vw, 3rem) !important; height: clamp(2.5rem, 10vw, 3rem) !important; }
-                    .property-details-grid { grid-template-columns: 1fr !important; }
                     .modal-content { max-width: 95% !important; margin: 0.5rem; }
                     .feature-grid  { grid-template-columns: 1fr !important; }
                     .action-button { min-height: 44px; -webkit-tap-highlight-color: transparent; }
@@ -208,16 +252,27 @@ export default function SaleDetailsPage({ rental, reviews, days_on_market, seo }
                     .hero-image { height: 12rem !important; }
                 }
 
-                @media (min-width: 1024px) {
-                    .property-details-grid { display: grid; grid-template-columns: 1fr 400px; gap: 2rem; }
-                    .main-content { order: 1; }
-                    .sidebar      { order: 2; }
+                /* ── Layout: mobile-first, single column ──────────────────
+                   DOM order defines the render order below:
+                   1. section-main-info  2. section-sale-details
+                   3. section-reviews    4. section-agent            */
+                .property-details-grid {
+                    display: flex;
+                    flex-direction: column;
+                    gap: clamp(1rem, 3vw, 1.5rem);
                 }
 
-                @media (max-width: 1023px) {
-                    .property-details-grid { display: flex; flex-direction: column; gap: 1.5rem; }
-                    .main-content { order: 1; }
-                    .sidebar      { order: 2; }
+                @media (min-width: 1024px) {
+                    .property-details-grid {
+                        display: grid;
+                        grid-template-columns: 1fr 400px;
+                        grid-template-rows: auto auto;
+                        gap: 2rem;
+                    }
+                    .section-main-info      { grid-column: 1; grid-row: 1; }
+                    .section-reviews        { grid-column: 1; grid-row: 2; }
+                    .section-sale-details   { grid-column: 2; grid-row: 1; }
+                    .section-agent          { grid-column: 2; grid-row: 2; }
                 }
 
                 /* Image modal improvements */
@@ -226,12 +281,14 @@ export default function SaleDetailsPage({ rental, reviews, days_on_market, seo }
                 }
 
                 .image-modal img {
-                    /* Prevent iOS zoom on double-tap */
                     -webkit-user-select: none;
                     user-select: none;
                     -webkit-touch-callout: none;
-                    /* Enable smoother scrolling on iOS */
                     -webkit-user-drag: none;
+                }
+
+                body.modal-open {
+                    overflow: hidden;
                 }
             `}</style>
 
@@ -241,7 +298,7 @@ export default function SaleDetailsPage({ rental, reviews, days_on_market, seo }
                 <main style={{ flex: 1 }}>
 
                     {/* ── HERO IMAGE CAROUSEL ──────────────────────────────── */}
-                    <div className="hero-image" style={{ position: 'relative', height: 'clamp(12rem, 40vw, 20rem)', background: 'linear-gradient(135deg, hsl(38 92% 50% / 0.2) 0%, hsl(38 92% 50% / 0.05) 100%)' }}>
+                    <div className="hero-image" style={{ position: 'relative', height: 'clamp(12rem, 40vw, 20rem)', background: 'linear-gradient(135deg, hsl(38 92% 50% / 0.18) 0%, hsl(38 92% 50% / 0.05) 100%)' }}>
                         <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden', backgroundColor: 'hsl(40 30% 94%)' }}>
 
                             {images.length > 0 ? (
@@ -255,7 +312,6 @@ export default function SaleDetailsPage({ rental, reviews, days_on_market, seo }
                                 <MapPin style={{ height: 'clamp(3rem, 10vw, 4rem)', width: 'clamp(3rem, 10vw, 4rem)', color: 'hsl(200 25% 15% / 0.2)' }} />
                             )}
 
-                            {/* Carousel controls */}
                             {images.length > 1 && (
                                 <>
                                     <button
@@ -278,7 +334,6 @@ export default function SaleDetailsPage({ rental, reviews, days_on_market, seo }
                                         <ChevronRight size={20} style={{ color: '#374151' }} />
                                     </button>
 
-                                    {/* Dot indicators */}
                                     <div style={{ position: 'absolute', bottom: 'clamp(0.5rem, 2vw, 0.75rem)', left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 'clamp(0.25rem, 1vw, 0.375rem)', padding: 'clamp(0.25rem, 1vw, 0.375rem) clamp(0.5rem, 2vw, 0.625rem)', backgroundColor: 'rgba(0,0,0,0.6)', borderRadius: '9999px', zIndex: 10 }}>
                                         {images.map((_, index) => (
                                             <button
@@ -289,7 +344,6 @@ export default function SaleDetailsPage({ rental, reviews, days_on_market, seo }
                                         ))}
                                     </div>
 
-                                    {/* Image counter */}
                                     <div className="image-counter" style={{ position: 'absolute', top: 'clamp(0.5rem, 2vw, 0.75rem)', right: 'clamp(0.5rem, 2vw, 0.75rem)', backgroundColor: 'rgba(0,0,0,0.7)', color: 'white', padding: 'clamp(0.1875rem, 1vw, 0.25rem) clamp(0.375rem, 2vw, 0.5rem)', borderRadius: '0.375rem', fontSize: 'clamp(0.6875rem, 2vw, 0.75rem)', fontWeight: '500', zIndex: 10 }}>
                                         {currentImageIndex + 1} / {images.length}
                                     </div>
@@ -297,12 +351,20 @@ export default function SaleDetailsPage({ rental, reviews, days_on_market, seo }
                             )}
                         </div>
 
-                        {/* Verified badge */}
                         {rental.is_verified && (
                             <div style={{ position: 'absolute', top: 'clamp(0.75rem, 3vw, 1rem)', left: 'clamp(0.75rem, 3vw, 1rem)' }}>
                                 <span className="verified-badge" style={{ display: 'inline-flex', alignItems: 'center', padding: 'clamp(0.25rem, 1vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem)', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', fontWeight: '500', backgroundColor: 'hsl(152 60% 40%)', color: 'white', borderRadius: '9999px', gap: '0.375rem' }}>
                                     <Shield style={{ height: 'clamp(0.75rem, 2vw, 0.875rem)', width: 'clamp(0.75rem, 2vw, 0.875rem)' }} />
                                     Verified
+                                </span>
+                            </div>
+                        )}
+
+                        {/* Sold overlay */}
+                        {rental.is_sold && (
+                            <div style={{ position: 'absolute', top: 'clamp(0.75rem, 3vw, 1rem)', right: 'clamp(0.75rem, 3vw, 1rem)' }}>
+                                <span style={{ display: 'inline-flex', alignItems: 'center', padding: 'clamp(0.25rem, 1vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem)', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', fontWeight: '700', backgroundColor: 'hsl(0 65% 44%)', color: 'white', borderRadius: '9999px' }}>
+                                    Sold
                                 </span>
                             </div>
                         )}
@@ -312,8 +374,8 @@ export default function SaleDetailsPage({ rental, reviews, days_on_market, seo }
                     <div className="container mx-auto" style={{ padding: 'clamp(1rem, 3vw, 2rem) clamp(0.75rem, 3vw, 1rem)' }}>
                         <div className="property-details-grid">
 
-                            {/* ═══ MAIN COLUMN ════════════════════════════════ */}
-                            <div className="main-content" style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(1rem, 3vw, 1.5rem)' }}>
+                            {/* ═══ 1. MAIN PROPERTY INFORMATION ═══════════════ */}
+                            <div className="section-main-info" style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(1rem, 3vw, 1.5rem)' }}>
 
                                 {/* Title & Location */}
                                 <div>
@@ -329,11 +391,13 @@ export default function SaleDetailsPage({ rental, reviews, days_on_market, seo }
                                 {/* Price & Features */}
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 'clamp(0.75rem, 2vw, 1rem)' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
-                                        <span style={{ color: 'hsl(38 92% 50%)', fontSize: 'clamp(1.25rem, 5vw, 2rem)', fontWeight: '700' }}>
+                                        <span style={{ color: 'hsl(38 80% 38%)', fontSize: 'clamp(1.25rem, 5vw, 2rem)', fontWeight: '700' }}>
                                             {fmt(rental.sale_price)}
                                         </span>
-                                        <span style={{ fontSize: '0.78rem', color: 'hsl(200 15% 52%)', fontWeight: '600' }}>For Sale</span>
                                         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                                            <span style={{ padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: '600', backgroundColor: 'hsl(38 92% 50% / 0.12)', color: 'hsl(38 80% 32%)', border: '1px solid hsl(38 92% 50% / 0.25)' }}>
+                                                For Sale
+                                            </span>
                                             {rental.property_type && (
                                                 <span style={{ padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: '600', backgroundColor: 'hsl(40 30% 94%)', color: 'hsl(200 25% 28%)', border: '1px solid hsl(40 20% 86%)' }}>
                                                     {rental.property_type.charAt(0).toUpperCase() + rental.property_type.slice(1)}
@@ -344,17 +408,25 @@ export default function SaleDetailsPage({ rental, reviews, days_on_market, seo }
 
                                     <div className="feature-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 'clamp(0.75rem, 2vw, 1rem)', fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)', color: 'hsl(200 15% 45%)' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
-                                            <BedDouble style={{ height: 'clamp(0.875rem, 2.5vw, 1rem)', width: 'clamp(0.875rem, 2.5vw, 1rem)', flexShrink: 0, color: 'hsl(38 92% 50%)' }} />
+                                            <BedDouble style={{ height: 'clamp(0.875rem, 2.5vw, 1rem)', width: 'clamp(0.875rem, 2.5vw, 1rem)', flexShrink: 0, color: 'hsl(38 80% 45%)' }} />
                                             {rental.bedrooms ?? '—'} Bedrooms
                                         </div>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
-                                            <Bath style={{ height: 'clamp(0.875rem, 2.5vw, 1rem)', width: 'clamp(0.875rem, 2.5vw, 1rem)', flexShrink: 0, color: 'hsl(38 92% 50%)' }} />
+                                            <Bath style={{ height: 'clamp(0.875rem, 2.5vw, 1rem)', width: 'clamp(0.875rem, 2.5vw, 1rem)', flexShrink: 0, color: 'hsl(38 80% 45%)' }} />
                                             {rental.bathrooms ?? '—'} Bathrooms
                                         </div>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
-                                            <Calendar style={{ height: 'clamp(0.875rem, 2.5vw, 1rem)', width: 'clamp(0.875rem, 2.5vw, 1rem)', flexShrink: 0, color: 'hsl(38 92% 50%)' }} />
-                                            {days_on_market ?? 0} days on market
-                                        </div>
+                                        {rental.land_size && (
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                                                <Ruler style={{ height: 'clamp(0.875rem, 2.5vw, 1rem)', width: 'clamp(0.875rem, 2.5vw, 1rem)', flexShrink: 0, color: 'hsl(38 80% 45%)' }} />
+                                                {rental.land_size} sqm
+                                            </div>
+                                        )}
+                                        {rental.year_built && (
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                                                <Calendar style={{ height: 'clamp(0.875rem, 2.5vw, 1rem)', width: 'clamp(0.875rem, 2.5vw, 1rem)', flexShrink: 0, color: 'hsl(38 80% 45%)' }} />
+                                                Built {rental.year_built}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
 
@@ -362,7 +434,7 @@ export default function SaleDetailsPage({ rental, reviews, days_on_market, seo }
                                 <div style={{ backgroundColor: 'hsl(38 92% 50% / 0.1)', border: '1px solid hsl(38 92% 50% / 0.2)', borderRadius: '0.75rem', padding: 'clamp(0.75rem, 3vw, 1rem)', display: 'flex', gap: 'clamp(0.5rem, 2vw, 0.75rem)' }}>
                                     <AlertTriangle style={{ height: 'clamp(1rem, 3vw, 1.25rem)', width: 'clamp(1rem, 3vw, 1.25rem)', color: 'hsl(38 92% 50%)', flexShrink: 0 }} />
                                     <p style={{ fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)', color: 'hsl(200 25% 15%)', fontWeight: '500', lineHeight: '1.5' }}>
-                                        Always inspect the property in person and engage a licensed solicitor before making any payment or signing documents.
+                                        Always verify title documents and inspect the property in person before making any payment.
                                     </p>
                                 </div>
 
@@ -384,174 +456,191 @@ export default function SaleDetailsPage({ rental, reviews, days_on_market, seo }
                                         </h3>
                                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'clamp(0.375rem, 1.5vw, 0.5rem)' }}>
                                             {amenities.map((amenity, i) => (
-                                                <span key={i} style={{ padding: 'clamp(0.25rem, 1vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem)', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', backgroundColor: 'hsl(38 92% 50% / 0.1)', color: 'hsl(38 85% 40%)', border: '1px solid hsl(38 92% 50% / 0.2)', borderRadius: '9999px' }}>
+                                                <span key={i} style={{ padding: 'clamp(0.25rem, 1vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem)', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', backgroundColor: 'hsl(38 92% 50% / 0.08)', color: 'hsl(38 80% 30%)', border: '1px solid hsl(38 92% 50% / 0.2)', borderRadius: '9999px' }}>
                                                     ✓ {amenity}
                                                 </span>
                                             ))}
                                         </div>
                                     </div>
                                 )}
+                            </div>
 
-                                {/* Reviews */}
-                                <div style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.75rem', padding: 'clamp(1rem, 3vw, 1.5rem)' }}>
-                                    <h3 style={{ color: 'hsl(200 25% 15%)', fontSize: 'clamp(1rem, 3vw, 1.125rem)', fontWeight: '600', marginBottom: 'clamp(0.75rem, 2vw, 1rem)' }}>
-                                        Reviews ({reviews?.length ?? 0})
-                                    </h3>
+                            {/* ═══ 2. SALE DETAILS ═════════════════════════════ */}
+                            <div className="section-sale-details" style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.75rem' }}>
+                                <div style={{ padding: 'clamp(1rem, 3vw, 1.5rem)', borderBottom: '1px solid hsl(40 20% 88%)' }}>
+                                    <h3 style={{ color: 'hsl(200 25% 15%)', fontSize: 'clamp(1rem, 3vw, 1.125rem)', fontWeight: '600' }}>Sale Details</h3>
+                                </div>
+                                <div style={{ padding: 'clamp(1rem, 3vw, 1.5rem)', display: 'flex', flexDirection: 'column', gap: 'clamp(0.75rem, 2vw, 1rem)' }}>
 
-                                    {reviews?.length > 0 ? (
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(0.75rem, 2vw, 1rem)' }}>
-                                            {reviews.map((review, i) => {
-                                                const h = hue(review.full_name ?? 'U');
-                                                return (
-                                                    <div key={i} style={{ padding: 'clamp(0.75rem, 3vw, 1rem)', backgroundColor: 'hsl(40 30% 97%)', borderRadius: '0.5rem', border: '1px solid hsl(40 20% 90%)' }}>
-                                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'clamp(0.5rem, 2vw, 0.75rem)', flexWrap: 'wrap', gap: '0.5rem' }}>
-                                                            <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.5rem, 2vw, 0.75rem)' }}>
-                                                                <div style={{ width: 'clamp(2rem, 8vw, 2.5rem)', height: 'clamp(2rem, 8vw, 2.5rem)', borderRadius: '50%', backgroundColor: `hsl(${h} 50% 88%)`, color: `hsl(${h} 50% 28%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 'clamp(0.875rem, 2.5vw, 1rem)', fontWeight: '800', flexShrink: 0 }}>
-                                                                    {(review.full_name ?? 'U').charAt(0).toUpperCase()}
-                                                                </div>
-                                                                <div>
-                                                                    <p style={{ fontWeight: '700', fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)', color: 'hsl(200 25% 15%)' }}>
-                                                                        {review.full_name || 'Anonymous'}
-                                                                    </p>
-                                                                    <p style={{ fontSize: '0.7rem', color: 'hsl(200 15% 55%)' }}>
-                                                                        {review.created_at ? new Date(review.created_at).toLocaleDateString('en-GB', { month: 'short', day: 'numeric', year: 'numeric' }) : ''}
-                                                                    </p>
-                                                                </div>
-                                                            </div>
-                                                            <div style={{ display: 'flex' }}>{renderStars(review.overall_rating)}</div>
-                                                        </div>
+                                    {/* Price highlight */}
+                                    <div style={{ padding: 'clamp(0.75rem, 2vw, 1rem)', backgroundColor: 'hsl(38 92% 50% / 0.08)', border: '1px solid hsl(38 92% 50% / 0.22)', borderRadius: '0.625rem', textAlign: 'center' }}>
+                                        <p style={{ fontSize: 'clamp(0.75rem, 2vw, 0.8125rem)', color: 'hsl(200 15% 45%)', marginBottom: '0.25rem' }}>Asking Price</p>
+                                        <p style={{ fontSize: 'clamp(1.1rem, 4vw, 1.35rem)', fontWeight: '700', color: 'hsl(38 80% 36%)' }}>
+                                            {fmt(rental.sale_price)}
+                                        </p>
+                                    </div>
 
-                                                        {/* Review attribute chips */}
-                                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'clamp(0.375rem, 1.5vw, 0.5rem)', marginBottom: 'clamp(0.5rem, 2vw, 0.75rem)' }}>
-                                                            {review.landlord_responsive          === 1 && <span style={{ padding: 'clamp(0.1875rem, 1vw, 0.25rem) clamp(0.4375rem, 2vw, 0.625rem)', fontSize: 'clamp(0.6875rem, 2vw, 0.75rem)', backgroundColor: 'hsl(152 60% 95%)', color: 'hsl(152 60% 35%)', borderRadius: '9999px', border: '1px solid hsl(152 60% 85%)', fontWeight: '700' }}>✓ Responsive Landlord</span>}
-                                                            {review.property_matched_description === 1 && <span style={{ padding: 'clamp(0.1875rem, 1vw, 0.25rem) clamp(0.4375rem, 2vw, 0.625rem)', fontSize: 'clamp(0.6875rem, 2vw, 0.75rem)', backgroundColor: 'hsl(152 60% 95%)', color: 'hsl(152 60% 35%)', borderRadius: '9999px', border: '1px solid hsl(152 60% 85%)', fontWeight: '700' }}>✓ Accurate Description</span>}
-                                                            {review.fair_pricing                 === 1 && <span style={{ padding: 'clamp(0.1875rem, 1vw, 0.25rem) clamp(0.4375rem, 2vw, 0.625rem)', fontSize: 'clamp(0.6875rem, 2vw, 0.75rem)', backgroundColor: 'hsl(152 60% 95%)', color: 'hsl(152 60% 35%)', borderRadius: '9999px', border: '1px solid hsl(152 60% 85%)', fontWeight: '700' }}>✓ Fair Pricing</span>}
-                                                            {review.good_communication           === 1 && <span style={{ padding: 'clamp(0.1875rem, 1vw, 0.25rem) clamp(0.4375rem, 2vw, 0.625rem)', fontSize: 'clamp(0.6875rem, 2vw, 0.75rem)', backgroundColor: 'hsl(152 60% 95%)', color: 'hsl(152 60% 35%)', borderRadius: '9999px', border: '1px solid hsl(152 60% 85%)', fontWeight: '700' }}>✓ Good Communication</span>}
-                                                        </div>
-
-                                                        {review.comments && (
-                                                            <p style={{ fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)', color: 'hsl(200 15% 45%)', lineHeight: '1.5' }}>
-                                                                {review.comments}
-                                                            </p>
-                                                        )}
-
-                                                        {review.response && (
-                                                            <div style={{ marginTop: 'clamp(0.5rem, 2vw, 0.75rem)', padding: 'clamp(0.5rem, 2vw, 0.75rem)', backgroundColor: 'white', borderLeft: '3px solid hsl(38 92% 50%)', borderRadius: '0.25rem' }}>
-                                                                <p style={{ fontSize: 'clamp(0.6875rem, 2vw, 0.75rem)', fontWeight: '700', color: 'hsl(38 92% 50%)', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                                                                    Response · {review.response_person || 'Agent'}
-                                                                </p>
-                                                                <p style={{ fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)', color: 'hsl(200 15% 44%)', lineHeight: '1.6' }}>
-                                                                    {review.response}
-                                                                </p>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                );
-                                            })}
+                                    {/* Detail rows */}
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                            <span style={{ color: 'hsl(200 15% 45%)' }}>Property Type</span>
+                                            <span style={{ fontWeight: '500', color: 'hsl(200 25% 15%)' }}>{rental.property_type || '—'}</span>
                                         </div>
-                                    ) : (
-                                        <div style={{ textAlign: 'center', padding: '2rem 0' }}>
-                                            <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>💬</div>
-                                            <p style={{ color: 'hsl(200 15% 52%)', fontSize: '0.875rem' }}>No reviews yet. Be the first to review this property.</p>
-                                            <button
-                                                className="action-button"
-                                                onClick={() => authRedirect(() => setShowReview(true))}
-                                                style={{ marginTop: '1rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.65rem 1.1rem', borderRadius: '0.625rem', fontSize: '0.875rem', fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.18s', border: '1.5px solid hsl(40 20% 88%)', background: 'white', color: 'hsl(38 92% 50%)' }}
-                                            >
-                                                Write a Review
-                                            </button>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                            <span style={{ color: 'hsl(200 15% 45%)' }}>Bedrooms</span>
+                                            <span style={{ fontWeight: '500', color: 'hsl(200 25% 15%)' }}>{rental.bedrooms ?? '—'}</span>
+                                        </div>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                            <span style={{ color: 'hsl(200 15% 45%)' }}>Bathrooms</span>
+                                            <span style={{ fontWeight: '500', color: 'hsl(200 25% 15%)' }}>{rental.bathrooms ?? '—'}</span>
+                                        </div>
+                                        {rental.land_size && (
+                                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                <span style={{ color: 'hsl(200 15% 45%)' }}>Land Size</span>
+                                                <span style={{ fontWeight: '500', color: 'hsl(200 25% 15%)' }}>{rental.land_size} sqm</span>
+                                            </div>
+                                        )}
+                                        {rental.year_built && (
+                                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                <span style={{ color: 'hsl(200 15% 45%)' }}>Year Built</span>
+                                                <span style={{ fontWeight: '500', color: 'hsl(200 25% 15%)' }}>{rental.year_built}</span>
+                                            </div>
+                                        )}
+                                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                            <span style={{ color: 'hsl(200 15% 45%)' }}>Status</span>
+                                            <span style={{ fontWeight: '500', color: rental.is_sold ? 'hsl(0 65% 44%)' : 'hsl(152 60% 32%)' }}>{rental.is_sold ? 'Sold' : 'Available'}</span>
+                                        </div>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                            <span style={{ color: 'hsl(200 15% 45%)' }}>Location</span>
+                                            <span style={{ fontWeight: '500', color: 'hsl(200 25% 15%)', textAlign: 'right' }}>{[rental.area, rental.city].filter(Boolean).join(', ')}</span>
+                                        </div>
+                                    </div>
+
+                                    {/* Agent fee note */}
+                                    {agent?.fee > 0 && (
+                                        <div style={{ borderTop: '1px solid hsl(40 20% 90%)', paddingTop: '0.75rem' }}>
+                                            <p style={{ fontSize: '0.72rem', fontWeight: '700', color: 'hsl(200 25% 35%)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem' }}>Estimated Agency Fee</p>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)' }}>
+                                                <span style={{ color: 'hsl(200 15% 45%)' }}>Agent fee ({agent.fee}%)</span>
+                                                <span style={{ fontWeight: '600', color: 'hsl(200 25% 22%)' }}>{fmt(agentFee)}</span>
+                                            </div>
+                                            <p style={{ fontSize: '0.7rem', color: 'hsl(200 15% 58%)', marginTop: '0.4rem' }}>Estimate only. Legal, valuation and stamp duty fees not included — confirm with the agent.</p>
                                         </div>
                                     )}
                                 </div>
                             </div>
 
-                            {/* ═══ SIDEBAR ════════════════════════════════════ */}
-                            <div className="sidebar" style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(1rem, 3vw, 1.5rem)' }}>
+                            {/* ═══ 4. AGENT INFORMATION ════════════════════════ */}
+                            <div className="section-agent" style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(1rem, 3vw, 1.5rem)' }}>
 
-                                {/* Sale Details card */}
-                                <div style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.75rem' }}>
-                                    <div style={{ padding: 'clamp(1rem, 3vw, 1.5rem)', borderBottom: '1px solid hsl(40 20% 88%)' }}>
-                                        <h3 style={{ color: 'hsl(200 25% 15%)', fontSize: 'clamp(1rem, 3vw, 1.125rem)', fontWeight: '600' }}>Sale Details</h3>
-                                    </div>
-                                    <div style={{ padding: 'clamp(1rem, 3vw, 1.5rem)', display: 'flex', flexDirection: 'column', gap: 'clamp(0.75rem, 2vw, 1rem)' }}>
-
-                                        {/* Price highlight */}
-                                        <div style={{ padding: 'clamp(0.75rem, 2vw, 1rem)', backgroundColor: 'hsl(38 92% 50% / 0.08)', border: '1px solid hsl(38 92% 50% / 0.2)', borderRadius: '0.625rem', textAlign: 'center' }}>
-                                            <p style={{ fontSize: 'clamp(0.75rem, 2vw, 0.8125rem)', color: 'hsl(200 15% 45%)', marginBottom: '0.25rem' }}>Sale Price</p>
-                                            <p style={{ fontSize: 'clamp(1.1rem, 4vw, 1.35rem)', fontWeight: '700', color: 'hsl(38 92% 50%)' }}>
-                                                {fmt(rental.sale_price)}
-                                            </p>
-                                        </div>
-
-                                        {/* Detail rows */}
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)' }}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                <span style={{ color: 'hsl(200 15% 45%)' }}>Property Type</span>
-                                                <span style={{ fontWeight: '500', color: 'hsl(200 25% 15%)' }}>{rental.property_type || '—'}</span>
-                                            </div>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                <span style={{ color: 'hsl(200 15% 45%)' }}>Bedrooms</span>
-                                                <span style={{ fontWeight: '500', color: 'hsl(200 25% 15%)' }}>{rental.bedrooms ?? '—'}</span>
-                                            </div>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                <span style={{ color: 'hsl(200 15% 45%)' }}>Bathrooms</span>
-                                                <span style={{ fontWeight: '500', color: 'hsl(200 25% 15%)' }}>{rental.bathrooms ?? '—'}</span>
-                                            </div>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                <span style={{ color: 'hsl(200 15% 45%)' }}>Days on Market</span>
-                                                <span style={{ fontWeight: '500', color: 'hsl(200 25% 15%)' }}>{days_on_market ?? 0}</span>
-                                            </div>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                <span style={{ color: 'hsl(200 15% 45%)' }}>Location</span>
-                                                <span style={{ fontWeight: '500', color: 'hsl(200 25% 15%)', textAlign: 'right' }}>{[rental.area, rental.city].filter(Boolean).join(', ')}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Agent card */}
-                                {rental.user && (
+                                {rental.agent_name && (
                                     <div style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.75rem' }}>
                                         <div style={{ padding: 'clamp(1rem, 3vw, 1.5rem)', borderBottom: '1px solid hsl(40 20% 88%)' }}>
                                             <h3 style={{ color: 'hsl(200 25% 15%)', fontSize: 'clamp(1rem, 3vw, 1.125rem)', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                                 <User style={{ height: 'clamp(1rem, 3vw, 1.25rem)', width: 'clamp(1rem, 3vw, 1.25rem)' }} />
-                                                Agent
+                                                Listed by
                                             </h3>
                                         </div>
                                         <div style={{ padding: 'clamp(1rem, 3vw, 1.5rem)', display: 'flex', flexDirection: 'column', gap: 'clamp(0.75rem, 2vw, 1rem)' }}>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.75rem, 2vw, 1rem)' }}>
-                                                <div style={{ width: 'clamp(2.5rem, 8vw, 3rem)', height: 'clamp(2.5rem, 8vw, 3rem)', borderRadius: '50%', backgroundColor: `hsl(${hue(rental.user.name ?? 'A')} 50% 88%)`, color: `hsl(${hue(rental.user.name ?? 'A')} 50% 28%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 'clamp(1rem, 3vw, 1.25rem)', fontWeight: '800', flexShrink: 0 }}>
-                                                    {(rental.user.name ?? 'A').charAt(0).toUpperCase()}
+                                                <div style={{
+                                                    width: 'clamp(2.5rem, 8vw, 3rem)',
+                                                    height: 'clamp(2.5rem, 8vw, 3rem)',
+                                                    borderRadius: '50%',
+                                                    backgroundColor: `hsl(${hue(rental.agent_name)} 50% 88%)`,
+                                                    color: `hsl(${hue(rental.agent_name)} 50% 28%)`,
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    fontSize: 'clamp(1rem, 3vw, 1.25rem)',
+                                                    fontWeight: '800',
+                                                    flexShrink: 0
+                                                }}>
+                                                    {rental.agent_name.charAt(0).toUpperCase()}
                                                 </div>
                                                 <div style={{ minWidth: 0 }}>
-                                                    <p style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: 'clamp(0.875rem, 2.5vw, 1rem)', fontWeight: '700', color: 'hsl(200 25% 15%)', wordBreak: 'break-word' }}>
-                                                        {rental.user.name}
-                                                        {rental.user.verification_status === 'verified' && (
-                                                            <Shield style={{ height: 'clamp(0.875rem, 2.5vw, 1rem)', width: 'clamp(0.875rem, 2.5vw, 1rem)', color: 'hsl(152 60% 40%)', flexShrink: 0 }} />
-                                                        )}
+                                                    <p style={{
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        gap: '0.5rem',
+                                                        fontSize: 'clamp(0.875rem, 2.5vw, 1rem)',
+                                                        fontWeight: '700',
+                                                        color: 'hsl(200 25% 15%)',
+                                                        wordBreak: 'break-word'
+                                                    }}>
+                                                        {rental.agent_name}
                                                     </p>
                                                     <p style={{ fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', color: 'hsl(200 15% 45%)' }}>
-                                                        {rental.user.company || 'Independent Agent'}
+                                                        {rental.agent_phone && (
+                                                            <span style={{ display: 'block' }}>{rental.agent_phone}</span>
+                                                        )}
+                                                        {rental.agent_email && (
+                                                            <span style={{ display: 'block', fontSize: '0.7rem' }}>{rental.agent_email}</span>
+                                                        )}
                                                     </p>
                                                 </div>
                                             </div>
 
-                                            {rental.user.average_rating > 0 && (
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                                                    <div style={{ display: 'flex' }}>{renderStars(rental.user.average_rating)}</div>
-                                                    <span style={{ fontSize: 'clamp(0.75rem, 2vw, 0.875rem)', color: 'hsl(200 15% 45%)' }}>
-                                                        {rental.user.average_rating?.toFixed(1)} ({rental.user.total_reviews ?? 0} reviews)
-                                                    </span>
-                                                </div>
-                                            )}
+                                            {/* Contact buttons */}
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                                {rental.agent_phone && (
+                                                    <a
+                                                        href={`tel:${rental.agent_phone}`}
+                                                        style={{
+                                                            width: '100%',
+                                                            padding: 'clamp(0.625rem, 2vw, 0.75rem)',
+                                                            border: '1px solid hsl(40 20% 88%)',
+                                                            borderRadius: '0.5rem',
+                                                            backgroundColor: 'white',
+                                                            color: 'hsl(38 80% 36%)',
+                                                            fontWeight: '500',
+                                                            cursor: 'pointer',
+                                                            fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)',
+                                                            textDecoration: 'none',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            gap: '0.5rem'
+                                                        }}
+                                                    >
+                                                        <Phone size={16} />
+                                                        Call Agent
+                                                    </a>
+                                                )}
 
-                                            <button
-                                                className="action-button"
-                                                onClick={() => setShowAgent(true)}
-                                                style={{ width: '100%', padding: 'clamp(0.625rem, 2vw, 0.75rem)', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.5rem', backgroundColor: 'white', color: 'hsl(38 92% 50%)', fontWeight: '500', cursor: 'pointer', fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)', touchAction: 'manipulation' }}
-                                            >
-                                                View Profile
-                                            </button>
+                                                {rental.agent_email && (
+                                                    <a
+                                                        href={`mailto:${rental.agent_email}`}
+                                                        style={{
+                                                            width: '100%',
+                                                            padding: 'clamp(0.625rem, 2vw, 0.75rem)',
+                                                            border: '1px solid hsl(40 20% 88%)',
+                                                            borderRadius: '0.5rem',
+                                                            backgroundColor: 'white',
+                                                            color: 'hsl(38 80% 36%)',
+                                                            fontWeight: '500',
+                                                            cursor: 'pointer',
+                                                            fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)',
+                                                            textDecoration: 'none',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            gap: '0.5rem'
+                                                        }}
+                                                    >
+                                                        <Mail size={16} />
+                                                        Email Agent
+                                                    </a>
+                                                )}
+
+                                                <button
+                                                    className="action-button"
+                                                    onClick={() => setShowAgent(true)}
+                                                    style={{ width: '100%', padding: 'clamp(0.625rem, 2vw, 0.75rem)', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.5rem', backgroundColor: 'white', color: 'hsl(38 80% 36%)', fontWeight: '500', cursor: 'pointer', fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)', touchAction: 'manipulation' }}
+                                                >
+                                                    View Profile
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 )}
@@ -560,18 +649,19 @@ export default function SaleDetailsPage({ rental, reviews, days_on_market, seo }
                                 <button
                                     className="action-button"
                                     onClick={() => authRedirect(() => setShowInquiry(true))}
-                                    style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: 'clamp(0.75rem, 2vw, 0.875rem)', border: 'none', borderRadius: '0.625rem', backgroundColor: 'hsl(38 92% 50%)', background: 'linear-gradient(135deg, hsl(38 92% 50%), hsl(38 85% 45%))', color: 'white', fontWeight: '700', cursor: 'pointer', fontSize: 'clamp(0.875rem, 2vw, 0.9rem)', touchAction: 'manipulation', transition: 'all 0.18s' }}
-                                    onMouseEnter={e => { e.currentTarget.style.filter = 'brightness(1.08)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
+                                    disabled={rental.is_sold}
+                                    style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: 'clamp(0.75rem, 2vw, 0.875rem)', border: 'none', borderRadius: '0.625rem', backgroundColor: 'hsl(38 92% 45%)', background: rental.is_sold ? 'hsl(200 10% 80%)' : 'linear-gradient(135deg, hsl(38 92% 45%), hsl(38 85% 52%))', color: 'white', fontWeight: '700', cursor: rental.is_sold ? 'not-allowed' : 'pointer', fontSize: 'clamp(0.875rem, 2vw, 0.9rem)', touchAction: 'manipulation', transition: 'all 0.18s' }}
+                                    onMouseEnter={e => { if (!rental.is_sold) { e.currentTarget.style.filter = 'brightness(1.06)'; e.currentTarget.style.transform = 'translateY(-1px)'; } }}
                                     onMouseLeave={e => { e.currentTarget.style.filter = 'none'; e.currentTarget.style.transform = 'none'; }}
                                 >
                                     <MessageSquare style={{ height: 'clamp(1rem, 3vw, 1.1rem)', width: 'clamp(1rem, 3vw, 1.1rem)' }} />
-                                    Send Inquiry
+                                    {rental.is_sold ? 'Property Sold' : 'Send Inquiry'}
                                 </button>
 
                                 <button
                                     className="action-button"
                                     onClick={() => authRedirect(() => setShowReview(true))}
-                                    style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: 'clamp(0.625rem, 2vw, 0.75rem)', border: '1.5px solid hsl(40 20% 88%)', borderRadius: '0.625rem', backgroundColor: 'white', color: 'hsl(38 92% 50%)', fontWeight: '600', cursor: 'pointer', fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)', touchAction: 'manipulation' }}
+                                    style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: 'clamp(0.625rem, 2vw, 0.75rem)', border: '1.5px solid hsl(40 20% 88%)', borderRadius: '0.625rem', backgroundColor: 'white', color: 'hsl(38 80% 36%)', fontWeight: '600', cursor: 'pointer', fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)', touchAction: 'manipulation' }}
                                 >
                                     <MessageSquare style={{ height: 'clamp(0.875rem, 2.5vw, 1rem)', width: 'clamp(0.875rem, 2.5vw, 1rem)' }} />
                                     Write a Review
@@ -586,11 +676,82 @@ export default function SaleDetailsPage({ rental, reviews, days_on_market, seo }
                                     Report Listing
                                 </button>
                             </div>
+
+                             {/* ═══ 3. REVIEWS ══════════════════════════════════ */}
+                            <div className="section-reviews" style={{ backgroundColor: 'white', border: '1px solid hsl(40 20% 88%)', borderRadius: '0.75rem', padding: 'clamp(1rem, 3vw, 1.5rem)' }}>
+                                <h3 style={{ color: 'hsl(200 25% 15%)', fontSize: 'clamp(1rem, 3vw, 1.125rem)', fontWeight: '600', marginBottom: 'clamp(0.75rem, 2vw, 1rem)' }}>
+                                    Reviews ({reviews?.length ?? 0})
+                                </h3>
+
+                                {reviews?.length > 0 ? (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(0.75rem, 2vw, 1rem)' }}>
+                                        {reviews.map((review, i) => {
+                                            const h = hue(review.full_name ?? 'U');
+                                            return (
+                                                <div key={i} style={{ padding: 'clamp(0.75rem, 3vw, 1rem)', backgroundColor: 'hsl(40 30% 97%)', borderRadius: '0.5rem', border: '1px solid hsl(40 20% 90%)' }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'clamp(0.5rem, 2vw, 0.75rem)', flexWrap: 'wrap', gap: '0.5rem' }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.5rem, 2vw, 0.75rem)' }}>
+                                                            <div style={{ width: 'clamp(2rem, 8vw, 2.5rem)', height: 'clamp(2rem, 8vw, 2.5rem)', borderRadius: '50%', backgroundColor: `hsl(${h} 50% 88%)`, color: `hsl(${h} 50% 28%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 'clamp(0.875rem, 2.5vw, 1rem)', fontWeight: '800', flexShrink: 0 }}>
+                                                                {(review.full_name ?? 'U').charAt(0).toUpperCase()}
+                                                            </div>
+                                                            <div>
+                                                                <p style={{ fontWeight: '700', fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)', color: 'hsl(200 25% 15%)' }}>
+                                                                    {review.full_name || 'Anonymous'}
+                                                                </p>
+                                                                <p style={{ fontSize: '0.7rem', color: 'hsl(200 15% 55%)' }}>
+                                                                    {review.created_at ? new Date(review.created_at).toLocaleDateString('en-GB', { month: 'short', day: 'numeric', month: 'numeric' }) : ''}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                        <div style={{ display: 'flex' }}>{renderStars(review.overall_rating)}</div>
+                                                    </div>
+
+                                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'clamp(0.375rem, 1.5vw, 0.5rem)', marginBottom: 'clamp(0.5rem, 2vw, 0.75rem)' }}>
+                                                        {review.landlord_responsive          === 1 && <span style={{ padding: 'clamp(0.1875rem, 1vw, 0.25rem) clamp(0.4375rem, 2vw, 0.625rem)', fontSize: 'clamp(0.6875rem, 2vw, 0.75rem)', backgroundColor: 'hsl(152 60% 95%)', color: 'hsl(152 60% 35%)', borderRadius: '9999px', border: '1px solid hsl(152 60% 85%)', fontWeight: '700' }}>✓ Responsive Seller</span>}
+                                                        {review.property_matched_description === 1 && <span style={{ padding: 'clamp(0.1875rem, 1vw, 0.25rem) clamp(0.4375rem, 2vw, 0.625rem)', fontSize: 'clamp(0.6875rem, 2vw, 0.75rem)', backgroundColor: 'hsl(152 60% 95%)', color: 'hsl(152 60% 35%)', borderRadius: '9999px', border: '1px solid hsl(152 60% 85%)', fontWeight: '700' }}>✓ Accurate Description</span>}
+                                                        {review.fair_pricing                 === 1 && <span style={{ padding: 'clamp(0.1875rem, 1vw, 0.25rem) clamp(0.4375rem, 2vw, 0.625rem)', fontSize: 'clamp(0.6875rem, 2vw, 0.75rem)', backgroundColor: 'hsl(152 60% 95%)', color: 'hsl(152 60% 35%)', borderRadius: '9999px', border: '1px solid hsl(152 60% 85%)', fontWeight: '700' }}>✓ Fair Pricing</span>}
+                                                        {review.good_communication           === 1 && <span style={{ padding: 'clamp(0.1875rem, 1vw, 0.25rem) clamp(0.4375rem, 2vw, 0.625rem)', fontSize: 'clamp(0.6875rem, 2vw, 0.75rem)', backgroundColor: 'hsl(152 60% 95%)', color: 'hsl(152 60% 35%)', borderRadius: '9999px', border: '1px solid hsl(152 60% 85%)', fontWeight: '700' }}>✓ Good Communication</span>}
+                                                    </div>
+
+                                                    {review.comments && (
+                                                        <p style={{ fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)', color: 'hsl(200 15% 45%)', lineHeight: '1.5' }}>
+                                                            {review.comments}
+                                                        </p>
+                                                    )}
+
+                                                    {review.response && (
+                                                        <div style={{ marginTop: 'clamp(0.5rem, 2vw, 0.75rem)', padding: 'clamp(0.5rem, 2vw, 0.75rem)', backgroundColor: 'white', borderLeft: '3px solid hsl(38 80% 45%)', borderRadius: '0.25rem' }}>
+                                                            <p style={{ fontSize: 'clamp(0.6875rem, 2vw, 0.75rem)', fontWeight: '700', color: 'hsl(38 80% 32%)', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                                                Response · {review.response_person || 'Agent'}
+                                                            </p>
+                                                            <p style={{ fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)', color: 'hsl(200 15% 44%)', lineHeight: '1.6' }}>
+                                                                {review.response}
+                                                            </p>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                ) : (
+                                    <div style={{ textAlign: 'center', padding: '2rem 0' }}>
+                                        <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>💬</div>
+                                        <p style={{ color: 'hsl(200 15% 52%)', fontSize: '0.875rem' }}>No reviews yet. Be the first to review this property.</p>
+                                        <button
+                                            className="action-button"
+                                            onClick={() => authRedirect(() => setShowReview(true))}
+                                            style={{ marginTop: '1rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.65rem 1.1rem', borderRadius: '0.625rem', fontSize: '0.875rem', fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.18s', border: '1.5px solid hsl(40 20% 88%)', background: 'white', color: 'hsl(38 80% 36%)' }}
+                                        >
+                                            Write a Review
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </main>
 
-                {/* Image Modal - Improved for mobile zoom */}
+                {/* Image Modal */}
                 {showImageModal && (
                     <div
                         className="image-modal"
@@ -622,7 +783,6 @@ export default function SaleDetailsPage({ rental, reviews, days_on_market, seo }
                                 overflow: 'hidden',
                             }}
                         >
-                            {/* Close button - optimized for touch */}
                             <button
                                 onClick={() => setShowImageModal(false)}
                                 style={{
@@ -651,7 +811,6 @@ export default function SaleDetailsPage({ rental, reviews, days_on_market, seo }
                                 ×
                             </button>
 
-                            {/* Image container with proper aspect ratio */}
                             <div style={{
                                 position: 'relative',
                                 width: '100%',
@@ -679,7 +838,6 @@ export default function SaleDetailsPage({ rental, reviews, days_on_market, seo }
                                 />
                             </div>
 
-                            {/* Navigation arrows - hidden on very small screens */}
                             {images.length > 1 && (
                                 <>
                                     <button
@@ -738,7 +896,6 @@ export default function SaleDetailsPage({ rental, reviews, days_on_market, seo }
                                         <ChevronRight size={24} />
                                     </button>
 
-                                    {/* Image counter */}
                                     <div style={{
                                         position: 'absolute',
                                         bottom: 'clamp(0.5rem, 2vw, 1rem)',
@@ -766,10 +923,8 @@ export default function SaleDetailsPage({ rental, reviews, days_on_market, seo }
 
                 {/* ── MODALS ───────────────────────────────────────────────── */}
 
-                {/* Agent profile */}
-                <AgentProfileModal agent={rental.user} rentalId={rental.id} isOpen={showAgent} onClose={() => setShowAgent(false)} auth={auth} />
+                <AgentProfileModal agent={agentProfile} rentalId={rental.id} isOpen={showAgent} onClose={() => setShowAgent(false)} auth={auth} />
 
-                {/* Report */}
                 {showReport && (
                     <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: 'clamp(0.5rem, 2vw, 1rem)' }}>
                         <div className="modal-content" style={{ backgroundColor: 'white', borderRadius: 'clamp(0.75rem, 2vw, 1rem)', maxHeight: '90vh', overflow: 'auto', maxWidth: 'clamp(90%, 95vw, 60%)', width: '100%', position: 'relative' }} onClick={e => e.stopPropagation()}>
@@ -778,7 +933,6 @@ export default function SaleDetailsPage({ rental, reviews, days_on_market, seo }
                     </div>
                 )}
 
-                {/* Review */}
                 {showReview && (
                     <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: 'clamp(0.5rem, 2vw, 1rem)' }}>
                         <div className="modal-content" style={{ backgroundColor: 'white', borderRadius: 'clamp(0.75rem, 2vw, 1rem)', maxHeight: '90vh', overflow: 'auto', maxWidth: 'clamp(90%, 95vw, 60%)', width: '100%', position: 'relative' }} onClick={e => e.stopPropagation()}>
@@ -787,12 +941,10 @@ export default function SaleDetailsPage({ rental, reviews, days_on_market, seo }
                     </div>
                 )}
 
-                {/* Inquiry */}
                 {showInquiry && (
                     <InquiryModal rental={rental} onClose={() => setShowInquiry(false)} />
                 )}
 
-                {/* Toast */}
                 {toast && (
                     <div style={{ position: 'fixed', top: 'clamp(0.5rem, 2vw, 1rem)', right: 'clamp(0.5rem, 2vw, 1rem)', backgroundColor: toast.variant === 'error' ? '#ef4444' : '#10b981', color: 'white', padding: 'clamp(0.75rem, 2vw, 1rem)', borderRadius: '0.5rem', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', zIndex: 9999, maxWidth: '400px', animation: 'slideIn 0.3s ease-out', fontSize: 'clamp(0.8125rem, 2vw, 0.875rem)' }}>
                         <div style={{ fontWeight: '600', marginBottom: '0.25rem' }}>{toast.title}</div>

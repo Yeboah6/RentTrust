@@ -19,7 +19,7 @@ class RentalSearchController extends Controller
         $listings = Rental::where('purpose', 'rent')
             ->orderByRaw("
                 CASE status
-                    WHEN 'active' THEN 0
+                    WHEN 'available' THEN 0
                     WHEN 'rented' THEN 1
                     WHEN 'inactive' THEN 2
                     WHEN 'sold' THEN 3
@@ -54,7 +54,7 @@ public function getMore(Request $request)
         $listings = Rental::where('purpose', 'rent')
             ->orderByRaw("
                 CASE status
-                    WHEN 'active' THEN 0
+                    WHEN 'available' THEN 0
                     WHEN 'rented' THEN 1
                     WHEN 'inactive' THEN 2
                     WHEN 'sold' THEN 3

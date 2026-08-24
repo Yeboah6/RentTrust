@@ -155,7 +155,6 @@ const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views
       rent_max: rental.rent_max || 0,
       sale_price: rental.sale_price || 0,
       effective_listing_status: rental.status || 'inactive',
-      // effective_listing_verification_status: rental.verification_status || 'unverified',
       verification_status: rental.verification_status || null,
       total_reviews: rental.reviews_count || 0,
       views: rental.views_count || 0,
@@ -194,11 +193,25 @@ const AgentDashboardPage = ({ agentData, rentals, reviews, inquiries = [], views
   const conversionRate = totalViews > 0 ? ((totalInquiries / totalViews) * 100).toFixed(1) : 0;
 
   const getStatusBadge = (status) => {
-    if (status === "approved" || status === "verified" || status === "active") {
+    if (status === "approved") {
       return (
         <span style={{ display: 'inline-flex', alignItems: 'center', padding: 'clamp(0.25rem, 1vw, 0.25rem) clamp(0.5rem, 2vw, 0.625rem)', fontSize: 'clamp(0.75rem, 2vw, 0.75rem)', fontWeight: '500', backgroundColor: 'hsl(152 60% 40%)', color: 'white', borderRadius: '9999px', gap: 'clamp(0.25rem, 1vw, 0.25rem)' }}>
           <CheckCircle style={{ height: 'clamp(0.75rem, 2vw, 0.75rem)', width: 'clamp(0.75rem, 2vw, 0.75rem)' }} />
-          Verified
+          Approved
+        </span>
+      );
+    } else if (status === "available") {
+      return (
+        <span style={{ display: 'inline-flex', alignItems: 'center', padding: 'clamp(0.25rem, 1vw, 0.25rem) clamp(0.5rem, 2vw, 0.625rem)', fontSize: 'clamp(0.75rem, 2vw, 0.75rem)', fontWeight: '500', backgroundColor: 'hsl(152 60% 40%)', color: 'white', borderRadius: '9999px', gap: 'clamp(0.25rem, 1vw, 0.25rem)' }}>
+          <CheckCircle style={{ height: 'clamp(0.75rem, 2vw, 0.75rem)', width: 'clamp(0.75rem, 2vw, 0.75rem)' }} />
+          Available
+        </span>
+      );
+    } else if (status === "verified") {
+      return (
+        <span style={{ display: 'inline-flex', alignItems: 'center', padding: 'clamp(0.25rem, 1vw, 0.25rem) clamp(0.5rem, 2vw, 0.625rem)', fontSize: 'clamp(0.75rem, 2vw, 0.75rem)', fontWeight: '500', backgroundColor: 'hsl(152 60% 40%)', color: 'white', borderRadius: '9999px', gap: 'clamp(0.25rem, 1vw, 0.25rem)' }}>
+          <CheckCircle style={{ height: 'clamp(0.75rem, 2vw, 0.75rem)', width: 'clamp(0.75rem, 2vw, 0.75rem)' }} />
+          Approved
         </span>
       );
     } else if (status === "pending") {

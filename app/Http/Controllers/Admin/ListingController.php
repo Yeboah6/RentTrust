@@ -6,6 +6,8 @@ use App\Models\Rental;
 use App\Models\AdminAuditLog;
 use App\Models\ListingVerification;
 use Illuminate\Support\Facades\{Log, Auth};
+use App\Notifications\VerificationApprovedNotification;
+use App\Notifications\VerificationRejectedNotification;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
@@ -33,6 +35,10 @@ class ListingController extends Controller
             'verification_status' => 'verified',
             'verified_at' => now(),
         ]);
+
+        if ($listing?->user) {
+            $listing->user->notify(new VerificationApprovedNotification($listing));
+        }
 
         AdminAuditLog::record('listing', "Listing {$newStatus}: " . ($listing->title ?? 'Untitled listing'), [
             'affected_user' => $listing?->user?->name ?? 'Unknown',
@@ -66,6 +72,12 @@ class ListingController extends Controller
             'verification_rejected_at' => now(),
             'verification_rejection_reason' => $validated['rejection_reason'],
         ]);
+
+        if ($listing?->user) {
+            $listing->user->notify(
+                new VerificationRejectedNotification($listing, $validated['rejection_reason'])
+            );
+        }
 
         AdminAuditLog::record('listing', "Listing {$newStatus}: " . ($listing->title ?? 'Untitled listing'), [
             'affected_user' => $listing?->user?->name ?? 'Unknown',

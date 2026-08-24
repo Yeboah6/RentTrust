@@ -40,7 +40,6 @@ class VerificationRejectedNotification extends Notification implements ShouldQue
         }
 
         $message->line('Please review the feedback above and resubmit your listing with the necessary updates.')
-            ->action('Update Your Listing', route('listing.edit', $this->rental->id))
             ->line('If you have questions, please contact our support team.')
             ->line('Thank you for using our platform!');
 
@@ -55,7 +54,6 @@ class VerificationRejectedNotification extends Notification implements ShouldQue
             'rental_title' => $this->rental->title,
             'message' => "Your listing \"{$this->rental->title}\" was rejected during verification.",
             'rejection_reason' => $this->rejectionReason,
-            'action_url' => route('listing.edit', $this->rental->id),
             'icon' => 'alert-circle',
             'color' => 'error'
         ];

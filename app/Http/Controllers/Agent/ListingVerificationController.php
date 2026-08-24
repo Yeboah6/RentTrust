@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ListingVerification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\{Auth, Mail, Storage};
+use App\Mail\ListingVerificationSubmitted;
 use Illuminate\Validation\Rule;
 
 class ListingVerificationController extends Controller
@@ -38,7 +39,6 @@ class ListingVerificationController extends Controller
             return back()->withErrors(['ownership_documents' => 'Please upload at least one document.']);
         }
  
-        // One pending/approved request per listing at a time.
         $alreadyActive = ListingVerification::where('listing_id', $validated['listing_id'])
             ->whereIn('status', ['pending', 'approved'])
             ->exists();
@@ -47,7 +47,7 @@ class ListingVerificationController extends Controller
             return back()->withErrors(['listing_id' => 'This listing already has an active verification request.']);
         }
  
-        ListingVerification::create([
+        $verification = ListingVerification::create([
             'listing_id' => $validated['listing_id'],
             'user_id' => Auth::id(),
             'property_title' => $validated['property_title'],
@@ -60,6 +60,9 @@ class ListingVerificationController extends Controller
             'photos' => $this->storeFiles($request, 'photos', $validated['listing_id']),
             'other_documents' => $this->storeFiles($request, 'other_documents', $validated['listing_id']),
         ]);
+
+        Mail::to(config('mail.admin_address', 'renttrust2026@gmail.com'))
+           ->queue(new ListingVerificationSubmitted($verification));
  
         return back()->with('success', 'Verification request submitted.');
     }
@@ -110,6 +113,9 @@ class ListingVerificationController extends Controller
             'other_documents' => $this->storeFiles($request, 'other_documents', $validated['listing_id'])
                 ?? $verification->other_documents,
         ]);
+
+        Mail::to(config('mail.admin_address', 'renttrust2026@gmail.com'))
+            ->queue(new ListingVerificationSubmitted($verification->fresh()));
 
         return back()->with('success', 'Verification request resubmitted.');
     }

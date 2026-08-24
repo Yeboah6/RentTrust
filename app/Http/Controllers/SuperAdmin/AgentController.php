@@ -23,7 +23,7 @@ class AgentController extends Controller
         $agents = User::where('role', 'agent')
             ->withCount([
                 'rentals as listings_count',
-                'rentals as active_listings' => fn($q) => $q->where('status', 'active')->where('is_sold', false),
+                'rentals as active_listings' => fn($q) => $q->where('status', 'available')->where('is_sold', false),
                 'rentals as sold_count'      => fn($q) => $q->where('is_sold', true),
                 'reviews as reviews_count',
             ])
@@ -80,7 +80,7 @@ class AgentController extends Controller
             'name'     => ['required', 'string', 'max:255'],
             'email'    => ['required', 'email', 'unique:users,email'],
             'phone'    => ['nullable', 'string', 'max:30', 'unique:users,phone'],
-            'fee'     => ['nullable', 'numeric', 'min:0'],
+            'fee'     =>  ['nullable', 'numeric', 'min:0'],
             'company'  => ['nullable', 'string', 'max:255'],
             'type'     => ['nullable', 'string', 'max:100'],
             'bio'      => ['nullable', 'string', 'max:2000'],
@@ -241,11 +241,11 @@ class AgentController extends Controller
             'name'        => ['required', 'string', 'max:255'],
             'email'       => ['required', 'email', Rule::unique('users', 'email')->ignore($agent->id)],
             'phone'       => ['nullable', 'string', 'max:30'],
-            'company'      => ['nullable', 'string', 'max:255'],
-            'type'      => ['nullable', 'string', 'max:100'],
+            'company'     => ['nullable', 'string', 'max:255'],
+            'type'        => ['nullable', 'string', 'max:100'],
             'location'    => ['nullable', 'string', 'max:255'],
             'bio'         => ['nullable', 'string', 'max:2000'],
-            'status'      => ['required', Rule::in(['active', 'pending', 'verified', 'suspended', 'rejected', 'inactive'])],
+            'status'      => ['required', Rule::in(['available', 'pending', 'verified', 'suspended', 'rejected', 'inactive'])],
             'is_verified' => ['boolean'],
             'password'    => ['nullable', 'string', 'min:8', 'confirmed'],
         ]);
@@ -418,7 +418,7 @@ class AgentController extends Controller
 
         Rental::where('agent_id', $agent->id)
             ->where('status', 'suspended')
-            ->update(['status' => 'active']);
+            ->update(['status' => 'available']);
 
         Log::info('SuperAdmin reactivated agent', [
             'agent_id' => $agent->id,

@@ -242,62 +242,6 @@ const PropertyCard = ({
                 : 'per month'}
           </div>
         </div>
-
-        {/* Footer: agent + verified badge */}
-        <div style={{ borderTop: '1px solid hsl(40 18% 91%)', paddingTop: '0.7rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.4rem' }}>
-
-            {agent_name ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.32rem', minWidth: 0 }}>
-                <div style={{
-                  width: '1.5rem',
-                  height: '1.5rem',
-                  borderRadius: '50%',
-                  backgroundColor: 'hsl(174 55% 32% / 0.12)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0,
-                  fontSize: '0.58rem',
-                  fontWeight: '700',
-                  color: 'hsl(174 62% 26%)',
-                }}>
-                  {String(agent_name).charAt(0).toUpperCase()}
-                </div>
-                <span style={{
-                  fontSize: '0.76rem',
-                  color: 'hsl(200 15% 46%)',
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                }}>
-                  {agent_name}
-                </span>
-              </div>
-            ) : (
-              <span style={{ fontSize: '0.76rem', color: 'hsl(200 15% 62%)' }}>No agent</span>
-            )}
-
-            {isVerified && (
-              <span style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '0.18rem',
-                padding: '0.16rem 0.45rem',
-                borderRadius: '9999px',
-                backgroundColor: 'hsl(152 55% 40% / 0.1)',
-                color: 'hsl(152 55% 30%)',
-                fontSize: '0.68rem',
-                fontWeight: '600',
-                flexShrink: 0,
-                whiteSpace: 'nowrap',
-              }}>
-                <Shield style={{ width: '0.62rem', height: '0.62rem' }} />
-                Verified
-              </span>
-            )}
-          </div>
-        </div>
       </div>
     </Link>
   );
