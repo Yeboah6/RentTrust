@@ -9,7 +9,6 @@ use App\Http\Controllers\SaleSearchController;
 use App\Http\Controllers\AgentController;
 
 use App\Models\Rental;
-// use App\Models\VerificationRequest;
 
 use App\Http\Controllers\Admin\AgentsController;
 use App\Http\Controllers\Admin\ListingController;
@@ -149,6 +148,11 @@ Route::middleware(['auth','verified'])->group(function () {
         ->name('settings.verification.store');
 
     Route::put('/verification-requests/{verification}', [ListingVerificationController::class, 'update']);
+
+    Route::post('/ghana-card', [AgentVerificationController::class, 'submitGhanaCard'])->name('ghana-card');
+    Route::post('/consent', [AgentVerificationController::class, 'submitConsent'])->name('consent');
+    Route::post('/biometric-capture', [AgentVerificationController::class, 'submitBiometric'])->name('biometric-capture');
+    Route::get('/nia-status', [AgentVerificationController::class, 'niaStatus'])->name('nia-status');
 
     Route::post('/verification-requests', [ListingVerificationController::class, 'store'])
         ->name('verification-requests.store');

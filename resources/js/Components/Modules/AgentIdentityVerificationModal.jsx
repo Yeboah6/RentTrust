@@ -1,43 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { router } from "@inertiajs/react";
 
-/**
- * AgentIdentityVerificationModal
- * -------------------------------
- * Replaces the old document-upload agent verification flow with a
- * Ghana Card + biometric identity check against the NIA (National
- * Identification Authority).
- *
- * Flow:
- *   1. intro            – "Verify your identity" overview
- *   2. pin               – Enter Ghana Card number + PIN
- *   3. consent            – Accept privacy / verification consent
- *   4. biometric_intro     – Start biometric verification (camera primer)
- *   5. capture               – Live biometric capture (selfie + liveness)
- *   6. nia_verify              – NIA verification (polling)
- *   7. success / failed          – Identity verified (or retry)
- *
- * BACKEND CONTRACT (adjust routes/payloads to match your controllers):
- *   POST /agent-verification/ghana-card
- *        body: { ghana_card_number, ghana_card_pin }
- *        -> 200 { ok: true }  |  422 { message }
- *
- *   POST /agent-verification/consent
- *        body: { consent_accepted: true }
- *        -> 200 { ok: true }
- *
- *   POST /agent-verification/biometric-capture
- *        body: FormData { selfie: Blob, liveness_check: 'blink'|'smile'... }
- *        -> 200 { ok: true, verification_id }
- *
- *   GET  /agent-verification/nia-status?verification_id=...
- *        -> 200 { status: 'pending'|'verified'|'failed', reason? }
- *
- * None of these routes exist yet in the codebase shown to me — wire them
- * up in AgentVerificationController and swap the fetch/router.post calls
- * below if your actual paths differ.
- */
-
 // ----- Icons -----
 const ShieldCheck = ({ style }) => (
   <svg style={style} fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -119,6 +82,7 @@ const formatGhanaCardNumber = (raw) => {
 };
 
 const isValidGhanaCard = (num) => /^\d{9}$/.test(num.replace(/[^0-9]/g, ""));
+const isValidCheckDigit = (digit) => /^[0-9A-Za-z]$/.test(digit);
 
 const AgentIdentityVerificationModal = ({ isOpen, onClose, agentData, onVerified }) => {
   const [currentStep, setCurrentStep] = useState("intro");
@@ -126,6 +90,7 @@ const AgentIdentityVerificationModal = ({ isOpen, onClose, agentData, onVerified
   const [error, setError] = useState(null);
 
   const [ghanaCardNumber, setGhanaCardNumber] = useState("");
+  const [ghanaCardCheckDigit, setGhanaCardCheckDigit] = useState("");
   const [ghanaCardPin, setGhanaCardPin] = useState("");
   const [showPin, setShowPin] = useState(false);
 
@@ -139,7 +104,6 @@ const AgentIdentityVerificationModal = ({ isOpen, onClose, agentData, onVerified
   const [capturedImage, setCapturedImage] = useState(null);
   const [livenessPrompt, setLivenessPrompt] = useState("Look straight at the camera");
 
-  const [verificationId, setVerificationId] = useState(null);
   const [niaFailReason, setNiaFailReason] = useState(null);
 
   const videoRef = useRef(null);
@@ -154,13 +118,13 @@ const AgentIdentityVerificationModal = ({ isOpen, onClose, agentData, onVerified
       setIsProcessing(false);
       setError(null);
       setGhanaCardNumber("");
+      setGhanaCardCheckDigit("");
       setGhanaCardPin("");
       setShowPin(false);
       setConsentChecks({ nia_share: false, terms: false });
       setCameraReady(false);
       setCameraError(null);
       setCapturedImage(null);
-      setVerificationId(null);
       setNiaFailReason(null);
     }
   }, [isOpen]);
@@ -222,6 +186,10 @@ const AgentIdentityVerificationModal = ({ isOpen, onClose, agentData, onVerified
       setError("Enter a valid Ghana Card personal number (9 digits, e.g. GHA-123456789-0).");
       return;
     }
+    if (!isValidCheckDigit(ghanaCardCheckDigit)) {
+      setError("Enter the final check character shown on your Ghana Card, after the last dash.");
+      return;
+    }
     if (!ghanaCardPin || ghanaCardPin.length < 4) {
       setError("Enter the PIN associated with your Ghana Card.");
       return;
@@ -231,7 +199,7 @@ const AgentIdentityVerificationModal = ({ isOpen, onClose, agentData, onVerified
     router.post(
       "/agent-verification/ghana-card",
       {
-        ghana_card_number: `GHA-${ghanaCardNumber}`,
+        ghana_card_number: `GHA-${ghanaCardNumber}-${ghanaCardCheckDigit}`,
         ghana_card_pin: ghanaCardPin,
       },
       {
@@ -255,7 +223,7 @@ const AgentIdentityVerificationModal = ({ isOpen, onClose, agentData, onVerified
 
     router.post(
       "/agent-verification/consent",
-      { consent_accepted: true },
+      { consents: { nia_data_share: consentChecks.nia_share, verification_terms: consentChecks.terms } },
       {
         preserveScroll: true,
         onSuccess: () => setCurrentStep("biometric_intro"),
@@ -304,11 +272,7 @@ const AgentIdentityVerificationModal = ({ isOpen, onClose, agentData, onVerified
       router.post("/agent-verification/biometric-capture", formData, {
         forceFormData: true,
         preserveScroll: true,
-        onSuccess: (page) => {
-          const newVerificationId = page?.props?.verification_id ?? null;
-          setVerificationId(newVerificationId);
-          setCurrentStep("nia_verify");
-        },
+        onSuccess: () => setCurrentStep("nia_verify"),
         onError: (errs) => {
           setError(Object.values(errs)[0] || "We couldn't process that capture. Please retake your photo.");
         },
@@ -328,10 +292,9 @@ const AgentIdentityVerificationModal = ({ isOpen, onClose, agentData, onVerified
 
     const poll = async () => {
       try {
-        const res = await fetch(
-          `/agent-verification/nia-status${verificationId ? `?verification_id=${verificationId}` : ""}`,
-          { headers: { Accept: "application/json" } }
-        );
+        const res = await fetch("/agent-verification/nia-status", {
+          headers: { Accept: "application/json" },
+        });
         const json = await res.json();
         if (cancelled) return;
 
@@ -357,7 +320,7 @@ const AgentIdentityVerificationModal = ({ isOpen, onClose, agentData, onVerified
       cancelled = true;
       if (pollRef.current) clearInterval(pollRef.current);
     };
-  }, [currentStep, verificationId, onVerified]);
+  }, [currentStep, onVerified]);
 
   const handleRetryAfterFailure = () => {
     setNiaFailReason(null);
@@ -595,19 +558,33 @@ const AgentIdentityVerificationModal = ({ isOpen, onClose, agentData, onVerified
               <div>
                 <div className="aivm-field">
                   <label className="aivm-label">Ghana Card Number</label>
-                  <div className="aivm-input-wrap">
-                    <span className="aivm-input-prefix">GHA-</span>
+                  <div style={{ display: "flex", gap: "0.5rem", alignItems: "flex-start" }}>
+                    <div className="aivm-input-wrap" style={{ flex: 1 }}>
+                      <span className="aivm-input-prefix">GHA-</span>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        value={ghanaCardNumber}
+                        onChange={(e) => setGhanaCardNumber(formatGhanaCardNumber(e.target.value))}
+                        placeholder="123456789"
+                        className="aivm-input aivm-input--with-prefix"
+                        disabled={isProcessing}
+                      />
+                    </div>
                     <input
                       type="text"
-                      inputMode="numeric"
-                      value={ghanaCardNumber}
-                      onChange={(e) => setGhanaCardNumber(formatGhanaCardNumber(e.target.value))}
-                      placeholder="123456789"
-                      className="aivm-input aivm-input--with-prefix"
+                      inputMode="text"
+                      maxLength={1}
+                      value={ghanaCardCheckDigit}
+                      onChange={(e) => setGhanaCardCheckDigit(e.target.value.slice(-1))}
+                      placeholder="0"
+                      aria-label="Check digit"
+                      className="aivm-input"
+                      style={{ width: "3.5rem", textAlign: "center", padding: "0.75rem 0.5rem" }}
                       disabled={isProcessing}
                     />
                   </div>
-                  <p className="aivm-hint">Enter the 9 digits after "GHA-" on your card, e.g. GHA-123456789-0.</p>
+                  <p className="aivm-hint">Enter the 9 digits after "GHA-" and the final check character, e.g. GHA-123456789-0.</p>
                 </div>
 
                 <div className="aivm-field">

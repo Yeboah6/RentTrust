@@ -6,7 +6,7 @@ import { usePage, useForm, router, Head } from "@inertiajs/react";
 // Adjust this path to wherever AgentIdentityVerificationModal actually lives in your project.
 import AgentIdentityVerificationModal from "../../Components/Modules/AgentIdentityVerificationModal";
 
-const AdminSettingsPage = () => {
+const SettingsPage = () => {
   const [activeTab, setActiveTab] = useState("profile");
   const [showPassword, setShowPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -516,7 +516,7 @@ const AdminSettingsPage = () => {
                   </div>
 
                   {/* Rejection notes from reviewer */}
-                  {verificationStatus === "rejected" && verification?.admin_notes && (
+                  {verificationStatus === "rejected" && verification?.rejection_reason && (
                     <div style={{
                       backgroundColor: '#fef2f2',
                       border: '1px solid #fecaca',
@@ -527,7 +527,7 @@ const AdminSettingsPage = () => {
                       <p style={{ fontWeight: '600', color: '#991b1b', fontSize: '0.8125rem', marginBottom: '0.25rem' }}>
                         Reason for rejection
                       </p>
-                      <p style={{ color: '#991b1b', fontSize: '0.8125rem' }}>{verification.admin_notes}</p>
+                      <p style={{ color: '#991b1b', fontSize: '0.8125rem' }}>{verification.rejection_reason}</p>
                     </div>
                   )}
 
@@ -535,7 +535,7 @@ const AdminSettingsPage = () => {
                   {verification?.reviewed_at && (
                     <p style={{ color: '#6b7280', fontSize: '0.75rem', marginBottom: '1.5rem' }}>
                       Reviewed on {new Date(verification.reviewed_at).toLocaleDateString()}
-                      {verification.reviewed_by ? ` by ${verification.reviewed_by}` : ""}
+                      {verification.reviewed_by_name ? ` by ${verification.reviewed_by_name}` : ""}
                     </p>
                   )}
 
@@ -934,4 +934,4 @@ const AdminSettingsPage = () => {
   );
 };
 
-export default AdminSettingsPage;
+export default SettingsPage;

@@ -165,7 +165,7 @@ class AuthController extends Controller
             'userRole' => $user?->role,
             'canAccessVerification' => $user?->role === 'agent',
             'verification' => $user?->role === 'agent'
-                ? AgentVerification::where('agent_id', $user->id)->first()
+                ? AgentVerification::where('user_id', $user->id)->first()
                 : null,
         ]);
     }

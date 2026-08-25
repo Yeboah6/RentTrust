@@ -15,11 +15,11 @@ export default defineConfig({
         tailwindcss(),
         react(),
     ],
-    // server: {
-    //     watch: {
-    //         ignored: ['**/storage/framework/views/**'],
-    //     },
-    // },
+    server: {
+        watch: {
+            ignored: ['**/storage/framework/views/**'],
+        },
+    },
     build: {
         rollupOptions: {
             output: {
@@ -48,11 +48,11 @@ export default defineConfig({
     //      }
     //  },
 
-    server: {
-        host: '0.0.0.0', // Listen on all network interfaces
-        port: 5173,
-        hmr: {
-            host: '192.168.2.7' // Replace with your machine's IP
-        }
-    }
+    // server: {
+    //     host: '0.0.0.0', // Listen on all network interfaces
+    //     port: 5173,
+    //     hmr: {
+    //         host: '192.168.2.7' // Replace with your machine's IP
+    //     }
+    // }
 });

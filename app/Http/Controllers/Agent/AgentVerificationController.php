@@ -1,117 +1,71 @@
 <?php
 
-namespace App\Http\Controllers\Agent;
+namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
-use App\Models\AgentVerification;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\{Auth, Mail, Storage};
-use Illuminate\Validation\Rule;
+use App\Http\Requests\Verification\SubmitBiometricRequest;
+use App\Http\Requests\Verification\SubmitConsentRequest;
+use App\Http\Requests\Verification\SubmitGhanaCardRequest;
+use App\Services\Verification\AgentVerificationService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 
 class AgentVerificationController extends Controller
 {
-    public function store(Request $request)
+    public function __construct(private AgentVerificationService $verificationService)
     {
-        $agentId = Auth::id();
-        $existing = AgentVerification::where('agent_id', $agentId)->first();
-        $isResubmission = (bool) $existing;
-
-        $validated = $request->validate([
-            'agent_name' => 'required|string|max:255',
-            'email' => [
-                'required',
-                'email',
-                Rule::unique('agent_verifications', 'email')->ignore($existing?->id),
-            ],
-            'phone_number' => 'nullable|string|max:30',
-            'gov_id' => ($existing?->gov_id ? 'nullable' : 'required') . '|file|mimes:jpg,jpeg,png,pdf|max:5120',
-            'license_documents' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
-            'proof_of_address' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
-            'notes' => 'nullable|string',
-        ]);
-
-        $data = [
-            'agent_id' => $agentId,
-            'agent_name' => $validated['agent_name'],
-            'email' => $validated['email'],
-            'phone_number' => $validated['phone_number'] ?? null,
-            'status' => 'pending',
-            'submitted_at' => now(),
-            'reviewed_at' => null,
-            'reviewed_by' => null,
-            'notes' => $validated['notes'] ?? null,
-        ];
-
-        if ($request->hasFile('gov_id')) {
-            $data['gov_id'] = $request->file('gov_id')->store('verifications/agents/gov_id', 'public');
-        }
-        if ($request->hasFile('license_documents')) {
-            $data['license_documents'] = $request->file('license_documents')->store('verifications/agents/license', 'public');
-        }
-        if ($request->hasFile('proof_of_address')) {
-            $data['proof_of_address'] = $request->file('proof_of_address')->store('verifications/agents/address', 'public');
-        }
-
-        if ($existing) {
-            $existing->update($data);
-        } else {
-            AgentVerification::create($data);
-        }
-
-        // Confirmation to the agent
-        Mail::raw(
-            "Hi {$validated['agent_name']},\n\n" .
-            ($isResubmission
-                ? "We've received your resubmitted verification documents and they're back in the review queue."
-                : "We've received your verification documents and they're now in the review queue.") .
-            "\n\nWe'll email you as soon as a decision has been made.\n\nYou can go ahead and submit more listings at any time.\n\nRentTrustGH",
-            function ($message) use ($validated) {
-                $message->to($validated['email'])
-                    ->subject($isResubmission ?? false
-                        ? 'Verification resubmitted — RentTrustGH'
-                        : 'Verification received — RentTrustGH');
-            }
-        );
-
-        // Heads-up to the admin team
-        Mail::raw(
-            "{$validated['agent_name']} ({$validated['email']}) just " .
-            ($isResubmission ? 're-submitted' : 'submitted') .
-            " agent verification documents.\n\n" .
-            "Review it in the admin panel: " . url('/super-admin/verifications') . "?search=" . urlencode($validated['email']),
-            function ($message) {
-                $message->to(config('mail.mail', 'renttrust2026@gmail.com'))
-                    ->subject('New agent verification submission');
-            }
-        );
-
-        return back()->with('success', 'Verification submitted for review.');
     }
 
-    public function downloadDocument(Request $request, AgentVerification $verification, string $filename)
+    /**
+     * Step 1 — POST /agent-verification/ghana-card
+     */
+    public function submitGhanaCard(SubmitGhanaCardRequest $request): RedirectResponse
     {
-        $filename = urldecode($filename);
-    
-        $fields = ['gov_id', 'license_documents', 'proof_of_address'];
-        $foundPath = null;
-    
-        foreach ($fields as $field) {
-            $path = $verification->{$field};
-    
-            if ($path && basename($path) === $filename) {
-                $foundPath = $path;
-                break;
-            }
-        }
-    
-        if (!$foundPath) {
-            abort(404, 'Document not found');
-        }
-    
-        if (!Storage::disk('public')->exists($foundPath)) {
-            abort(404, 'Document not found on disk');
-        }
-    
-        return Storage::disk('public')->download($foundPath, $filename);
+        $this->verificationService->submitGhanaCard(
+            $request->user(),
+            $request->validated('ghana_card_number'),
+            $request->validated('ghana_card_pin'),
+        );
+
+        return back();
+    }
+
+    /**
+     * Step 2 — POST /agent-verification/consent
+     */
+    public function submitConsent(SubmitConsentRequest $request): RedirectResponse
+    {
+        $this->verificationService->recordConsent(
+            $request->user(),
+            $request->validated('consents'),
+        );
+
+        return back();
+    }
+
+    /**
+     * Step 3 — POST /agent-verification/biometric-capture
+     */
+    public function submitBiometric(SubmitBiometricRequest $request): RedirectResponse
+    {
+        $this->verificationService->queueBiometricCapture(
+            $request->user(),
+            $request->file('selfie'),
+            $request->validated('liveness_check') ?? 'blink',
+        );
+
+        return back();
+    }
+
+    /**
+     * Step 4 — GET /agent-verification/nia-status
+     *
+     * Plain JSON (not an Inertia response) since the frontend polls this
+     * with a raw fetch(), not router.get().
+     */
+    public function niaStatus(): JsonResponse
+    {
+        return response()->json(
+            $this->verificationService->currentStatus(request()->user())
+        );
     }
 }
